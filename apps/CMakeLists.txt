@@ -16,5 +16,5 @@
 # You should have received a copy of the GNU General Public License
 # along with osm2rdf.  If not, see <https://www.gnu.org/licenses/>.
 
-add_executable(olu osm_live_updates.cpp)
-#target_link_libraries(olu PRIVATE olu_library)
+add_executable(olu osm-live-updates.cpp)
+target_link_libraries(olu PRIVATE olu_library)

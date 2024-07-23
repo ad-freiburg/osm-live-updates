@@ -22,12 +22,7 @@
 #include <vector>
 
 // _________________________________________________________________________________________________
-template <typename T>
-olu::sparql::QueryWriter<T>::QueryWriter() = default;
-
-// _________________________________________________________________________________________________
-template<typename T>
-std::string olu::sparql::QueryWriter<T>::writeInsertQuery(std::vector<std::string>& triples) {
+std::string olu::sparql::QueryWriter::writeInsertQuery(std::vector<std::string>& triples) {
     std::string query;
     query = "INSERT DATA {\n";
 
@@ -35,17 +30,16 @@ std::string olu::sparql::QueryWriter<T>::writeInsertQuery(std::vector<std::strin
         query += element + "\n";
     }
 
-    query += "}\n";
+    query += "}";
     return query;
 }
 
 // _________________________________________________________________________________________________
-template<typename T>
-std::string olu::sparql::QueryWriter<T>::writeDeleteQuery(std::string& subject) {
+std::string olu::sparql::QueryWriter::writeDeleteQuery(std::string& subject) {
     std::string query;
     query = "DELETE { ?s ?p ?o } WHERE {\n"
             + subject +
-            "?p ?o . "
-            "}\n";
+            " ?p ?o .\n"
+            "}";
     return query;
 }

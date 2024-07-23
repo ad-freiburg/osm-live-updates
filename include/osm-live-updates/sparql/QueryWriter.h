@@ -24,10 +24,9 @@
 
 namespace olu::sparql {
 
-template<typename T>
 class QueryWriter {
 public:
-    QueryWriter();
+    QueryWriter() = default;
 
     // Writes a SPARQL query that inserts a list of triples
     std::string writeInsertQuery(std::vector<std::string>& triples);
