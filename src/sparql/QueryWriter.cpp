@@ -17,6 +17,7 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "osm-live-updates/sparql/QueryWriter.h"
+#include "osm-live-updates/config/Constants.h"
 
 #include <string>
 #include <vector>
@@ -24,7 +25,8 @@
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeInsertQuery(std::vector<std::string>& triples) {
     std::string query;
-    query = "INSERT DATA {\n";
+    query = olu::config::constants::PREFIXES;
+    query += "INSERT DATA {\n";
 
     for (auto & element : triples) {
         query += element + "\n";
@@ -37,7 +39,8 @@ std::string olu::sparql::QueryWriter::writeInsertQuery(std::vector<std::string>&
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeDeleteQuery(std::string& subject) {
     std::string query;
-    query = "DELETE { ?s ?p ?o } WHERE {\n"
+    query = olu::config::constants::PREFIXES;
+    query += "DELETE { ?s ?p ?o } WHERE {\n"
             + subject +
             " ?p ?o .\n"
             "}";
