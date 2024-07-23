@@ -21,7 +21,7 @@
 #include "gtest/gtest.h"
 
 namespace olu::sparql {
-    TEST(QueryWriter, insert) {
+    TEST(QueryWriter, insertQueries) {
         {
             olu::sparql::QueryWriter queryWriter;
             std::vector<std::string> triples;
@@ -48,6 +48,21 @@ namespace olu::sparql {
                     "INSERT DATA {\n"
                     "osmrel:1960198 ogc:sfContains ?osm_id:10559440 .\n"
                     "region:102740 osmkey:name name:Bretagne .\n"
+                    "}",
+                    query
+            );
+        }
+    }
+    TEST(QueryWriter, deleteQueries) {
+        {
+            olu::sparql::QueryWriter queryWriter;
+            std::string subject = "osmrel:1960198";
+
+            std::string query = queryWriter.writeDeleteQuery(subject);
+            ASSERT_EQ(
+                    olu::config::constants::PREFIXES +
+                    "DELETE { ?s ?p ?o } WHERE {\n"
+                    "osmrel:1960198 ?p ?o .\n"
                     "}",
                     query
             );
