@@ -20,8 +20,48 @@
 #define OSM_LIVE_UPDATES_CONSTANTS_H
 
 #include <string>
-namespace olu::config::constants {
 
+namespace olu::config::constants {
+    // URLs
+    const static inline std::string OSM_REPLICATION_BASE_URL =
+        "https://planet.openstreetmap.org/replication";
+    const static inline std::string OSM_NODE_BASE_URL =
+        "https://www.openstreetmap.org/api/0.6/node";
+
+    // File extensions
+    const static inline std::string OSM_FILE_EXTENSION = ".osm";
+    const static inline std::string OSM_CHANGE_FILE_EXTENSION = ".osc";
+    const static inline std::string GZIP_EXTENSION = ".gz";
+    const static inline std::string BZIP2_EXTENSION = ".bz2";
+    const static inline std::string RDF_TURTLE_EXTENSION = ".ttl";
+
+    // File names
+    const static inline std::string OSM_DIFF_STATE_FILE = "state";
+    const static inline std::string OSM_2_RDF_INPUT_FILE = "tmp_input";
+    const static inline std::string OSM_2_RDF_OUTPUT_FILE = "tmp_output";
+
+    // SPARQL
+    const static inline std::string PREFIXES =
+        "PREFIX ohmnode: <https://www.openhistoricalmap.org/node/>\n"
+        "PREFIX osmrel: <https://www.openstreetmap.org/relation/>\n"
+        "PREFIX osmnode: <https://www.openstreetmap.org/node/>\n"
+        "PREFIX osmkey: <https://www.openstreetmap.org/wiki/Key:>\n"
+        "PREFIX osmway: <https://www.openstreetmap.org/way/>\n"
+        "PREFIX osmmeta: <https://www.openstreetmap.org/meta/>\n"
+        "PREFIX osm: <https://www.openstreetmap.org/>\n"
+        "PREFIX osm2rdfmeta: <https://osm2rdf.cs.uni-freiburg.de/rdf/meta#>\n"
+        "PREFIX ohmrel: <https://www.openhistoricalmap.org/relation/>\n"
+        "PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>\n"
+        "PREFIX osm2rdfkey: <https://osm2rdf.cs.uni-freiburg.de/rdf/key#>\n"
+        "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>\n"
+        "PREFIX ohmway: <https://www.openhistoricalmap.org/way/>\n"
+        "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
+        "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n"
+        "PREFIX ohm: <https://www.openhistoricalmap.org/>\n"
+        "PREFIX wd: <http://www.wikidata.org/entity/>\n"
+        "PREFIX osm2rdf: <https://osm2rdf.cs.uni-freiburg.de/rdf#>\n"
+        "PREFIX ogc: <http://www.opengis.net/rdf#>\n"
+        "PREFIX geo: <http://www.opengis.net/ont/geosparql#>\n";
 } // namespace olu::config::constants
 
 #endif //OSM_LIVE_UPDATES_CONSTANTS_H
