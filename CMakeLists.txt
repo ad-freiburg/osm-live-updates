@@ -50,7 +50,11 @@ if(NOT Boost_FOUND)
 endif()
 include_directories (${Boost_INCLUDE_DIR})
 
+set(CURL_INCLUDE_DIRS "/opt/homebrew/opt/curl/lib")
 find_package(CURL REQUIRED)
+if(NOT CURL_FOUND)
+    message(FATAL_ERROR "Curl Not found")
+endif()
 include_directories(${CURL_INCLUDE_DIR})
 
 # Only do these if this is the main project, and not if it is included through add_subdirectory

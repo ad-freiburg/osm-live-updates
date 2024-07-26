@@ -17,4 +17,4 @@
 # along with osm2rdf.  If not, see <https://www.gnu.org/licenses/>.
 
 add_executable(olu osm-live-updates.cpp)
-target_link_libraries(olu PRIVATE olu_library)
+target_link_libraries(olu PRIVATE olu_library ${CURL_LIBRARIES})
