@@ -6,6 +6,7 @@
 #include "osm-live-updates/config/Constants.h"
 
 #include <stdexcept>
+#include <boost/asio/connect.hpp>
 
 namespace constants = olu::config::constants;
 
@@ -40,6 +41,25 @@ std::string URLHelper::formatSequenceNumberForUrl(std::string &sequenceNumber) {
     std::string part2 = sequenceNumber.substr(3, 3);
     std::string part3 = sequenceNumber.substr(6, 3);
     return part1 + "/" + part2 + "/" + part3;
+}
+
+// _________________________________________________________________________________________________
+std::string URLHelper::encodeForUrlQuery(const std::string &value) {
+    std::ostringstream escaped;
+    escaped.fill('0');
+    escaped << std::hex;
+
+    for (char c : value) {
+        // Keep alphanumeric characters and other allowed characters
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+            escaped << c;
+            continue;
+        }
+        // Any other characters are percent-encoded
+        escaped << '%' << std::setw(2) << int((unsigned char)c);
+    }
+
+    return escaped.str();
 }
 
 } // namespace olu::util
