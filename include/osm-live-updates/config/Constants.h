@@ -34,6 +34,7 @@ namespace olu::config::constants {
     const static inline std::string GZIP_EXTENSION = ".gz";
     const static inline std::string BZIP2_EXTENSION = ".bz2";
     const static inline std::string RDF_TURTLE_EXTENSION = ".ttl";
+    const static inline std::string TXT_EXTENSION = ".txt";
 
     // File names
     const static inline std::string OSM_DIFF_STATE_FILE = "state";
