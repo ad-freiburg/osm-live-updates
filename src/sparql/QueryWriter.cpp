@@ -16,8 +16,8 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "osm-live-updates/sparql/QueryWriter.h"
-#include "osm-live-updates/config/Constants.h"
+#include "sparql/QueryWriter.h"
+#include "config/Constants.h"
 
 #include <string>
 #include <vector>

@@ -17,9 +17,9 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "osm-live-updates/OsmDataFetcher.h"
-#include "osm-live-updates/config/Constants.h"
-#include "osm-live-updates/util/URLHelper.h"
-#include "osm-live-updates/util/HttpClient.h"
+#include "config/Constants.h"
+#include "util/URLHelper.h"
+#include "util/HttpClient.h"
 
 #include <string>
 #include <vector>

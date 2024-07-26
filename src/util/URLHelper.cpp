@@ -2,8 +2,8 @@
 // Created by Nicolas von Trott on 26.07.24.
 //
 
-#include "osm-live-updates/util/URLHelper.h"
-#include "osm-live-updates/config/Constants.h"
+#include "util/URLHelper.h"
+#include "config/Constants.h"
 
 #include <stdexcept>
 #include <boost/asio/connect.hpp>

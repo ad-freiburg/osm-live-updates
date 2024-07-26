@@ -15,7 +15,7 @@
 //
 //------------------------------------------------------------------------------
 
-#include "osm-live-updates/util/HttpClient.h"
+#include "util/HttpClient.h"
 
 #include <string>
 #include <curl/curl.h>
