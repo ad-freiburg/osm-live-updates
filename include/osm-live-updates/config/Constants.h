@@ -40,6 +40,13 @@ namespace olu::config::constants {
     const static inline std::string OSM_2_RDF_INPUT_FILE = "tmp_input";
     const static inline std::string OSM_2_RDF_OUTPUT_FILE = "tmp_output";
 
+    // Exception Messages
+    const static inline char *const EXCEPTION_MSG_SEQUENCE_NUMBER_IS_EMPTY =
+            "Sequence number is empty.";
+    const static inline char *const EXCEPTION_MSG_SEQUENCE_NUMBER_IS_TOO_LONG =
+            "Sequence number is too long, it can be up to 9 Digits.";
+
+
     // SPARQL
     const static inline std::string PREFIXES =
         "PREFIX ohmnode: <https://www.openhistoricalmap.org/node/>\n"
