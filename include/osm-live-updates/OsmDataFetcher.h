@@ -19,15 +19,21 @@
 #ifndef OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 #define OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 
+#include "osm-live-updates/OsmDiffGranularities.h"
+
 #include <string>
 
 namespace olu {
 
 class OsmDataFetcher {
 public:
+    explicit OsmDataFetcher(OsmDiffGranularity diffGranularity);
+
     // Fetches the sequence number of the latest diff from the osm server and returns it
-    static std::string fetchLatestSequenceNumber();
+    std::string fetchLatestSequenceNumber();
     static void fetchDiffWithSequenceNumber(int& sequenceNumber);
+private:
+    OsmDiffGranularity _diffGranularity;
 };
 
 } // namespace olu

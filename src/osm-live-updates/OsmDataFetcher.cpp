@@ -29,12 +29,16 @@ namespace constants = olu::config::constants;
 
 namespace olu {
 
+OsmDataFetcher::OsmDataFetcher(OsmDiffGranularity diffGranularity) {
+    _diffGranularity = diffGranularity;
+}
+
 // _________________________________________________________________________________________________
 std::string OsmDataFetcher::fetchLatestSequenceNumber() {
     // Build url for state file
     std::vector<std::string> pathSegments;
     pathSegments.emplace_back(constants::OSM_REPLICATION_BASE_URL);
-    pathSegments.emplace_back("minute");
+    pathSegments.emplace_back(urlSegmentFor.at(_diffGranularity));
     pathSegments.emplace_back(constants::OSM_DIFF_STATE_FILE + constants::TXT_EXTENSION);
     std::string url = util::URLHelper::buildUrl(pathSegments);
 
