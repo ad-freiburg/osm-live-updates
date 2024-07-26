@@ -22,6 +22,8 @@
 #include <string>
 #include <vector>
 
+//TODO: Check for valid triples
+
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeInsertQuery(std::vector<std::string>& triples) {
     std::string query;
