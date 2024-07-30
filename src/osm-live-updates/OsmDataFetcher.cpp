@@ -24,11 +24,17 @@
 #include <string>
 #include <vector>
 #include <boost/regex.hpp>
+#include <osmium/handler.hpp>
+#include <osmium/io/any_input.hpp>
+#include <osmium/osm/node.hpp>
+#include <osmium/osm/way.hpp>
+#include <osmium/visitor.hpp>
 
 namespace constants = olu::config::constants;
 
 namespace olu {
 
+// _________________________________________________________________________________________________
 OsmDataFetcher::OsmDataFetcher(OsmDiffGranularity diffGranularity) {
     _diffGranularity = diffGranularity;
 }
@@ -57,8 +63,21 @@ std::string OsmDataFetcher::fetchLatestSequenceNumber() {
 }
 
 // _________________________________________________________________________________________________
-void OsmDataFetcher::fetchDiffWithSequenceNumber(int &sequenceNumber) {
+void OsmDataFetcher::fetchDiffWithSequenceNumber(std::string &sequenceNumber) {
+    // Build url for diff file
+    std::string sequenceNumberFormatted = util::URLHelper::formatSequenceNumberForUrl(sequenceNumber);
+    std::vector<std::string> pathSegments;
+    pathSegments.emplace_back(constants::OSM_REPLICATION_BASE_URL);
+    pathSegments.emplace_back(urlSegmentFor.at(_diffGranularity));
+    pathSegments.emplace_back(sequenceNumberFormatted + constants::OSM_CHANGE_FILE_EXTENSION);
+    std::string url = util::URLHelper::buildUrl(pathSegments);
 
+    // Get Diff file from OSM server
+    std::string readBuffer = util::HttpClient::perform_get(url);
+
+    // Decompress gzipped file
+    auto otypes = osmium::osm_entity_bits::node | osmium::osm_entity_bits::way;
+    osmium::io::Reader reader{readBuffer, otypes};
 }
 
 } // namespace olu

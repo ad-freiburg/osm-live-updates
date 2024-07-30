@@ -30,14 +30,15 @@ add_library(olu_library ${CPP_LIST} ${HEADER_LIST})
 target_include_directories(olu_library PUBLIC "${CMAKE_CURRENT_LIST_DIR}/../include")
 
 ## This depends on (header only) boost (Boost::boost)
-#target_link_libraries(osm2rdf_library PRIVATE
-#        Boost::boost
-#        Boost::serialization
-#        Threads::Threads
-#        ${EXPAT_LIBRARIES}
-#        ${BZIP2_LIBRARIES}
-#        ${ZLIB_LIBRARIES}
-#)
+target_link_libraries(olu_library PRIVATE
+        Boost::boost
+        Boost::serialization
+        Threads::Threads
+        ${EXPAT_LIBRARIES}
+        ${BZIP2_LIBRARIES}
+        ${ZLIB_LIBRARIES}
+        ${CURL_LIBRARIES}
+)
 
 ## Link OpenMP if found
 #if (OpenMP_CXX_FOUND)
@@ -51,5 +52,4 @@ target_compile_features(olu_library PUBLIC cxx_std_20)
 source_group(
         TREE "${PROJECT_SOURCE_DIR}/include"
         PREFIX "Header Files"
-        FILES ${HEADER_LIST}
-)
+        FILES ${HEADER_LIST})

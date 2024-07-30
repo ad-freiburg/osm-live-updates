@@ -6,7 +6,9 @@
 #include <vector>
 
 int main() {
-    olu::OsmDataFetcher::fetchLatestSequenceNumber();
+    auto osmDataFetcher = olu::OsmDataFetcher(OsmDiffGranularity::MINUTE);
+    std::string seqNumber = osmDataFetcher.fetchLatestSequenceNumber();
+    osmDataFetcher.fetchDiffWithSequenceNumber(seqNumber);
 
     return 0;
 }

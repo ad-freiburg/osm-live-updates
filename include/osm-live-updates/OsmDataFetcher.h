@@ -31,7 +31,7 @@ public:
 
     // Fetches the sequence number of the latest diff from the osm server and returns it
     std::string fetchLatestSequenceNumber();
-    static void fetchDiffWithSequenceNumber(int& sequenceNumber);
+    void fetchDiffWithSequenceNumber(std::string& sequenceNumber);
 private:
     OsmDiffGranularity _diffGranularity;
 };

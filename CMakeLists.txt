@@ -28,15 +28,36 @@ project(
         LANGUAGES CXX
 )
 
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# export compile commands to tools like clang
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # ----------------------------------------------------------------------------
 # Global settings
 # ----------------------------------------------------------------------------
+add_compile_options(-Wall -Wextra -Wno-missing-field-initializers)
+add_compile_options(-DGTEST_HAS_TR1_TUPLE=0 -DGTEST_USE_OWN_TR1_TUPLE=0)
+# Basic optimization
+add_compile_options(-march=native)
+# Enable fast-math
+add_compile_options(-ffast-math)
 # ----------------------------------------------------------------------------
 # External programs
 # ----------------------------------------------------------------------------
+find_program(
+        CLANG_TIDY_EXE
+        NAMES "clang-tidy"
+        DOC "Path to clang-tidy executable"
+)
+
+find_program(
+        CPPCHECK_EXE
+        NAMES "cppcheck"
+        DOC "Path to cppcheck executable"
+)
 # ----------------------------------------------------------------------------
 # Configure dependencies
 # ----------------------------------------------------------------------------
@@ -44,11 +65,46 @@ set(BOOST_ROOT "/opt/homebrew/Cellar/boost/")
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
-find_package(Boost REQUIRED)
-if(NOT Boost_FOUND)
-    message(FATAL_ERROR "Boost Not found")
-endif()
+find_package(Boost REQUIRED serialization)
+find_package(EXPAT REQUIRED)
+find_package(BZip2 REQUIRED)
+find_package(ZLIB REQUIRED)
+
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
+# Disable installation of google stuff
+set(INSTALL_GMOCK OFF)
+set(INSTALL_GTEST OFF)
+set(BENCHMARK_ENABLE_INSTALL OFF)
+
 include_directories (${Boost_INCLUDE_DIR})
+
+#find_package(Git QUIET)
+#if (GIT_FOUND AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
+#    # Update submodules as needed
+#    option(GIT_SUBMODULE "Check submodules during build" ON)
+#    if (GIT_SUBMODULE)
+#        message(STATUS "Submodule update")
+#        execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+#                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+#                RESULT_VARIABLE GIT_SUBMOD_RESULT)
+#        if (NOT GIT_SUBMOD_RESULT EQUAL "0")
+#            message(FATAL_ERROR "git submodule update --init failed with ${GIT_SUBMOD_RESULT}, please checkout submodules")
+#        endif ()
+#    endif ()
+#endif ()
+
+if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vendor/google/googletest/CMakeLists.txt")
+    message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
+endif ()
+
+#find_package(POPL REQUIRED)
+#include_directories(SYSTEM ${POPL_INCLUDE_DIR})
+find_package(Protozero REQUIRED)
+include_directories(SYSTEM ${PROTOZERO_INCLUDE_DIR})
+find_package(Osmium REQUIRED COMPONENTS pbf xml)
+include_directories(SYSTEM ${OSMIUM_INCLUDE_DIRS})
 
 set(CURL_INCLUDE_DIRS "/opt/homebrew/opt/curl/lib")
 find_package(CURL REQUIRED)
@@ -93,9 +149,85 @@ if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     endif ()
 endif ()
 
+## Based on https://github.com/ad-freiburg/pfaedle/blob/master/cmake/GetGitRevisionDescription.cmake
+#function(get_git_sha1 _var)
+#    if (NOT GIT_FOUND)
+#        find_package(Git QUIET)
+#    endif ()
+#
+#    execute_process(COMMAND
+#            "${GIT_EXECUTABLE}"
+#            rev-parse --short HEAD --
+#            WORKING_DIRECTORY
+#            "${CMAKE_SOURCE_DIR}"
+#            RESULT_VARIABLE
+#            res
+#            OUTPUT_VARIABLE
+#            out
+#            ERROR_QUIET
+#            OUTPUT_STRIP_TRAILING_WHITESPACE)
+#    if (NOT res EQUAL 0)
+#        set(out "${out}-${res}-NOTFOUND")
+#    endif ()
+#    set(${_var} "${out}" PARENT_SCOPE)
+#endfunction()
+#function(get_git_is_dirty _var)
+#    if (NOT GIT_FOUND)
+#        find_package(Git QUIET)
+#    endif ()
+#
+#    execute_process(COMMAND
+#            "${GIT_EXECUTABLE}"
+#            diff-index --name-only HEAD --
+#            WORKING_DIRECTORY
+#            "${CMAKE_SOURCE_DIR}"
+#            RESULT_VARIABLE
+#            res
+#            OUTPUT_VARIABLE
+#            out
+#            ERROR_QUIET
+#            OUTPUT_STRIP_TRAILING_WHITESPACE)
+#    if (NOT res EQUAL 0)
+#        set(out "${out}-${res}-NOTFOUND")
+#    endif ()
+#
+#    if (NOT "${out}" STREQUAL "")
+#        set(IS_DIRTY "dirty")
+#    else ()
+#        set(IS_DIRTY "")
+#    endif ()
+#    set(${_var} "${IS_DIRTY}" PARENT_SCOPE)
+#endfunction()
+
+#get_git_sha1(VERSION_GIT)
+#get_git_is_dirty(VERSION_GIT_IS_DIRTY)
+#if ("${VERSION_GIT_IS_DIRTY}" STREQUAL "")
+#    set(VERSION_GIT_FULL "${VERSION_GIT}")
+#else ()
+#    set(VERSION_GIT_FULL "${VERSION_GIT}-${VERSION_GIT_IS_DIRTY}")
+#endif ()
+
+if (CLANG_TIDY_EXE)
+    message(STATUS "Found CLANG_TIDY_EXE at ${CLANG_TIDY_EXE}, enabling checks")
+    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};-checks=-*,readability-*")
+else()
+    message(STATUS "CLANG_TIDY_EXE not found")
+endif ()
+if (CPPCHECK_EXE)
+    message(STATUS "Found CPPCHECK_EXE at ${CPPCHECK_EXE}, enabling checks")
+    set(CMAKE_CXX_CPPCHECK "${CPPCHECK_EXE}")
+else()
+    message(STATUS "CPPCHECK_EXE not found")
+endif ()
 
 # The compiled library code is here
 add_subdirectory(src)
 
 # The executable code is here
 add_subdirectory(apps)
+
+# Install target settings
+install(
+        FILES build/apps/olu DESTINATION bin
+        PERMISSIONS OWNER_EXECUTE GROUP_EXECUTE WORLD_EXECUTE COMPONENT binaries
+)
