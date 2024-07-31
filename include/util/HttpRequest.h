@@ -16,18 +16,35 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef OSM_LIVE_UPDATES_HTTPCLIENT_H
-#define OSM_LIVE_UPDATES_HTTPCLIENT_H
+#ifndef OSM_LIVE_UPDATES_HTTPREQUEST_H
+#define OSM_LIVE_UPDATES_HTTPREQUEST_H
 
 #include <string>
+#include <curl/curl.h>
+#include "HttpMethod.h"
 
 namespace olu::util {
 
-class HttpClient {
+class HttpRequest {
 public:
-    static std::string perform_get(std::string& url);
+    explicit HttpRequest(
+            const HttpMethod& method,
+            const std::string& url,
+            bool followLocation = true);
+    ~HttpRequest();
+    void addHeader(const std::string& key, const std::string& value);
+    void addBody(const std::string& body);
+
+    std::string perform();
+private:
+    CURL *_curl;
+    HttpMethod _method;
+    CURLcode _res;
+
+    std::string performGet();
+    void performPost();
 };
 
 } // namespace olu::util
 
-#endif //OSM_LIVE_UPDATES_HTTPCLIENT_H
+#endif //OSM_LIVE_UPDATES_HTTPREQUEST_H
