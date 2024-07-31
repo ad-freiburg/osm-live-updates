@@ -23,11 +23,10 @@
 namespace olu::sparql {
     TEST(QueryWriter, insertQueries) {
         {
-            olu::sparql::QueryWriter queryWriter;
             std::vector<std::string> triples;
             triples.emplace_back("osmrel:1960198 ogc:sfContains ?osm_id:10559440 .");
 
-            std::string query = queryWriter.writeInsertQuery(triples);
+            std::string query = olu::sparql::QueryWriter::writeInsertQuery(triples);
             ASSERT_EQ(
                     olu::config::constants::PREFIXES +
                     "INSERT DATA {\n"
@@ -37,12 +36,11 @@ namespace olu::sparql {
             );
         }
         {
-            olu::sparql::QueryWriter queryWriter;
             std::vector<std::string> triples;
             triples.emplace_back("osmrel:1960198 ogc:sfContains ?osm_id:10559440 .");
             triples.emplace_back("region:102740 osmkey:name name:Bretagne .");
 
-            std::string query = queryWriter.writeInsertQuery(triples);
+            std::string query = olu::sparql::QueryWriter::writeInsertQuery(triples);
             ASSERT_EQ(
                     olu::config::constants::PREFIXES +
                     "INSERT DATA {\n"
@@ -55,10 +53,9 @@ namespace olu::sparql {
     }
     TEST(QueryWriter, deleteQueries) {
         {
-            olu::sparql::QueryWriter queryWriter;
             std::string subject = "osmrel:1960198";
 
-            std::string query = queryWriter.writeDeleteQuery(subject);
+            std::string query = olu::sparql::QueryWriter::writeDeleteQuery(subject);
             ASSERT_EQ(
                     olu::config::constants::PREFIXES +
                     "DELETE { ?s ?p ?o } WHERE {\n"

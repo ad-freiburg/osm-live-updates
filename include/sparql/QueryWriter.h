@@ -26,13 +26,11 @@ namespace olu::sparql {
 
 class QueryWriter {
 public:
-    QueryWriter() = default;
-
     // Writes a SPARQL query that inserts a list of triples
-    std::string writeInsertQuery(std::vector<std::string>& triples);
+    static std::string writeInsertQuery(std::vector<std::string>& triples);
 
     // Writes a SPARQL query that deletes all triples for a subject
-    std::string writeDeleteQuery(std::string& subject);
+    static std::string writeDeleteQuery(std::string& subject);
 };
 
 } // namespace olu::sparql
