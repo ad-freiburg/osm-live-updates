@@ -20,7 +20,6 @@
 #include <string>
 #include <curl/curl.h>
 
-// Performs an HTTP request against httpbin.cpp.al and prints request & response
 namespace olu::util {
 
 // _________________________________________________________________________________________________
