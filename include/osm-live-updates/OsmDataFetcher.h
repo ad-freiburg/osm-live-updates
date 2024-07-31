@@ -20,6 +20,7 @@
 #define OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 
 #include "osm-live-updates/OsmDiffGranularities.h"
+#include "util/CacheFile.h"
 
 #include <string>
 
@@ -34,6 +35,8 @@ public:
     void fetchDiffWithSequenceNumber(std::string& sequenceNumber);
 private:
     OsmDiffGranularity _diffGranularity;
+protected:
+    util::CacheFile _cacheFile = util::CacheFile("/tmp/dataFetcherCache");
 };
 
 } // namespace olu

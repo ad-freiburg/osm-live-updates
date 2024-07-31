@@ -19,16 +19,12 @@
 #include "osm-live-updates/OsmDataFetcher.h"
 #include "config/Constants.h"
 #include "util/URLHelper.h"
-#include "util/HttpClient.h"
+#include "util/HttpRequest.h"
+#include "util/Decompressor.h"
 
 #include <string>
 #include <vector>
 #include <boost/regex.hpp>
-#include <osmium/handler.hpp>
-#include <osmium/io/any_input.hpp>
-#include <osmium/osm/node.hpp>
-#include <osmium/osm/way.hpp>
-#include <osmium/visitor.hpp>
 
 namespace constants = olu::config::constants;
 
@@ -49,7 +45,8 @@ std::string OsmDataFetcher::fetchLatestSequenceNumber() {
     std::string url = util::URLHelper::buildUrl(pathSegments);
 
     // Get state file from osm server
-    std::string readBuffer = util::HttpClient::perform_get(url);
+    auto request = util::HttpRequest(util::GET, url);
+    std::string readBuffer = request.perform();
 
     // Extract sequence number from state file
     boost::regex regex("sequenceNumber=(\\d+)");
@@ -66,18 +63,21 @@ std::string OsmDataFetcher::fetchLatestSequenceNumber() {
 void OsmDataFetcher::fetchDiffWithSequenceNumber(std::string &sequenceNumber) {
     // Build url for diff file
     std::string sequenceNumberFormatted = util::URLHelper::formatSequenceNumberForUrl(sequenceNumber);
+    std::string diffFilename = sequenceNumberFormatted + constants::OSM_CHANGE_FILE_EXTENSION;
     std::vector<std::string> pathSegments;
     pathSegments.emplace_back(constants::OSM_REPLICATION_BASE_URL);
     pathSegments.emplace_back(urlSegmentFor.at(_diffGranularity));
-    pathSegments.emplace_back(sequenceNumberFormatted + constants::OSM_CHANGE_FILE_EXTENSION);
+    pathSegments.emplace_back(diffFilename);
     std::string url = util::URLHelper::buildUrl(pathSegments);
 
     // Get Diff file from OSM server
-    std::string readBuffer = util::HttpClient::perform_get(url);
+    auto request = util::HttpRequest(util::GET, url);
+    std::string readBuffer = request.perform();
+    std::string uncompressed = util::Decompressor::read(readBuffer);
+
 
     // Decompress gzipped file
-    auto otypes = osmium::osm_entity_bits::node | osmium::osm_entity_bits::way;
-    osmium::io::Reader reader{readBuffer, otypes};
+
 }
 
 } // namespace olu
