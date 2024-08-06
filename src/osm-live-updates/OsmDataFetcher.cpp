@@ -20,7 +20,6 @@
 #include "config/Constants.h"
 #include "util/URLHelper.h"
 #include "util/HttpRequest.h"
-#include "util/Decompressor.h"
 
 #include <string>
 #include <vector>
@@ -60,7 +59,7 @@ std::string OsmDataFetcher::fetchLatestSequenceNumber() {
 }
 
 // _________________________________________________________________________________________________
-void OsmDataFetcher::fetchDiffWithSequenceNumber(std::string &sequenceNumber) {
+std::string OsmDataFetcher::fetchDiffWithSequenceNumber(std::string &sequenceNumber) {
     // Build url for diff file
     std::string sequenceNumberFormatted = util::URLHelper::formatSequenceNumberForUrl(sequenceNumber);
     std::string diffFilename = sequenceNumberFormatted + constants::OSM_CHANGE_FILE_EXTENSION;
@@ -70,14 +69,13 @@ void OsmDataFetcher::fetchDiffWithSequenceNumber(std::string &sequenceNumber) {
     pathSegments.emplace_back(diffFilename);
     std::string url = util::URLHelper::buildUrl(pathSegments);
 
-    // Get Diff file from OSM server
+    // Get Diff file from server and write to cache file.
+    std::string filePath = constants::DIFF_CACHE_FILE + sequenceNumber + constants::OSM_CHANGE_FILE_EXTENSION + constants::GZIP_EXTENSION;
     auto request = util::HttpRequest(util::GET, url);
-    std::string readBuffer = request.perform();
-    std::string uncompressed = util::Decompressor::read(readBuffer);
-
-
-    // Decompress gzipped file
-
+    auto cacheFile = util::CacheFile(filePath);
+    cacheFile.write(request.perform());
+    cacheFile.close();
+    return filePath;
 }
 
 } // namespace olu

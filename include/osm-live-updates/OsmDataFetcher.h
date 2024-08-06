@@ -32,7 +32,10 @@ public:
 
     // Fetches the sequence number of the latest diff from the osm server and returns it
     std::string fetchLatestSequenceNumber();
-    void fetchDiffWithSequenceNumber(std::string& sequenceNumber);
+
+    // Fetches the gzipped .osc change file from the server, writes it to a file and returns the
+    // path to the file
+    std::string fetchDiffWithSequenceNumber(std::string& sequenceNumber);
 private:
     OsmDiffGranularity _diffGranularity;
 protected:
