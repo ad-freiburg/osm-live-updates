@@ -16,27 +16,30 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
+#include "config/Constants.h"
+#include "gtest/gtest.h"
 #include "util/Decompressor.h"
 
-#include <string>
-#include <osmium/io/gzip_compression.hpp>
+#include <fstream>
 
+namespace constants = olu::config::constants;
 namespace olu::util {
 
-// ____________________________________________________________________________
-std::string Decompressor::read(const std::string& path) {
-    const int fd = osmium::io::detail::open_for_reading(path);
+// _________________________________________________________________________________________________
+TEST(Decompressor, compressAndDecompress) {
+    {
+        // Todo: Read path from environment
+        std::string result= "/Users/nicolasvontrott/Documents/Masterproject/osm-live-updates/tests/data/";
 
-    size_t size = 0;
-    std::string all;
-    osmium::io::GzipDecompressor decompressor { fd };
-    for (std::string data = decompressor.read(); !data.empty(); data = decompressor.read()) {
-        size += data.size();
-        all += data;
+        std::string compressedFilePath = result + "427.osc.gz";
+        std::string decompressed = Decompressor::read(compressedFilePath);
+
+        std::string uncompressedFilePath = result + "427.osc";
+        std::ifstream t(uncompressedFilePath);
+        std::stringstream buffer;
+        buffer << t.rdbuf();
+        ASSERT_EQ(buffer.str(), decompressed);
     }
-
-    decompressor.close();
-    return all;
 }
 
-} //namespace olu::util
+} // namespace olu::util
