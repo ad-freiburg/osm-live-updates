@@ -33,9 +33,8 @@ target_include_directories(olu_library PUBLIC "${CMAKE_CURRENT_LIST_DIR}/../incl
 target_link_libraries(olu_library PRIVATE
         Boost::boost
         Boost::serialization
+        Boost::iostreams
         Threads::Threads
-        ${EXPAT_LIBRARIES}
-        ${BZIP2_LIBRARIES}
         ${ZLIB_LIBRARIES}
         ${CURL_LIBRARIES}
 )
