@@ -36,6 +36,8 @@ public:
     // Fetches the gzipped .osc change file from the server, writes it to a file and returns the
     // path to the file
     std::string fetchDiffWithSequenceNumber(std::string& sequenceNumber);
+
+    static std::string fetchNode(std::string& nodeId);
 private:
     OsmDiffGranularity _diffGranularity;
 protected:

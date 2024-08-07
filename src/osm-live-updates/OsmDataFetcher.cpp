@@ -78,6 +78,19 @@ std::string OsmDataFetcher::fetchDiffWithSequenceNumber(std::string &sequenceNum
     return filePath;
 }
 
+// _________________________________________________________________________________________________
+std::string OsmDataFetcher::fetchNode(std::string &nodeId) {
+    std::vector<std::string> pathSegments;
+    pathSegments.emplace_back(constants::OSM_NODE_BASE_URL);
+    pathSegments.emplace_back(nodeId);
+    std::string url = util::URLHelper::buildUrl(pathSegments);
+
+    auto request = util::HttpRequest(util::GET, url);
+    std::string response = request.perform();
+
+    return response;
+}
+
 } // namespace olu
 
 
