@@ -16,27 +16,21 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef OSM_LIVE_UPDATES_URLHELPER_H
-#define OSM_LIVE_UPDATES_URLHELPER_H
+#ifndef OSM_LIVE_UPDATES_XMLWRITER_H
+#define OSM_LIVE_UPDATES_XMLWRITER_H
 
-#include <string>
-#include <vector>
+#include <boost/property_tree/ptree.hpp>
 
+namespace pt = boost::property_tree;
 namespace olu::util {
 
-class URLHelper {
-public:
-    // Builds an url from a list of strings by concatenating them with a '/'
-    static std::string buildUrl(std::vector<std::string> &pathSegments);
+    class XmlWriter {
+    public:
+        static void addTagToPTree(pt::ptree& element,
+                                  const std::string& key,
+                                  const std::string& value);
+    };
 
-    // Formats a sequence number for use in an url
-    // For example: The sequence number 6177383 would be returned as 006/177/383
-    // @throw 'std::invalid_argument' if sequence number is empty or too long
-    static std::string formatSequenceNumberForUrl(std::string &sequenceNumber);
+} // namespace  olu::util
 
-    static std::string encodeForUrlQuery(const std::string& value);
-};
-
-} // namespace olu::util
-
-#endif //OSM_LIVE_UPDATES_URLHELPER_H
+#endif //OSM_LIVE_UPDATES_XMLWRITER_H

@@ -17,10 +17,9 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "util/XmlReader.h"
-#include "config/Constants.h"
 #include "gtest/gtest.h"
 
-namespace constants = olu::config::constants;
+#include <fstream>
 
 // _________________________________________________________________________________________________
 TEST(XmlReader, readNodeElement) {
@@ -36,4 +35,3 @@ TEST(XmlReader, readNodeElement) {
         ASSERT_EQ(nodeElement, correctNodeElement);
     }
 }
-

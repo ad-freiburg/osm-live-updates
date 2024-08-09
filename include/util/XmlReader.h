@@ -19,21 +19,14 @@
 #ifndef OSM_LIVE_UPDATES_XMLREADER_H
 #define OSM_LIVE_UPDATES_XMLREADER_H
 
-#include <string>
 #include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/xml_parser.hpp>
-#include <boost/foreach.hpp>
-#include <set>
-#include <iostream>
 
 namespace pt = boost::property_tree;
-
 namespace olu::util {
 
     class XmlReader {
     public:
         static std::string readNodeElement(const std::string& xml);
-    private:
         static void populatePTreeFromString(const std::string& xml, pt::ptree& tree);
         static std::string writeXmlElementToString(const pt::ptree& element);
     };

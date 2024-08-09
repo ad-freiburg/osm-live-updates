@@ -21,9 +21,9 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
 #include <string>
-#include <iostream>
 
 namespace pt = boost::property_tree;
+
 // _________________________________________________________________________________________________
 void olu::util::XmlReader::populatePTreeFromString(const std::string &xml, pt::ptree &tree) {
     std::stringstream ss;
@@ -48,7 +48,12 @@ std::string olu::util::XmlReader::readNodeElement(const std::string& xml) {
     populatePTreeFromString(xml, tree);
 
     auto nodeElement = tree.get_child("osm");
-    return writeXmlElementToString(nodeElement);
+    auto nodeElementAsString = writeXmlElementToString(nodeElement);
+
+    tree.clear();
+    nodeElement.clear();
+
+    return nodeElementAsString;
 }
 
 //    std::cout << nodeElement.get_value<std::string>() << std::endl;
