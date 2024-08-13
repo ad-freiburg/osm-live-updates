@@ -19,7 +19,7 @@
 #ifndef OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 #define OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 
-#include "osm-live-updates/OsmDiffGranularities.h"
+#include "osm/OsmDiffGranularities.h"
 #include "util/CacheFile.h"
 
 #include <string>

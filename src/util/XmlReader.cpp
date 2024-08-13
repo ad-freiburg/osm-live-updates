@@ -55,9 +55,3 @@ std::string olu::util::XmlReader::readNodeElement(const std::string& xml) {
 
     return nodeElementAsString;
 }
-
-//    std::cout << nodeElement.get_value<std::string>() << std::endl;
-//    tree.get_value<std::string>()
-//    BOOST_FOREACH(pt::ptree::value_type &v, nodeElement) {
-//        std::cout << v.second.get_value<std::string>() << std::endl;
-//    }
