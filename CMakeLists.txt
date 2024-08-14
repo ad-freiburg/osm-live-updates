@@ -61,11 +61,11 @@ find_program(
 # ----------------------------------------------------------------------------
 # Configure dependencies
 # ----------------------------------------------------------------------------
-set(BOOST_ROOT "/opt/homebrew/Cellar/boost/")
+set(BOOST_ROOT "/opt/homebrew/Cellar/boost/1.85.0")
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
-find_package(Boost 1.38 REQUIRED serialization iostreams)
+find_package(Boost 1.85 REQUIRED serialization iostreams)
 mark_as_advanced(CLEAR BOOST_ROOT)
 
 if(Boost_FOUND)
@@ -112,8 +112,10 @@ if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vendor/google/googletest/CMakeLists.
     message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
 endif ()
 
-#find_package(POPL REQUIRED)
-#include_directories(SYSTEM ${POPL_INCLUDE_DIR})
+
+
+find_package(POPL REQUIRED)
+include_directories(SYSTEM ${POPL_INCLUDE_DIR})
 find_package(Protozero REQUIRED)
 include_directories(SYSTEM ${PROTOZERO_INCLUDE_DIR})
 find_package(Osmium REQUIRED COMPONENTS pbf xml)
