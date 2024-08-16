@@ -37,7 +37,8 @@ namespace olu::osm {
         writeToInputFile(osmData);
 
         auto config = osm2ttl::config::Config();
-        std::vector<std::string> arguments = { olu::config::constants::PATH_TO_INPUT_FILE,
+        std::vector<std::string> arguments = { " ",
+                                               olu::config::constants::PATH_TO_INPUT_FILE,
                                                "-o",
                                                olu::config::constants::PATH_TO_OUTPUT_FILE,
                                                "-t",
@@ -50,18 +51,18 @@ namespace olu::osm {
 
         config.fromArgs(argv.size() - 1, argv.data());
 
-        std::cerr << osm2ttl::util::currentTimeFormatted()
-                  << "osm2ttl :: " << osm2ttl::version::GIT_INFO << " :: BEGIN"
-                  << std::endl;
-        std::cerr << config.getInfo(osm2ttl::util::formattedTimeSpacer) << std::endl;
-
-        std::cerr << osm2ttl::util::currentTimeFormatted() << "Free ram: "
-                  << osm2ttl::util::ram::available() /
-                     (osm2ttl::util::ram::GIGA * 1.0)
-                  << "G/"
-                  << osm2ttl::util::ram::physPages() /
-                     (osm2ttl::util::ram::GIGA * 1.0)
-                  << "G" << std::endl;
+//        std::cerr << osm2ttl::util::currentTimeFormatted()
+//                  << "osm2ttl :: " << osm2ttl::version::GIT_INFO << " :: BEGIN"
+//                  << std::endl;
+//        std::cerr << config.getInfo(osm2ttl::util::formattedTimeSpacer) << std::endl;
+//
+//        std::cerr << osm2ttl::util::currentTimeFormatted() << "Free ram: "
+//                  << osm2ttl::util::ram::available() /
+//                     (osm2ttl::util::ram::GIGA * 1.0)
+//                  << "G/"
+//                  << osm2ttl::util::ram::physPages() /
+//                     (osm2ttl::util::ram::GIGA * 1.0)
+//                  << "G" << std::endl;
 
         try {
             if (config.outputFormat == "qlever") {
