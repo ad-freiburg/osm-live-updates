@@ -17,6 +17,11 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "osm/Osm2Rdf.h"
+#include "osm2ttl/util/Time.h"
+#include "osm2ttl/Version.h"
+#include "osm2ttl/util/Ram.h"
+#include "osm2ttl/config/ExitCode.h"
+#include "config/Constants.h"
 
 #include <osm2ttl/config/Config.h>
 #include <osm2ttl/util/Output.h>
@@ -26,44 +31,74 @@
 #include <iostream>
 
 namespace olu::osm {
-    // _____________________________________________________________________________________________
-    Osm2Rdf::Osm2Rdf() {
-        _config = osm2ttl::config::Config();
-        _config.input = _config.getTempPath("osm2rdf", "input");
-        _config.output = _config.getTempPath("osm2rdf", "output");
-        _config.cache = _config.getTempPath("osm2rdf", "scratch");
-    }
 
     // _____________________________________________________________________________________________
-    std::string Osm2Rdf::convert(std::string &osmData) const {
-        // Write data to input file
+    std::string Osm2Rdf::convert(std::string& osmData) {
         writeToInputFile(osmData);
 
-        // Generate output file
-        auto output = osm2ttl::util::Output{_config, _config.output};
-        if (!output.open()) {
-            std::cerr << "Error opening outputfile: " << _config.output << std::endl;
-            exit(1);
+        auto config = osm2ttl::config::Config();
+        std::vector<std::string> arguments = { olu::config::constants::PATH_TO_INPUT_FILE,
+                                               "-o",
+                                               olu::config::constants::PATH_TO_OUTPUT_FILE,
+                                               "-t",
+                                               olu::config::constants::PATH_TO_SCRATCH_DIRECTORY };
+        std::vector<char*> argv;
+        for (const auto& arg : arguments) {
+            argv.push_back((char*)arg.data());
         }
+        argv.push_back(nullptr);
 
-        osm2ttl::ttl::Writer<osm2ttl::ttl::format::QLEVER> writer{_config, &output};
-        writer.writeHeader();
+        config.fromArgs(argv.size() - 1, argv.data());
 
-        osm2ttl::osm::OsmiumHandler osmiumHandler{_config, &writer};
-        osmiumHandler.handle();
+        std::cerr << osm2ttl::util::currentTimeFormatted()
+                  << "osm2ttl :: " << osm2ttl::version::GIT_INFO << " :: BEGIN"
+                  << std::endl;
+        std::cerr << config.getInfo(osm2ttl::util::formattedTimeSpacer) << std::endl;
 
-        // All work done, close output
-        output.close();
+        std::cerr << osm2ttl::util::currentTimeFormatted() << "Free ram: "
+                  << osm2ttl::util::ram::available() /
+                     (osm2ttl::util::ram::GIGA * 1.0)
+                  << "G/"
+                  << osm2ttl::util::ram::physPages() /
+                     (osm2ttl::util::ram::GIGA * 1.0)
+                  << "G" << std::endl;
 
-        return readTripletsFromOutputFile();
+        try {
+            if (config.outputFormat == "qlever") {
+                run<osm2ttl::ttl::format::QLEVER>(config);
+            } else if (config.outputFormat == "nt") {
+                run<osm2ttl::ttl::format::NT>(config);
+            } else if (config.outputFormat == "ttl") {
+                run<osm2ttl::ttl::format::TTL>(config);
+            } else {
+                std::cerr << osm2ttl::util::currentTimeFormatted()
+                          << "osm2ttl :: " << osm2ttl::version::GIT_INFO << " :: ERROR"
+                          << std::endl;
+                std::cerr << "Unknown output format: " << config.outputFormat
+                          << std::endl;
+                std::exit(osm2ttl::config::ExitCode::FAILURE);
+            }
+        } catch (const std::exception& e) {
+            // All exceptions used by the Osmium library derive from std::exception.
+            std::cerr << osm2ttl::util::currentTimeFormatted()
+                      << "osm2ttl :: " << osm2ttl::version::GIT_INFO << " :: ERROR"
+                      << std::endl;
+            std::cerr << e.what() << std::endl;
+            std::exit(osm2ttl::config::ExitCode::EXCEPTION);
+        }
+        std::cerr << osm2ttl::util::currentTimeFormatted()
+                  << "osm2ttl :: " << osm2ttl::version::GIT_INFO << " :: FINISHED"
+                  << std::endl;
+
+        return readTripletsFromOutputFile(config);
     }
 
     // _____________________________________________________________________________________________
-    void Osm2Rdf::writeToInputFile(std::string &data) const {
+    void Osm2Rdf::writeToInputFile(std::string &data) {
         std::ofstream input;
-        input.open(_config.input, std::ofstream::out | std::ofstream::trunc);
+        input.open(olu::config::constants::PATH_TO_INPUT_FILE);
         if (!input) {
-            std::cerr << "Error opening input file: " << _config.input << std::endl;
+            std::cerr << "Error opening file: " << olu::config::constants::PATH_TO_INPUT_FILE << std::endl;
             exit(1);
         }
 
@@ -72,11 +107,30 @@ namespace olu::osm {
     }
 
     // _____________________________________________________________________________________________
-    std::string Osm2Rdf::readTripletsFromOutputFile() const {
-        std::ifstream ifs(_config.output);
+    std::string Osm2Rdf::readTripletsFromOutputFile(const osm2ttl::config::Config& config) {
+        std::ifstream ifs(config.output);
         std::string data((std::istreambuf_iterator<char>(ifs)),
                          (std::istreambuf_iterator<char>()));
         return data;
+    }
+
+    template <typename T>
+    void Osm2Rdf::run(const osm2ttl::config::Config &config) const {
+        // Setup
+        // Input file reference
+        osm2ttl::util::Output output{config, config.output};
+        if (!output.open()) {
+            std::cerr << "Error opening outputfile: " << config.output << std::endl;
+            exit(1);
+        }
+        osm2ttl::ttl::Writer<T> writer{config, &output};
+        writer.writeHeader();
+
+        osm2ttl::osm::OsmiumHandler osmiumHandler{config, &writer};
+        osmiumHandler.handle();
+
+        // All work done, close output
+        output.close();
     }
 
 } // namespace olu::osm

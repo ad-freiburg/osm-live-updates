@@ -26,15 +26,13 @@ namespace olu::osm {
 
     class Osm2Rdf {
     public:
-        explicit Osm2Rdf();
-
         // Converts osm data to ttl triplets
-        std::string convert(std::string& osmData) const;
+        std::string convert(std::string& osmData);
     private:
-        osm2ttl::config::Config _config;
-
-        void writeToInputFile(std::string& data) const;
-        std::string readTripletsFromOutputFile() const;
+        template <typename T>
+        void run(const osm2ttl::config::Config& config) const;
+        static void writeToInputFile(std::string& data) ;
+        [[nodiscard]] static std::string readTripletsFromOutputFile(const osm2ttl::config::Config& config) ;
     };
 } // namespace olu::osm
 

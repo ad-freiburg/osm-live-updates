@@ -49,6 +49,10 @@ namespace olu::config::constants {
     const static inline char *const EXCEPTION_MSG_SEQUENCE_NUMBER_IS_TOO_LONG =
             "Sequence number is too long, it can be up to 9 Digits.";
 
+    // Osm2rdf
+    const static inline std::string PATH_TO_INPUT_FILE = "/input/input.osm";
+    const static inline std::string PATH_TO_OUTPUT_FILE = "/output/output.ttl";
+    const static inline std::string PATH_TO_SCRATCH_DIRECTORY = "/scratch/";
 
     // SPARQL
     const static inline std::string PREFIXES =
