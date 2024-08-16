@@ -7,6 +7,8 @@
 
 #include <stdexcept>
 #include <boost/asio/connect.hpp>
+#include <iostream>
+#include <iomanip>
 
 namespace constants = olu::config::constants;
 

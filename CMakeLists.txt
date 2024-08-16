@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-cmake_minimum_required(VERSION 3.25)
+cmake_minimum_required(VERSION 3.16.3)
 
 # --------------------------------------------------------------------------------------------------
 # Project
@@ -61,11 +61,10 @@ find_program(
 # ----------------------------------------------------------------------------
 # Configure dependencies
 # ----------------------------------------------------------------------------
-set(BOOST_ROOT "/opt/homebrew/Cellar/boost/1.85.0")
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
-find_package(Boost 1.85 REQUIRED serialization iostreams)
+find_package(Boost REQUIRED serialization iostreams regex)
 mark_as_advanced(CLEAR BOOST_ROOT)
 
 if(Boost_FOUND)
@@ -75,7 +74,6 @@ else()
     message(FATAL_ERROR "PLEASE, specify the directory where the Boost library is installed in BOOST_ROOT")
 endif()
 
-set(ZLIB_ROOT "/opt/homebrew/Cellar/zlib/")
 find_package(ZLIB REQUIRED)
 if(ZLIB_FOUND)
     include_directories(SYSTEM ${ZLIB_INCLUDE_DIRS})
@@ -112,7 +110,15 @@ if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vendor/google/googletest/CMakeLists.
     message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
 endif ()
 
-
+include(CMakePrintHelpers)
+include(FetchContent)
+FetchContent_Declare(osm2rdf
+        GIT_REPOSITORY  https://github.com/ad-freiburg/osm2rdf.git
+        GIT_TAG v0.2
+)
+FetchContent_MakeAvailable(osm2rdf)
+include_directories(SYSTEM ${osm2rdf_SOURCE_DIR}/include)
+cmake_print_variables(${osm2rdf_SOURCE_DIR}/include)
 
 find_package(POPL REQUIRED)
 include_directories(SYSTEM ${POPL_INCLUDE_DIR})
@@ -121,7 +127,6 @@ include_directories(SYSTEM ${PROTOZERO_INCLUDE_DIR})
 find_package(Osmium REQUIRED COMPONENTS pbf xml)
 include_directories(SYSTEM ${OSMIUM_INCLUDE_DIRS})
 
-set(CURL_INCLUDE_DIRS "/opt/homebrew/opt/curl/lib")
 find_package(CURL REQUIRED)
 if(NOT CURL_FOUND)
     message(FATAL_ERROR "Curl Not found")
@@ -156,6 +161,7 @@ if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         enable_testing()
         include(GoogleTest)
         add_subdirectory(tests)
+        include_directories(SYSTEM ${gtest_SOURCE_DIR}/include)
     endif ()
     option(PACKAGE_BENCHMARKS "Build the benchmarks" ON)
     if (PACKAGE_BENCHMARKS)

@@ -34,15 +34,17 @@ target_link_libraries(olu_library PRIVATE
         Boost::boost
         Boost::serialization
         Boost::iostreams
+        Boost::regex
         Threads::Threads
         ${ZLIB_LIBRARIES}
         ${CURL_LIBRARIES}
+        osm2ttl_library
 )
 
-## Link OpenMP if found
-#if (OpenMP_CXX_FOUND)
-#    target_link_libraries(osm2rdf_library PUBLIC OpenMP::OpenMP_CXX)
-#endif ()
+# Link OpenMP if found
+if (OpenMP_CXX_FOUND)
+    target_link_libraries(osm2rdf_library PUBLIC OpenMP::OpenMP_CXX)
+endif ()
 
 # All users of this library will need at least C++20
 target_compile_features(olu_library PUBLIC cxx_std_20)
