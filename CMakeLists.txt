@@ -110,7 +110,6 @@ if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vendor/google/googletest/CMakeLists.
     message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
 endif ()
 
-include(CMakePrintHelpers)
 include(FetchContent)
 FetchContent_Declare(osm2rdf
         GIT_REPOSITORY  https://github.com/ad-freiburg/osm2rdf.git
@@ -118,7 +117,6 @@ FetchContent_Declare(osm2rdf
 )
 FetchContent_MakeAvailable(osm2rdf)
 include_directories(SYSTEM ${osm2rdf_SOURCE_DIR}/include)
-cmake_print_variables(${osm2rdf_SOURCE_DIR}/include)
 
 find_package(POPL REQUIRED)
 include_directories(SYSTEM ${POPL_INCLUDE_DIR})

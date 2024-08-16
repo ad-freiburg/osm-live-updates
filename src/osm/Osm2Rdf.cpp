@@ -23,27 +23,60 @@
 #include <osm2ttl/ttl/Writer.h>
 #include <osm2ttl/osm/OsmiumHandler.h>
 #include <osm2ttl/ttl/Format.h>
-
-#include "iostream"
+#include <iostream>
 
 namespace olu::osm {
-// _________________________________________________________________________________________________
-Osm2Rdf::Osm2Rdf() {
-    auto config = osm2ttl::config::Config();
-    osm2ttl::util::Output output{config, config.output};
-    if (!output.open()) {
-        std::cerr << "Error opening outputfile: " << config.output << std::endl;
-        exit(1);
+    // _____________________________________________________________________________________________
+    Osm2Rdf::Osm2Rdf() {
+        _config = osm2ttl::config::Config();
+        _config.input = _config.getTempPath("osm2rdf", "input");
+        _config.output = _config.getTempPath("osm2rdf", "output");
+        _config.cache = _config.getTempPath("osm2rdf", "scratch");
     }
 
-    osm2ttl::ttl::Writer<osm2ttl::ttl::format::QLEVER> writer{config, &output};
-    writer.writeHeader();
+    // _____________________________________________________________________________________________
+    std::string Osm2Rdf::convert(std::string &osmData) const {
+        // Write data to input file
+        writeToInputFile(osmData);
 
-    osm2ttl::osm::OsmiumHandler osmiumHandler{config, &writer};
-    osmiumHandler.handle();
+        // Generate output file
+        auto output = osm2ttl::util::Output{_config, _config.output};
+        if (!output.open()) {
+            std::cerr << "Error opening outputfile: " << _config.output << std::endl;
+            exit(1);
+        }
 
-    // All work done, close output
-    output.close();
-}
+        osm2ttl::ttl::Writer<osm2ttl::ttl::format::QLEVER> writer{_config, &output};
+        writer.writeHeader();
+
+        osm2ttl::osm::OsmiumHandler osmiumHandler{_config, &writer};
+        osmiumHandler.handle();
+
+        // All work done, close output
+        output.close();
+
+        return readTripletsFromOutputFile();
+    }
+
+    // _____________________________________________________________________________________________
+    void Osm2Rdf::writeToInputFile(std::string &data) const {
+        std::ofstream input;
+        input.open(_config.input, std::ofstream::out | std::ofstream::trunc);
+        if (!input) {
+            std::cerr << "Error opening input file: " << _config.input << std::endl;
+            exit(1);
+        }
+
+        input << data;
+        input.close();
+    }
+
+    // _____________________________________________________________________________________________
+    std::string Osm2Rdf::readTripletsFromOutputFile() const {
+        std::ifstream ifs(_config.output);
+        std::string data((std::istreambuf_iterator<char>(ifs)),
+                         (std::istreambuf_iterator<char>()));
+        return data;
+    }
 
 } // namespace olu::osm

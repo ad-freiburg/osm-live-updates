@@ -19,13 +19,23 @@
 #ifndef OSM_LIVE_UPDATES_OSM2RDF_H
 #define OSM_LIVE_UPDATES_OSM2RDF_H
 
+#include <osm2ttl/config/Config.h>
+#include <osm2ttl/util/Output.h>
+
 namespace olu::osm {
 
     class Osm2Rdf {
     public:
         explicit Osm2Rdf();
-    };
 
+        // Converts osm data to ttl triplets
+        std::string convert(std::string& osmData) const;
+    private:
+        osm2ttl::config::Config _config;
+
+        void writeToInputFile(std::string& data) const;
+        std::string readTripletsFromOutputFile() const;
+    };
 } // namespace olu::osm
 
 #endif //OSM_LIVE_UPDATES_OSM2RDF_H
