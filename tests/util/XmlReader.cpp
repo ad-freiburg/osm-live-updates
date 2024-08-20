@@ -17,6 +17,7 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "util/XmlReader.h"
+#include "config/Constants.h"
 #include "gtest/gtest.h"
 
 #include <fstream>
@@ -48,7 +49,7 @@ TEST(XmlReader, readAttribute) {
         olu::util::XmlReader::populatePTreeFromString(content, tree);
 
         std::string attribute = olu::util::XmlReader::readAttribute(
-                "osm.node.<xmlattr>.id",
+                olu::config::constants::ATTRIBUTE_PATH_FOR_NODE_ID,
                 tree);
         ASSERT_EQ(attribute, "1");
 
@@ -85,10 +86,45 @@ TEST(XmlReader, readAttribute) {
         olu::util::XmlReader::populatePTreeFromString(content, tree);
 
         std::string attribute = olu::util::XmlReader::readAttribute(
-                "osm.node.<xmlattr>.notExisting",
+                olu::config::constants::OSM_TAG_NAME + "." +
+                olu::config::constants::NODE_TAG_NAME + "." +
+                olu::config::constants::XML_ATTRIBUTE_TAG_NAME + ".notExisting",
                 tree);
 
         ASSERT_EQ(attribute, "");
+
+        tree.clear();
+    }
+}
+
+
+TEST(XmlReader, readTagOfChildrens) {
+    {
+        // Todo: Read path from environment
+        std::string path = "/src/tests/data/";
+        std::ifstream xmlFile (path + "node.osm");
+        std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
+                             (std::istreambuf_iterator<char>()) );
+
+        pt::ptree tree;
+        olu::util::XmlReader::populatePTreeFromString(content, tree);
+
+        auto childrenTags = olu::util::XmlReader::readTagOfChildrens(
+                olu::config::constants::OSM_TAG_NAME,
+                tree,
+                false);
+
+        ASSERT_EQ(childrenTags.size(), 2);
+        ASSERT_EQ(childrenTags.at(0), olu::config::constants::XML_ATTRIBUTE_TAG_NAME);
+        ASSERT_EQ(childrenTags.at(1), olu::config::constants::NODE_TAG_NAME);
+
+        auto childrenTags2 = olu::util::XmlReader::readTagOfChildrens(
+                olu::config::constants::OSM_TAG_NAME,
+                tree,
+                true);
+
+        ASSERT_EQ(childrenTags2.size(), 1);
+        ASSERT_EQ(childrenTags2.at(0), olu::config::constants::NODE_TAG_NAME);
 
         tree.clear();
     }

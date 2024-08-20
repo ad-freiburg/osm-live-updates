@@ -54,6 +54,12 @@ namespace olu::config::constants {
     const static inline std::string PATH_TO_OUTPUT_FILE = "/output/output.ttl";
     const static inline std::string PATH_TO_SCRATCH_DIRECTORY = "/scratch/";
 
+    // OsmChangeHandler
+    const static inline std::string XML_ATTRIBUTE_TAG_NAME = "<xmlattr>";
+    const static inline std::string NODE_TAG_NAME = "node";
+    const static inline std::string OSM_TAG_NAME = "osm";
+    const static inline std::string ATTRIBUTE_PATH_FOR_NODE_ID = "osm.node." + XML_ATTRIBUTE_TAG_NAME + ".id";
+
     // SPARQL
     const static inline std::string PREFIXES =
         "PREFIX ohmnode: <https://www.openhistoricalmap.org/node/>\n"

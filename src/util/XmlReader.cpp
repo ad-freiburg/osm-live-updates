@@ -17,6 +17,7 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "util/XmlReader.h"
+#include "config/Constants.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
@@ -48,7 +49,7 @@ std::string olu::util::XmlReader::readNodeElement(const std::string& xml) {
     pt::ptree tree;
     populatePTreeFromString(xml, tree);
 
-    auto nodeElement = tree.get_child("osm");
+    auto nodeElement = tree.get_child(olu::config::constants::OSM_TAG_NAME);
     auto nodeElementAsString = writeXmlElementToString(nodeElement);
 
     tree.clear();
@@ -57,6 +58,7 @@ std::string olu::util::XmlReader::readNodeElement(const std::string& xml) {
     return nodeElementAsString;
 }
 
+// _________________________________________________________________________________________________
 std::string olu::util::XmlReader::readAttribute(const std::string& attributePath,
                                                 const boost::property_tree::ptree& tree) {
     std::string attributeValue;
@@ -71,4 +73,22 @@ std::string olu::util::XmlReader::readAttribute(const std::string& attributePath
     }
 
     return attributeValue;
+}
+
+// _________________________________________________________________________________________________
+std::vector<std::string> olu::util::XmlReader::readTagOfChildrens(
+        const std::string &parentPath,
+        const boost::property_tree::ptree &tree,
+        const bool excludeXmlAttr) {
+
+    std::vector<std::string> childrenNames;
+    for (const auto &child : tree.get_child(parentPath)) {
+        if (excludeXmlAttr && child.first == olu::config::constants::XML_ATTRIBUTE_TAG_NAME) {
+            continue;
+        }
+
+        childrenNames.push_back(child.first);
+    }
+
+    return childrenNames;
 }
