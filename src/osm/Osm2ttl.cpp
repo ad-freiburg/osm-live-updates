@@ -21,6 +21,7 @@
 #include "osm2ttl/Version.h"
 #include "osm2ttl/config/ExitCode.h"
 #include "config/Constants.h"
+#include "util/Decompressor.h"
 
 #include <osm2ttl/config/Config.h>
 #include <osm2ttl/util/Output.h>
@@ -41,8 +42,8 @@ namespace olu::osm {
                                                "-o",
                                                olu::config::constants::PATH_TO_OUTPUT_FILE,
                                                "-t",
-                                               olu::config::constants::PATH_TO_SCRATCH_DIRECTORY,
-                                               "--" + osm2ttl::config::constants::OUTPUT_NO_COMPRESS_OPTION_LONG
+                                               olu::config::constants::PATH_TO_SCRATCH_DIRECTORY
+//                                               "--" + osm2ttl::config::constants::OUTPUT_NO_COMPRESS_OPTION_LONG
                                                };
         std::vector<char*> argv;
         for (const auto& arg : arguments) {
@@ -110,10 +111,12 @@ namespace olu::osm {
 
     // _____________________________________________________________________________________________
     std::string Osm2ttl::readTripletsFromOutputFile(const osm2ttl::config::Config& config) {
-        std::ifstream ifs(config.output);
-        std::string data((std::istreambuf_iterator<char>(ifs)),
-                         (std::istreambuf_iterator<char>()));
-        return data;
+//        std::ifstream ifs(config.output);
+//        std::string data((std::istreambuf_iterator<char>(ifs)),
+//                         (std::istreambuf_iterator<char>()));
+
+        std::string dataDecompressed = olu::util::Decompressor::readBzip2(config.output);
+        return dataDecompressed;
     }
 
     template <typename T>

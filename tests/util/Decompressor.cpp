@@ -21,20 +21,49 @@
 #include "util/Decompressor.h"
 
 #include <fstream>
+#include <filesystem>
 
 namespace constants = olu::config::constants;
 namespace olu::util {
 
 // _________________________________________________________________________________________________
-TEST(Decompressor, compressAndDecompress) {
+TEST(Decompressor, decompressGzip) {
+    {
+        std::string nonExistingFilePath= "/src/tests/data/non_existing.bzip2";
+        ASSERT_THROW(Decompressor::readGzip(nonExistingFilePath),
+                     std::filesystem::filesystem_error);
+    }
+
     {
         // Todo: Read path from environment
         std::string result= "/src/tests/data/";
 
         std::string compressedFilePath = result + "427.osc.gz";
-        std::string decompressed = Decompressor::read(compressedFilePath);
+        std::string decompressed = Decompressor::readGzip(compressedFilePath);
 
         std::string uncompressedFilePath = result + "427.osc";
+        std::ifstream t(uncompressedFilePath);
+        std::stringstream buffer;
+        buffer << t.rdbuf();
+        ASSERT_EQ(buffer.str(), decompressed);
+    }
+}
+
+TEST(Decompressor, decompressBzip2) {
+    {
+        std::string nonExistingFilePath= "/src/tests/data/non_existing.bzip2";
+        ASSERT_THROW(Decompressor::readBzip2(nonExistingFilePath),
+                     std::filesystem::filesystem_error);
+    }
+
+    {
+        // Todo: Read path from environment
+        std::string result= "/src/tests/data/";
+
+        std::string compressedFilePath = result + "node.ttl.bz2";
+        std::string decompressed = Decompressor::readBzip2(compressedFilePath);
+
+        std::string uncompressedFilePath = result + "node.ttl";
         std::ifstream t(uncompressedFilePath);
         std::stringstream buffer;
         buffer << t.rdbuf();

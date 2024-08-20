@@ -25,7 +25,8 @@ namespace olu::util {
 
 class Decompressor {
 public:
-    static std::string read(const std::string& path);
+    static std::string readGzip(const std::string& path);
+    static std::string readBzip2(const std::string& path);
 };
 
 } // namespace olu::util

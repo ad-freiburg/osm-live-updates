@@ -22,18 +22,20 @@
 
 namespace olu::osm {
     TEST(Osm2ttl, convertNode) {
-        std::string path = "/src/osm-live-updates/tests/data/";
+        std::string path = "/src/tests/data/";
 
         std::ifstream ifs(path + "node.osm");
         std::string nodeAsOsm((std::istreambuf_iterator<char>(ifs)),
-                         (std::istreambuf_iterator<char>()));
+                              (std::istreambuf_iterator<char>()));
+
+        std::cout << nodeAsOsm << std::endl;
 
         auto osm2rdf = olu::osm::Osm2ttl();
         auto nodeConverted2ttl = osm2rdf.convert(nodeAsOsm);
 
         std::ifstream ifs2(path + "node.ttl");
-        std::string groundTruth((std::istreambuf_iterator<char>(ifs)),
-                              (std::istreambuf_iterator<char>()));
+        std::string groundTruth((std::istreambuf_iterator<char>(ifs2)),
+                                (std::istreambuf_iterator<char>()));
 
         ASSERT_EQ(groundTruth, nodeConverted2ttl);
     }

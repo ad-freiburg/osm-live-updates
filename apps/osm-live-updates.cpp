@@ -17,15 +17,8 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <iostream>
-#include "../include/osm/OsmDataFetcher.h"
-#include "osm/Osm2ttl.h"
-
 #include <string>
 
 int main() {
-    std::string nodeId = "1";
-    auto response = olu::OsmDataFetcher::fetchNode(nodeId);
-//    std::cout << response << std::endl;
-
     return 0;
 }

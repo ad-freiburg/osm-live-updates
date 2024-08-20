@@ -1,3 +1,4 @@
+@prefix osmm: <https://www.openstreetmap.org/meta/> .
 @prefix osmway: <https://www.openstreetmap.org/way/> .
 @prefix osmt: <https://www.openstreetmap.org/wiki/Key:> .
 @prefix osmrel: <https://www.openstreetmap.org/relation/> .
@@ -17,3 +18,6 @@ osmnode:1 osmt:name "Monte Piselli - San Giacomo" .
 osmnode:1 osmt:frequency "105.5 MHz" .
 osmnode:1 osmt:description "Radio Subasio" .
 osmnode:1 osmt:communication:radio "fm" .
+osmnode:1 osmt:man_made "mast" .
+osmnode:1 osmt:communication:microwave "yes" .
+osmnode:1 osmm:facts "9"^^xsd:integer .
