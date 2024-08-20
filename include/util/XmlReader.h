@@ -26,6 +26,7 @@ namespace olu::util {
 
     class XmlReader {
     public:
+        static std::string readAttribute(const std::string& attributePath, const pt::ptree& tree);
         static std::string readNodeElement(const std::string& xml);
         static void populatePTreeFromString(const std::string& xml, pt::ptree& tree);
         static std::string writeXmlElementToString(const pt::ptree& element);

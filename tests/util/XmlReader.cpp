@@ -35,3 +35,61 @@ TEST(XmlReader, readNodeElement) {
         ASSERT_EQ(nodeElement, correctNodeElement);
     }
 }
+
+TEST(XmlReader, readAttribute) {
+    {
+        // Todo: Read path from environment
+        std::string path = "/src/tests/data/";
+        std::ifstream xmlFile (path + "node.osm");
+        std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
+                             (std::istreambuf_iterator<char>()) );
+
+        pt::ptree tree;
+        olu::util::XmlReader::populatePTreeFromString(content, tree);
+
+        std::string attribute = olu::util::XmlReader::readAttribute(
+                "osm.node.<xmlattr>.id",
+                tree);
+        ASSERT_EQ(attribute, "1");
+
+        tree.clear();
+    }
+
+    {
+        // Todo: Read path from environment
+        std::string path = "/src/tests/data/";
+        std::ifstream xmlFile (path + "node.osm");
+        std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
+                             (std::istreambuf_iterator<char>()) );
+
+        pt::ptree tree;
+        olu::util::XmlReader::populatePTreeFromString(content, tree);
+
+        std::string attribute = olu::util::XmlReader::readAttribute(
+                "osm.node.<xmlattr>.notExisting",
+                tree);
+
+        ASSERT_EQ(attribute, "");
+
+        tree.clear();
+    }
+
+    {
+        // Todo: Read path from environment
+        std::string path = "/src/tests/data/";
+        std::ifstream xmlFile (path + "node.osm");
+        std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
+                             (std::istreambuf_iterator<char>()) );
+
+        pt::ptree tree;
+        olu::util::XmlReader::populatePTreeFromString(content, tree);
+
+        std::string attribute = olu::util::XmlReader::readAttribute(
+                "osm.node.<xmlattr>.notExisting",
+                tree);
+
+        ASSERT_EQ(attribute, "");
+
+        tree.clear();
+    }
+}
