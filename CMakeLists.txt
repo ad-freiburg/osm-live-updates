@@ -111,6 +111,15 @@ if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vendor/google/googletest/CMakeLists.
 endif ()
 
 include(FetchContent)
+include(CMakePrintHelpers)
+FetchContent_Declare(popl
+        GIT_REPOSITORY  https://github.com/badaix/popl.git
+        GIT_TAG v1.3.0
+        )
+FetchContent_MakeAvailable(popl)
+include_directories(SYSTEM ${popl_SOURCE_DIR}/include)
+set(POPL_INCLUDE_DIR ${popl_SOURCE_DIR}/include)
+
 FetchContent_Declare(osm2rdf
         GIT_REPOSITORY  https://github.com/ad-freiburg/osm2rdf.git
         GIT_TAG v0.2
@@ -118,8 +127,6 @@ FetchContent_Declare(osm2rdf
 FetchContent_MakeAvailable(osm2rdf)
 include_directories(SYSTEM ${osm2rdf_SOURCE_DIR}/include)
 
-find_package(POPL REQUIRED)
-include_directories(SYSTEM ${POPL_INCLUDE_DIR})
 find_package(Protozero REQUIRED)
 include_directories(SYSTEM ${PROTOZERO_INCLUDE_DIR})
 find_package(Osmium REQUIRED COMPONENTS pbf xml)
