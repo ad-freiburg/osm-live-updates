@@ -77,7 +77,6 @@ std::string HttpRequest::performGet() {
         curl_easy_setopt(_curl, CURLOPT_WRITEFUNCTION, WriteCallback);
         curl_easy_setopt(_curl, CURLOPT_WRITEDATA, &readBuffer);
         _res = curl_easy_perform(_curl);
-        curl_easy_cleanup(_curl);
 
         return readBuffer;
     }
@@ -87,7 +86,6 @@ std::string HttpRequest::performGet() {
 void HttpRequest::performPost() {
     if (_curl) {
         _res = curl_easy_perform(_curl);
-        curl_easy_cleanup(_curl);
     }
 }
 
