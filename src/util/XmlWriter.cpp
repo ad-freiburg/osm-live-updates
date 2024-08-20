@@ -17,15 +17,17 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "util/XmlWriter.h"
+#include "config/Constants.h"
+
 #include <boost/property_tree/ptree.hpp>
 #include <string>
 
 namespace pt = boost::property_tree;
 
 // _________________________________________________________________________________________________
-void olu::util::XmlWriter::addTagToPTree(pt::ptree& element,
-                                         const std::string& key,
-                                         const std::string& value) {
-    element.put("node.tag.<xmlattr>.key", key);
-    element.put("node.tag.<xmlattr>.value", value);
+void olu::util::XmlWriter::addAttributeToElement(pt::ptree &ptree, const std::string &elementPath,
+                                                 const std::string &value, const std::string &key) {
+    std::string path = elementPath + "." + olu::config::constants::XML_ATTRIBUTE_TAG_NAME;
+    ptree.put(path + ".key", key);
+    ptree.put(path + ".value", value);
 }

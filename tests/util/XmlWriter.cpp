@@ -18,12 +18,13 @@
 
 #include "util/XmlWriter.h"
 #include "util/XmlReader.h"
+#include "config/Constants.h"
 #include "gtest/gtest.h"
 
 #include <fstream>
 
 // _________________________________________________________________________________________________
-TEST(XmlWriter, addTagToPTree) {
+TEST(XmlWriter, addAttributeToElement) {
     {
     // Todo: Read path from environment
     std::string path = "/src/tests/data/";
@@ -37,7 +38,8 @@ TEST(XmlWriter, addTagToPTree) {
 
     pt::ptree tree;
     olu::util::XmlReader::populatePTreeFromString(content, tree);
-    olu::util::XmlWriter::addTagToPTree(tree, "key", "value");
+    std::string elementPath = olu::config::constants::NODE_TAG_NAME + "." + olu::config::constants::TAG_TAG_NAME;
+    olu::util::XmlWriter::addAttributeToElement(tree, elementPath, "value", "key");
     std::string nodeElement = olu::util::XmlReader::writeXmlElementToString(tree);
     ASSERT_EQ(nodeElement, correctNodeElement);
 

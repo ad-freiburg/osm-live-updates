@@ -26,9 +26,8 @@ namespace olu::util {
 
     class XmlWriter {
     public:
-        static void addTagToPTree(pt::ptree& element,
-                                  const std::string& key,
-                                  const std::string& value);
+        static void addAttributeToElement(pt::ptree &ptree, const std::string &elementPath,
+                                          const std::string &value, const std::string &key);
     };
 
 } // namespace  olu::util

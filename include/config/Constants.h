@@ -57,6 +57,7 @@ namespace olu::config::constants {
     // OsmChangeHandler
     const static inline std::string XML_ATTRIBUTE_TAG_NAME = "<xmlattr>";
     const static inline std::string NODE_TAG_NAME = "node";
+    const static inline std::string TAG_TAG_NAME = "tag";
     const static inline std::string OSM_TAG_NAME = "osm";
     const static inline std::string ATTRIBUTE_PATH_FOR_NODE_ID = "osm.node." + XML_ATTRIBUTE_TAG_NAME + ".id";
 
