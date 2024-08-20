@@ -1,0 +1,19 @@
+@prefix osmway: <https://www.openstreetmap.org/way/> .
+@prefix osmt: <https://www.openstreetmap.org/wiki/Key:> .
+@prefix osmrel: <https://www.openstreetmap.org/relation/> .
+@prefix osmnode: <https://www.openstreetmap.org/node/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix osm: <https://www.openstreetmap.org/> .
+@prefix ogc: <http://www.opengis.net/rdf#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix wd: <http://www.wikidata.org/entity/> .
+@prefix geo: <http://www.opengis.net/ont/geosparql#> .
+osmnode:1 rdf:type osm:node .
+osmnode:1 geo:hasGeometry "POINT(13.5690032 42.7957187)"^^geo:wktLiteral .
+osmnode:1 osmt:tower:type "communication" .
+osmnode:1 osmt:tower:construction "lattice" .
+osmnode:1 osmt:note "This is the very first node on OpenStreetMap." .
+osmnode:1 osmt:name "Monte Piselli - San Giacomo" .
+osmnode:1 osmt:frequency "105.5 MHz" .
+osmnode:1 osmt:description "Radio Subasio" .
+osmnode:1 osmt:communication:radio "fm" .

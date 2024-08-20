@@ -26,7 +26,7 @@
 TEST(XmlWriter, addTagToPTree) {
     {
     // Todo: Read path from environment
-    std::string path = "/Users/nicolasvontrott/Documents/Masterproject/osm-live-updates/tests/data/";
+    std::string path = "/src/tests/data/";
     std::ifstream file1 (path + "empty_node.osm");
     std::string content( (std::istreambuf_iterator<char>(file1) ),
                          (std::istreambuf_iterator<char>()) );

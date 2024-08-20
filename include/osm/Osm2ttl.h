@@ -16,15 +16,15 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef OSM_LIVE_UPDATES_OSM2RDF_H
-#define OSM_LIVE_UPDATES_OSM2RDF_H
+#ifndef OSM_LIVE_UPDATES_OSM2TTL_H
+#define OSM_LIVE_UPDATES_OSM2TTL_H
 
 #include <osm2ttl/config/Config.h>
 #include <osm2ttl/util/Output.h>
 
 namespace olu::osm {
 
-    class Osm2Rdf {
+    class Osm2ttl {
     public:
         // Converts osm data to ttl triplets
         std::string convert(std::string& osmData);
@@ -34,6 +34,7 @@ namespace olu::osm {
         static void writeToInputFile(std::string& data) ;
         [[nodiscard]] static std::string readTripletsFromOutputFile(const osm2ttl::config::Config& config) ;
     };
+
 } // namespace olu::osm
 
-#endif //OSM_LIVE_UPDATES_OSM2RDF_H
+#endif //OSM_LIVE_UPDATES_OSM2TTL_H

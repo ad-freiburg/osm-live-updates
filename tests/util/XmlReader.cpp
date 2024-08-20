@@ -25,7 +25,7 @@
 TEST(XmlReader, readNodeElement) {
     {
         // Todo: Read path from environment
-        std::string path = "/Users/nicolasvontrott/Documents/Masterproject/osm-live-updates/tests/data/";
+        std::string path = "/src/tests/data/";
         std::ifstream xmlFile (path + "node.osm");
         std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
                              (std::istreambuf_iterator<char>()) );

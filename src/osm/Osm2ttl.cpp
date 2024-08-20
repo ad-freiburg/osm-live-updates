@@ -16,10 +16,9 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "osm/Osm2Rdf.h"
+#include "osm/Osm2ttl.h"
 #include "osm2ttl/util/Time.h"
 #include "osm2ttl/Version.h"
-#include "osm2ttl/util/Ram.h"
 #include "osm2ttl/config/ExitCode.h"
 #include "config/Constants.h"
 
@@ -33,7 +32,7 @@
 namespace olu::osm {
 
     // _____________________________________________________________________________________________
-    std::string Osm2Rdf::convert(std::string& osmData) {
+    std::string Osm2ttl::convert(std::string& osmData) {
         writeToInputFile(osmData);
 
         auto config = osm2ttl::config::Config();
@@ -42,7 +41,9 @@ namespace olu::osm {
                                                "-o",
                                                olu::config::constants::PATH_TO_OUTPUT_FILE,
                                                "-t",
-                                               olu::config::constants::PATH_TO_SCRATCH_DIRECTORY };
+                                               olu::config::constants::PATH_TO_SCRATCH_DIRECTORY,
+                                               "--" + osm2ttl::config::constants::OUTPUT_NO_COMPRESS_OPTION_LONG
+                                               };
         std::vector<char*> argv;
         for (const auto& arg : arguments) {
             argv.push_back((char*)arg.data());
@@ -95,7 +96,7 @@ namespace olu::osm {
     }
 
     // _____________________________________________________________________________________________
-    void Osm2Rdf::writeToInputFile(std::string &data) {
+    void Osm2ttl::writeToInputFile(std::string &data) {
         std::ofstream input;
         input.open(olu::config::constants::PATH_TO_INPUT_FILE);
         if (!input) {
@@ -108,7 +109,7 @@ namespace olu::osm {
     }
 
     // _____________________________________________________________________________________________
-    std::string Osm2Rdf::readTripletsFromOutputFile(const osm2ttl::config::Config& config) {
+    std::string Osm2ttl::readTripletsFromOutputFile(const osm2ttl::config::Config& config) {
         std::ifstream ifs(config.output);
         std::string data((std::istreambuf_iterator<char>(ifs)),
                          (std::istreambuf_iterator<char>()));
@@ -116,7 +117,7 @@ namespace olu::osm {
     }
 
     template <typename T>
-    void Osm2Rdf::run(const osm2ttl::config::Config &config) const {
+    void Osm2ttl::run(const osm2ttl::config::Config &config) const {
         // Setup
         // Input file reference
         osm2ttl::util::Output output{config, config.output};

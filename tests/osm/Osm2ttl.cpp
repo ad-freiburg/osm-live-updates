@@ -16,16 +16,25 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <iostream>
-#include "../include/osm/OsmDataFetcher.h"
 #include "osm/Osm2ttl.h"
+#include "config/Constants.h"
+#include "gtest/gtest.h"
 
-#include <string>
+namespace olu::osm {
+    TEST(Osm2ttl, convertNode) {
+        std::string path = "/src/osm-live-updates/tests/data/";
 
-int main() {
-    std::string nodeId = "1";
-    auto response = olu::OsmDataFetcher::fetchNode(nodeId);
-//    std::cout << response << std::endl;
+        std::ifstream ifs(path + "node.osm");
+        std::string nodeAsOsm((std::istreambuf_iterator<char>(ifs)),
+                         (std::istreambuf_iterator<char>()));
 
-    return 0;
-}
+        auto osm2rdf = olu::osm::Osm2ttl();
+        auto nodeConverted2ttl = osm2rdf.convert(nodeAsOsm);
+
+        std::ifstream ifs2(path + "node.ttl");
+        std::string groundTruth((std::istreambuf_iterator<char>(ifs)),
+                              (std::istreambuf_iterator<char>()));
+
+        ASSERT_EQ(groundTruth, nodeConverted2ttl);
+    }
+} // namespace olu::osm

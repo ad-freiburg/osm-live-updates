@@ -24,7 +24,7 @@ file(GLOB_RECURSE CPP_LIST CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/*.cpp")
 add_library(olu_library ${CPP_LIST} ${HEADER_LIST})
 
 ## Add gtest header for FRIEND_TEST
-#target_include_directories(olu_library PUBLIC "${CMAKE_CURRENT_LIST_DIR}/../vendor/google/googletest/googletest/include")
+target_include_directories(olu_library PUBLIC "${CMAKE_CURRENT_LIST_DIR}/../vendor/google/googletest/googletest/include")
 
 # We need this directory, and users of our library will need it too
 target_include_directories(olu_library PUBLIC "${CMAKE_CURRENT_LIST_DIR}/../include")

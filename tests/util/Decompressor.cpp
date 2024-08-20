@@ -29,7 +29,7 @@ namespace olu::util {
 TEST(Decompressor, compressAndDecompress) {
     {
         // Todo: Read path from environment
-        std::string result= "/Users/nicolasvontrott/Documents/Masterproject/osm-live-updates/tests/data/";
+        std::string result= "/src/tests/data/";
 
         std::string compressedFilePath = result + "427.osc.gz";
         std::string decompressed = Decompressor::read(compressedFilePath);
