@@ -28,8 +28,6 @@ namespace olu::osm {
         std::string nodeAsOsm((std::istreambuf_iterator<char>(ifs)),
                               (std::istreambuf_iterator<char>()));
 
-        std::cout << nodeAsOsm << std::endl;
-
         auto osm2rdf = olu::osm::Osm2ttl();
         auto nodeConverted2ttl = osm2rdf.convert(nodeAsOsm);
 
