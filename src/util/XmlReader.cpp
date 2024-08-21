@@ -83,7 +83,7 @@ std::vector<std::string> olu::util::XmlReader::readTagOfChildrens(
 
     std::vector<std::string> childrenNames;
     for (const auto &child : tree.get_child(parentPath)) {
-        if (excludeXmlAttr && child.first == olu::config::constants::XML_ATTRIBUTE_TAG_NAME) {
+        if (excludeXmlAttr && child.first == olu::config::constants::XML_ATTRIBUTE_TAG) {
             continue;
         }
 

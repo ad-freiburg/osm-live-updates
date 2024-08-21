@@ -87,8 +87,8 @@ TEST(XmlReader, readAttribute) {
 
         std::string attribute = olu::util::XmlReader::readAttribute(
                 olu::config::constants::OSM_TAG_NAME + "." +
-                olu::config::constants::NODE_TAG_NAME + "." +
-                olu::config::constants::XML_ATTRIBUTE_TAG_NAME + ".notExisting",
+                olu::config::constants::NODE_TAG + "." +
+                olu::config::constants::XML_ATTRIBUTE_TAG + ".notExisting",
                 tree);
 
         ASSERT_EQ(attribute, "");
@@ -115,8 +115,8 @@ TEST(XmlReader, readTagOfChildrens) {
                 false);
 
         ASSERT_EQ(childrenTags.size(), 2);
-        ASSERT_EQ(childrenTags.at(0), olu::config::constants::XML_ATTRIBUTE_TAG_NAME);
-        ASSERT_EQ(childrenTags.at(1), olu::config::constants::NODE_TAG_NAME);
+        ASSERT_EQ(childrenTags.at(0), olu::config::constants::XML_ATTRIBUTE_TAG);
+        ASSERT_EQ(childrenTags.at(1), olu::config::constants::NODE_TAG);
 
         auto childrenTags2 = olu::util::XmlReader::readTagOfChildrens(
                 olu::config::constants::OSM_TAG_NAME,
@@ -124,7 +124,7 @@ TEST(XmlReader, readTagOfChildrens) {
                 true);
 
         ASSERT_EQ(childrenTags2.size(), 1);
-        ASSERT_EQ(childrenTags2.at(0), olu::config::constants::NODE_TAG_NAME);
+        ASSERT_EQ(childrenTags2.at(0), olu::config::constants::NODE_TAG);
 
         tree.clear();
     }

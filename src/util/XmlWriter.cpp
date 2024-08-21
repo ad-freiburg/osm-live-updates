@@ -27,7 +27,7 @@ namespace pt = boost::property_tree;
 // _________________________________________________________________________________________________
 void olu::util::XmlWriter::addAttributeToElement(pt::ptree &ptree, const std::string &elementPath,
                                                  const std::string &value, const std::string &key) {
-    std::string path = elementPath + "." + olu::config::constants::XML_ATTRIBUTE_TAG_NAME;
+    std::string path = elementPath + "." + olu::config::constants::XML_ATTRIBUTE_TAG;
     ptree.put(path + ".key", key);
     ptree.put(path + ".value", value);
 }
