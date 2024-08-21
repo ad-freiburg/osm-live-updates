@@ -25,16 +25,22 @@ namespace olu::osm {
         std::string path = "/src/tests/data/";
 
         std::ifstream ifs(path + "node.osm");
-        std::string nodeAsOsm((std::istreambuf_iterator<char>(ifs)),
+        std::string nodeElement((std::istreambuf_iterator<char>(ifs)),
                               (std::istreambuf_iterator<char>()));
+        std::vector<std::string> elements;
+        elements.push_back(nodeElement);
 
         auto osm2rdf = olu::osm::Osm2ttl();
-        auto nodeConverted2ttl = osm2rdf.convert(nodeAsOsm);
+        auto result = osm2rdf.convert(elements);
+        std::string resultAsString;
+        for (auto & element : result) {
+            resultAsString += element + "\n";
+        }
 
         std::ifstream ifs2(path + "node.ttl");
         std::string groundTruth((std::istreambuf_iterator<char>(ifs2)),
                                 (std::istreambuf_iterator<char>()));
 
-        ASSERT_EQ(groundTruth, nodeConverted2ttl);
+        ASSERT_EQ(groundTruth, resultAsString);
     }
 } // namespace olu::osm

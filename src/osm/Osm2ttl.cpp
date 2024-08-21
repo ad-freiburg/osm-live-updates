@@ -33,7 +33,7 @@
 namespace olu::osm {
 
     // _____________________________________________________________________________________________
-    std::string Osm2ttl::convert(std::string& osmData) {
+    std::vector<std::string> Osm2ttl::convert(std::vector<std::string> &osmData) {
         writeToInputFile(osmData);
 
         auto config = osm2ttl::config::Config();
@@ -97,7 +97,7 @@ namespace olu::osm {
     }
 
     // _____________________________________________________________________________________________
-    void Osm2ttl::writeToInputFile(std::string &data) {
+    void Osm2ttl::writeToInputFile(std::vector<std::string> &osmElements) {
         std::ofstream input;
         input.open(olu::config::constants::PATH_TO_INPUT_FILE);
         if (!input) {
@@ -105,18 +105,50 @@ namespace olu::osm {
             exit(1);
         }
 
-        input << data;
+        for (auto & element : osmElements) {
+            input << element;
+        }
+
         input.close();
     }
 
     // _____________________________________________________________________________________________
-    std::string Osm2ttl::readTripletsFromOutputFile(const osm2ttl::config::Config& config) {
+    std::vector<std::string> Osm2ttl::readTripletsFromOutputFile(const osm2ttl::config::Config& config) {
 //        std::ifstream ifs(config.output);
 //        std::string data((std::istreambuf_iterator<char>(ifs)),
 //                         (std::istreambuf_iterator<char>()));
 
         std::string dataDecompressed = olu::util::Decompressor::readBzip2(config.output);
-        return dataDecompressed;
+        std::vector<std::string> triplets;
+
+        std::istringstream iss(dataDecompressed);
+        for (std::string line; std::getline(iss, line); )
+        {
+            triplets.push_back(line);
+        }
+
+        return triplets;
+    }
+
+    // _____________________________________________________________________________________________
+    std::string Osm2ttl::removePrefixes(const std::string &data) {
+        std::string result;
+        std::istringstream stream(data);
+        std::string line;
+
+        // Process each line
+        while (std::getline(stream, line)) {
+            if (line.empty() || line[0] != '@') {
+                result += line + "\n";
+            }
+        }
+
+        // Remove the trailing newline character if needed
+        if (!result.empty() && result.back() == '\n') {
+            result.pop_back();
+        }
+
+        return result;
     }
 
     template <typename T>

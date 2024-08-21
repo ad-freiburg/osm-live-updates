@@ -27,12 +27,13 @@ namespace olu::osm {
     class Osm2ttl {
     public:
         // Converts osm data to ttl triplets
-        std::string convert(std::string& osmData);
+        std::vector<std::string> convert(std::vector<std::string> &osmData);
     private:
         template <typename T>
         void run(const osm2ttl::config::Config& config) const;
-        static void writeToInputFile(std::string& data) ;
-        [[nodiscard]] static std::string readTripletsFromOutputFile(const osm2ttl::config::Config& config) ;
+        static void writeToInputFile(std::vector<std::string> &osmElements);
+        static std::string removePrefixes(const std::string& data);
+        [[nodiscard]] static std::vector<std::string> readTripletsFromOutputFile(const osm2ttl::config::Config& config) ;
     };
 
 } // namespace olu::osm
