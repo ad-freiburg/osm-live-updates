@@ -23,6 +23,7 @@
 #include "util/CacheFile.h"
 
 #include <string>
+#include <boost/property_tree/ptree.hpp>
 
 namespace olu {
 
@@ -37,7 +38,10 @@ public:
     // path to the file
     std::string fetchDiffWithSequenceNumber(std::string& sequenceNumber);
 
-    static std::string fetchNode(std::string& nodeId);
+    // Fetches all nodes that are referenced in the given way element
+    static std::vector<std::string> fetchNodeReferencesForWay(const boost::property_tree::ptree& way);
+
+    static std::string fetchNode(std::string &nodeId, bool extractNodeElement = false);
 private:
     OsmDiffGranularity _diffGranularity;
 protected:

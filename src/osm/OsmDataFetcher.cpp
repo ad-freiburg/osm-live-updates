@@ -20,6 +20,7 @@
 #include "config/Constants.h"
 #include "util/URLHelper.h"
 #include "util/HttpRequest.h"
+#include "util/XmlReader.h"
 
 #include <string>
 #include <vector>
@@ -79,7 +80,7 @@ std::string OsmDataFetcher::fetchDiffWithSequenceNumber(std::string &sequenceNum
 }
 
 // _________________________________________________________________________________________________
-std::string OsmDataFetcher::fetchNode(std::string &nodeId) {
+    std::string OsmDataFetcher::fetchNode(std::string &nodeId, bool extractNodeElement) {
     std::vector<std::string> pathSegments;
     pathSegments.emplace_back(constants::OSM_NODE_BASE_URL);
     pathSegments.emplace_back(nodeId);
@@ -88,7 +89,37 @@ std::string OsmDataFetcher::fetchNode(std::string &nodeId) {
     auto request = util::HttpRequest(util::GET, url);
     std::string response = request.perform();
 
+    if (extractNodeElement) {
+        auto nodeElement = util::XmlReader::readNodeElement(response);
+        return nodeElement;
+    }
+
     return response;
+}
+
+// _________________________________________________________________________________________________
+    std::vector<std::string> OsmDataFetcher::fetchNodeReferencesForWay(const boost::property_tree::ptree &way) {
+    std::vector<std::string> referencedNodes;
+    std::set<std::string> visitedNodes;
+
+    for (const auto &child : way.get_child("")) {
+        if (child.first != olu::config::constants::NODE_REFERENCE_TAG) {
+            continue;
+        }
+
+        auto identifier = util::XmlReader::readAttribute(
+                constants::REFERENCE_ATTRIBUTE,
+                way);
+
+        if (!visitedNodes.contains(identifier)) {
+            visitedNodes.insert(identifier);
+
+            auto nodeElement = fetchNode(identifier, true);
+            referencedNodes.push_back(nodeElement);
+        }
+    }
+
+    return referencedNodes;
 }
 
 } // namespace olu
