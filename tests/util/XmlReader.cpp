@@ -86,7 +86,7 @@ TEST(XmlReader, readAttribute) {
         olu::util::XmlReader::populatePTreeFromString(content, tree);
 
         std::string attribute = olu::util::XmlReader::readAttribute(
-                olu::config::constants::OSM_TAG_NAME + "." +
+                olu::config::constants::OSM_TAG + "." +
                 olu::config::constants::NODE_TAG + "." +
                 olu::config::constants::XML_ATTRIBUTE_TAG + ".notExisting",
                 tree);
@@ -98,7 +98,7 @@ TEST(XmlReader, readAttribute) {
 }
 
 
-TEST(XmlReader, readTagOfChildrens) {
+TEST(XmlReader, readTagOfChildren) {
     {
         // Todo: Read path from environment
         std::string path = "/src/tests/data/";
@@ -109,8 +109,8 @@ TEST(XmlReader, readTagOfChildrens) {
         pt::ptree tree;
         olu::util::XmlReader::populatePTreeFromString(content, tree);
 
-        auto childrenTags = olu::util::XmlReader::readTagOfChildrens(
-                olu::config::constants::OSM_TAG_NAME,
+        auto childrenTags = olu::util::XmlReader::readTagOfChildren(
+                olu::config::constants::OSM_TAG,
                 tree,
                 false);
 
@@ -118,8 +118,8 @@ TEST(XmlReader, readTagOfChildrens) {
         ASSERT_EQ(childrenTags.at(0), olu::config::constants::XML_ATTRIBUTE_TAG);
         ASSERT_EQ(childrenTags.at(1), olu::config::constants::NODE_TAG);
 
-        auto childrenTags2 = olu::util::XmlReader::readTagOfChildrens(
-                olu::config::constants::OSM_TAG_NAME,
+        auto childrenTags2 = olu::util::XmlReader::readTagOfChildren(
+                olu::config::constants::OSM_TAG,
                 tree,
                 true);
 

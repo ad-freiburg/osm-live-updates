@@ -57,22 +57,24 @@ namespace olu::config::constants {
     // OsmChangeHandler
     const static inline std::string XML_ATTRIBUTE_TAG = "<xmlattr>";
     const static inline std::string NODE_TAG = "node";
+    const static inline std::string NODE_REFERENCE_TAG = "nd";
     const static inline std::string WAY_TAG = "way";
     const static inline std::string RELATION_TAG = "relation";
-    const static inline std::string TAG_TAG_NAME = "tag";
-    const static inline std::string OSM_TAG_NAME = "osm";
-    const static inline std::string ID_TAG_NAME = "id";
+    const static inline std::string OSM_TAG = "osm";
 
     const static inline std::string NODE_SUBJECT = "osmnode";
     const static inline std::string WAY_SUBJECT = "osmway";
     const static inline std::string RELATION_SUBJECT = "osmrel";
 
+    const static inline std::string REFERENCE_ATTRIBUTE = "osmrel";
+    const static inline std::string ID_ATTRIBUTE = "id";
+
     const static inline std::string ATTRIBUTE_PATH_FOR_NODE_ID =
-            OSM_TAG_NAME + "." + NODE_TAG + "." + XML_ATTRIBUTE_TAG + "." + ID_TAG_NAME;
+            OSM_TAG + "." + NODE_TAG + "." + XML_ATTRIBUTE_TAG + "." + ID_ATTRIBUTE;
     const static inline std::string ATTRIBUTE_PATH_FOR_WAY_ID =
-            OSM_TAG_NAME + "." + WAY_TAG + "." + XML_ATTRIBUTE_TAG + "." + ID_TAG_NAME;
+            OSM_TAG + "." + WAY_TAG + "." + XML_ATTRIBUTE_TAG + "." + ID_ATTRIBUTE;
     const static inline std::string ATTRIBUTE_PATH_FOR_RELATION_ID =
-            OSM_TAG_NAME + "." + RELATION_TAG + "." + XML_ATTRIBUTE_TAG + "." + ID_TAG_NAME;
+            OSM_TAG + "." + RELATION_TAG + "." + XML_ATTRIBUTE_TAG + "." + ID_ATTRIBUTE;
 
     // SPARQL
     const static inline std::string PREFIXES =

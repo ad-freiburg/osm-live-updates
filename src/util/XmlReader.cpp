@@ -49,7 +49,7 @@ std::string olu::util::XmlReader::readNodeElement(const std::string& xml) {
     pt::ptree tree;
     populatePTreeFromString(xml, tree);
 
-    auto nodeElement = tree.get_child(olu::config::constants::OSM_TAG_NAME);
+    auto nodeElement = tree.get_child(olu::config::constants::OSM_TAG);
     auto nodeElementAsString = writeXmlElementToString(nodeElement);
 
     tree.clear();
@@ -76,7 +76,7 @@ std::string olu::util::XmlReader::readAttribute(const std::string& attributePath
 }
 
 // _________________________________________________________________________________________________
-std::vector<std::string> olu::util::XmlReader::readTagOfChildrens(
+std::vector<std::string> olu::util::XmlReader::readTagOfChildren(
         const std::string &parentPath,
         const boost::property_tree::ptree &tree,
         const bool excludeXmlAttr) {
