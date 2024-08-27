@@ -108,8 +108,8 @@ std::string OsmDataFetcher::fetchDiffWithSequenceNumber(std::string &sequenceNum
         }
 
         auto identifier = util::XmlReader::readAttribute(
-                constants::REFERENCE_ATTRIBUTE,
-                way);
+                constants::NODE_REFERENCE_ATTRIBUTE,
+                child.second);
 
         if (!visitedNodes.contains(identifier)) {
             visitedNodes.insert(identifier);
