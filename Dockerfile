@@ -20,7 +20,7 @@ FROM ubuntu:20.04
 LABEL authors="nicolasvontrott"
 LABEL Description="Build environment"
 
-ENV HOME /root
+ENV HOME=/root
 ENV TZ=Europe/Berlin
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -53,3 +53,7 @@ RUN cd ${HOME} && \
   wget -P /usr/local/share/ca-certificates/cacert.org http://www.cacert.org/certs/root.crt http://www.cacert.org/certs/class3.crt \
   update-ca-certificates \
   git config --global http.sslCAinfo /etc/ssl/certs/ca-certificates.crt
+
+RUN mkdir input \
+    mkdir output \
+    mkdir scratch
