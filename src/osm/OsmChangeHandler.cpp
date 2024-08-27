@@ -30,27 +30,48 @@
 #include <string>
 
 namespace olu::osm {
-    OsmChangeHandler::OsmChangeHandler(std::string &sparqlEndpointUri):
-        _sparql(sparql::SparqlWrapper(sparqlEndpointUri))  {
+    OsmChangeHandler::OsmChangeHandler(std::string &sparqlEndpointUri) {
         _osm2ttl = Osm2ttl();
+//        _sparql.setEndpointUri(sparqlEndpointUri);
     }
 
-    void olu::osm::OsmChangeHandler::handleInsert(const boost::property_tree::ptree &element) {
-        // Check if the element has at least one tag. If not return without doing anything.
-        auto childrenTags = olu::util::XmlReader::readTagOfChildren(
-                config::constants::OSM_TAG,
-                element);
-        if (childrenTags.empty()) {
+    void OsmChangeHandler::handleChange(const std::string &pathToOsmChangeFile) {
+        std::ifstream ifs (pathToOsmChangeFile);
+        std::string fileContent( (std::istreambuf_iterator<char>(ifs) ),
+                                 (std::istreambuf_iterator<char>()) );
+
+        boost::property_tree::ptree osmChange;
+        olu::util::XmlReader::populatePTreeFromString(fileContent, osmChange);
+
+        for (const auto &child : osmChange.get_child(config::constants::OSM_CHANGE_TAG)) {
+            boost::property_tree::ptree childTree = child.second;
+            if (child.first == config::constants::MODIFY_TAG) {
+                for (const auto &element : childTree) {
+//                    handleModify(element.first, element.second);
+                }
+            } else if (child.first == config::constants::CREATE_TAG) {
+                for (const auto &element : childTree) {
+                    boost::property_tree::ptree elementTree = element.second;
+                    handleInsert(element.first, element.second);
+                }
+            } else if (child.first == config::constants::DELETE_TAG) {
+                for (const auto &element : childTree) {
+//                    handleDelete(element.first, element.second);
+                }
+            }
+        }
+    }
+
+    void olu::osm::OsmChangeHandler::handleInsert(const std::string& elementTag,
+                                                  const boost::property_tree::ptree &element) {
+        // Elements without a tag are not converted to ttl
+        if (olu::util::XmlReader::readTagOfChildren("", element).empty()) {
             return;
         }
-        auto elementTag = childrenTags.front();
 
-        std::vector<std::string> osmElements;
-        if (elementTag == config::constants::WAY_TAG) {
-            osmElements = olu::OsmDataFetcher::fetchNodeReferencesForWay(element);
-        }
-
-        osmElements.push_back(olu::util::XmlReader::writeXmlElementToString(element));
+        auto osmElements = getOsmElementsForInsert(elementTag, element);
+        for (std::string i: osmElements)
+            std::cout << i << ' ';
         auto ttl = _osm2ttl.convert(osmElements);
         auto query = sparql::QueryWriter::writeInsertQuery(ttl);
         _sparql.setQuery(query);
@@ -58,54 +79,37 @@ namespace olu::osm {
         _sparql.runQuery();
     }
 
-    void OsmChangeHandler::handleDelete(const boost::property_tree::ptree &element) {
-        auto subject = getSubjectFor(element);
+    void OsmChangeHandler::handleDelete(const std::string& elementTag,
+                                        const boost::property_tree::ptree &element) {
+        auto subject = olu::sparql::QueryWriter::getSubjectFor(elementTag, element);
         auto query = sparql::QueryWriter::writeDeleteQuery(subject);
         _sparql.setQuery(query);
         _sparql.setMethod(util::POST);
         _sparql.runQuery();
     }
 
-    void OsmChangeHandler::handleModify(const boost::property_tree::ptree &element) {
-        handleDelete(element);
-        handleInsert(element);
+    void OsmChangeHandler::handleModify(const std::string& elementTag,
+                                        const boost::property_tree::ptree &element) {
+        handleDelete(elementTag, element);
+        handleInsert(elementTag, element);
     }
 
-    std::string OsmChangeHandler::getSubjectFor(const boost::property_tree::ptree &element) {
-        auto childrenTags = olu::util::XmlReader::readTagOfChildren(
-                config::constants::OSM_TAG,
-                element);
-        if (childrenTags.size() != 1) {
-            std::cerr << "Element should not contain more or less than one children" << std::endl;
-        }
-
-        auto elementTag = childrenTags.front();
-
-        std::string identifier;
-        if (elementTag == config::constants::NODE_TAG) {
-            identifier = olu::util::XmlReader::readAttribute(
-                    olu::config::constants::ATTRIBUTE_PATH_FOR_NODE_ID,
-                    element);
-            return config::constants::NODE_SUBJECT + ":" + identifier;
-        }
-
+    std::vector<std::string> OsmChangeHandler::getOsmElementsForInsert(
+            const std::string &elementTag,
+            const boost::property_tree::ptree &element) {
+        std::vector<std::string> osmElements;
+        osmElements.push_back(config::constants::OSM_XML_NODE_START);
         if (elementTag == config::constants::WAY_TAG) {
-            identifier = olu::util::XmlReader::readAttribute(
-                    olu::config::constants::ATTRIBUTE_PATH_FOR_WAY_ID,
-                    element);
-            return config::constants::WAY_SUBJECT + ":" + identifier;
+            auto nodeReferenceElements = olu::OsmDataFetcher::fetchNodeReferencesForWay(element);
+            osmElements.insert(
+                osmElements.end(),
+                std::make_move_iterator(nodeReferenceElements.begin()),
+                std::make_move_iterator(nodeReferenceElements.end())
+            );
         }
-
-        if (elementTag == config::constants::RELATION_TAG) {
-            identifier = olu::util::XmlReader::readAttribute(
-                    olu::config::constants::ATTRIBUTE_PATH_FOR_RELATION_ID,
-                    element);
-            return config::constants::RELATION_SUBJECT + ":" + identifier;
-        }
-
-        throw OsmChangeHandlerException(
-                ("Could not determine subject for element: " +
-                util::XmlReader::writeXmlElementToString(element)).c_str());
+        osmElements.push_back(olu::util::XmlReader::readTree(element, {elementTag}, 0));
+        osmElements.push_back(config::constants::OSM_XML_NODE_END);
+        return osmElements;
     }
 
 } // namespace olu::osm

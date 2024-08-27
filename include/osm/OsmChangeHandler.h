@@ -31,15 +31,22 @@ namespace olu::osm {
     public:
         explicit OsmChangeHandler(std::string& sparqlEndpointUri);
 
-        void handleInsert(const pt::ptree& element);
-        void handleDelete(const pt::ptree& element);
-        void handleModify(const pt::ptree& element);
+        void handleChange(const std::string& pathToOsmChangeFile);
 
     private:
-        sparql::SparqlWrapper _sparql;
+        sparql::SparqlWrapper _sparql = sparql::SparqlWrapper();
         olu::osm::Osm2ttl _osm2ttl;
 
-        static std::string getSubjectFor(const boost::property_tree::ptree &element);
+        void handleInsert(const std::string& elementTag, const pt::ptree& element);
+        void handleDelete(const std::string& elementTag, const pt::ptree& element);
+        void handleModify(const std::string& elementTag, const pt::ptree& element);
+
+        // Populates a vector with all osm elements needed for conversion to ttl format, which
+        // includes all nodes that are referenced in an 'way' element
+        // The osm element is also embedded in the following xml element
+        // <osm version="0.6">...</osm>
+        static std::vector<std::string> getOsmElementsForInsert(const std::string& elementTag,
+                                                                const pt::ptree& element);
     };
 } // namespace olu::osm
 
