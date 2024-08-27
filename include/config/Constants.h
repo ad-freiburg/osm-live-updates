@@ -78,11 +78,11 @@ namespace olu::config::constants {
     const static inline std::string ID_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "id";
 
     const static inline std::string ATTRIBUTE_PATH_FOR_NODE_ID =
-            OSM_TAG + "." + NODE_TAG + "." + XML_ATTRIBUTE_TAG + "." + ID_ATTRIBUTE;
+            OSM_TAG + "." + NODE_TAG + "." + ID_ATTRIBUTE;
     const static inline std::string ATTRIBUTE_PATH_FOR_WAY_ID =
-            OSM_TAG + "." + WAY_TAG + "." + XML_ATTRIBUTE_TAG + "." + ID_ATTRIBUTE;
+            OSM_TAG + "." + WAY_TAG + "." + ID_ATTRIBUTE;
     const static inline std::string ATTRIBUTE_PATH_FOR_RELATION_ID =
-            OSM_TAG + "." + RELATION_TAG + "." + XML_ATTRIBUTE_TAG + "." + ID_ATTRIBUTE;
+            OSM_TAG + "." + RELATION_TAG + "." + ID_ATTRIBUTE;
 
     // SPARQL
     const static inline std::string PREFIXES =
