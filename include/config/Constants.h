@@ -61,13 +61,21 @@ namespace olu::config::constants {
     const static inline std::string WAY_TAG = "way";
     const static inline std::string RELATION_TAG = "relation";
     const static inline std::string OSM_TAG = "osm";
+    const static inline std::string OSM_CHANGE_TAG = "osmChange";
+
+    const static inline std::string MODIFY_TAG = "modify";
+    const static inline std::string DELETE_TAG = "delete";
+    const static inline std::string CREATE_TAG = "create";
+
+    const static inline std::string OSM_XML_NODE_START = "<osm version=\"0.6\">";
+    const static inline std::string OSM_XML_NODE_END = "</osm>";
 
     const static inline std::string NODE_SUBJECT = "osmnode";
     const static inline std::string WAY_SUBJECT = "osmway";
     const static inline std::string RELATION_SUBJECT = "osmrel";
 
-    const static inline std::string REFERENCE_ATTRIBUTE = "osmrel";
-    const static inline std::string ID_ATTRIBUTE = "id";
+    const static inline std::string REFERENCE_ATTRIBUTE = "ref";
+    const static inline std::string ID_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "id";
 
     const static inline std::string ATTRIBUTE_PATH_FOR_NODE_ID =
             OSM_TAG + "." + NODE_TAG + "." + XML_ATTRIBUTE_TAG + "." + ID_ATTRIBUTE;
