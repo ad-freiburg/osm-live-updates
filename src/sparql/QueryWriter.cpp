@@ -54,9 +54,6 @@ std::string olu::sparql::QueryWriter::writeDeleteQuery(std::string& subject) {
 
 std::string olu::sparql::QueryWriter::getSubjectFor(const std::string &elementTag,
                                                     const boost::property_tree::ptree &element) {
-
-    std::cout << olu::util::XmlReader::readTree(element) << std::endl;
-
     std::string identifier;
     if (elementTag == config::constants::NODE_TAG) {
         identifier = olu::util::XmlReader::readAttribute(
