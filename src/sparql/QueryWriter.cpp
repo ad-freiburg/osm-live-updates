@@ -17,10 +17,13 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "sparql/QueryWriter.h"
+#include "sparql/QueryWriterException.h"
 #include "config/Constants.h"
+#include "util/XmlReader.h"
 
 #include <string>
 #include <vector>
+#include <iostream>
 
 //TODO: Check for valid triples
 
@@ -47,4 +50,36 @@ std::string olu::sparql::QueryWriter::writeDeleteQuery(std::string& subject) {
             " ?p ?o .\n"
             "}";
     return query;
+}
+
+std::string olu::sparql::QueryWriter::getSubjectFor(const std::string &elementTag,
+                                                    const boost::property_tree::ptree &element) {
+
+    std::cout << olu::util::XmlReader::writeXmlElementToString(element) << std::endl;
+
+    std::string identifier;
+    if (elementTag == config::constants::NODE_TAG) {
+        identifier = olu::util::XmlReader::readAttribute(
+                olu::config::constants::ID_ATTRIBUTE,
+                element);
+        return config::constants::NODE_SUBJECT + ":" + identifier;
+    }
+
+    if (elementTag == config::constants::WAY_TAG) {
+        identifier = olu::util::XmlReader::readAttribute(
+                olu::config::constants::ID_ATTRIBUTE,
+                element);
+        return config::constants::WAY_SUBJECT + ":" + identifier;
+    }
+
+    if (elementTag == config::constants::RELATION_TAG) {
+        identifier = olu::util::XmlReader::readAttribute(
+                olu::config::constants::ID_ATTRIBUTE,
+                element);
+        return config::constants::RELATION_SUBJECT + ":" + identifier;
+    }
+
+    throw QueryWriterException(
+            ("Could not determine subject for element: " +
+             util::XmlReader::writeXmlElementToString(element)).c_str());
 }

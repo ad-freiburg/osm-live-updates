@@ -21,11 +21,17 @@
 
 #include <string>
 #include <vector>
+#include <boost/property_tree/ptree.hpp>
 
 namespace olu::sparql {
 
 class QueryWriter {
 public:
+    // Returns the elements subject formatted for a SPARQL query:
+    // For a node element with id 178709586 the function would return 'osmnode:178709586'
+    static std::string getSubjectFor(const std::string& elementTag,
+                                     const boost::property_tree::ptree &element);
+
     // Writes a SPARQL query that inserts a list of triples
     static std::string writeInsertQuery(std::vector<std::string>& triples);
 
