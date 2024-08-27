@@ -40,7 +40,7 @@ TEST(XmlWriter, addAttributeToElement) {
     olu::util::XmlReader::populatePTreeFromString(content, tree);
     std::string elementPath = olu::config::constants::NODE_TAG + "." + "tag";
     olu::util::XmlWriter::addAttributeToElement(tree, elementPath, "value", "key");
-    std::string nodeElement = olu::util::XmlReader::writeXmlElementToString(tree);
+    std::string nodeElement = olu::util::XmlReader::readTree(tree);
     ASSERT_EQ(nodeElement, correctNodeElement);
 
     tree.clear();

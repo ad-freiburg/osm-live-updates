@@ -34,12 +34,13 @@ void olu::util::XmlReader::populatePTreeFromString(const std::string &xml, pt::p
 }
 
 // _________________________________________________________________________________________________
-std::string olu::util::XmlReader::writeXmlElementToString(const pt::ptree &element) {
+std::string olu::util::XmlReader::readTree(const pt::ptree &element,
+                                           const int& indent) {
     std::ostringstream oss;
     write_xml_element(oss,
                       {},
                       element,
-                      -1,
+                      indent,
                       pt::xml_parser::xml_writer_settings<pt::ptree::key_type>{});
     return oss.str();
 }
@@ -50,7 +51,7 @@ std::string olu::util::XmlReader::readNodeElement(const std::string& xml) {
     populatePTreeFromString(xml, tree);
 
     auto nodeElement = tree.get_child(olu::config::constants::OSM_TAG);
-    auto nodeElementAsString = writeXmlElementToString(nodeElement);
+    auto nodeElementAsString = readTree(nodeElement);
 
     tree.clear();
     nodeElement.clear();

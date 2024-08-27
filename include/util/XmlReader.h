@@ -33,7 +33,8 @@ namespace olu::util {
                                                           const bool excludeXmlAttr = true);
         static std::string readNodeElement(const std::string& xml);
         static void populatePTreeFromString(const std::string& xml, pt::ptree& tree);
-        static std::string writeXmlElementToString(const pt::ptree& element);
+        static std::string readTree(const pt::ptree& element,
+                                    const int& indent = -1);
     };
 
 } // namespace  olu::util
