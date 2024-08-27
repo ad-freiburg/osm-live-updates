@@ -74,7 +74,7 @@ namespace olu::config::constants {
     const static inline std::string WAY_SUBJECT = "osmway";
     const static inline std::string RELATION_SUBJECT = "osmrel";
 
-    const static inline std::string REFERENCE_ATTRIBUTE = "ref";
+    const static inline std::string NODE_REFERENCE_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "ref";
     const static inline std::string ID_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "id";
 
     const static inline std::string ATTRIBUTE_PATH_FOR_NODE_ID =
