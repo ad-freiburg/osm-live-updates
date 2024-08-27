@@ -41,7 +41,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_compile_options(-Wall -Wextra -Wno-missing-field-initializers)
 add_compile_options(-DGTEST_HAS_TR1_TUPLE=0 -DGTEST_USE_OWN_TR1_TUPLE=0)
 # Basic optimization
-add_compile_options(-march=native)
+# Deactivated because it is not working on apple silicon
+#add_compile_options(-march=native)
 # Enable fast-math
 add_compile_options(-ffast-math)
 # ----------------------------------------------------------------------------
