@@ -34,6 +34,7 @@ namespace olu::util {
         static std::string readNodeElement(const std::string& xml);
         static void populatePTreeFromString(const std::string& xml, pt::ptree& tree);
         static std::string readTree(const pt::ptree& element,
+                                    const pt::ptree::key_type& key = {},
                                     const int& indent = -1);
     };
 

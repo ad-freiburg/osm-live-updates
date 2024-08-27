@@ -35,10 +35,11 @@ void olu::util::XmlReader::populatePTreeFromString(const std::string &xml, pt::p
 
 // _________________________________________________________________________________________________
 std::string olu::util::XmlReader::readTree(const pt::ptree &element,
+                                           const pt::ptree::key_type& key,
                                            const int& indent) {
     std::ostringstream oss;
     write_xml_element(oss,
-                      {},
+                      key,
                       element,
                       indent,
                       pt::xml_parser::xml_writer_settings<pt::ptree::key_type>{});
