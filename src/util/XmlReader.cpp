@@ -51,7 +51,16 @@ std::string olu::util::XmlReader::readNodeElement(const std::string& xml) {
     pt::ptree tree;
     populatePTreeFromString(xml, tree);
 
-    auto nodeElement = tree.get_child(olu::config::constants::OSM_TAG);
+    boost::property_tree::ptree nodeElement;
+    try {
+        nodeElement = tree.get_child(olu::config::constants::OSM_TAG);
+    } catch (boost::property_tree::ptree_bad_path &e) {
+        std::cerr << "Path not found: " << e.what() << std::endl;
+        std::cerr << "In tree: " << readTree(tree, {}, 0) << std::endl;
+        std::cerr << "Tree from xml: " << xml << std::endl;
+        return "";
+    }
+
     auto nodeElementAsString = readTree(nodeElement);
 
     tree.clear();
