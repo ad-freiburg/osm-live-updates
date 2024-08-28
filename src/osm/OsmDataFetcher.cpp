@@ -17,10 +17,12 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "osm/OsmDataFetcher.h"
+#include "osm/WktHelper.h"
 #include "config/Constants.h"
 #include "util/URLHelper.h"
 #include "util/HttpRequest.h"
 #include "util/XmlReader.h"
+#include "sparql/QueryWriter.h"
 
 #include <string>
 #include <vector>
@@ -31,8 +33,9 @@ namespace constants = olu::config::constants;
 namespace olu {
 
 // _________________________________________________________________________________________________
-OsmDataFetcher::OsmDataFetcher(OsmDiffGranularity diffGranularity) {
+OsmDataFetcher::OsmDataFetcher(OsmDiffGranularity diffGranularity, olu::sparql::SparqlWrapper& sparqlWrapper) {
     _diffGranularity = diffGranularity;
+    _sparqlWrapper = sparqlWrapper;
 }
 
 // _________________________________________________________________________________________________
@@ -139,6 +142,22 @@ std::vector<std::string> OsmDataFetcher::fetchNodeReferencesForWay(const boost::
 
     std::vector<std::string> nodeIds(visitedNodes.begin(), visitedNodes.end());
     return fetchNodes(nodeIds);
+}
+
+
+std::vector<std::string>
+OsmDataFetcher::fetchNodesFromSparql(const std::vector<std::string> &nodeIds) {
+    std::vector<std::string> dummyNodes;
+    for(const std::string& nodeId : nodeIds) {
+        auto query = olu::sparql::QueryWriter::writeQueryForNodeLocation(nodeId);
+        _sparqlWrapper.setMethod(util::HttpMethod::GET);
+        _sparqlWrapper.setQuery(query);
+        auto pointAsWkt = _sparqlWrapper.runQuery();
+        auto dummyNode = olu::osm::WktHelper::createDummyNodeFromPoint(nodeId, pointAsWkt);
+        dummyNodes.emplace_back(dummyNode);
+    }
+
+    return dummyNodes;
 }
 
 } // namespace olu

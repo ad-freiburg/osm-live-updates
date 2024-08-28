@@ -19,10 +19,12 @@
 #include "osm/OsmDataFetcher.h"
 #include "config/Constants.h"
 #include "gtest/gtest.h"
+#include "sparql/SparqlWrapper.h"
 
 namespace olu {
     TEST(OsmDataFetcher, fetchLatestSequenceNumber) {
-        auto osmDataFetcher = OsmDataFetcher(OsmDiffGranularity::MINUTE);
+        auto sw = sparql::SparqlWrapper();
+        auto osmDataFetcher = OsmDataFetcher(OsmDiffGranularity::MINUTE, sw);
         auto response = osmDataFetcher.fetchLatestSequenceNumber();
 
         ASSERT_TRUE(response.length() > 0);

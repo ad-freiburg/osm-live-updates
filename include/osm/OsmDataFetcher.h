@@ -21,6 +21,7 @@
 
 #include "osm/OsmDiffGranularities.h"
 #include "util/CacheFile.h"
+#include "sparql/SparqlWrapper.h"
 
 #include <string>
 #include <boost/property_tree/ptree.hpp>
@@ -29,7 +30,7 @@ namespace olu {
 
 class OsmDataFetcher {
 public:
-    explicit OsmDataFetcher(OsmDiffGranularity diffGranularity);
+    explicit OsmDataFetcher(OsmDiffGranularity diffGranularity, olu::sparql::SparqlWrapper& _sparqlWrapper);
 
     // Fetches the sequence number of the latest diff from the osm server and returns it
     std::string fetchLatestSequenceNumber();
@@ -44,10 +45,13 @@ public:
     // Asynchronously Fetches all nodes that are referenced in the given way element
     static std::vector<std::string> fetchNodes(const std::vector<std::string> &nodeIds);
 
+    std::vector<std::string> fetchNodesFromSparql(const std::vector<std::string> &nodeIds);
+
 
     static std::string fetchNode(std::string &nodeId, bool extractNodeElement = false);
 private:
     OsmDiffGranularity _diffGranularity;
+    olu::sparql::SparqlWrapper _sparqlWrapper;
 protected:
     util::CacheFile _cacheFile = util::CacheFile("/tmp/dataFetcherCache");
 };
