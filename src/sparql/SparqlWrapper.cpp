@@ -21,11 +21,12 @@
 #include "util/HttpRequest.h"
 
 #include <string>
+#include <iostream>
 
 namespace olu::sparql {
 
 // _________________________________________________________________________________________________
-SparqlWrapper::SparqlWrapper(std::string &endpointUri) {
+void SparqlWrapper::setEndpointUri(std::string &endpointUri) {
     _endpoint = endpointUri;
 }
 
@@ -50,7 +51,8 @@ std::string SparqlWrapper::runQuery() {
         request.addHeader("Content-Type", "application/sparql-query");
     }
 
-    return request.perform();
+    return _query;
+//    return request.perform();
 }
 
 } // namespace olu::sparql

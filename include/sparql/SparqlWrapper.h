@@ -28,8 +28,9 @@ namespace olu::sparql {
 
 class SparqlWrapper {
 public:
-    explicit SparqlWrapper(std::string& endpointUri);
+    SparqlWrapper() = default;
 
+    void setEndpointUri(std::string& endpointUri);
     // Sets the HTTP Method for the query. Typically, `SELECT` queries should be performed with
     // `GET` and update queries (`DELETE`, `INSERT`) with `POST`
     void setMethod(util::HttpMethod method);
