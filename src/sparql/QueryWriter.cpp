@@ -52,6 +52,7 @@ std::string olu::sparql::QueryWriter::writeDeleteQuery(std::string& subject) {
     return query;
 }
 
+// _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::getSubjectFor(const std::string &elementTag,
                                                     const boost::property_tree::ptree &element) {
     std::string identifier;
@@ -79,4 +80,15 @@ std::string olu::sparql::QueryWriter::getSubjectFor(const std::string &elementTa
     throw QueryWriterException(
             ("Could not determine subject for element: " +
                     util::XmlReader::readTree(element)).c_str());
+}
+
+// _________________________________________________________________________________________________
+std::string olu::sparql::QueryWriter::writeQueryForNodeLocation(const std::string &nodeId) {
+    auto query = olu::config::constants::PREFIXES;
+    query += "SELECT { ?o } WHERE {\n"
+             + config::constants::NODE_SUBJECT + ":" + nodeId + " "
+             + config::constants::LOCATION_AS_WKT_PREDICATE + " "
+             "?o .\n"
+             "}";
+    return query;
 }

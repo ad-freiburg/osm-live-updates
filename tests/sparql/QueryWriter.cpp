@@ -65,4 +65,18 @@ namespace olu::sparql {
             );
         }
     }
+    TEST(QueryWriter, writeQueryForNodeLocation) {
+        {
+            std::string nodeId = "1";
+
+            std::string query = olu::sparql::QueryWriter::writeQueryForNodeLocation(nodeId);
+            ASSERT_EQ(
+                    olu::config::constants::PREFIXES +
+                    "SELECT { ?o } WHERE {\n"
+                    "osmnode:1 geo:hasGeometry/geo:asWKT ?o .\n"
+                    "}",
+                    query
+            );
+        }
+    }
 }

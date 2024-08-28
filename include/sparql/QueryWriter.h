@@ -32,11 +32,14 @@ public:
     static std::string getSubjectFor(const std::string& elementTag,
                                      const boost::property_tree::ptree &element);
 
-    // Writes a SPARQL query that inserts a list of triples
+    // Returns a SPARQL query that inserts a list of triples
     static std::string writeInsertQuery(std::vector<std::string>& triples);
 
-    // Writes a SPARQL query that deletes all triples for a subject
+    // Returns a SPARQL query that deletes all triples for a subject
     static std::string writeDeleteQuery(std::string& subject);
+
+    // Returns a SPARQL query that asks for the location of a point in WKT format
+    static std::string writeQueryForNodeLocation(const std::string& nodeId);
 };
 
 } // namespace olu::sparql
