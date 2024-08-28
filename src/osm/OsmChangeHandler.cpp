@@ -47,16 +47,15 @@ namespace olu::osm {
             boost::property_tree::ptree childTree = child.second;
             if (child.first == config::constants::MODIFY_TAG) {
                 for (const auto &element : childTree) {
-//                    handleModify(element.first, element.second);
+                    handleModify(element.first, element.second);
                 }
             } else if (child.first == config::constants::CREATE_TAG) {
                 for (const auto &element : childTree) {
-                    boost::property_tree::ptree elementTree = element.second;
                     handleInsert(element.first, element.second);
                 }
             } else if (child.first == config::constants::DELETE_TAG) {
                 for (const auto &element : childTree) {
-//                    handleDelete(element.first, element.second);
+                    handleDelete(element.first, element.second);
                 }
             }
         }
@@ -70,8 +69,6 @@ namespace olu::osm {
         }
 
         auto osmElements = getOsmElementsForInsert(elementTag, element);
-        for (std::string i: osmElements)
-            std::cout << i << ' ';
         auto ttl = _osm2ttl.convert(osmElements);
         auto query = sparql::QueryWriter::writeInsertQuery(ttl);
         _sparql.setQuery(query);
