@@ -74,6 +74,8 @@ namespace olu::config::constants {
     const static inline std::string WAY_SUBJECT = "osmway";
     const static inline std::string RELATION_SUBJECT = "osmrel";
 
+    const static inline std::string LOCATION_AS_WKT_PREDICATE = "geo:hasGeometry/geo:asWKT";
+
     const static inline std::string NODE_REFERENCE_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "ref";
     const static inline std::string ID_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "id";
 
