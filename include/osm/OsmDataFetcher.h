@@ -41,6 +41,10 @@ public:
     // Fetches all nodes that are referenced in the given way element
     static std::vector<std::string> fetchNodeReferencesForWay(const boost::property_tree::ptree& way);
 
+    // Asynchronously Fetches all nodes that are referenced in the given way element
+    static std::vector<std::string> fetchNodes(const std::vector<std::string> &nodeIds);
+
+
     static std::string fetchNode(std::string &nodeId, bool extractNodeElement = false);
 private:
     OsmDiffGranularity _diffGranularity;
