@@ -20,6 +20,7 @@
 #define OSM_LIVE_UPDATES_HTTPREQUEST_H
 
 #include <string>
+#include <vector>
 #include <curl/curl.h>
 #include "HttpMethod.h"
 
@@ -29,17 +30,19 @@ class HttpRequest {
 public:
     explicit HttpRequest(
             const HttpMethod& method,
-            const std::string& url,
-            bool followLocation = true);
+            const std::string& url);
     ~HttpRequest();
     void addHeader(const std::string& key, const std::string& value);
     void addBody(const std::string& body);
-
     std::string perform();
+
+
+    static std::vector<std::string> multiPerform(const std::vector<std::string>& urls);
 private:
     CURL *_curl;
     HttpMethod _method;
     CURLcode _res;
+    std::string _data;
 
     std::string performGet();
     void performPost();
