@@ -43,7 +43,7 @@ void setup_curl(CURL* curl_handle, std::string& data, const std::string& url)
     curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &data);
     curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
 
-    curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
+//    curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
 }
 
 // _________________________________________________________________________________________________
