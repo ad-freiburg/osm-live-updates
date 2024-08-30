@@ -19,40 +19,59 @@
 #include "sparql/SparqlWrapper.h"
 #include "util/URLHelper.h"
 #include "util/HttpRequest.h"
+#include "config/Constants.h"
 
 #include <string>
-#include <iostream>
+#include <fstream>
 
 namespace olu::sparql {
-
-// _________________________________________________________________________________________________
-void SparqlWrapper::setEndpointUri(std::string &endpointUri) {
-    _endpoint = endpointUri;
-}
-
-// _________________________________________________________________________________________________
-void SparqlWrapper::setMethod(util::HttpMethod httpMethod) {
-    _httpMethod = httpMethod;
-}
-
-// _________________________________________________________________________________________________
-void SparqlWrapper::setQuery(std::string &query) {
-    _query = query;
-}
-
-// _________________________________________________________________________________________________
-std::string SparqlWrapper::runQuery() {
-    std::string encodedQuery = util::URLHelper::encodeForUrlQuery(_query);
-    std::string url = _endpoint + "?" + encodedQuery;
-
-    auto request = util::HttpRequest(_httpMethod,url);
-
-    if (_httpMethod == util::POST) {
-        request.addHeader("Content-Type", "application/sparql-query");
+    // _____________________________________________________________________________________________
+    void SparqlWrapper::setEndpointUri(const std::string &endpointUri) {
+        _endpointUri = endpointUri;
     }
 
-    return _query;
-//    return request.perform();
-}
+    // _____________________________________________________________________________________________
+    void SparqlWrapper::setMethod(const util::HttpMethod httpMethod) {
+        _httpMethod = httpMethod;
+    }
+
+    // _____________________________________________________________________________________________
+    void SparqlWrapper::setQuery(const std::string &query) {
+        _query = query;
+    }
+
+    void SparqlWrapper::setPrefixes(const std::string &prefixes) {
+        _prefixes = prefixes;
+    }
+
+    // _____________________________________________________________________________________________
+    std::string SparqlWrapper::runQuery() {
+        handleFileOutput();
+
+        // Format and encode query for url
+        std::string query = _prefixes + "\n" + _query;
+        std::string encodedQuery = util::URLHelper::encodeForUrlQuery(query);
+        std::string url = _endpointUri + "?" + encodedQuery;
+
+        auto request = util::HttpRequest(_httpMethod, url);
+        if (_httpMethod == util::POST) {
+            request.addHeader(olu::config::constants::HTML_KEY_CONTENT_TYPE,
+                              olu::config::constants::HTML_VALUE_CONTENT_TYPE_SPARQL_QUERY);
+        }
+        auto response = request.perform();
+
+        _query = ""; _prefixes = "";
+
+        return response;
+    }
+
+    void SparqlWrapper::handleFileOutput() {
+        if (_config.writeSparqlQueriesToFile) {
+            std::ofstream outputFile;
+            outputFile.open (_config.pathToSparqlQueryOutput, std::ios_base::app);
+            outputFile << _query << "\n";
+            outputFile.close();
+        }
+    }
 
 } // namespace olu::sparql

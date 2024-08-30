@@ -20,6 +20,7 @@
 #define OSM_LIVE_UPDATES_SPARQLWRAPPER_H
 
 #include "util/HttpMethod.h"
+#include "config/Config.h"
 
 #include <string>
 #include <vector>
@@ -28,20 +29,34 @@ namespace olu::sparql {
 
 class SparqlWrapper {
 public:
-    SparqlWrapper() = default;
+    // Class that handles the connection to a sparql endpoint
+    explicit SparqlWrapper(const olu::config::Config& config) { _config = config; };
 
-    void setEndpointUri(std::string& endpointUri);
+    // Sets the uri of the sparql endpoint
+    void setEndpointUri(const std::string& endpointUri);
+
     // Sets the HTTP Method for the query. Typically, `SELECT` queries should be performed with
     // `GET` and update queries (`DELETE`, `INSERT`) with `POST`
     void setMethod(util::HttpMethod method);
 
-    void setQuery(std::string& query);
+    // Sets the current query
+    void setQuery(const std::string& query);
 
+    // Sets the prefixes for the current query
+    void setPrefixes(const std::string& prefixes);
+
+    // Sends the current query to the sparql endpoint and returns the response from the endpoint.
+    // Make sure that the correct HTTP method is set before running the query (POST for database
+    // updates and GET for queries with select)
     std::string runQuery();
 private:
-    std::string _endpoint;
+    olu::config::Config _config;
+    std::string _endpointUri;
     util::HttpMethod _httpMethod = util::POST;
     std::string _query;
+    std::string _prefixes;
+
+    void handleFileOutput();
 };
 
 } // namespace olu::sparql
