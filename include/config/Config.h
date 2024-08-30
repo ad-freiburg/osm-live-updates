@@ -25,6 +25,13 @@
 namespace olu::config {
 
 struct Config {
+
+    // Specifies whether the generated sparql queries that are sent to the sparql endpoint should
+    // also be saved to a file
+    bool writeSparqlQueriesToFile = true;
+    std::string pathToSparqlQueryOutput = "/src/build/sparqlOutput.txt";
+
+
     std::filesystem::path cache{std::filesystem::temp_directory_path()};
 
     // Generate a path inside the cache directory.
