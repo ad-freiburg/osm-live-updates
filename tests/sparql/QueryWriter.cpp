@@ -28,9 +28,8 @@ namespace olu::sparql {
 
             std::string query = olu::sparql::QueryWriter::writeInsertQuery(triples);
             ASSERT_EQ(
-                    olu::config::constants::PREFIXES +
-                    "INSERT DATA {\n"
-                    "osmrel:1960198 ogc:sfContains ?osm_id:10559440 .\n"
+                    "INSERT DATA { "
+                    "osmrel:1960198 ogc:sfContains ?osm_id:10559440 . "
                     "}",
                     query
             );
@@ -42,10 +41,9 @@ namespace olu::sparql {
 
             std::string query = olu::sparql::QueryWriter::writeInsertQuery(triples);
             ASSERT_EQ(
-                    olu::config::constants::PREFIXES +
-                    "INSERT DATA {\n"
-                    "osmrel:1960198 ogc:sfContains ?osm_id:10559440 .\n"
-                    "region:102740 osmkey:name name:Bretagne .\n"
+                    "INSERT DATA { "
+                    "osmrel:1960198 ogc:sfContains ?osm_id:10559440 . "
+                    "region:102740 osmkey:name name:Bretagne . "
                     "}",
                     query
             );
@@ -57,10 +55,7 @@ namespace olu::sparql {
 
             std::string query = olu::sparql::QueryWriter::writeDeleteQuery(subject);
             ASSERT_EQ(
-                    olu::config::constants::PREFIXES +
-                    "DELETE { ?s ?p ?o } WHERE {\n"
-                    "osmrel:1960198 ?p ?o .\n"
-                    "}",
+                    "DELETE { ?s ?p ?o } WHERE { osmrel:1960198 ?p ?o . }",
                     query
             );
         }
@@ -71,9 +66,8 @@ namespace olu::sparql {
 
             std::string query = olu::sparql::QueryWriter::writeQueryForNodeLocation(nodeId);
             ASSERT_EQ(
-                    olu::config::constants::PREFIXES +
-                    "SELECT { ?o } WHERE {\n"
-                    "osmnode:1 geo:hasGeometry/geo:asWKT ?o .\n"
+                    "SELECT { ?o } WHERE { "
+                    "osmnode:1 geo:hasGeometry/geo:asWKT ?o . "
                     "}",
                     query
             );

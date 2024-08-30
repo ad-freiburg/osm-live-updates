@@ -33,10 +33,10 @@ public:
                                      const boost::property_tree::ptree &element);
 
     // Returns a SPARQL query that inserts a list of triples
-    static std::string writeInsertQuery(std::vector<std::string>& triples);
+    static std::string writeInsertQuery(const std::vector<std::string>& triples);
 
     // Returns a SPARQL query that deletes all triples for a subject
-    static std::string writeDeleteQuery(std::string& subject);
+    static std::string writeDeleteQuery(const std::string& subject);
 
     // Returns a SPARQL query that asks for the location of a point in WKT format
     static std::string writeQueryForNodeLocation(const std::string& nodeId);

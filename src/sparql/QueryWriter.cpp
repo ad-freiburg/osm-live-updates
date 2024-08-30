@@ -23,18 +23,16 @@
 
 #include <string>
 #include <vector>
-#include <iostream>
 
 //TODO: Check for valid triples
 
 // _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeInsertQuery(std::vector<std::string>& triples) {
+std::string olu::sparql::QueryWriter::writeInsertQuery(const std::vector<std::string>& triples) {
     std::string query;
-    query = olu::config::constants::PREFIXES;
-    query += "INSERT DATA {\n";
+    query += "INSERT DATA { ";
 
     for (auto & element : triples) {
-        query += element + "\n";
+        query += element + " ";
     }
 
     query += "}";
@@ -42,13 +40,11 @@ std::string olu::sparql::QueryWriter::writeInsertQuery(std::vector<std::string>&
 }
 
 // _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeDeleteQuery(std::string& subject) {
+std::string olu::sparql::QueryWriter::writeDeleteQuery(const std::string& subject) {
     std::string query;
-    query = olu::config::constants::PREFIXES;
-    query += "DELETE { ?s ?p ?o } WHERE {\n"
+    query += "DELETE { ?s ?p ?o } WHERE { "
             + subject +
-            " ?p ?o .\n"
-            "}";
+            " ?p ?o . }";
     return query;
 }
 
@@ -84,11 +80,9 @@ std::string olu::sparql::QueryWriter::getSubjectFor(const std::string &elementTa
 
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeQueryForNodeLocation(const std::string &nodeId) {
-    auto query = olu::config::constants::PREFIXES;
-    query += "SELECT { ?o } WHERE {\n"
+    std::string query = "SELECT { ?o } WHERE { "
              + config::constants::NODE_SUBJECT + ":" + nodeId + " "
              + config::constants::LOCATION_AS_WKT_PREDICATE + " "
-             "?o .\n"
-             "}";
+             "?o . }";
     return query;
 }
