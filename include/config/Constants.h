@@ -28,6 +28,11 @@ namespace olu::config::constants {
     const static inline std::string OSM_NODE_BASE_URL =
         "https://www.openstreetmap.org/api/0.6/node";
 
+    // HTML
+    const static inline std::string HTML_KEY_CONTENT_TYPE = "Content-Type";
+    const static inline std::string HTML_VALUE_CONTENT_TYPE_SPARQL_QUERY =
+            "application/sparql-query";
+
     // File extensions
     const static inline std::string OSM_FILE_EXTENSION = ".osm";
     const static inline std::string OSM_CHANGE_FILE_EXTENSION = ".osc";
@@ -87,7 +92,7 @@ namespace olu::config::constants {
             OSM_TAG + "." + RELATION_TAG + "." + ID_ATTRIBUTE;
 
     // SPARQL
-    const static inline std::string PREFIXES =
+    const static inline std::string DEFAULT_PREFIXES =
         "PREFIX ohmnode: <https://www.openhistoricalmap.org/node/>\n"
         "PREFIX osmrel: <https://www.openstreetmap.org/relation/>\n"
         "PREFIX osmnode: <https://www.openstreetmap.org/node/>\n"
@@ -108,6 +113,11 @@ namespace olu::config::constants {
         "PREFIX osm2rdf: <https://osm2rdf.cs.uni-freiburg.de/rdf#>\n"
         "PREFIX ogc: <http://www.opengis.net/rdf#>\n"
         "PREFIX geo: <http://www.opengis.net/ont/geosparql#>\n";
+
+    const static inline std::string PREFIXES_FOR_NODE_LOCATION =
+            "PREFIX osmnode: <https://www.openstreetmap.org/node/>\n"
+            "PREFIX geo: <http://www.opengis.net/ont/geosparql#>";
+
 } // namespace olu::config::constants
 
 #endif //OSM_LIVE_UPDATES_CONSTANTS_H
