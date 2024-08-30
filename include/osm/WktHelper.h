@@ -11,7 +11,8 @@ namespace olu::osm {
     class WktHelper {
     public:
         // Creates a dummy node with an id and a location which is extracted from an WKT point.
-        static std::string createDummyNodeFromPoint(const std::string& nodeId, const std::string& pointAsWkt);
+        static std::string createDummyNodeFromPoint(const std::string& nodeId,
+                                                    const std::string& pointAsWkt);
     };
 
     class WktHelperException : public std::exception {
