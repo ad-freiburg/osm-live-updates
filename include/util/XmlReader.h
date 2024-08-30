@@ -32,7 +32,10 @@ namespace olu::util {
                                                           const boost::property_tree::ptree &tree,
                                                           const bool excludeXmlAttr = true);
         static std::string readNodeElement(const std::string& xml);
+
+        static void populatePTreeFromFile(const std::string& pathToFile, pt::ptree& tree);
         static void populatePTreeFromString(const std::string& xml, pt::ptree& tree);
+
         static std::string readTree(const pt::ptree& element,
                                     const pt::ptree::key_type& key = {},
                                     const int& indent = -1);

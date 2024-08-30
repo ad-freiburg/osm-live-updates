@@ -34,6 +34,16 @@ void olu::util::XmlReader::populatePTreeFromString(const std::string &xml, pt::p
 }
 
 // _________________________________________________________________________________________________
+void olu::util::XmlReader::populatePTreeFromFile(const std::string &pathToFile,
+                                                 boost::property_tree::ptree &tree) {
+    std::ifstream ifs (pathToFile);
+    std::string fileContent( (std::istreambuf_iterator<char>(ifs) ),
+                             (std::istreambuf_iterator<char>()) );
+
+    populatePTreeFromString(fileContent, tree);
+}
+
+// _________________________________________________________________________________________________
 std::string olu::util::XmlReader::readTree(const pt::ptree &element,
                                            const pt::ptree::key_type& key,
                                            const int& indent) {
