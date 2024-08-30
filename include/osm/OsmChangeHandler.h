@@ -31,7 +31,7 @@ namespace olu::osm {
 
     class OsmChangeHandler {
     public:
-        explicit OsmChangeHandler(config::Config& config, std::string& sparqlEndpointUri);
+        explicit OsmChangeHandler(config::Config& config);
 
         // Processes a file in osmChange format ('https://wiki.openstreetmap.org/wiki/OsmChange')
         void handleChange(const std::string& pathToOsmChangeFile);

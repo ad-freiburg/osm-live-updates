@@ -28,9 +28,9 @@
 
 namespace olu::osm {
 
-    OsmChangeHandler::OsmChangeHandler(config::Config& config, std::string &sparqlEndpointUri)
+    OsmChangeHandler::OsmChangeHandler(config::Config& config)
     : _config(config), _sparql(config), _osm2ttl(), _odf(OsmDataFetcher(config)) {
-        _sparql.setEndpointUri(sparqlEndpointUri);
+        _sparql.setEndpointUri(config.sparqlEndpointUri);
     }
 
     void OsmChangeHandler::handleChange(const std::string &pathToOsmChangeFile) {

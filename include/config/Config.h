@@ -19,12 +19,19 @@
 #ifndef OSM_LIVE_UPDATES_CONFIG_H
 #define OSM_LIVE_UPDATES_CONFIG_H
 
+#include "osm/OsmDiffGranularities.h"
+
 #include <string>
 #include <filesystem>
 
 namespace olu::config {
 
 struct Config {
+
+    std::string sparqlEndpointUri = "https://qlever.cs.uni-freiburg.de/api/osm-planet";
+
+
+    OsmDiffGranularity diffGranularity = OsmDiffGranularity::HOUR;
 
     // Specifies whether the generated sparql queries that are sent to the sparql endpoint should
     // also be saved to a file

@@ -35,6 +35,7 @@ namespace olu::osm {
 // _________________________________________________________________________________________________
 OsmDataFetcher::OsmDataFetcher(olu::config::Config& config)
     : _config(config), _sparqlWrapper(olu::sparql::SparqlWrapper(config)) {
+    _sparqlWrapper.setEndpointUri(config.sparqlEndpointUri);
 }
 
 // _________________________________________________________________________________________________
