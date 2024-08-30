@@ -17,44 +17,44 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "osm/OsmChangeHandler.h"
-#include "osm/OsmChangeHandlerException.h"
 #include "osm/OsmDataFetcher.h"
-#include "osm/Osm2ttl.h"
 #include "util/XmlReader.h"
 #include "config/Constants.h"
-#include "sparql/SparqlWrapper.h"
 #include "sparql/QueryWriter.h"
+#include "sparql/SparqlWrapper.h"
 
 #include <boost/property_tree/ptree.hpp>
-#include <iostream>
 #include <string>
 
 namespace olu::osm {
-    OsmChangeHandler::OsmChangeHandler(std::string &sparqlEndpointUri) {
-        _osm2ttl = Osm2ttl();
-//        _sparql.setEndpointUri(sparqlEndpointUri);
+
+    OsmChangeHandler::OsmChangeHandler(config::Config& config, std::string &sparqlEndpointUri)
+    : _config(config), _sparql(config), _osm2ttl() {
+        _sparql.setEndpointUri(sparqlEndpointUri);
     }
 
     void OsmChangeHandler::handleChange(const std::string &pathToOsmChangeFile) {
-        std::ifstream ifs (pathToOsmChangeFile);
-        std::string fileContent( (std::istreambuf_iterator<char>(ifs) ),
-                                 (std::istreambuf_iterator<char>()) );
+        boost::property_tree::ptree osmChangeElement;
+        olu::util::XmlReader::populatePTreeFromFile(pathToOsmChangeFile,
+                                                    osmChangeElement);
 
-        boost::property_tree::ptree osmChange;
-        olu::util::XmlReader::populatePTreeFromString(fileContent, osmChange);
+        // Loop over all change elements in the change file ('modify', 'delete' or 'create')
+        for (const auto &child : osmChangeElement.get_child(
+                config::constants::OSM_CHANGE_TAG)) {
 
-        for (const auto &child : osmChange.get_child(config::constants::OSM_CHANGE_TAG)) {
-            boost::property_tree::ptree childTree = child.second;
             if (child.first == config::constants::MODIFY_TAG) {
-                for (const auto &element : childTree) {
+                // Loop over each element ('node', 'way' or 'relation') to be modified
+                for (const auto &element : child.second) {
                     handleModify(element.first, element.second);
                 }
             } else if (child.first == config::constants::CREATE_TAG) {
-                for (const auto &element : childTree) {
+                // Loop over each element ('node', 'way' or 'relation') to be created
+                for (const auto &element : child.second) {
                     handleInsert(element.first, element.second);
                 }
             } else if (child.first == config::constants::DELETE_TAG) {
-                for (const auto &element : childTree) {
+                // Loop over each element ('node', 'way' or 'relation') to be deleted
+                for (const auto &element : child.second) {
                     handleDelete(element.first, element.second);
                 }
             }
@@ -69,8 +69,13 @@ namespace olu::osm {
         }
 
         auto osmElements = getOsmElementsForInsert(elementTag, element);
+
+        // Convert the osmElements in xml format to rdf turtle format
         auto ttl = _osm2ttl.convert(osmElements);
+
+        // Create a sparql query from the ttl triples and send it to the sparql endpoint
         auto query = sparql::QueryWriter::writeInsertQuery(ttl);
+        _sparql.setPrefixes(config::constants::DEFAULT_PREFIXES);
         _sparql.setQuery(query);
         _sparql.setMethod(util::POST);
         _sparql.runQuery();
@@ -80,6 +85,7 @@ namespace olu::osm {
                                         const boost::property_tree::ptree &element) {
         auto subject = olu::sparql::QueryWriter::getSubjectFor(elementTag, element);
         auto query = sparql::QueryWriter::writeDeleteQuery(subject);
+        _sparql.setPrefixes(config::constants::DEFAULT_PREFIXES);
         _sparql.setQuery(query);
         _sparql.setMethod(util::POST);
         _sparql.runQuery();

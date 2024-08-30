@@ -33,7 +33,9 @@ namespace constants = olu::config::constants;
 namespace olu {
 
 // _________________________________________________________________________________________________
-OsmDataFetcher::OsmDataFetcher(OsmDiffGranularity diffGranularity, olu::sparql::SparqlWrapper& sparqlWrapper) {
+OsmDataFetcher::OsmDataFetcher(OsmDiffGranularity diffGranularity,
+                               olu::sparql::SparqlWrapper& sparqlWrapper)
+                               : _sparqlWrapper(sparqlWrapper) {
     _diffGranularity = diffGranularity;
     _sparqlWrapper = sparqlWrapper;
 }
@@ -152,6 +154,7 @@ OsmDataFetcher::fetchNodesFromSparql(const std::vector<std::string> &nodeIds) {
         auto query = olu::sparql::QueryWriter::writeQueryForNodeLocation(nodeId);
         _sparqlWrapper.setMethod(util::HttpMethod::GET);
         _sparqlWrapper.setQuery(query);
+        _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_NODE_LOCATION);
         auto pointAsWkt = _sparqlWrapper.runQuery();
         auto dummyNode = olu::osm::WktHelper::createDummyNodeFromPoint(nodeId, pointAsWkt);
         dummyNodes.emplace_back(dummyNode);

@@ -20,6 +20,7 @@
 #define OSM_LIVE_UPDATES_OSMCHANGEHANDLER_H
 
 #include "sparql/SparqlWrapper.h"
+#include "config/Config.h"
 #include "osm/Osm2ttl.h"
 
 #include <boost/property_tree/ptree.hpp>
@@ -29,12 +30,14 @@ namespace olu::osm {
 
     class OsmChangeHandler {
     public:
-        explicit OsmChangeHandler(std::string& sparqlEndpointUri);
+        explicit OsmChangeHandler(config::Config& config, std::string& sparqlEndpointUri);
 
+        // Processes a file in osmChange format ('https://wiki.openstreetmap.org/wiki/OsmChange')
         void handleChange(const std::string& pathToOsmChangeFile);
 
     private:
-        sparql::SparqlWrapper _sparql = sparql::SparqlWrapper();
+        config::Config _config;
+        sparql::SparqlWrapper _sparql;
         olu::osm::Osm2ttl _osm2ttl;
 
         void handleInsert(const std::string& elementTag, const pt::ptree& element);

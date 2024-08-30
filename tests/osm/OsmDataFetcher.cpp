@@ -23,7 +23,8 @@
 
 namespace olu {
     TEST(OsmDataFetcher, fetchLatestSequenceNumber) {
-        auto sw = sparql::SparqlWrapper();
+        auto config = config::Config();
+        auto sw = sparql::SparqlWrapper(config);
         auto osmDataFetcher = OsmDataFetcher(OsmDiffGranularity::MINUTE, sw);
         auto response = osmDataFetcher.fetchLatestSequenceNumber();
 
