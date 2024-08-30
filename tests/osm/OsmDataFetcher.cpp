@@ -25,7 +25,7 @@ namespace olu {
     TEST(OsmDataFetcher, fetchLatestSequenceNumber) {
         auto config = config::Config();
         auto sw = sparql::SparqlWrapper(config);
-        auto osmDataFetcher = OsmDataFetcher(OsmDiffGranularity::MINUTE, sw);
+        auto osmDataFetcher = olu::osm::OsmDataFetcher(config);
         auto response = osmDataFetcher.fetchLatestSequenceNumber();
 
         ASSERT_TRUE(response.length() > 0);
@@ -33,7 +33,7 @@ namespace olu {
 
     TEST(OsmDataFetcher, fetchNode) {
         std::string nodeId = "1";
-        auto response = olu::OsmDataFetcher::fetchNode(nodeId);
+        auto response = olu::osm::OsmDataFetcher::fetchNode(nodeId);
 
         ASSERT_TRUE(response.length() > 0);
     }

@@ -26,21 +26,21 @@
 #include <string>
 #include <boost/property_tree/ptree.hpp>
 
-namespace olu {
+namespace olu::osm {
 
 class OsmDataFetcher {
 public:
-    explicit OsmDataFetcher(OsmDiffGranularity diffGranularity, olu::sparql::SparqlWrapper& _sparqlWrapper);
+    explicit OsmDataFetcher(olu::config::Config& config);
 
     // Fetches the sequence number of the latest diff from the osm server and returns it
-    std::string fetchLatestSequenceNumber();
+    std::string fetchLatestSequenceNumber() const;
 
     // Fetches the gzipped .osc change file from the server, writes it to a file and returns the
     // path to the file
     std::string fetchDiffWithSequenceNumber(std::string& sequenceNumber);
 
     // Fetches all nodes that are referenced in the given way element
-    static std::vector<std::string> fetchNodeReferencesForWay(const boost::property_tree::ptree& way);
+    std::vector<std::string> fetchNodeReferencesForWay(const boost::property_tree::ptree& way);
 
     // Asynchronously Fetches all nodes that are referenced in the given way element
     static std::vector<std::string> fetchNodes(const std::vector<std::string> &nodeIds);
@@ -50,7 +50,7 @@ public:
 
     static std::string fetchNode(std::string &nodeId, bool extractNodeElement = false);
 private:
-    OsmDiffGranularity _diffGranularity;
+    olu::config::Config _config;
     olu::sparql::SparqlWrapper _sparqlWrapper;
 protected:
     util::CacheFile _cacheFile = util::CacheFile("/tmp/dataFetcherCache");

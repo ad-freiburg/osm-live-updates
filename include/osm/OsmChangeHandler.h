@@ -22,6 +22,7 @@
 #include "sparql/SparqlWrapper.h"
 #include "config/Config.h"
 #include "osm/Osm2ttl.h"
+#include "osm/OsmDataFetcher.h"
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -38,7 +39,8 @@ namespace olu::osm {
     private:
         config::Config _config;
         sparql::SparqlWrapper _sparql;
-        olu::osm::Osm2ttl _osm2ttl;
+        Osm2ttl _osm2ttl;
+        OsmDataFetcher _odf;
 
         void handleInsert(const std::string& elementTag, const pt::ptree& element);
         void handleDelete(const std::string& elementTag, const pt::ptree& element);
@@ -48,8 +50,8 @@ namespace olu::osm {
         // includes all nodes that are referenced in an 'way' element
         // The osm element is also embedded in the following xml element
         // <osm version="0.6">...</osm>
-        static std::vector<std::string> getOsmElementsForInsert(const std::string& elementTag,
-                                                                const pt::ptree& element);
+        std::vector<std::string> getOsmElementsForInsert(const std::string& elementTag,
+                                                         const pt::ptree& element);
     };
 } // namespace olu::osm
 

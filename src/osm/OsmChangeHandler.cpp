@@ -29,7 +29,7 @@
 namespace olu::osm {
 
     OsmChangeHandler::OsmChangeHandler(config::Config& config, std::string &sparqlEndpointUri)
-    : _config(config), _sparql(config), _osm2ttl() {
+    : _config(config), _sparql(config), _osm2ttl(), _odf(OsmDataFetcher(config)) {
         _sparql.setEndpointUri(sparqlEndpointUri);
     }
 
@@ -103,7 +103,7 @@ namespace olu::osm {
         std::vector<std::string> osmElements;
         osmElements.push_back(config::constants::OSM_XML_NODE_START);
         if (elementTag == config::constants::WAY_TAG) {
-            auto nodeReferenceElements = olu::OsmDataFetcher::fetchNodeReferencesForWay(element);
+            auto nodeReferenceElements = _odf.fetchNodeReferencesForWay(element);
             osmElements.insert(
                 osmElements.end(),
                 std::make_move_iterator(nodeReferenceElements.begin()),

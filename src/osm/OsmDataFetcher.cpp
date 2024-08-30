@@ -30,22 +30,19 @@
 
 namespace constants = olu::config::constants;
 
-namespace olu {
+namespace olu::osm {
 
 // _________________________________________________________________________________________________
-OsmDataFetcher::OsmDataFetcher(OsmDiffGranularity diffGranularity,
-                               olu::sparql::SparqlWrapper& sparqlWrapper)
-                               : _sparqlWrapper(sparqlWrapper) {
-    _diffGranularity = diffGranularity;
-    _sparqlWrapper = sparqlWrapper;
+OsmDataFetcher::OsmDataFetcher(olu::config::Config& config)
+    : _config(config), _sparqlWrapper(olu::sparql::SparqlWrapper(config)) {
 }
 
 // _________________________________________________________________________________________________
-std::string OsmDataFetcher::fetchLatestSequenceNumber() {
+std::string OsmDataFetcher::fetchLatestSequenceNumber() const {
     // Build url for state file
     std::vector<std::string> pathSegments;
     pathSegments.emplace_back(constants::OSM_REPLICATION_BASE_URL);
-    pathSegments.emplace_back(urlSegmentFor.at(_diffGranularity));
+    pathSegments.emplace_back(urlSegmentFor.at(_config.diffGranularity));
     pathSegments.emplace_back(constants::OSM_DIFF_STATE_FILE + constants::TXT_EXTENSION);
     std::string url = util::URLHelper::buildUrl(pathSegments);
 
@@ -71,7 +68,7 @@ std::string OsmDataFetcher::fetchDiffWithSequenceNumber(std::string &sequenceNum
     std::string diffFilename = sequenceNumberFormatted + constants::OSM_CHANGE_FILE_EXTENSION;
     std::vector<std::string> pathSegments;
     pathSegments.emplace_back(constants::OSM_REPLICATION_BASE_URL);
-    pathSegments.emplace_back(urlSegmentFor.at(_diffGranularity));
+    pathSegments.emplace_back(urlSegmentFor.at(_config.diffGranularity));
     pathSegments.emplace_back(diffFilename);
     std::string url = util::URLHelper::buildUrl(pathSegments);
 
@@ -143,7 +140,7 @@ std::vector<std::string> OsmDataFetcher::fetchNodeReferencesForWay(const boost::
     }
 
     std::vector<std::string> nodeIds(visitedNodes.begin(), visitedNodes.end());
-    return fetchNodes(nodeIds);
+    return fetchNodesFromSparql(nodeIds);
 }
 
 
