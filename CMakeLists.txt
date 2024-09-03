@@ -17,13 +17,14 @@
 # along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 cmake_minimum_required(VERSION 3.16.3)
+set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 
 # --------------------------------------------------------------------------------------------------
 # Project
 # --------------------------------------------------------------------------------------------------
 project(
         osm_live_updates
-        VERSION 0.1
+        VERSION 0.1.0
         DESCRIPTION "Live updates for the complete open street map data in an rdf database"
         LANGUAGES CXX
 )
@@ -92,20 +93,20 @@ set(INSTALL_GMOCK OFF)
 set(INSTALL_GTEST OFF)
 set(BENCHMARK_ENABLE_INSTALL OFF)
 
-#find_package(Git QUIET)
-#if (GIT_FOUND AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
-#    # Update submodules as needed
-#    option(GIT_SUBMODULE "Check submodules during build" ON)
-#    if (GIT_SUBMODULE)
-#        message(STATUS "Submodule update")
-#        execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
-#                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-#                RESULT_VARIABLE GIT_SUBMOD_RESULT)
-#        if (NOT GIT_SUBMOD_RESULT EQUAL "0")
-#            message(FATAL_ERROR "git submodule update --init failed with ${GIT_SUBMOD_RESULT}, please checkout submodules")
-#        endif ()
-#    endif ()
-#endif ()
+find_package(Git QUIET)
+if (GIT_FOUND AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
+    # Update submodules as needed
+    option(GIT_SUBMODULE "Check submodules during build" ON)
+    if (GIT_SUBMODULE)
+        message(STATUS "Submodule update")
+        execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+                WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                RESULT_VARIABLE GIT_SUBMOD_RESULT)
+        if (NOT GIT_SUBMOD_RESULT EQUAL "0")
+            message(FATAL_ERROR "git submodule update --init failed with ${GIT_SUBMOD_RESULT}, please checkout submodules")
+        endif ()
+    endif ()
+endif ()
 
 if (NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/vendor/google/googletest/CMakeLists.txt")
     message(FATAL_ERROR "The submodules were not downloaded! GIT_SUBMODULE was turned off or failed. Please update submodules and try again.")
@@ -176,63 +177,63 @@ if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     endif ()
 endif ()
 
-## Based on https://github.com/ad-freiburg/pfaedle/blob/master/cmake/GetGitRevisionDescription.cmake
-#function(get_git_sha1 _var)
-#    if (NOT GIT_FOUND)
-#        find_package(Git QUIET)
-#    endif ()
-#
-#    execute_process(COMMAND
-#            "${GIT_EXECUTABLE}"
-#            rev-parse --short HEAD --
-#            WORKING_DIRECTORY
-#            "${CMAKE_SOURCE_DIR}"
-#            RESULT_VARIABLE
-#            res
-#            OUTPUT_VARIABLE
-#            out
-#            ERROR_QUIET
-#            OUTPUT_STRIP_TRAILING_WHITESPACE)
-#    if (NOT res EQUAL 0)
-#        set(out "${out}-${res}-NOTFOUND")
-#    endif ()
-#    set(${_var} "${out}" PARENT_SCOPE)
-#endfunction()
-#function(get_git_is_dirty _var)
-#    if (NOT GIT_FOUND)
-#        find_package(Git QUIET)
-#    endif ()
-#
-#    execute_process(COMMAND
-#            "${GIT_EXECUTABLE}"
-#            diff-index --name-only HEAD --
-#            WORKING_DIRECTORY
-#            "${CMAKE_SOURCE_DIR}"
-#            RESULT_VARIABLE
-#            res
-#            OUTPUT_VARIABLE
-#            out
-#            ERROR_QUIET
-#            OUTPUT_STRIP_TRAILING_WHITESPACE)
-#    if (NOT res EQUAL 0)
-#        set(out "${out}-${res}-NOTFOUND")
-#    endif ()
-#
-#    if (NOT "${out}" STREQUAL "")
-#        set(IS_DIRTY "dirty")
-#    else ()
-#        set(IS_DIRTY "")
-#    endif ()
-#    set(${_var} "${IS_DIRTY}" PARENT_SCOPE)
-#endfunction()
+# Based on https://github.com/ad-freiburg/pfaedle/blob/master/cmake/GetGitRevisionDescription.cmake
+function(get_git_sha1 _var)
+    if (NOT GIT_FOUND)
+        find_package(Git QUIET)
+    endif ()
 
-#get_git_sha1(VERSION_GIT)
-#get_git_is_dirty(VERSION_GIT_IS_DIRTY)
-#if ("${VERSION_GIT_IS_DIRTY}" STREQUAL "")
-#    set(VERSION_GIT_FULL "${VERSION_GIT}")
-#else ()
-#    set(VERSION_GIT_FULL "${VERSION_GIT}-${VERSION_GIT_IS_DIRTY}")
-#endif ()
+    execute_process(COMMAND
+            "${GIT_EXECUTABLE}"
+            rev-parse --short HEAD --
+            WORKING_DIRECTORY
+            "${CMAKE_SOURCE_DIR}"
+            RESULT_VARIABLE
+            res
+            OUTPUT_VARIABLE
+            out
+            ERROR_QUIET
+            OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if (NOT res EQUAL 0)
+        set(out "${out}-${res}-NOTFOUND")
+    endif ()
+    set(${_var} "${out}" PARENT_SCOPE)
+endfunction()
+function(get_git_is_dirty _var)
+    if (NOT GIT_FOUND)
+        find_package(Git QUIET)
+    endif ()
+
+    execute_process(COMMAND
+            "${GIT_EXECUTABLE}"
+            diff-index --name-only HEAD --
+            WORKING_DIRECTORY
+            "${CMAKE_SOURCE_DIR}"
+            RESULT_VARIABLE
+            res
+            OUTPUT_VARIABLE
+            out
+            ERROR_QUIET
+            OUTPUT_STRIP_TRAILING_WHITESPACE)
+    if (NOT res EQUAL 0)
+        set(out "${out}-${res}-NOTFOUND")
+    endif ()
+
+    if (NOT "${out}" STREQUAL "")
+        set(IS_DIRTY "dirty")
+    else ()
+        set(IS_DIRTY "")
+    endif ()
+    set(${_var} "${IS_DIRTY}" PARENT_SCOPE)
+endfunction()
+
+get_git_sha1(VERSION_GIT)
+get_git_is_dirty(VERSION_GIT_IS_DIRTY)
+if ("${VERSION_GIT_IS_DIRTY}" STREQUAL "")
+    set(VERSION_GIT_FULL "${VERSION_GIT}")
+else ()
+    set(VERSION_GIT_FULL "${VERSION_GIT}-${VERSION_GIT_IS_DIRTY}")
+endif ()
 
 if (CLANG_TIDY_EXE)
     message(STATUS "Found CLANG_TIDY_EXE at ${CLANG_TIDY_EXE}, enabling checks")
