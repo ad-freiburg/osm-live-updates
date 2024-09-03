@@ -36,6 +36,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     git \
     libcurl4-openssl-dev \
     clang-tidy \
+    cppcheck \
     g++ \
     libboost-dev \
     libboost-serialization-dev \
