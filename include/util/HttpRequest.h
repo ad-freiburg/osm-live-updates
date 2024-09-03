@@ -26,27 +26,39 @@
 
 namespace olu::util {
 
-class HttpRequest {
-public:
-    explicit HttpRequest(
-            const HttpMethod& method,
-            const std::string& url);
-    ~HttpRequest();
-    void addHeader(const std::string& key, const std::string& value);
-    void addBody(const std::string& body);
-    std::string perform();
+    class HttpRequest {
+    public:
+        explicit HttpRequest(
+                const HttpMethod& method,
+                const std::string& url);
+        ~HttpRequest();
+        void addHeader(const std::string& key, const std::string& value);
+        void addBody(const std::string& body);
+        std::string perform();
 
 
-    static std::vector<std::string> multiPerform(const std::vector<std::string>& urls);
-private:
-    CURL *_curl;
-    HttpMethod _method;
-    CURLcode _res;
-    std::string _data;
+        static std::vector<std::string> multiPerform(const std::vector<std::string>& urls);
+    private:
+        CURL *_curl;
+        HttpMethod _method;
+        CURLcode _res;
+        std::string _data;
 
-    std::string performGet();
-    void performPost();
-};
+        std::string performGet();
+        void performPost();
+    };
+
+    class HttpRequestException : public std::exception {
+    private:
+        std::string message;
+
+    public:
+        explicit HttpRequestException(const char* msg) : message(msg) { }
+
+        [[nodiscard]] const char* what() const noexcept override {
+            return message.c_str();
+        }
+    };
 
 } // namespace olu::util
 

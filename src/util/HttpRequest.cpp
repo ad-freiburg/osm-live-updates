@@ -50,6 +50,8 @@ void setup_curl(CURL* curl_handle, std::string& data, const std::string& url)
 HttpRequest::HttpRequest(const HttpMethod& method, const std::string& url) {
     _curl = curl_easy_init();
     _method = method;
+    // Initialize response code with failed init
+    _res = CURLcode::CURLE_FAILED_INIT;
     setup_curl(_curl, _data, url);
 }
 
@@ -92,6 +94,8 @@ std::string HttpRequest::performGet() {
         _res = curl_easy_perform(_curl);
         return _data;
     }
+
+    throw HttpRequestException("Failed to initialize CURL");
 }
 
 // _________________________________________________________________________________________________
@@ -99,6 +103,8 @@ void HttpRequest::performPost() {
     if (_curl) {
         _res = curl_easy_perform(_curl);
     }
+
+    throw HttpRequestException("Failed to initialize CURL");
 }
 
 std::vector<std::string> HttpRequest::multiPerform(const std::vector<std::string> &urls) {

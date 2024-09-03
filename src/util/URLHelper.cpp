@@ -24,6 +24,14 @@
 #include <iostream>
 #include <iomanip>
 
+const static inline int MIN_SEQ_NUMBER_LENGTH = 1;
+const static inline int MAX_SEQ_NUMBER_LENGTH = 9;
+const static inline int SEGMENT_LENGTH = 3;
+
+const static inline int START_POS_FIRST_SEGMENT = 0;
+const static inline int START_POS_SECOND_SEGMENT = 3;
+const static inline int START_POS_THIRD_SEGMENT = 6;
+
 namespace constants = olu::config::constants;
 
 namespace olu::util {
@@ -44,19 +52,23 @@ std::string URLHelper::buildUrl(std::vector<std::string> &pathSegments) {
 
 // _________________________________________________________________________________________________
 std::string URLHelper::formatSequenceNumberForUrl(std::string &sequenceNumber) {
-    if (sequenceNumber.length() < 1)
+    if (sequenceNumber.length() < MIN_SEQ_NUMBER_LENGTH) {
         throw std::invalid_argument(constants::EXCEPTION_MSG_SEQUENCE_NUMBER_IS_EMPTY);
+    }
 
-    if (sequenceNumber.length() > 9)
+    if (sequenceNumber.length() > MAX_SEQ_NUMBER_LENGTH) {
         throw std::invalid_argument(constants::EXCEPTION_MSG_SEQUENCE_NUMBER_IS_TOO_LONG);
+    }
 
-    while (sequenceNumber.length() < 9)
+    while (sequenceNumber.length() < MAX_SEQ_NUMBER_LENGTH) {
         sequenceNumber.insert(0, "0");
+    }
 
-    std::string part1 = sequenceNumber.substr(0, 3);
-    std::string part2 = sequenceNumber.substr(3, 3);
-    std::string part3 = sequenceNumber.substr(6, 3);
-    return part1 + "/" + part2 + "/" + part3;
+    // Format sequence number for file path which looks like XXX/XXX/XXX
+    std::string firstSegment = sequenceNumber.substr(START_POS_FIRST_SEGMENT, SEGMENT_LENGTH);
+    std::string secondSegment = sequenceNumber.substr(START_POS_SECOND_SEGMENT, SEGMENT_LENGTH);
+    std::string thirdSegment = sequenceNumber.substr(START_POS_THIRD_SEGMENT, SEGMENT_LENGTH);
+    return firstSegment + "/" + secondSegment + "/" + thirdSegment;
 }
 
 // _________________________________________________________________________________________________

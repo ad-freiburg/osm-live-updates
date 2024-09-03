@@ -39,7 +39,7 @@ OsmDataFetcher::OsmDataFetcher(olu::config::Config& config)
 // _________________________________________________________________________________________________
 std::string OsmDataFetcher::fetchLatestSequenceNumber() const {
     // Build url for state file
-    std::vector<std::string> pathSegments;
+    std::vector<std::string> pathSegments { };
     pathSegments.emplace_back(constants::OSM_REPLICATION_BASE_URL);
     pathSegments.emplace_back(urlSegmentFor.at(_config.diffGranularity));
     pathSegments.emplace_back(constants::OSM_DIFF_STATE_FILE + constants::TXT_EXTENSION);
@@ -55,13 +55,13 @@ std::string OsmDataFetcher::fetchLatestSequenceNumber() const {
     if (boost::regex_search(readBuffer, match, regex)) {
         std::string number = match[1];
         return number;
-    } else {
-       // TODO: Throw error if nothing found.
     }
+
+    throw OsmDataFetcherException("Latest sequence number could not be fetched");
 }
 
 // _________________________________________________________________________________________________
-std::string OsmDataFetcher::fetchDiffWithSequenceNumber(std::string &sequenceNumber) {
+    std::string OsmDataFetcher::fetchDiffWithSequenceNumber(std::string &sequenceNumber) const {
     // Build url for diff file
     std::string sequenceNumberFormatted = util::URLHelper::formatSequenceNumberForUrl(sequenceNumber);
     std::string diffFilename = sequenceNumberFormatted + constants::OSM_CHANGE_FILE_EXTENSION;
