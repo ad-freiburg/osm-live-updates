@@ -66,7 +66,7 @@ namespace olu::sparql {
 
             std::string query = olu::sparql::QueryWriter::writeQueryForNodeLocation(nodeId);
             ASSERT_EQ(
-                    "SELECT { ?o } WHERE { "
+                    "SELECT ?o WHERE { "
                     "osmnode:1 geo:hasGeometry/geo:asWKT ?o . "
                     "}",
                     query
