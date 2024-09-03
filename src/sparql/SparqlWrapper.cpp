@@ -25,10 +25,6 @@
 #include <fstream>
 
 namespace olu::sparql {
-    // _____________________________________________________________________________________________
-    void SparqlWrapper::setEndpointUri(const std::string &endpointUri) {
-        _endpointUri = endpointUri;
-    }
 
     // _____________________________________________________________________________________________
     void SparqlWrapper::setMethod(const util::HttpMethod httpMethod) {
@@ -39,7 +35,6 @@ namespace olu::sparql {
     void SparqlWrapper::setQuery(const std::string &query) {
         _query = query;
     }
-
     void SparqlWrapper::setPrefixes(const std::string &prefixes) {
         _prefixes = prefixes;
     }
@@ -47,11 +42,10 @@ namespace olu::sparql {
     // _____________________________________________________________________________________________
     std::string SparqlWrapper::runQuery() {
         handleFileOutput();
-
         // Format and encode query for url
         std::string query = _prefixes + "\n" + _query;
         std::string encodedQuery = util::URLHelper::encodeForUrlQuery(query);
-        std::string url = _endpointUri + "?" + encodedQuery;
+        std::string url = _config.sparqlEndpointUri + "?query=" + encodedQuery;
 
         auto request = util::HttpRequest(_httpMethod, url);
         if (_httpMethod == util::POST) {

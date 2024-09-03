@@ -32,9 +32,6 @@ public:
     // Class that handles the connection to a sparql endpoint
     explicit SparqlWrapper(const olu::config::Config& config) { _config = config; };
 
-    // Sets the uri of the sparql endpoint
-    void setEndpointUri(const std::string& endpointUri);
-
     // Sets the HTTP Method for the query. Typically, `SELECT` queries should be performed with
     // `GET` and update queries (`DELETE`, `INSERT`) with `POST`
     void setMethod(util::HttpMethod method);
@@ -51,7 +48,6 @@ public:
     std::string runQuery();
 private:
     olu::config::Config _config;
-    std::string _endpointUri;
     util::HttpMethod _httpMethod = util::POST;
     std::string _query;
     std::string _prefixes;
