@@ -34,9 +34,7 @@ namespace olu::osm {
 
 // _________________________________________________________________________________________________
 OsmDataFetcher::OsmDataFetcher(olu::config::Config& config)
-    : _config(config), _sparqlWrapper(olu::sparql::SparqlWrapper(config)) {
-    _sparqlWrapper.setEndpointUri(config.sparqlEndpointUri);
-}
+    : _config(config), _sparqlWrapper(olu::sparql::SparqlWrapper(config)) { }
 
 // _________________________________________________________________________________________________
 std::string OsmDataFetcher::fetchLatestSequenceNumber() const {
