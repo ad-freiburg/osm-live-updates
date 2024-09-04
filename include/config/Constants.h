@@ -33,6 +33,11 @@ namespace olu::config::constants {
     const static inline std::string HTML_VALUE_CONTENT_TYPE_SPARQL_QUERY =
             "application/sparql-query";
 
+    // HTML
+    const static inline std::string HTML_KEY_ACCEPT = "Accept";
+    const static inline std::string HTML_VALUE_ACCEPT_SPARQL_RESULT_XML =
+            "application/sparql-results+xml";
+
     // File extensions
     const static inline std::string OSM_FILE_EXTENSION = ".osm";
     const static inline std::string OSM_CHANGE_FILE_EXTENSION = ".osc";
@@ -117,6 +122,11 @@ namespace olu::config::constants {
     const static inline std::string PREFIXES_FOR_NODE_LOCATION =
             "PREFIX osmnode: <https://www.openstreetmap.org/node/>\n"
             "PREFIX geo: <http://www.opengis.net/ont/geosparql#>";
+
+    // Qlever
+    const static inline std::string PATH_TO_SPARQL_RESULT_FOR_NODE_LOCATION =
+            "sparql.results.result.binding.literal";
+
 
 } // namespace olu::config::constants
 
