@@ -43,6 +43,7 @@ namespace olu::util {
         HttpMethod _method;
         CURLcode _res;
         std::string _data;
+        struct curl_slist *_chunk = nullptr;
 
         std::string performGet();
         void performPost();

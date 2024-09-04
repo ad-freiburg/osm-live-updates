@@ -58,12 +58,13 @@ HttpRequest::HttpRequest(const HttpMethod& method, const std::string& url) {
 // _________________________________________________________________________________________________
 HttpRequest::~HttpRequest() {
     curl_easy_cleanup(_curl);
+    curl_slist_free_all(_chunk);
 }
 
 // _________________________________________________________________________________________________
 void HttpRequest::addHeader(const std::string& key, const std::string& value) {
     std::string header = key + ": " + value;
-    curl_easy_setopt(_curl, CURLOPT_HEADER, header.c_str());
+    _chunk = curl_slist_append(_chunk, header.c_str());
 }
 
 // _________________________________________________________________________________________________
@@ -74,6 +75,8 @@ void HttpRequest::addBody(const std::string& body) {
 // _________________________________________________________________________________________________
 std::string HttpRequest::perform() {
     std::string response;
+    curl_easy_setopt(_curl, CURLOPT_HTTPHEADER, _chunk);
+
     if (_method == HttpMethod::GET) {
         response =  performGet();
     } else {
