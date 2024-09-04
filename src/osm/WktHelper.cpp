@@ -21,5 +21,5 @@ std::string olu::osm::WktHelper::createDummyNodeFromPoint(const std::string& nod
         throw WktHelperException(("No WKT Point found in " + pointAsWkt).c_str());
     }
 
-    return "<node id=\"" + nodeId + "\" lat=\"" + lat + "\" lon=\"" + lon + "\">";
+    return "<node id=\"" + nodeId + "\" lat=\"" + lat + "\" lon=\"" + lon + "\"/>";
 }
