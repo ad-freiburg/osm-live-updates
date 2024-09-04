@@ -25,6 +25,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <string>
+#include <iostream>
 
 namespace olu::osm {
 
@@ -66,17 +67,24 @@ namespace olu::osm {
             return;
         }
 
-        auto osmElements = getOsmElementsForInsert(elementTag, element);
+        try {
+            // Convert the osmElements in xml format to rdf turtle format
+            auto osmElements = getOsmElementsForInsert(elementTag, element);
+            auto ttl = _osm2ttl.convert(osmElements);
 
-        // Convert the osmElements in xml format to rdf turtle format
-        auto ttl = _osm2ttl.convert(osmElements);
-
-        // Create a sparql query from the ttl triples and send it to the sparql endpoint
-        auto query = sparql::QueryWriter::writeInsertQuery(ttl);
-        _sparql.setPrefixes(config::constants::DEFAULT_PREFIXES);
-        _sparql.setQuery(query);
-        _sparql.setMethod(util::POST);
-        _sparql.runQuery();
+            // Create a sparql query from the ttl triples and send it to the sparql endpoint
+            auto query = sparql::QueryWriter::writeInsertQuery(ttl);
+            _sparql.setPrefixes(config::constants::DEFAULT_PREFIXES);
+            _sparql.setQuery(query);
+            _sparql.setMethod(util::POST);
+            _sparql.runQuery();
+        } catch (std::exception &e) {
+            std::cerr << "Could not handle insertion of element with tag "
+                << elementTag
+                << " and content "
+                << util::XmlReader::readTree(element)
+                << std::endl;
+        }
     }
 
     void OsmChangeHandler::handleDelete(const std::string& elementTag,
