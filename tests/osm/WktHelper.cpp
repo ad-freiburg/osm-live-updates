@@ -26,7 +26,7 @@ TEST(WktHelper, createDummyNodeFromPoint) {
 
         auto dummyNode = olu::osm::WktHelper::createDummyNodeFromPoint(nodeId, pointAsWkt);
         ASSERT_EQ(dummyNode,
-                  "<node id=\"1\" lat=\"42.7957187\" lon=\"13.5690032\">");
+                  "<node id=\"1\" lat=\"42.7957187\" lon=\"13.5690032\"/>");
     }
     {
         std::string pointAsWkt = "POINT(42.7957187)";
