@@ -109,7 +109,7 @@ namespace olu::osm {
             return;
         }
 
-        std::cout << "Successfully handled insertion of " << elementTag << " with result " << result << std::endl;
+        std::cout << "Successfully handled insertion of " << elementTag << std::endl;
     }
 
     void OsmChangeHandler::handleDelete(const std::string& elementTag,
@@ -121,7 +121,7 @@ namespace olu::osm {
         _sparql.setMethod(util::POST);
         auto result = _sparql.runQuery();
 
-        std::cout << "Successfully handled deletion of " << elementTag << " with result " << result << std::endl;
+        std::cout << "Successfully handled deletion of " << elementTag << std::endl;
 
     }
 
