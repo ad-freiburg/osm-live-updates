@@ -27,9 +27,7 @@
 namespace olu::config {
 
 struct Config {
-
-    std::string sparqlEndpointUri = "https://qlever.cs.uni-freiburg.de/api/osm-planet";
-
+    std::string sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
 
     OsmDiffGranularity diffGranularity = OsmDiffGranularity::HOUR;
 
