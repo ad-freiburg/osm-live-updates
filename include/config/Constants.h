@@ -20,6 +20,7 @@
 #define OSM_LIVE_UPDATES_CONSTANTS_H
 
 #include <string>
+#include <vector>
 
 namespace olu::config::constants {
     // URLs
@@ -107,6 +108,7 @@ namespace olu::config::constants {
         "PREFIX osm: <https://www.openstreetmap.org/>\n"
         "PREFIX osm2rdfmeta: <https://osm2rdf.cs.uni-freiburg.de/rdf/meta#>\n"
         "PREFIX ohmrel: <https://www.openhistoricalmap.org/relation/>\n"
+        "PREFIX osmt: <https://www.openstreetmap.org/wiki/Key:>\n"
         "PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>\n"
         "PREFIX osm2rdfkey: <https://osm2rdf.cs.uni-freiburg.de/rdf/key#>\n"
         "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>\n"
@@ -119,9 +121,16 @@ namespace olu::config::constants {
         "PREFIX ogc: <http://www.opengis.net/rdf#>\n"
         "PREFIX geo: <http://www.opengis.net/ont/geosparql#>\n";
 
-    const static inline std::string PREFIXES_FOR_NODE_LOCATION =
-            "PREFIX osmnode: <https://www.openstreetmap.org/node/>\n"
-            "PREFIX geo: <http://www.opengis.net/ont/geosparql#>";
+    const static inline std::vector<std::string> PREFIXES_FOR_NODE_LOCATION{
+            "PREFIX osmnode: <https://www.openstreetmap.org/node/>",
+            "PREFIX geo: <http://www.opengis.net/ont/geosparql#>"
+    };
+
+    const static inline std::vector<std::string> PREFIXES_FOR_DELETE_QUERY {
+        "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
+        "PREFIX osmnode: <https://www.openstreetmap.org/node/>",
+        "PREFIX osmway: <https://www.openstreetmap.org/way/>"
+    };
 
     // Qlever
     const static inline std::string PATH_TO_SPARQL_RESULT_FOR_NODE_LOCATION =
