@@ -77,10 +77,11 @@ std::string HttpRequest::perform() {
     std::string response;
     curl_easy_setopt(_curl, CURLOPT_HTTPHEADER, _chunk);
 
-    if (_method == HttpMethod::GET) {
-        response =  performGet();
+    if(_curl) {
+        _res = curl_easy_perform(_curl);
+        response = _data;
     } else {
-        performPost();
+        throw HttpRequestException("Failed to initialize CURL");
     }
 
     if (_res != CURLE_OK) {
@@ -89,25 +90,6 @@ std::string HttpRequest::perform() {
     }
 
     return response;
-}
-
-// _________________________________________________________________________________________________
-std::string HttpRequest::performGet() {
-    if(_curl) {
-        _res = curl_easy_perform(_curl);
-        return _data;
-    }
-
-    throw HttpRequestException("Failed to initialize CURL");
-}
-
-// _________________________________________________________________________________________________
-void HttpRequest::performPost() {
-    if (_curl) {
-        _res = curl_easy_perform(_curl);
-    }
-
-    throw HttpRequestException("Failed to initialize CURL");
 }
 
 std::vector<std::string> HttpRequest::multiPerform(const std::vector<std::string> &urls) {
