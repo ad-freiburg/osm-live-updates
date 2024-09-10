@@ -48,11 +48,18 @@ namespace olu::sparql {
         std::string url = _config.sparqlEndpointUri + "?query=" + encodedQuery;
 
         auto request = util::HttpRequest(_httpMethod, url);
+        std::string response;
         if (_httpMethod == util::POST) {
             request.addHeader(olu::config::constants::HTML_KEY_CONTENT_TYPE,
                               olu::config::constants::HTML_VALUE_CONTENT_TYPE_SPARQL_QUERY);
+
+            response = _query;
+        } else if (_httpMethod == util::GET) {
+            request.addHeader(olu::config::constants::HTML_KEY_ACCEPT,
+                              olu::config::constants::HTML_VALUE_ACCEPT_SPARQL_RESULT_XML);
+
+            response = request.perform();
         }
-        auto response = request.perform();
 
         _query = ""; _prefixes = "";
 
