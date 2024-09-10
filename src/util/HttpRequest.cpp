@@ -58,12 +58,13 @@ HttpRequest::HttpRequest(const HttpMethod& method, const std::string& url) {
 // _________________________________________________________________________________________________
 HttpRequest::~HttpRequest() {
     curl_easy_cleanup(_curl);
+    curl_slist_free_all(_chunk);
 }
 
 // _________________________________________________________________________________________________
 void HttpRequest::addHeader(const std::string& key, const std::string& value) {
     std::string header = key + ": " + value;
-    curl_easy_setopt(_curl, CURLOPT_HEADER, header.c_str());
+    _chunk = curl_slist_append(_chunk, header.c_str());
 }
 
 // _________________________________________________________________________________________________
@@ -74,10 +75,13 @@ void HttpRequest::addBody(const std::string& body) {
 // _________________________________________________________________________________________________
 std::string HttpRequest::perform() {
     std::string response;
-    if (_method == HttpMethod::GET) {
-        response =  performGet();
+    curl_easy_setopt(_curl, CURLOPT_HTTPHEADER, _chunk);
+
+    if(_curl) {
+        _res = curl_easy_perform(_curl);
+        response = _data;
     } else {
-        performPost();
+        throw HttpRequestException("Failed to initialize CURL");
     }
 
     if (_res != CURLE_OK) {
@@ -86,25 +90,6 @@ std::string HttpRequest::perform() {
     }
 
     return response;
-}
-
-// _________________________________________________________________________________________________
-std::string HttpRequest::performGet() {
-    if(_curl) {
-        _res = curl_easy_perform(_curl);
-        return _data;
-    }
-
-    throw HttpRequestException("Failed to initialize CURL");
-}
-
-// _________________________________________________________________________________________________
-void HttpRequest::performPost() {
-    if (_curl) {
-        _res = curl_easy_perform(_curl);
-    }
-
-    throw HttpRequestException("Failed to initialize CURL");
 }
 
 std::vector<std::string> HttpRequest::multiPerform(const std::vector<std::string> &urls) {

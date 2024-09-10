@@ -17,14 +17,13 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "osm/OsmChangeHandler.h"
-#include "osm/OsmDataFetcher.h"
 #include "util/XmlReader.h"
 #include "config/Constants.h"
 #include "sparql/QueryWriter.h"
-#include "sparql/SparqlWrapper.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <string>
+#include <iostream>
 
 namespace olu::osm {
 
@@ -66,27 +65,64 @@ namespace olu::osm {
             return;
         }
 
-        auto osmElements = getOsmElementsForInsert(elementTag, element);
+        std::string result;
+        std::vector<std::string> osmElements;
+        try {
+            // Convert the osmElements in xml format to rdf turtle format
+            osmElements = getOsmElementsForInsert(elementTag, element);
+            auto ttl = _osm2ttl.convert(osmElements);
+            std::vector<std::string> prefixes;
+            std::copy_if (
+                    ttl.begin(),
+                    ttl.end(),
+                    std::back_inserter(prefixes),
+                    [](const std::string& triple){
+                        return triple.starts_with("@prefix");
+                    } );
 
-        // Convert the osmElements in xml format to rdf turtle format
-        auto ttl = _osm2ttl.convert(osmElements);
+            // Transform prefixes to correct format
+            for (auto & prefix : prefixes) {
+                prefix = "PREFIX " + prefix.substr(8, prefix.length() - 10);
+            }
 
-        // Create a sparql query from the ttl triples and send it to the sparql endpoint
-        auto query = sparql::QueryWriter::writeInsertQuery(ttl);
-        _sparql.setPrefixes(config::constants::DEFAULT_PREFIXES);
-        _sparql.setQuery(query);
-        _sparql.setMethod(util::POST);
-        _sparql.runQuery();
+            std::vector<std::string> triples;
+            std::copy_if (
+                    ttl.begin(),
+                    ttl.end(),
+                    std::back_inserter(triples),
+                    [](const std::string& triple){
+                        return !triple.starts_with("@prefix");
+                    } );
+
+            // Create a sparql query from the ttl triples and send it to the sparql endpoint
+            auto query = sparql::QueryWriter::writeInsertQuery(triples);
+            _sparql.setPrefixes(prefixes);
+            _sparql.setQuery(query);
+            _sparql.setMethod(util::POST);
+            result = _sparql.runQuery();
+        } catch (std::exception &e) {
+            std::cerr << "Could not handle insertion of element with tag "
+                << elementTag
+                << " and content "
+                << util::XmlReader::readTree(element)
+                << std::endl;
+            return;
+        }
+
+        std::cout << "Successfully handled insertion of " << elementTag << std::endl;
     }
 
     void OsmChangeHandler::handleDelete(const std::string& elementTag,
                                         const boost::property_tree::ptree &element) {
         auto subject = olu::sparql::QueryWriter::getSubjectFor(elementTag, element);
         auto query = sparql::QueryWriter::writeDeleteQuery(subject);
-        _sparql.setPrefixes(config::constants::DEFAULT_PREFIXES);
+        _sparql.setPrefixes(config::constants::PREFIXES_FOR_DELETE_QUERY);
         _sparql.setQuery(query);
         _sparql.setMethod(util::POST);
-        _sparql.runQuery();
+        auto result = _sparql.runQuery();
+
+        std::cout << "Successfully handled deletion of " << elementTag << std::endl;
+
     }
 
     void OsmChangeHandler::handleModify(const std::string& elementTag,

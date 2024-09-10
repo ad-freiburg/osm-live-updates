@@ -55,6 +55,7 @@ RUN cd ${HOME} && \
   update-ca-certificates \
   git config --global http.sslCAinfo /etc/ssl/certs/ca-certificates.crt
 
-RUN mkdir input \
+RUN cd ${HOME} && \
+    mkdir input \
     mkdir output \
     mkdir scratch

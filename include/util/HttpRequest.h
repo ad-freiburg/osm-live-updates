@@ -43,9 +43,7 @@ namespace olu::util {
         HttpMethod _method;
         CURLcode _res;
         std::string _data;
-
-        std::string performGet();
-        void performPost();
+        struct curl_slist *_chunk = nullptr;
     };
 
     class HttpRequestException : public std::exception {

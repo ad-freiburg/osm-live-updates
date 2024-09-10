@@ -18,7 +18,6 @@
 
 #ifndef OSM_LIVE_UPDATES_CACHEFILE_H_
 #define OSM_LIVE_UPDATES_CACHEFILE_H_
-
 #include <filesystem>
 
 namespace olu::util {

@@ -27,6 +27,8 @@
 #include <string>
 #include <vector>
 #include <boost/regex.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <iostream>
 
 namespace constants = olu::config::constants;
 
@@ -151,7 +153,24 @@ OsmDataFetcher::fetchNodesFromSparql(const std::vector<std::string> &nodeIds) {
         _sparqlWrapper.setMethod(util::HttpMethod::GET);
         _sparqlWrapper.setQuery(query);
         _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_NODE_LOCATION);
-        auto pointAsWkt = _sparqlWrapper.runQuery();
+        auto response = _sparqlWrapper.runQuery();
+        boost::property_tree::ptree responseAsTree;
+        olu::util::XmlReader::populatePTreeFromString(response, responseAsTree);
+
+        std::string pointAsWkt;
+        try {
+            pointAsWkt = responseAsTree.get<std::string>(
+                    constants::PATH_TO_SPARQL_RESULT_FOR_NODE_LOCATION);
+        } catch (boost::property_tree::ptree_bad_path &e) {
+            std::cerr << "Could not get location for node with id "
+                          + nodeId
+                          + " from sparql endpoint" << std::endl;
+            throw OsmDataFetcherException(
+                    ("Could not get location for node with id "
+                    + nodeId
+                    + " from sparql endpoint").c_str());
+        }
+
         auto dummyNode = olu::osm::WktHelper::createDummyNodeFromPoint(nodeId, pointAsWkt);
         dummyNodes.emplace_back(dummyNode);
     }

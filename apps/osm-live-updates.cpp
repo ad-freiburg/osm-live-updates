@@ -16,9 +16,19 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <iostream>
+#include "osm/Osm2ttl.h"
+#include "osm/OsmDataFetcher.h"
+#include "osm/OsmChangeHandler.h"
+
 #include <string>
+#include <fstream>
 
 int main() {
-    return 0;
+    auto config((olu::config::Config()));
+    auto changeHandler = olu::osm::OsmChangeHandler(config);
+
+    std::string pathToOsmChangeFile = "/src/tests/data/159.osc";
+    changeHandler.handleChange(pathToOsmChangeFile);
+
+   return 0;
 }
