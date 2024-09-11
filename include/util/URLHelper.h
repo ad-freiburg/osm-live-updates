@@ -32,7 +32,7 @@ public:
     // Formats a sequence number for use in an url
     // For example: The sequence number 6177383 would be returned as 006/177/383
     // @throw 'std::invalid_argument' if sequence number is empty or too long
-    static std::string formatSequenceNumberForUrl(std::string &sequenceNumber);
+    static std::string formatSequenceNumberForUrl(int &sequenceNumber);
 
     static std::string encodeForUrlQuery(const std::string& value);
 };

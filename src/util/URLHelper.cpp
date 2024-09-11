@@ -24,8 +24,10 @@
 #include <iostream>
 #include <iomanip>
 
-const static inline int MIN_SEQ_NUMBER_LENGTH = 1;
-const static inline int MAX_SEQ_NUMBER_LENGTH = 9;
+const static inline int MIN_SEQ_NUMBER = 0;
+const static inline int MAX_SEQ_NUMBER = 999999999;
+
+const static inline int FORMATTED_SEQ_NUMBER_LENGTH = 9;
 const static inline int SEGMENT_LENGTH = 3;
 
 const static inline int START_POS_FIRST_SEGMENT = 0;
@@ -51,23 +53,20 @@ std::string URLHelper::buildUrl(std::vector<std::string> &pathSegments) {
 }
 
 // _________________________________________________________________________________________________
-std::string URLHelper::formatSequenceNumberForUrl(std::string &sequenceNumber) {
-    if (sequenceNumber.length() < MIN_SEQ_NUMBER_LENGTH) {
-        throw std::invalid_argument(constants::EXCEPTION_MSG_SEQUENCE_NUMBER_IS_EMPTY);
+std::string URLHelper::formatSequenceNumberForUrl(int &sequenceNumber) {
+    if (sequenceNumber < MIN_SEQ_NUMBER || sequenceNumber > MAX_SEQ_NUMBER) {
+        throw std::invalid_argument(constants::EXCEPTION_MSG_SEQUENCE_NUMBER_IS_INVALID);
     }
 
-    if (sequenceNumber.length() > MAX_SEQ_NUMBER_LENGTH) {
-        throw std::invalid_argument(constants::EXCEPTION_MSG_SEQUENCE_NUMBER_IS_TOO_LONG);
-    }
-
-    while (sequenceNumber.length() < MAX_SEQ_NUMBER_LENGTH) {
-        sequenceNumber.insert(0, "0");
+    std::string sequenceNumberStr = std::to_string(sequenceNumber);
+    while (sequenceNumberStr.length() < FORMATTED_SEQ_NUMBER_LENGTH) {
+        sequenceNumberStr.insert(0, "0");
     }
 
     // Format sequence number for file path which looks like XXX/XXX/XXX
-    std::string firstSegment = sequenceNumber.substr(START_POS_FIRST_SEGMENT, SEGMENT_LENGTH);
-    std::string secondSegment = sequenceNumber.substr(START_POS_SECOND_SEGMENT, SEGMENT_LENGTH);
-    std::string thirdSegment = sequenceNumber.substr(START_POS_THIRD_SEGMENT, SEGMENT_LENGTH);
+    std::string firstSegment = sequenceNumberStr.substr(START_POS_FIRST_SEGMENT, SEGMENT_LENGTH);
+    std::string secondSegment = sequenceNumberStr.substr(START_POS_SECOND_SEGMENT, SEGMENT_LENGTH);
+    std::string thirdSegment = sequenceNumberStr.substr(START_POS_THIRD_SEGMENT, SEGMENT_LENGTH);
     return firstSegment + "/" + secondSegment + "/" + thirdSegment;
 }
 

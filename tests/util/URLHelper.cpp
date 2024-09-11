@@ -29,32 +29,32 @@ namespace olu::util {
 // _________________________________________________________________________________________________
 TEST(URLHelper, formatSequenceNumber) {
     {
-        std::string seqNumber = "6177383";
+        int seqNumber = 6177383;
         std::string formattedSeqNumber = URLHelper::formatSequenceNumberForUrl(seqNumber);
         ASSERT_EQ(formattedSeqNumber, "006/177/383");
     }
     {
-        std::string seqNumber = "116177383";
+        int seqNumber = 116177383;
         std::string formattedSeqNumber = URLHelper::formatSequenceNumberForUrl(seqNumber);
         ASSERT_EQ(formattedSeqNumber, "116/177/383");
     }
     {
         EXPECT_THROW({
              try {
-                 std::string seqNumber = "1234567890";
+                 int seqNumber = 1234567890;
                  std::string formattedSeqNumber = URLHelper::formatSequenceNumberForUrl(seqNumber);
              } catch(const std::invalid_argument& e) {
-                 EXPECT_STREQ(constants::EXCEPTION_MSG_SEQUENCE_NUMBER_IS_TOO_LONG, e.what());
+                 EXPECT_STREQ(constants::EXCEPTION_MSG_SEQUENCE_NUMBER_IS_INVALID, e.what());
                  throw;
              }}, std::invalid_argument);
     }
     {
         EXPECT_THROW({
              try {
-                 std::string seqNumber;
+                 int seqNumber = -1    ;
                  std::string formattedSeqNumber = URLHelper::formatSequenceNumberForUrl(seqNumber);
              } catch(const std::invalid_argument& e) {
-                 EXPECT_STREQ(constants::EXCEPTION_MSG_SEQUENCE_NUMBER_IS_EMPTY, e.what());
+                 EXPECT_STREQ(constants::EXCEPTION_MSG_SEQUENCE_NUMBER_IS_INVALID, e.what());
                  throw;
              }}, std::invalid_argument);
     }
@@ -64,10 +64,10 @@ TEST(URLHelper, formatSequenceNumber) {
 TEST(URLHelper, buildUrl) {
     {
         std::vector<std::string> pathSegments;
-        pathSegments.emplace_back(constants::OSM_REPLICATION_BASE_URL);
+        pathSegments.emplace_back(constants::OSM_NODE_BASE_URL);
         pathSegments.emplace_back("state.txt");
         std::string url = URLHelper::buildUrl(pathSegments);
-        ASSERT_EQ(url, constants::OSM_REPLICATION_BASE_URL + "/" + "state.txt");
+        ASSERT_EQ(url, constants::OSM_NODE_BASE_URL + "/" + "state.txt");
     }
     {
         std::vector<std::string> pathSegments;
