@@ -44,6 +44,7 @@ std::string Decompressor::readGzip(const std::string& path) {
     in.push(boost::iostreams::gzip_decompressor());
     in.push(file);
     copy(in, ss);
+    file.close();
 
     return ss.str();
 }

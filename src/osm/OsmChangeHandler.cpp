@@ -18,6 +18,7 @@
 
 #include "osm/OsmChangeHandler.h"
 #include "util/XmlReader.h"
+#include "util/Decompressor.h"
 #include "config/Constants.h"
 #include "sparql/QueryWriter.h"
 
@@ -32,8 +33,14 @@ namespace olu::osm {
 
     void OsmChangeHandler::handleChange(const std::string &pathToOsmChangeFile) {
         boost::property_tree::ptree osmChangeElement;
-        olu::util::XmlReader::populatePTreeFromFile(pathToOsmChangeFile,
-                                                    osmChangeElement);
+        if (pathToOsmChangeFile.ends_with(config::constants::GZIP_EXTENSION)) {
+            auto decompressed = olu::util::Decompressor::readGzip(pathToOsmChangeFile);
+            std::cout << decompressed << std::endl;
+            olu::util::XmlReader::populatePTreeFromString(decompressed, osmChangeElement);
+        } else {
+            olu::util::XmlReader::populatePTreeFromFile(pathToOsmChangeFile,
+                                                        osmChangeElement);
+        }
 
         // Loop over all change elements in the change file ('modify', 'delete' or 'create')
         for (const auto &child : osmChangeElement.get_child(
@@ -56,7 +63,11 @@ namespace olu::osm {
                 }
             }
         }
+
+        std::filesystem::remove(pathToOsmChangeFile);
     }
+
+
 
     void olu::osm::OsmChangeHandler::handleInsert(const std::string& elementTag,
                                                   const boost::property_tree::ptree &element) {
@@ -148,5 +159,4 @@ namespace olu::osm {
         osmElements.push_back(config::constants::OSM_XML_NODE_END);
         return osmElements;
     }
-
 } // namespace olu::osm

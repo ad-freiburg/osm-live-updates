@@ -20,6 +20,7 @@
 #define OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 
 #include "osm/OsmDiffGranularities.h"
+#include "osm/OsmDatabaseState.h"
 #include "util/CacheFile.h"
 #include "sparql/SparqlWrapper.h"
 
@@ -33,11 +34,11 @@ namespace olu::osm {
         explicit OsmDataFetcher(olu::config::Config& config);
 
         // Fetches the sequence number of the latest diff from the osm server and returns it
-        [[nodiscard]] std::string fetchLatestSequenceNumber() const;
+        [[nodiscard]] OsmDatabaseState fetchLatestDatabaseState() const;
 
         // Fetches the gzipped .osc change file from the server, writes it to a file and returns the
         // path to the file
-        std::string fetchDiffWithSequenceNumber(std::string& sequenceNumber) const;
+        std::string fetchDiffWithSequenceNumber(int &sequenceNumber) ;
 
         // Fetches all nodes that are referenced in the given way element
         std::vector<std::string> fetchNodeReferencesForWay(const boost::property_tree::ptree& way);

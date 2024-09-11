@@ -22,13 +22,13 @@
 #include "sparql/SparqlWrapper.h"
 
 namespace olu {
-    TEST(OsmDataFetcher, fetchLatestSequenceNumber) {
+    TEST(OsmDataFetcher, fetchLatestDatabaseState) {
         auto config = config::Config();
         auto sw = sparql::SparqlWrapper(config);
         auto osmDataFetcher = olu::osm::OsmDataFetcher(config);
-        auto response = osmDataFetcher.fetchLatestSequenceNumber();
+        auto response = osmDataFetcher.fetchLatestDatabaseState();
 
-        ASSERT_TRUE(response.length() > 0);
+        ASSERT_TRUE(response.timeStamp.length() > 0);
     }
 
     TEST(OsmDataFetcher, fetchNode) {

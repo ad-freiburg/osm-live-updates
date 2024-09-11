@@ -29,6 +29,9 @@ namespace olu::config {
 struct Config {
     std::string sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
 
+    // ChangeFileBrowser
+    std::string osmDatabaseDirectoryPath = "http://download.geofabrik.de/europe/andorra-updates";
+
     OsmDiffGranularity diffGranularity = OsmDiffGranularity::HOUR;
 
     // Specifies whether the generated sparql queries that are sent to the sparql endpoint should

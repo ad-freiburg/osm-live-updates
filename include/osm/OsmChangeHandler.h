@@ -52,6 +52,8 @@ namespace olu::osm {
         // <osm version="0.6">...</osm>
         std::vector<std::string> getOsmElementsForInsert(const std::string& elementTag,
                                                          const pt::ptree& element);
+
+        void deleteChangeFile(const std::string& pathToOsmChangeFile);
     };
 } // namespace olu::osm
 
