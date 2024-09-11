@@ -18,6 +18,7 @@
 
 #include "osm/Osm2ttl.h"
 #include "osm/OsmDataFetcher.h"
+#include "osm/OsmUpdater.h"
 #include "osm/OsmChangeHandler.h"
 
 #include <string>
@@ -25,10 +26,16 @@
 
 int main() {
     auto config((olu::config::Config()));
-    auto changeHandler = olu::osm::OsmChangeHandler(config);
 
-    std::string pathToOsmChangeFile = "/src/tests/data/159.osc";
-    changeHandler.handleChange(pathToOsmChangeFile);
+    // Example how to handle a single change file
+//    auto changeHandler = olu::osm::OsmChangeHandler(config);
+//
+//    std::string pathToOsmChangeFile = "/src/tests/data/159.osc";
+//    changeHandler.handleChange(pathToOsmChangeFile);
 
-   return 0;
+    // Example how to update a database depending on the sequence number
+    auto osmUpdater = olu::osm::OsmUpdater(config);
+    osmUpdater.run(4176);
+
+    return 0;
 }
