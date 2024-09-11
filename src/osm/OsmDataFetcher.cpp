@@ -23,12 +23,14 @@
 #include "util/HttpRequest.h"
 #include "util/XmlReader.h"
 #include "sparql/QueryWriter.h"
+#include "util/Decompressor.h"
 
 #include <string>
 #include <vector>
 #include <boost/regex.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <iostream>
+#include <fstream>
 
 namespace constants = olu::config::constants;
 
@@ -39,11 +41,12 @@ OsmDataFetcher::OsmDataFetcher(olu::config::Config& config)
     : _config(config), _sparqlWrapper(olu::sparql::SparqlWrapper(config)) { }
 
 // _________________________________________________________________________________________________
-std::string OsmDataFetcher::fetchLatestSequenceNumber() const {
+    OsmDatabaseState OsmDataFetcher::fetchLatestDatabaseState() const {
+    OsmDatabaseState osmDatabaseState;
+
     // Build url for state file
     std::vector<std::string> pathSegments { };
-    pathSegments.emplace_back(constants::OSM_REPLICATION_BASE_URL);
-    pathSegments.emplace_back(urlSegmentFor.at(_config.diffGranularity));
+    pathSegments.emplace_back(_config.osmDatabaseDirectoryPath);
     pathSegments.emplace_back(constants::OSM_DIFF_STATE_FILE + constants::TXT_EXTENSION);
     std::string url = util::URLHelper::buildUrl(pathSegments);
 
@@ -52,33 +55,52 @@ std::string OsmDataFetcher::fetchLatestSequenceNumber() const {
     std::string readBuffer = request.perform();
 
     // Extract sequence number from state file
-    boost::regex regex("sequenceNumber=(\\d+)");
-    boost::smatch match;
-    if (boost::regex_search(readBuffer, match, regex)) {
-        std::string number = match[1];
-        return number;
+    boost::regex regexSeqNumber("sequenceNumber=(\\d+)");
+    boost::smatch matchSeqNumber;
+    if (boost::regex_search(readBuffer, matchSeqNumber, regexSeqNumber)) {
+        std::string number = matchSeqNumber[1];
+        osmDatabaseState.sequenceNumber = std::stoi(number);
+    } else {
+        throw OsmDataFetcherException(
+                "Sequence number of latest database state could not be fetched");
     }
 
-    throw OsmDataFetcherException("Latest sequence number could not be fetched");
+    // Extract timestamp from state file
+    boost::regex regexTimestamp(
+            R"(timestamp=([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}\\:[0-9]{2}\\:[0-9]{2}Z))");
+    boost::smatch matchTimestamp;
+    if (boost::regex_search(readBuffer, matchTimestamp, regexTimestamp)) {
+        std::string timestamp = matchTimestamp[1];
+        osmDatabaseState.timeStamp = timestamp;
+    } else {
+        throw OsmDataFetcherException(
+                "Timestamp of latest database state could not be fetched");
+    }
+
+    return osmDatabaseState;
 }
 
 // _________________________________________________________________________________________________
-    std::string OsmDataFetcher::fetchDiffWithSequenceNumber(std::string &sequenceNumber) const {
+    std::string OsmDataFetcher::fetchDiffWithSequenceNumber(int &sequenceNumber) {
     // Build url for diff file
     std::string sequenceNumberFormatted = util::URLHelper::formatSequenceNumberForUrl(sequenceNumber);
-    std::string diffFilename = sequenceNumberFormatted + constants::OSM_CHANGE_FILE_EXTENSION;
+    std::string diffFilename = sequenceNumberFormatted + constants::OSM_CHANGE_FILE_EXTENSION + constants::GZIP_EXTENSION;
     std::vector<std::string> pathSegments;
-    pathSegments.emplace_back(constants::OSM_REPLICATION_BASE_URL);
-    pathSegments.emplace_back(urlSegmentFor.at(_config.diffGranularity));
+    pathSegments.emplace_back(_config.osmDatabaseDirectoryPath);
     pathSegments.emplace_back(diffFilename);
     std::string url = util::URLHelper::buildUrl(pathSegments);
+    std::cout << url << std::endl;
 
     // Get Diff file from server and write to cache file.
-    std::string filePath = constants::DIFF_CACHE_FILE + sequenceNumber + constants::OSM_CHANGE_FILE_EXTENSION + constants::GZIP_EXTENSION;
+    std::string filePath = constants::DIFF_CACHE_FILE + std::to_string(sequenceNumber) + constants::OSM_CHANGE_FILE_EXTENSION + constants::GZIP_EXTENSION;
     auto request = util::HttpRequest(util::GET, url);
-    auto cacheFile = util::CacheFile(filePath);
-    cacheFile.write(request.perform());
-    cacheFile.close();
+
+    auto response = request.perform();
+    std::ofstream outputFile;
+    outputFile.open (filePath);
+    outputFile << response;
+    outputFile.close();
+
     return filePath;
 }
 

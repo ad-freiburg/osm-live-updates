@@ -23,9 +23,6 @@
 #include <vector>
 
 namespace olu::config::constants {
-    // URLs
-    const static inline std::string OSM_REPLICATION_BASE_URL =
-        "https://planet.openstreetmap.org/replication";
     const static inline std::string OSM_NODE_BASE_URL =
         "https://www.openstreetmap.org/api/0.6/node";
 
@@ -34,7 +31,6 @@ namespace olu::config::constants {
     const static inline std::string HTML_VALUE_CONTENT_TYPE_SPARQL_QUERY =
             "application/sparql-query";
 
-    // HTML
     const static inline std::string HTML_KEY_ACCEPT = "Accept";
     const static inline std::string HTML_VALUE_ACCEPT_SPARQL_RESULT_XML =
             "application/sparql-results+xml";
@@ -55,10 +51,8 @@ namespace olu::config::constants {
     const static inline std::string DIFF_CACHE_FILE = "cache_for_seq_";
 
     // Exception Messages
-    const static inline char *const EXCEPTION_MSG_SEQUENCE_NUMBER_IS_EMPTY =
-            "Sequence number is empty.";
-    const static inline char *const EXCEPTION_MSG_SEQUENCE_NUMBER_IS_TOO_LONG =
-            "Sequence number is too long, it can be up to 9 Digits.";
+    const static inline char *const EXCEPTION_MSG_SEQUENCE_NUMBER_IS_INVALID =
+            "Sequence number is invalid.";
 
     // Osm2rdf
     const static inline std::string PATH_TO_INPUT_FILE = "/input/input.osm";
