@@ -89,7 +89,6 @@ OsmDataFetcher::OsmDataFetcher(olu::config::Config& config)
     pathSegments.emplace_back(_config.osmDatabaseDirectoryPath);
     pathSegments.emplace_back(diffFilename);
     std::string url = util::URLHelper::buildUrl(pathSegments);
-    std::cout << url << std::endl;
 
     // Get Diff file from server and write to cache file.
     std::string filePath = constants::DIFF_CACHE_FILE + std::to_string(sequenceNumber) + constants::OSM_CHANGE_FILE_EXTENSION + constants::GZIP_EXTENSION;
