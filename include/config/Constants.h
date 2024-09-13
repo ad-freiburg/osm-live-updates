@@ -80,6 +80,10 @@ namespace olu::config::constants {
     const static inline std::string RELATION_SUBJECT = "osmrel";
 
     const static inline std::string LOCATION_AS_WKT_PREDICATE = "geo:hasGeometry/geo:asWKT";
+    const static inline std::string RDF_TYPE_PREDICATE = "rdf:type";
+    const static inline std::string OSM_META_TIMESTAMP_PREDICATE = "osmmeta:timestamp";
+
+    const static inline std::string OSM_NODE_OBJECT = "osm:node";
 
     const static inline std::string NODE_REFERENCE_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "ref";
     const static inline std::string ID_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "id";
@@ -120,6 +124,12 @@ namespace olu::config::constants {
             "PREFIX geo: <http://www.opengis.net/ont/geosparql#>"
     };
 
+    const static inline std::vector<std::string> PREFIXES_FOR_LATEST_NODE_TIMESTAMP {
+            "PREFIX osmmeta: <https://www.openstreetmap.org/meta/>",
+            "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
+            "PREFIX osm: <https://www.openstreetmap.org/>"
+    };
+
     const static inline std::vector<std::string> PREFIXES_FOR_DELETE_QUERY {
         "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
         "PREFIX osmnode: <https://www.openstreetmap.org/node/>",
@@ -127,7 +137,7 @@ namespace olu::config::constants {
     };
 
     // Qlever
-    const static inline std::string PATH_TO_SPARQL_RESULT_FOR_NODE_LOCATION =
+    const static inline std::string PATH_TO_SPARQL_RESULT =
             "sparql.results.result.binding.literal";
 
 

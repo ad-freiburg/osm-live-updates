@@ -86,3 +86,10 @@ std::string olu::sparql::QueryWriter::writeQueryForNodeLocation(const std::strin
              "?o . }";
     return query;
 }
+
+// _________________________________________________________________________________________________
+std::string olu::sparql::QueryWriter::writeQueryForLatestNodeTimestamp() {
+    std::string query = "SELECT ?p WHERE { ?s rdf:type osm:node . ?s osmmeta:timestamp ?p . } "
+                        "ORDER BY DESC(?p) LIMIT 1";
+    return query;
+}

@@ -11,12 +11,27 @@ namespace olu::osm {
         _latestState = _odf.fetchLatestDatabaseState();
     }
 
-    void OsmUpdater::run(int fromSequenceNumber) {
-        auto sequenceNumber = fromSequenceNumber;
+    void OsmUpdater::run() {
+        auto sequenceNumber = decideStartSequenceNumber();
         while (sequenceNumber <= _latestState.sequenceNumber) {
-            auto pathToOsmChangeFile = _odf.fetchDiffWithSequenceNumber(fromSequenceNumber);
+            auto pathToOsmChangeFile = _odf.fetchDiffWithSequenceNumber(sequenceNumber);
             _och.handleChange(pathToOsmChangeFile);
             sequenceNumber++;
         }
+    }
+
+    int OsmUpdater::decideStartSequenceNumber() {
+        if (_config.sequenceNumber > 0) {
+            return _config.sequenceNumber;
+        }
+
+        std::string timestamp;
+        if (_config.timestamp.empty()) {
+            timestamp = _odf.fetchLatestTimestampOfAnyNode();
+        } else {
+            timestamp = _config.timestamp;
+        }
+
+        return _odf.fetchNearestSequenceNumberForTimestamp(timestamp);
     }
 }
