@@ -40,6 +40,9 @@ public:
 
     // Returns a SPARQL query that asks for the location of a point in WKT format
     static std::string writeQueryForNodeLocation(const std::string& nodeId);
+
+    // Returns a SPARQL query that asks for the latest timestamp of any node in the database
+    static std::string writeQueryForLatestNodeTimestamp();
 };
 
 } // namespace olu::sparql

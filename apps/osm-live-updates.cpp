@@ -24,6 +24,7 @@
 #include <string>
 #include <fstream>
 
+
 int main() {
     auto config((olu::config::Config()));
 
@@ -35,7 +36,7 @@ int main() {
 
     // Example how to update a database depending on the sequence number
     auto osmUpdater = olu::osm::OsmUpdater(config);
-    osmUpdater.run(4176);
+    osmUpdater.run();
 
     return 0;
 }

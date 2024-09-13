@@ -27,10 +27,14 @@
 namespace olu::config {
 
 struct Config {
+    // To be passed via the command line
     std::string sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
-
-    // ChangeFileBrowser
     std::string osmDatabaseDirectoryPath = "http://download.geofabrik.de/europe/andorra-updates";
+//    std::string sparqlEndpointUri = "https://qlever.cs.uni-freiburg.de/api/osm-planet/";
+//    std::string osmDatabaseDirectoryPath = "https://planet.openstreetmap.org/replication/minute/";
+
+    int sequenceNumber = -1;
+    std::string timestamp;
 
     OsmDiffGranularity diffGranularity = OsmDiffGranularity::HOUR;
 

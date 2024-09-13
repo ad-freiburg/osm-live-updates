@@ -33,7 +33,12 @@ namespace olu::osm {
     public:
         explicit OsmDataFetcher(olu::config::Config& config);
 
-        // Fetches the sequence number of the latest diff from the osm server and returns it
+        // Fetches the database state (sequence number and timestamp) for the given sequence number
+        // from the server
+        [[nodiscard]] OsmDatabaseState fetchDatabaseState(int sequenceNumber) const;
+
+        // Fetches the database state (sequence number and timestamp) of the latest diff from the
+        // server
         [[nodiscard]] OsmDatabaseState fetchLatestDatabaseState() const;
 
         // Fetches the gzipped .osc change file from the server, writes it to a file and returns the
@@ -50,9 +55,17 @@ namespace olu::osm {
 
 
         static std::string fetchNode(std::string &nodeId, bool extractNodeElement = false);
+
+        // Runs a SPARQL query to get the latest timestamp of any node in the database
+        std::string fetchLatestTimestampOfAnyNode();
+        // Fetches the 'nearest' sequence number for the given timestamp from the server.
+        int fetchNearestSequenceNumberForTimestamp(const std::string& timeStamp) const;
+
     private:
         olu::config::Config _config;
         olu::sparql::SparqlWrapper _sparqlWrapper;
+
+        static OsmDatabaseState extractStateFromStateFile(const std::string& stateFile);
     protected:
         util::CacheFile _cacheFile = util::CacheFile("/tmp/dataFetcherCache");
     };
