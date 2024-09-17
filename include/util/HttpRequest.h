@@ -33,16 +33,15 @@ namespace olu::util {
                 const std::string& url);
         ~HttpRequest();
         void addHeader(const std::string& key, const std::string& value);
-        void addBody(const std::string& body);
+        void addBody(std::string body);
         std::string perform();
-
-
-        static std::vector<std::string> multiPerform(const std::vector<std::string>& urls);
     private:
         CURL *_curl;
         HttpMethod _method;
         CURLcode _res;
         std::string _data;
+        std::string _body;
+
         struct curl_slist *_chunk = nullptr;
     };
 

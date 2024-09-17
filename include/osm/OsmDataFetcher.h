@@ -48,9 +48,6 @@ namespace olu::osm {
         // Fetches all nodes that are referenced in the given way element
         std::vector<std::string> fetchNodeReferencesForWay(const boost::property_tree::ptree& way);
 
-        // Asynchronously Fetches all nodes that are referenced in the given way element
-        static std::vector<std::string> fetchNodes(const std::vector<std::string> &nodeIds);
-
         std::vector<std::string> fetchNodesFromSparql(const std::vector<std::string> &nodeIds);
 
 

@@ -20,6 +20,7 @@
 
 #include <curl/curl.h>
 #include <iostream>
+#include <utility>
 #include <vector>
 #include <cstring>
 
@@ -68,14 +69,15 @@ void HttpRequest::addHeader(const std::string& key, const std::string& value) {
 }
 
 // _________________________________________________________________________________________________
-void HttpRequest::addBody(const std::string& body) {
-    curl_easy_setopt(_curl, CURLOPT_POSTFIELDS, body.c_str());
+void HttpRequest::addBody(std::string body) {
+    _body = std::move(body);
 }
 
 // _________________________________________________________________________________________________
 std::string HttpRequest::perform() {
     std::string response;
     curl_easy_setopt(_curl, CURLOPT_HTTPHEADER, _chunk);
+    curl_easy_setopt(_curl, CURLOPT_POSTFIELDS, _body.c_str());
 
     if(_curl) {
         _res = curl_easy_perform(_curl);
@@ -90,68 +92,6 @@ std::string HttpRequest::perform() {
     }
 
     return response;
-}
-
-std::vector<std::string> HttpRequest::multiPerform(const std::vector<std::string> &urls) {
-    CURLM* multi_handle;
-    int still_running;
-
-    curl_global_init(CURL_GLOBAL_DEFAULT);
-    multi_handle = curl_multi_init();
-
-    std::vector<CURL*> curl_handles;
-    std::vector<std::string> dataVec(urls.size());
-
-    for (size_t i = 0; i < urls.size(); ++i)
-    {
-        CURL* curl_handle = curl_easy_init();
-        setup_curl(curl_handle, dataVec[i], urls[i]);
-        curl_handles.push_back(curl_handle);
-        curl_multi_add_handle(multi_handle, curl_handle);
-    }
-
-    curl_multi_perform(multi_handle, &still_running);
-
-    while (still_running)
-    {
-        struct timeval timeout;
-        int rc;
-
-        fd_set fdread;
-        fd_set fdwrite;
-        fd_set fdexcep;
-        int maxfd;
-
-        timeout.tv_sec = 1;
-        timeout.tv_usec = 0;
-
-        FD_ZERO(&fdread);
-        FD_ZERO(&fdwrite);
-        FD_ZERO(&fdexcep);
-
-        curl_multi_fdset(multi_handle, &fdread, &fdwrite, &fdexcep, &maxfd);
-        rc = select(maxfd + 1, &fdread, &fdwrite, &fdexcep, &timeout);
-
-        switch (rc)
-        {
-            case -1:
-                break;
-            case 0:
-            default:
-                curl_multi_perform(multi_handle, &still_running);
-                break;
-        }
-    }
-
-    for (CURL* handle : curl_handles)
-    {
-        curl_multi_remove_handle(multi_handle, handle);
-        curl_easy_cleanup(handle);
-    }
-    curl_multi_cleanup(multi_handle);
-    curl_global_cleanup();
-
-    return dataVec;
 }
 
 } // namespace olu::util
