@@ -23,6 +23,7 @@
 
 #include <string>
 #include <fstream>
+#include <iostream>
 
 namespace olu::sparql {
 
@@ -72,6 +73,16 @@ namespace olu::sparql {
             outputFile << _query << "\n";
             outputFile.close();
         }
+    }
+
+    void SparqlWrapper::clearCache() const {
+        std::string url = _config.sparqlEndpointUri;
+        auto request = util::HttpRequest(util::HttpMethod::POST, url);
+        request.addHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
+        request.addHeader("Accept", "application/qlever-results+json");
+        request.addBody("cmd=clear-cache");
+        auto response = request.perform();
+        std::cout << response << std::endl;
     }
 
 } // namespace olu::sparql

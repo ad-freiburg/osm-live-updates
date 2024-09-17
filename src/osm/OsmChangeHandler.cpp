@@ -55,11 +55,19 @@ namespace olu::osm {
                 // Loop over each element ('node', 'way' or 'relation') to be created
                 for (const auto &element : child.second) {
                     handleInsert(element.first, element.second);
+
+                    // Fix: The cache needs to be cleared after each update, otherwise the
+                    // sparql endpoint can send outdated data
+                    _sparql.clearCache();
                 }
             } else if (child.first == config::constants::DELETE_TAG) {
                 // Loop over each element ('node', 'way' or 'relation') to be deleted
                 for (const auto &element : child.second) {
                     handleDelete(element.first, element.second);
+
+                    // Fix: The cache needs to be cleared after each update, otherwise the
+                    // sparql endpoint can send outdated data
+                    _sparql.clearCache();
                 }
             }
         }

@@ -113,27 +113,6 @@ std::string OsmDataFetcher::fetchNode(std::string &nodeId, bool extractNodeEleme
     return response;
 }
 
-std::vector<std::string> OsmDataFetcher::fetchNodes(const std::vector<std::string> &nodeIds) {
-    std::vector<std::string> urls;
-    for(const std::basic_string<char>& nodeId : nodeIds) {
-        std::vector<std::string> pathSegments;
-        pathSegments.emplace_back(constants::OSM_NODE_BASE_URL);
-        pathSegments.emplace_back(nodeId);
-        std::string url = util::URLHelper::buildUrl(pathSegments);
-        urls.emplace_back(url);
-    }
-
-    auto responses = util::HttpRequest::multiPerform(urls);
-
-    std::vector<std::string> nodeElements;
-    for(const std::string& response : responses) {
-        auto nodeElement = util::XmlReader::readNodeElement(response);
-        nodeElements.emplace_back(nodeElement);
-    }
-
-    return nodeElements;
-}
-
 // _________________________________________________________________________________________________
 std::vector<std::string> OsmDataFetcher::fetchNodeReferencesForWay(const boost::property_tree::ptree &way) {
     std::vector<std::string> referencedNodes;

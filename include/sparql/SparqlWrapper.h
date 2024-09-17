@@ -42,6 +42,9 @@ public:
     // Sets the prefixes for the current query
     void setPrefixes(const std::vector<std::string> &prefixes);
 
+    // Clears the cache of the sparql endpoint
+    void clearCache() const;
+
     // Sends the current query to the sparql endpoint and returns the response from the endpoint.
     // Make sure that the correct HTTP method is set before running the query (POST for database
     // updates and GET for queries with select)
