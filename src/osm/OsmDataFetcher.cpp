@@ -46,7 +46,7 @@ OsmDatabaseState OsmDataFetcher::fetchDatabaseState(int sequenceNumber) const {
     std::string seqNumberFormatted = util::URLHelper::formatSequenceNumberForUrl(sequenceNumber);
     std::string stateFileName = seqNumberFormatted + "." + constants::OSM_DIFF_STATE_FILE + constants::TXT_EXTENSION;
     std::vector<std::string> pathSegments { };
-    pathSegments.emplace_back(_config.osmDatabaseDirectoryPath);
+    pathSegments.emplace_back(_config.osmChangeFileDirectoryUri);
     pathSegments.emplace_back(stateFileName);
     std::string url = util::URLHelper::buildUrl(pathSegments);
 
@@ -61,7 +61,7 @@ OsmDatabaseState OsmDataFetcher::fetchDatabaseState(int sequenceNumber) const {
 OsmDatabaseState OsmDataFetcher::fetchLatestDatabaseState() const {
     // Build url for state file
     std::vector<std::string> pathSegments { };
-    pathSegments.emplace_back(_config.osmDatabaseDirectoryPath);
+    pathSegments.emplace_back(_config.osmChangeFileDirectoryUri);
     pathSegments.emplace_back(constants::OSM_DIFF_STATE_FILE + constants::TXT_EXTENSION);
     std::string url = util::URLHelper::buildUrl(pathSegments);
 
@@ -78,7 +78,7 @@ OsmDatabaseState OsmDataFetcher::fetchLatestDatabaseState() const {
     std::string sequenceNumberFormatted = util::URLHelper::formatSequenceNumberForUrl(sequenceNumber);
     std::string diffFilename = sequenceNumberFormatted + constants::OSM_CHANGE_FILE_EXTENSION + constants::GZIP_EXTENSION;
     std::vector<std::string> pathSegments;
-    pathSegments.emplace_back(_config.osmDatabaseDirectoryPath);
+    pathSegments.emplace_back(_config.osmChangeFileDirectoryUri);
     pathSegments.emplace_back(diffFilename);
     std::string url = util::URLHelper::buildUrl(pathSegments);
 

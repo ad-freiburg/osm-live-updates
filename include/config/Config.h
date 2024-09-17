@@ -27,28 +27,38 @@
 namespace olu::config {
 
 struct Config {
-    // To be passed via the command line
-    std::string sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
-    std::string osmDatabaseDirectoryPath = "http://download.geofabrik.de/europe/andorra-updates";
+    std::string sparqlEndpointUri;
+    std::string pathToOsmChangeFile;
+    std::string osmChangeFileDirectoryUri;
+
+//    std::string sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
+//    std::string osmDatabaseDirectoryPath = "http://download.geofabrik.de/europe/andorra-updates";
 //    std::string sparqlEndpointUri = "https://qlever.cs.uni-freiburg.de/api/osm-planet/";
 //    std::string osmDatabaseDirectoryPath = "https://planet.openstreetmap.org/replication/minute/";
 
     int sequenceNumber = -1;
     std::string timestamp;
 
-    OsmDiffGranularity diffGranularity = OsmDiffGranularity::HOUR;
+
+
 
     // Specifies whether the generated sparql queries that are sent to the sparql endpoint should
     // also be saved to a file
     bool writeSparqlQueriesToFile = true;
-    std::string pathToSparqlQueryOutput = "/src/build/sparqlOutput.txt";
 
+    std::string pathToSparqlQueryOutput = "/src/build/sparqlOutput.txt";
 
     std::filesystem::path cache{std::filesystem::temp_directory_path()};
 
     // Generate a path inside the cache directory.
     [[nodiscard]] std::filesystem::path getTempPath(
             const std::string &path, const std::string &suffix) const;
+
+    // Generate the information string containing the current settings.
+    [[nodiscard]] std::string getInfo(std::string_view prefix) const;
+
+    // Parse provided commandline arguments into config object.
+    void fromArgs(int argc, char** argv);
 };
 
 }

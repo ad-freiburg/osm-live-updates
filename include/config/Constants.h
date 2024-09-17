@@ -141,6 +141,43 @@ namespace olu::config::constants {
             "sparql.results.result.binding.literal";
 
 
+    const static inline std::string HEADER = "Configuration for OLU";
+
+    const static inline std::string HELP_OPTION_SHORT = "h";
+    const static inline std::string HELP_OPTION_LONG = "help";
+    const static inline std::string HELP_OPTION_HELP = "Display help information.";
+
+    const static inline std::string SPARQL_ENDPOINT_URI_INFO = "SPARQL endpoint URI:";
+    const static inline std::string SPARQL_ENDPOINT_URI_OPTION_SHORT = "u";
+    const static inline std::string SPARQL_ENDPOINT_URI_OPTION_LONG = "sparql-uri";
+    const static inline std::string SPARQL_ENDPOINT_URI_OPTION_HELP =
+            "The URI of the SPARQL endpoint that you want to update.";
+
+    const static inline std::string PATH_TO_OSM_CHANGE_FILE_INFO = "Path to osm change file:";
+    const static inline std::string PATH_TO_OSM_CHANGE_FILE_OPTION_SHORT = "f";
+    const static inline std::string PATH_TO_OSM_CHANGE_FILE_OPTION_LONG = "change-file-path";
+    const static inline std::string PATH_TO_OSM_CHANGE_FILE_OPTION_HELP =
+            "The path to the osm change file that you want to be applied to the SPARQL endpoint.";
+
+    const static inline std::string OSM_CHANGE_FILE_DIRECTORY_URI_INFO =
+            "URI of osm change file directory:";
+    const static inline std::string OSM_CHANGE_FILE_DIRECTORY_URI_OPTION_SHORT = "d";
+    const static inline std::string OSM_CHANGE_FILE_DIRECTORY_URI_OPTION_LONG = "change-file-dir";
+    const static inline std::string OSM_CHANGE_FILE_DIRECTORY_URI_OPTION_HELP =
+            "The URI of the directory where the osm change files can be found.";
+
+    const static inline std::string SEQUENCE_NUMBER_INFO = "Starting sequence number:";
+    const static inline std::string SEQUENCE_NUMBER_OPTION_SHORT = "s";
+    const static inline std::string SEQUENCE_NUMBER_OPTION_LONG = "sequence-number";
+    const static inline std::string SEQUENCE_NUMBER_OPTION_HELP =
+            "The sequence number to start the update process from.";
+
+    const static inline std::string TIME_STAMP_INFO = "Starting timestamp:";
+    const static inline std::string TIME_STAMP_OPTION_SHORT = "t";
+    const static inline std::string TIME_STAMP_OPTION_LONG = "timestamp";
+    const static inline std::string TIME_STAMP_OPTION_HELP =
+            "The time stamp to start the update process from.";
+
 } // namespace olu::config::constants
 
 #endif //OSM_LIVE_UPDATES_CONSTANTS_H

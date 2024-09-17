@@ -19,24 +19,23 @@
 #include "osm/Osm2ttl.h"
 #include "osm/OsmDataFetcher.h"
 #include "osm/OsmUpdater.h"
-#include "osm/OsmChangeHandler.h"
+#include "config/ExitCode.h"
 
-#include <string>
 #include <fstream>
+#include <iostream>
 
-
-int main() {
+int main(int argc, char** argv) {
     auto config((olu::config::Config()));
+    config.fromArgs(argc, argv);
+    std::cerr << config.getInfo("---") << std::endl;
 
-    // Example how to handle a single change file
-//    auto changeHandler = olu::osm::OsmChangeHandler(config);
-//
-//    std::string pathToOsmChangeFile = "/src/tests/data/159.osc";
-//    changeHandler.handleChange(pathToOsmChangeFile);
+    try {
+        auto osmUpdater = olu::osm::OsmUpdater(config);
+        osmUpdater.run();
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        std::exit(olu::config::ExitCode::EXCEPTION);
+    }
 
-    // Example how to update a database depending on the sequence number
-    auto osmUpdater = olu::osm::OsmUpdater(config);
-    osmUpdater.run();
-
-    return 0;
+    std::exit(olu::config::ExitCode::SUCCESS);
 }

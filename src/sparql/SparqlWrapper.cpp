@@ -82,7 +82,6 @@ namespace olu::sparql {
         request.addHeader("Accept", "application/qlever-results+json");
         request.addBody("cmd=clear-cache");
         auto response = request.perform();
-        std::cout << response << std::endl;
     }
 
 } // namespace olu::sparql
