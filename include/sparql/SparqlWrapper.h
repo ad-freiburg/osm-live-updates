@@ -30,7 +30,10 @@ namespace olu::sparql {
 class SparqlWrapper {
 public:
     // Class that handles the connection to a sparql endpoint
-    explicit SparqlWrapper(const olu::config::Config& config) { _config = config; };
+    explicit SparqlWrapper(const olu::config::Config& config) {
+        _config = config;
+        clearOutputFile();
+    };
 
     // Sets the HTTP Method for the query. Typically, `SELECT` queries should be performed with
     // `GET` and update queries (`DELETE`, `INSERT`) with `POST`
@@ -55,6 +58,7 @@ private:
     std::string _query;
     std::string _prefixes;
 
+    void clearOutputFile() const;
     void handleFileOutput();
 };
 

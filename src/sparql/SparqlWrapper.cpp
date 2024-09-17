@@ -66,11 +66,21 @@ namespace olu::sparql {
         return response;
     }
 
+    void SparqlWrapper::clearOutputFile() const {
+        if (_config.writeSparqlQueriesToFile) {
+            std::ofstream outputFile;
+            outputFile.open (_config.pathToSparqlQueryOutput, std::ios_base::trunc);
+            outputFile << "";
+            outputFile.close();
+        }
+    }
+
     void SparqlWrapper::handleFileOutput() {
         if (_config.writeSparqlQueriesToFile) {
             std::ofstream outputFile;
             outputFile.open (_config.pathToSparqlQueryOutput, std::ios_base::app);
-            outputFile << _query << "\n";
+            outputFile << _prefixes;
+            outputFile << _query;
             outputFile.close();
         }
     }
