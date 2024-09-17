@@ -34,7 +34,8 @@ namespace olu::osm {
         explicit OsmChangeHandler(config::Config& config);
 
         // Processes a file in osmChange format ('https://wiki.openstreetmap.org/wiki/OsmChange')
-        void handleChange(const std::string& pathToOsmChangeFile);
+        void handleChange(const std::string &pathToOsmChangeFile,
+                          const bool &deleteChangeFile);
 
     private:
         config::Config _config;

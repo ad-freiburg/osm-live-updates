@@ -31,7 +31,8 @@ namespace olu::osm {
     OsmChangeHandler::OsmChangeHandler(config::Config& config)
     : _config(config), _sparql(config), _osm2ttl(), _odf(OsmDataFetcher(config)) { }
 
-    void OsmChangeHandler::handleChange(const std::string &pathToOsmChangeFile) {
+    void OsmChangeHandler::handleChange(const std::string &pathToOsmChangeFile,
+                                        const bool &deleteChangeFile) {
         boost::property_tree::ptree osmChangeElement;
         if (pathToOsmChangeFile.ends_with(config::constants::GZIP_EXTENSION)) {
             auto decompressed = olu::util::Decompressor::readGzip(pathToOsmChangeFile);
@@ -72,7 +73,9 @@ namespace olu::osm {
             }
         }
 
-        std::filesystem::remove(pathToOsmChangeFile);
+        if (deleteChangeFile) {
+            std::filesystem::remove(pathToOsmChangeFile);
+        }
     }
 
 
