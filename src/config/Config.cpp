@@ -91,7 +91,7 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
         }
 
         if (!(pathToOsmChangeFileOp->is_set()) && !(osmChangeFileDirectoryUriOp->is_set())) {
-            std::cerr << "You have to provide the path to an osm change file or the uri to an directory where the osm change files are located" << std::endl;
+            std::cerr << "You have to provide the path to an osm change file or the URI to an directory where the osm change files are located" << std::endl;
             exit(olu::config::ExitCode::ARGUMENT_MISSING);
         }
 
@@ -102,7 +102,7 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
         }
 
         if (osmChangeFileDirectoryUriOp->is_set()) {
-            osmChangeFileDirectoryUri = pathToOsmChangeFileOp->value();
+            osmChangeFileDirectoryUri = osmChangeFileDirectoryUriOp->value();
         }
 
         if (timestampOp->is_set()) {
