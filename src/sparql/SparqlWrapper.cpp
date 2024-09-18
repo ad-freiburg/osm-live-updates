@@ -38,31 +38,35 @@ namespace olu::sparql {
     }
     void SparqlWrapper::setPrefixes(const std::vector<std::string> &prefixes) {
         for (const auto & prefix : prefixes) {
-            _prefixes += prefix + "\n";
+            _prefixes += prefix + " ";
         }
     }
 
     // _____________________________________________________________________________________________
     std::string SparqlWrapper::runQuery() {
         handleFileOutput();
-        // Format and encode query for url
-        std::string query = _prefixes + "\n" + _query;
-        std::string encodedQuery = util::URLHelper::encodeForUrlQuery(query);
-        std::string url = _config.sparqlEndpointUri + "?query=" + encodedQuery;
 
-        auto request = util::HttpRequest(_httpMethod, url);
+        // Format and encode query for url
+        std::string query = _prefixes + _query;
+        std::string encodedQuery = util::URLHelper::encodeForUrlQuery(query);
+
         std::string response;
         if (_httpMethod == util::POST) {
+            auto request = util::HttpRequest(_httpMethod, _config.sparqlEndpointUri);
             request.addHeader(olu::config::constants::HTML_KEY_CONTENT_TYPE,
-                              olu::config::constants::HTML_VALUE_CONTENT_TYPE_SPARQL_QUERY);
+                              olu::config::constants::HTML_VALUE_CONTENT_TYPE);
+            std::string body = "query=" + encodedQuery;
+            request.addBody(body);
+            response = request.perform();
         } else if (_httpMethod == util::GET) {
+            std::string url = _config.sparqlEndpointUri + "?query=" + encodedQuery;
+            auto request = util::HttpRequest(_httpMethod, url);
             request.addHeader(olu::config::constants::HTML_KEY_ACCEPT,
                               olu::config::constants::HTML_VALUE_ACCEPT_SPARQL_RESULT_XML);
+            response = request.perform();
         }
 
-        response = request.perform();
         _query = ""; _prefixes = "";
-
         return response;
     }
 
@@ -79,8 +83,7 @@ namespace olu::sparql {
         if (_config.writeSparqlQueriesToFile) {
             std::ofstream outputFile;
             outputFile.open (_config.pathToSparqlQueryOutput, std::ios_base::app);
-            outputFile << _prefixes;
-            outputFile << _query;
+            outputFile << _prefixes << _query << std::endl;
             outputFile.close();
         }
     }
@@ -88,8 +91,8 @@ namespace olu::sparql {
     void SparqlWrapper::clearCache() const {
         std::string url = _config.sparqlEndpointUri;
         auto request = util::HttpRequest(util::HttpMethod::POST, url);
-        request.addHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
-        request.addHeader("Accept", "application/qlever-results+json");
+        request.addHeader(olu::config::constants::HTML_KEY_CONTENT_TYPE,
+                          olu::config::constants::HTML_VALUE_CONTENT_TYPE);
         request.addBody("cmd=clear-cache");
         auto response = request.perform();
     }

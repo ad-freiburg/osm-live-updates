@@ -28,8 +28,8 @@ namespace olu::config::constants {
 
     // HTML
     const static inline std::string HTML_KEY_CONTENT_TYPE = "Content-Type";
-    const static inline std::string HTML_VALUE_CONTENT_TYPE_SPARQL_QUERY =
-            "application/sparql-query";
+    const static inline std::string HTML_VALUE_CONTENT_TYPE =
+            "application/x-www-form-urlencoded;charset=UTF-8";
 
     const static inline std::string HTML_KEY_ACCEPT = "Accept";
     const static inline std::string HTML_VALUE_ACCEPT_SPARQL_RESULT_XML =
