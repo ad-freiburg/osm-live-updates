@@ -36,7 +36,6 @@ namespace olu::osm {
         boost::property_tree::ptree osmChangeElement;
         if (pathToOsmChangeFile.ends_with(config::constants::GZIP_EXTENSION)) {
             auto decompressed = olu::util::Decompressor::readGzip(pathToOsmChangeFile);
-            std::cout << decompressed << std::endl;
             olu::util::XmlReader::populatePTreeFromString(decompressed, osmChangeElement);
         } else {
             olu::util::XmlReader::populatePTreeFromFile(pathToOsmChangeFile,
@@ -130,8 +129,6 @@ namespace olu::osm {
                 << std::endl;
             return;
         }
-
-        std::cout << "Successfully handled insertion of " << elementTag << std::endl;
     }
 
     void OsmChangeHandler::handleDelete(const std::string& elementTag,
@@ -142,9 +139,6 @@ namespace olu::osm {
         _sparql.setQuery(query);
         _sparql.setMethod(util::POST);
         auto result = _sparql.runQuery();
-
-        std::cout << "Successfully handled deletion of " << elementTag << std::endl;
-
     }
 
     void OsmChangeHandler::handleModify(const std::string& elementTag,

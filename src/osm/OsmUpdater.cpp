@@ -15,8 +15,11 @@ namespace olu::osm {
         } else {
             _latestState = _odf.fetchLatestDatabaseState();
             auto sequenceNumber = decideStartSequenceNumber();
+            std::cout << "Start at sequence number: " << sequenceNumber << std::endl;
+            std::cout << "Latest sequence number: " << _latestState.sequenceNumber << std::endl;
             while (sequenceNumber <= _latestState.sequenceNumber) {
                 auto pathToOsmChangeFile = _odf.fetchDiffWithSequenceNumber(sequenceNumber);
+                std::cout << "Handling diff with sequence number: " << sequenceNumber << std::endl;
                 _och.handleChange(pathToOsmChangeFile, true);
                 sequenceNumber++;
             }

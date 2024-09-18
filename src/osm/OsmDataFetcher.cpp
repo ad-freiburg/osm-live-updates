@@ -53,7 +53,6 @@ OsmDatabaseState OsmDataFetcher::fetchDatabaseState(int sequenceNumber) const {
     // Get state file from osm server
     auto request = util::HttpRequest(util::GET, url);
     std::string response = request.perform();
-    std::cout << response << std::endl;
     return extractStateFromStateFile(response);
 }
 
@@ -68,7 +67,6 @@ OsmDatabaseState OsmDataFetcher::fetchLatestDatabaseState() const {
     // Get state file from osm server
     auto request = util::HttpRequest(util::GET, url);
     std::string response = request.perform();
-    std::cout << response << std::endl;
     return extractStateFromStateFile(response);
 }
 
@@ -177,7 +175,6 @@ std::string OsmDataFetcher::fetchLatestTimestampOfAnyNode() {
     _sparqlWrapper.setQuery(query);
     _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_LATEST_NODE_TIMESTAMP);
     auto response = _sparqlWrapper.runQuery();
-        std::cout << response << std::endl;
 
     boost::property_tree::ptree responseAsTree;
     olu::util::XmlReader::populatePTreeFromString(response, responseAsTree);
