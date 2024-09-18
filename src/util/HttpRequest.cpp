@@ -77,7 +77,12 @@ void HttpRequest::addBody(std::string body) {
 std::string HttpRequest::perform() {
     std::string response;
     curl_easy_setopt(_curl, CURLOPT_HTTPHEADER, _chunk);
-    curl_easy_setopt(_curl, CURLOPT_POSTFIELDS, _body.c_str());
+
+    if (_method == POST) {
+        curl_easy_setopt(_curl,CURLOPT_POST,1L);
+        curl_easy_setopt(_curl, CURLOPT_POSTFIELDS, _body.c_str());
+        curl_easy_setopt(_curl, CURLOPT_POSTFIELDSIZE, _body.length());
+    }
 
     if(_curl) {
         _res = curl_easy_perform(_curl);

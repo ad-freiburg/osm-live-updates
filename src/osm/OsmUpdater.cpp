@@ -7,16 +7,19 @@
 
 namespace olu::osm {
     OsmUpdater::OsmUpdater(config::Config &config)
-    : _config(config), _odf(OsmDataFetcher(config)), _och(OsmChangeHandler(config)) {
-        _latestState = _odf.fetchLatestDatabaseState();
-    }
+    : _config(config), _odf(OsmDataFetcher(config)), _och(OsmChangeHandler(config)) { }
 
     void OsmUpdater::run() {
-        auto sequenceNumber = decideStartSequenceNumber();
-        while (sequenceNumber <= _latestState.sequenceNumber) {
-            auto pathToOsmChangeFile = _odf.fetchDiffWithSequenceNumber(sequenceNumber);
-            _och.handleChange(pathToOsmChangeFile);
-            sequenceNumber++;
+        if (!(_config.pathToOsmChangeFile.empty())) {
+            _och.handleChange(_config.pathToOsmChangeFile, false);
+        } else {
+            _latestState = _odf.fetchLatestDatabaseState();
+            auto sequenceNumber = decideStartSequenceNumber();
+            while (sequenceNumber <= _latestState.sequenceNumber) {
+                auto pathToOsmChangeFile = _odf.fetchDiffWithSequenceNumber(sequenceNumber);
+                _och.handleChange(pathToOsmChangeFile, true);
+                sequenceNumber++;
+            }
         }
     }
 
