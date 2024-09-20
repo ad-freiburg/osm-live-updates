@@ -11,6 +11,7 @@ namespace olu::osm {
 
     void OsmUpdater::run() {
         if (!(_config.pathToOsmChangeFile.empty())) {
+            std::cout << "Start handling change file at path: " << _config.pathToOsmChangeFile << std::endl;
             _och.handleChange(_config.pathToOsmChangeFile, false);
         } else {
             _latestState = _odf.fetchLatestDatabaseState();
@@ -24,6 +25,8 @@ namespace olu::osm {
                 sequenceNumber++;
             }
         }
+
+        std::cout << "DONE" << std::endl;
     }
 
     int OsmUpdater::decideStartSequenceNumber() {

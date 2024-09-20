@@ -38,7 +38,7 @@ target_link_libraries(olu_library PRIVATE
         Threads::Threads
         ${ZLIB_LIBRARIES}
         ${CURL_LIBRARIES}
-        osm2ttl_library
+        osm2rdf_library
 )
 
 # Link OpenMP if found

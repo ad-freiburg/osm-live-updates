@@ -122,9 +122,10 @@ FetchContent_MakeAvailable(popl)
 include_directories(SYSTEM ${popl_SOURCE_DIR}/include)
 set(POPL_INCLUDE_DIR ${popl_SOURCE_DIR}/include)
 
+# User a osm2rdf branch that is tuned for this app
 FetchContent_Declare(osm2rdf
-        GIT_REPOSITORY  https://github.com/ad-freiburg/osm2rdf.git
-        GIT_TAG v0.2
+        GIT_REPOSITORY  https://github.com/nicolano/osm2rdf.git
+        GIT_TAG 46e1ea5338ed2b783be1e6b0ff7515084fdecade
 )
 FetchContent_MakeAvailable(osm2rdf)
 include_directories(SYSTEM ${osm2rdf_SOURCE_DIR}/include)

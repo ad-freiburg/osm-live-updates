@@ -25,6 +25,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <string>
 #include <iostream>
+#include <osm2rdf/util/ProgressBar.h>
 
 namespace olu::osm {
 
@@ -42,6 +43,31 @@ namespace olu::osm {
                                                         osmChangeElement);
         }
 
+        size_t maxCount = 0;
+        // Loop over all change elements in the change file ('modify', 'delete' or 'create')
+        for (const auto &child : osmChangeElement.get_child(
+                config::constants::OSM_CHANGE_TAG)) {
+
+            if (child.first == config::constants::MODIFY_TAG) {
+                // Loop over each element ('node', 'way' or 'relation') to be modified
+                for (const auto &element : child.second) {
+                    maxCount++;
+                }
+            } else if (child.first == config::constants::CREATE_TAG) {
+                // Loop over each element ('node', 'way' or 'relation') to be created
+                for (const auto &element : child.second) {
+                    maxCount++;
+                }
+            } else if (child.first == config::constants::DELETE_TAG) {
+                // Loop over each element ('node', 'way' or 'relation') to be deleted
+                for (const auto &element : child.second) {
+                    maxCount++;
+                }
+            }
+        }
+
+        osm2rdf::util::ProgressBar progressBar(maxCount, true);
+        size_t entryCount = 0;
         // Loop over all change elements in the change file ('modify', 'delete' or 'create')
         for (const auto &child : osmChangeElement.get_child(
                 config::constants::OSM_CHANGE_TAG)) {
@@ -70,11 +96,15 @@ namespace olu::osm {
                     _sparql.clearCache();
                 }
             }
+
+            progressBar.update(entryCount++);
         }
 
         if (deleteChangeFile) {
             std::filesystem::remove(pathToOsmChangeFile);
         }
+
+        progressBar.done();
     }
 
 
