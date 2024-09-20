@@ -54,7 +54,7 @@ namespace olu::osm {
         std::vector<std::string> getOsmElementsForInsert(const std::string& elementTag,
                                                          const pt::ptree& element);
 
-        void deleteChangeFile(const std::string& pathToOsmChangeFile);
+        static size_t countElements(const boost::property_tree::ptree &osmChangeElement);
     };
 } // namespace olu::osm
 

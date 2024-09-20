@@ -43,29 +43,7 @@ namespace olu::osm {
                                                         osmChangeElement);
         }
 
-        size_t maxCount = 0;
-        // Loop over all change elements in the change file ('modify', 'delete' or 'create')
-        for (const auto &child : osmChangeElement.get_child(
-                config::constants::OSM_CHANGE_TAG)) {
-
-            if (child.first == config::constants::MODIFY_TAG) {
-                // Loop over each element ('node', 'way' or 'relation') to be modified
-                for (const auto &element : child.second) {
-                    maxCount++;
-                }
-            } else if (child.first == config::constants::CREATE_TAG) {
-                // Loop over each element ('node', 'way' or 'relation') to be created
-                for (const auto &element : child.second) {
-                    maxCount++;
-                }
-            } else if (child.first == config::constants::DELETE_TAG) {
-                // Loop over each element ('node', 'way' or 'relation') to be deleted
-                for (const auto &element : child.second) {
-                    maxCount++;
-                }
-            }
-        }
-
+        auto maxCount = countElements(osmChangeElement);
         osm2rdf::util::ProgressBar progressBar(maxCount, true);
         size_t entryCount = 0;
         // Loop over all change elements in the change file ('modify', 'delete' or 'create')
@@ -193,5 +171,31 @@ namespace olu::osm {
         osmElements.push_back(olu::util::XmlReader::readTree(element, {elementTag}, 0));
         osmElements.push_back(config::constants::OSM_XML_NODE_END);
         return osmElements;
+    }
+
+    size_t OsmChangeHandler::countElements(const boost::property_tree::ptree &osmChangeElement) {
+        size_t count = 0;
+        // Loop over all change elements in the change file ('modify', 'delete' or 'create')
+        for (const auto &child : osmChangeElement.get_child(
+                config::constants::OSM_CHANGE_TAG)) {
+
+            if (child.first == config::constants::MODIFY_TAG) {
+                // Loop over each element ('node', 'way' or 'relation') to be modified
+                for (const auto &element : child.second) {
+                    count++;
+                }
+            } else if (child.first == config::constants::CREATE_TAG) {
+                // Loop over each element ('node', 'way' or 'relation') to be created
+                for (const auto &element : child.second) {
+                    count++;
+                }
+            } else if (child.first == config::constants::DELETE_TAG) {
+                // Loop over each element ('node', 'way' or 'relation') to be deleted
+                for (const auto &element : child.second) {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 } // namespace olu::osm
