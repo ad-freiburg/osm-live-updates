@@ -19,7 +19,6 @@
 #ifndef OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 #define OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 
-#include "osm/OsmDiffGranularities.h"
 #include "osm/OsmDatabaseState.h"
 #include "util/CacheFile.h"
 #include "sparql/SparqlWrapper.h"

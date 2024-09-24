@@ -19,8 +19,6 @@
 #ifndef OSM_LIVE_UPDATES_CONFIG_H
 #define OSM_LIVE_UPDATES_CONFIG_H
 
-#include "osm/OsmDiffGranularities.h"
-
 #include <string>
 #include <filesystem>
 
