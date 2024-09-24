@@ -2,7 +2,7 @@
 // Created by Nicolas von Trott on 28.08.24.
 //
 
-#include "osm/WktHelper.h"
+#include "util/WktHelper.h"
 
 #include <boost/regex.hpp>
 #include <string>
@@ -18,7 +18,8 @@ std::string olu::osm::WktHelper::createDummyNodeFromPoint(const int &nodeId,
         lon = match[1];
         lat = match[2];
     } else {
-        throw WktHelperException(("No WKT Point found in " + pointAsWkt).c_str());
+        std::string message = "No WKT Point found in " + pointAsWkt;
+        throw WktHelperException(message.c_str());
     }
 
     return "<node id=\"" + std::to_string(nodeId) + "\" lat=\"" + lat + "\" lon=\"" + lon + "\"/>";

@@ -21,7 +21,7 @@
 #include "util/Decompressor.h"
 #include "config/Constants.h"
 #include "sparql/QueryWriter.h"
-#include "osm/WktHelper.h"
+#include "util/WktHelper.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <string>
