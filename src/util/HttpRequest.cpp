@@ -20,6 +20,7 @@
 
 #include <curl/curl.h>
 #include <iostream>
+#include <fstream>
 #include <utility>
 #include <vector>
 #include <cstring>
@@ -51,8 +52,8 @@ void setup_curl(CURL* curl_handle, std::string& data, const std::string& url)
 HttpRequest::HttpRequest(const HttpMethod& method, const std::string& url) {
     _curl = curl_easy_init();
     _method = method;
-    // Initialize response code with failed init
     _res = CURLcode::CURLE_FAILED_INIT;
+    _url = url;
     setup_curl(_curl, _data, url);
 }
 
@@ -92,8 +93,23 @@ std::string HttpRequest::perform() {
     }
 
     if (_res != CURLE_OK) {
-        fprintf(stderr, "curl_easy_perform() failed: %s\n",
-                curl_easy_strerror(_res));
+        std::string reason = curl_easy_strerror(_res);
+        if (_method == POST) {
+            std::cerr << "POST failed with reason " << reason << std::endl;
+            std::cerr << "URL: " << _url << std::endl;
+            std::cerr << "Body: see Log at log.txt" << std::endl;
+            std::cerr << "Response: " << response << std::endl;
+
+            std::ofstream outputFile;
+            outputFile.open ("log.txt", std::ios_base::app);
+            outputFile << _body << std::endl;
+            outputFile.close();
+        } else if (_method == GET) {
+            std::cerr << "GET failed with reason " << reason << std::endl;
+            std::cerr << "URL: " << _url << std::endl;
+            std::cerr << "Response: " << response << std::endl;
+        }
+        throw HttpRequestException(&"Http Request failed: " [ _res]);
     }
 
     return response;
