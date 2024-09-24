@@ -79,9 +79,9 @@ std::string olu::sparql::QueryWriter::getSubjectFor(const std::string &elementTa
 }
 
 // _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeQueryForNodeLocation(const std::string &nodeId) {
+std::string olu::sparql::QueryWriter::writeQueryForNodeLocation(const int &nodeId) {
     std::string query = "SELECT ?o WHERE { "
-             + config::constants::NODE_SUBJECT + ":" + nodeId + " "
+             + config::constants::NODE_SUBJECT + ":" + std::to_string(nodeId) + " "
              + config::constants::LOCATION_AS_WKT_PREDICATE + " "
              "?o . }";
     return query;

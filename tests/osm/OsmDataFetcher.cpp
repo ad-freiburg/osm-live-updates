@@ -29,11 +29,4 @@ namespace olu {
 
         ASSERT_ANY_THROW(osmDataFetcher.fetchLatestDatabaseState());
     }
-
-    TEST(OsmDataFetcher, fetchNode) {
-        std::string nodeId = "1";
-        auto response = olu::osm::OsmDataFetcher::fetchNode(nodeId);
-
-        ASSERT_TRUE(response.length() > 0);
-    }
 }

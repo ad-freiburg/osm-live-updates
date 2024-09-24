@@ -37,7 +37,7 @@ namespace olu::osm {
             << std::endl;
 
             while (sequenceNumber <= _latestState.sequenceNumber) {
-                auto pathToOsmChangeFile = _odf.fetchDiffWithSequenceNumber(sequenceNumber);
+                auto pathToOsmChangeFile = _odf.fetchChangeFile(sequenceNumber);
                 std::cout
                 << osm2rdf::util::currentTimeFormatted()
                 << "Handling change file for sequence number: "
@@ -67,6 +67,7 @@ namespace olu::osm {
             timestamp = _config.timestamp;
         }
 
-        return _odf.fetchNearestSequenceNumberForTimestamp(timestamp);
+        auto databaseState = _odf.fetchDatabaseStateForTimestamp(timestamp);
+        return databaseState.sequenceNumber;
     }
 }

@@ -22,7 +22,7 @@
 TEST(WktHelper, createDummyNodeFromPoint) {
     {
         std::string pointAsWkt = "POINT(13.5690032 42.7957187)";
-        std::string nodeId = "1";
+        int nodeId = 1;
 
         auto dummyNode = olu::osm::WktHelper::createDummyNodeFromPoint(nodeId, pointAsWkt);
         ASSERT_EQ(dummyNode,
@@ -30,7 +30,7 @@ TEST(WktHelper, createDummyNodeFromPoint) {
     }
     {
         std::string pointAsWkt = "POINT(42.7957187)";
-        std::string nodeId = "1";
+        int nodeId = 1;
 
         ASSERT_THROW(
                 olu::osm::WktHelper::createDummyNodeFromPoint(nodeId, pointAsWkt),
@@ -38,7 +38,7 @@ TEST(WktHelper, createDummyNodeFromPoint) {
     }
     {
         std::string pointAsWkt = "POINT(13.5690032,42.7957187)";
-        std::string nodeId = "1";
+        int nodeId = 1;
 
         ASSERT_THROW(
                 olu::osm::WktHelper::createDummyNodeFromPoint(nodeId, pointAsWkt),
@@ -46,7 +46,7 @@ TEST(WktHelper, createDummyNodeFromPoint) {
     }
     {
         std::string pointAsWkt = "(13.5690032 42.7957187)";
-        std::string nodeId = "1";
+        int nodeId = 1;
 
         ASSERT_THROW(
                 olu::osm::WktHelper::createDummyNodeFromPoint(nodeId, pointAsWkt),
@@ -54,7 +54,7 @@ TEST(WktHelper, createDummyNodeFromPoint) {
     }
     {
         std::string pointAsWkt = "13.5690032 42.7957187";
-        std::string nodeId = "1";
+        int nodeId = 1;
 
         ASSERT_THROW(
                 olu::osm::WktHelper::createDummyNodeFromPoint(nodeId, pointAsWkt),

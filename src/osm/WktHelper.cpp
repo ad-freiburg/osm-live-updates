@@ -7,7 +7,7 @@
 #include <boost/regex.hpp>
 #include <string>
 
-std::string olu::osm::WktHelper::createDummyNodeFromPoint(const std::string& nodeId,
+std::string olu::osm::WktHelper::createDummyNodeFromPoint(const int &nodeId,
                                                           const std::string& pointAsWkt) {
     const boost::regex pattern(R"(POINT\(([-+]?[0-9]*\.?[0-9]+)\s+([-+]?[0-9]*\.?[0-9]+)\))");
     boost::smatch match;
@@ -21,5 +21,5 @@ std::string olu::osm::WktHelper::createDummyNodeFromPoint(const std::string& nod
         throw WktHelperException(("No WKT Point found in " + pointAsWkt).c_str());
     }
 
-    return "<node id=\"" + nodeId + "\" lat=\"" + lat + "\" lon=\"" + lon + "\"/>";
+    return "<node id=\"" + std::to_string(nodeId) + "\" lat=\"" + lat + "\" lon=\"" + lon + "\"/>";
 }

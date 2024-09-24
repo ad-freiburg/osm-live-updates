@@ -21,11 +21,13 @@
 #include "util/Decompressor.h"
 #include "config/Constants.h"
 #include "sparql/QueryWriter.h"
+#include "osm/WktHelper.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <string>
 #include <iostream>
 #include <osm2rdf/util/ProgressBar.h>
+#include <set>
 
 /// The maximum number of triples that can be in a query to the QLever endpoint.
 const static inline int MAX_TRIPLE_COUNT_PER_QUERY = 64;
@@ -220,7 +222,8 @@ namespace olu::osm {
         if (elementTag == config::constants::WAY_TAG) {
             std::vector<std::string> nodeReferenceElements;
             try {
-                nodeReferenceElements = _odf.fetchNodeReferencesForWay(element);
+                auto referencedNodeIds = getIdsOfReferencedNodes(element);
+                nodeReferenceElements = createDummyNodes(referencedNodeIds);
             } catch (std::exception &e) {
                 std::cerr << e.what();
                 throw OsmChangeHandlerException(
@@ -283,5 +286,41 @@ namespace olu::osm {
                     return !triple.starts_with("@prefix");
                 } );
         return triples;
+    }
+
+    std::vector<int>
+    OsmChangeHandler::getIdsOfReferencedNodes(const boost::property_tree::ptree &way) {
+        std::vector<int> referencedNodes;
+        std::set<int> visitedNodes;
+
+        for (const auto &child : way.get_child("")) {
+            if (child.first != config::constants::NODE_REFERENCE_TAG) {
+                continue;
+            }
+
+            auto idString = util::XmlReader::readAttribute(
+                    config::constants::NODE_REFERENCE_ATTRIBUTE,
+                    child.second);
+            int id = stoi(idString);
+
+            if (!visitedNodes.contains(id)) {
+                visitedNodes.insert(id);
+            }
+        }
+
+        std::vector<int> nodeIds(visitedNodes.begin(), visitedNodes.end());
+        return nodeIds;
+    }
+
+    std::vector<std::string>
+    OsmChangeHandler::createDummyNodes(const std::vector<int>& nodeIds) {
+        std::vector<std::string> dummyNodes;
+        for(const int & nodeId : nodeIds) {
+            auto pointAsWkt = _odf.fetchNodeLocationAsWkt(nodeId);
+            auto dummyNode = olu::osm::WktHelper::createDummyNodeFromPoint(nodeId, pointAsWkt);
+            dummyNodes.emplace_back(dummyNode);
+        }
+
+        return dummyNodes;
     }
 } // namespace olu::osm

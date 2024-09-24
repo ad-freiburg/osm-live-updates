@@ -143,6 +143,23 @@ namespace olu::osm {
          * @return A vector with all triples in the conversion data
          */
         static std::vector<std::string> getTriplesFromConvertedData(std::vector<std::string> ttl);
+
+        /**
+         * Gets the id of each node that is referenced in the passed `way` element
+         *
+         * @param way The `way` element to get the ids of all referenced nodes
+         * @return A vector containing the ids of all referenced nodes
+         */
+        static std::vector<int> getIdsOfReferencedNodes(const boost::property_tree::ptree &way);
+
+        /**
+         * Creates an vector containing dummy nodes for the given node ids. The dummy nodes contain
+         * the node id and the location which is used for the nodes that are referenced in ways.
+         *
+         * @param nodeIds The node ids to create dummy nodes for
+         * @return A vector containing a dummy node for each given node id
+         */
+        std::vector<std::string> createDummyNodes(const std::vector<int>& nodeIds);
     };
 
     /**
