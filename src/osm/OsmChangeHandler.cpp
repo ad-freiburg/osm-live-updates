@@ -89,11 +89,6 @@ namespace olu::osm {
 
     void olu::osm::OsmChangeHandler::handleInsert(const std::string& elementTag,
                                                   const boost::property_tree::ptree &element) {
-        // Elements without a tag are not converted to ttl
-        if (olu::util::XmlReader::readTagOfChildren("", element).empty()) {
-            return;
-        }
-
         std::string result;
         std::vector<std::string> osmElements;
         try {
@@ -132,8 +127,9 @@ namespace olu::osm {
         } catch (std::exception &e) {
             std::cerr << "Could not handle insertion of element with tag "
                 << elementTag
-                << " and content "
-                << util::XmlReader::readTree(element)
+                << " and id "
+                << util::XmlReader::readAttribute(
+                        olu::config::constants::ID_ATTRIBUTE, element)
                 << std::endl;
             return;
         }
