@@ -27,6 +27,8 @@
 #include <iostream>
 #include <osm2rdf/util/ProgressBar.h>
 
+const static inline int MAX_TRIPLE_COUNT_PER_QUERY = 64;
+
 namespace olu::osm {
 
     OsmChangeHandler::OsmChangeHandler(config::Config& config)
@@ -54,6 +56,7 @@ namespace olu::osm {
                 // Loop over each element ('node', 'way' or 'relation') to be modified
                 for (const auto &element : child.second) {
                     handleModify(element.first, element.second);
+                    progressBar.update(entryCount++);
                 }
             } else if (child.first == config::constants::CREATE_TAG) {
                 // Loop over each element ('node', 'way' or 'relation') to be created
@@ -63,6 +66,7 @@ namespace olu::osm {
                     // Fix: The cache needs to be cleared after each update, otherwise the
                     // sparql endpoint can send outdated data
                     _sparql.clearCache();
+                    progressBar.update(entryCount++);
                 }
             } else if (child.first == config::constants::DELETE_TAG) {
                 // Loop over each element ('node', 'way' or 'relation') to be deleted
@@ -72,10 +76,9 @@ namespace olu::osm {
                     // Fix: The cache needs to be cleared after each update, otherwise the
                     // sparql endpoint can send outdated data
                     _sparql.clearCache();
+                    progressBar.update(entryCount++);
                 }
             }
-
-            progressBar.update(entryCount++);
         }
 
         if (deleteChangeFile) {
@@ -118,12 +121,22 @@ namespace olu::osm {
                         return !triple.starts_with("@prefix");
                     } );
 
-            // Create a sparql query from the ttl triples and send it to the sparql endpoint
-            auto query = sparql::QueryWriter::writeInsertQuery(triples);
-            _sparql.setPrefixes(prefixes);
-            _sparql.setQuery(query);
-            _sparql.setMethod(util::POST);
-            result = _sparql.runQuery();
+            // QLever has a maximum number of triples it can handle in one query, so we have to
+            // divide the triples in batches
+            std::vector<std::vector<std::string>> triplesBatches;
+            for (auto it = triples.cbegin(), e = triples.cend(); it != triples.cend(); it = e) {
+                e = it + std::min<std::size_t>(triples.cend() - it, MAX_TRIPLE_COUNT_PER_QUERY);
+                triplesBatches.emplace_back(it, e);
+            }
+
+            // Create a sparql query for each batch and send it to the sparql endpoint.
+            for (auto & batch : triplesBatches) {
+                auto query = sparql::QueryWriter::writeInsertQuery(batch);
+                _sparql.setPrefixes(prefixes);
+                _sparql.setQuery(query);
+                _sparql.setMethod(util::POST);
+                _sparql.runQuery();
+            }
         } catch (std::exception &e) {
             std::cerr << "Could not handle insertion of element with tag "
                 << elementTag
@@ -174,22 +187,10 @@ namespace olu::osm {
         // Loop over all change elements in the change file ('modify', 'delete' or 'create')
         for (const auto &child : osmChangeElement.get_child(
                 config::constants::OSM_CHANGE_TAG)) {
-
-            if (child.first == config::constants::MODIFY_TAG) {
-                // Loop over each element ('node', 'way' or 'relation') to be modified
-                for (const auto &element : child.second) {
-                    count++;
-                }
-            } else if (child.first == config::constants::CREATE_TAG) {
-                // Loop over each element ('node', 'way' or 'relation') to be created
-                for (const auto &element : child.second) {
-                    count++;
-                }
-            } else if (child.first == config::constants::DELETE_TAG) {
-                // Loop over each element ('node', 'way' or 'relation') to be deleted
-                for (const auto &element : child.second) {
-                    count++;
-                }
+            if (child.first == config::constants::MODIFY_TAG ||
+                child.first == config::constants::CREATE_TAG ||
+                child.first == config::constants::DELETE_TAG) {
+                count += child.second.size();
             }
         }
         return count;
