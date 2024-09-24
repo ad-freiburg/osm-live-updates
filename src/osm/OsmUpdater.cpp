@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include "osm/OsmUpdater.h"
+#include "osm2rdf/util/Time.h"
 
 namespace olu::osm {
     OsmUpdater::OsmUpdater(config::Config &config)
@@ -11,22 +12,40 @@ namespace olu::osm {
 
     void OsmUpdater::run() {
         if (!(_config.pathToOsmChangeFile.empty())) {
-            std::cout << "Start handling change file at path: " << _config.pathToOsmChangeFile << std::endl;
+            std::cout
+            << osm2rdf::util::currentTimeFormatted()
+            << "Start handling change file: "
+            << std::endl;
             _och.handleChange(_config.pathToOsmChangeFile, false);
         } else {
             _latestState = _odf.fetchLatestDatabaseState();
             auto sequenceNumber = decideStartSequenceNumber();
-            std::cout << "Start at sequence number: " << sequenceNumber << std::endl;
-            std::cout << "Latest sequence number: " << _latestState.sequenceNumber << std::endl;
+            std::cout
+            << osm2rdf::util::currentTimeFormatted()
+            << "Start at sequence number: "
+            << sequenceNumber
+            << std::endl;
+            std::cout
+            << osm2rdf::util::currentTimeFormatted()
+            << "Latest sequence number: "
+            << _latestState.sequenceNumber
+            << std::endl;
             while (sequenceNumber <= _latestState.sequenceNumber) {
                 auto pathToOsmChangeFile = _odf.fetchDiffWithSequenceNumber(sequenceNumber);
-                std::cout << "Handling diff with sequence number: " << sequenceNumber << std::endl;
+                std::cout
+                << osm2rdf::util::currentTimeFormatted()
+                << "Handling diff with sequence number: "
+                << sequenceNumber
+                << std::endl;
                 _och.handleChange(pathToOsmChangeFile, true);
                 sequenceNumber++;
             }
         }
 
-        std::cout << "DONE" << std::endl;
+        std::cout
+        << osm2rdf::util::currentTimeFormatted()
+        << "DONE"
+        << std::endl;
     }
 
     int OsmUpdater::decideStartSequenceNumber() {

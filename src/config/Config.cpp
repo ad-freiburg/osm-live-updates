@@ -20,6 +20,7 @@
 #include "config/Config.h"
 #include "config/Constants.h"
 #include "config/ExitCode.h"
+#include "osm2rdf/util/Time.h"
 
 #include <filesystem>
 #include <string>
@@ -144,22 +145,62 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
 std::string olu::config::Config::getInfo(std::string_view prefix) const {
     std::ostringstream oss;
 
-    oss << prefix << olu::config::constants::HEADER << std::endl;
-    oss << prefix << olu::config::constants::SPARQL_ENDPOINT_URI_INFO << " " << sparqlEndpointUri << std::endl;
+    oss
+    << prefix
+    << osm2rdf::util::currentTimeFormatted()
+    << olu::config::constants::HEADER
+    << std::endl;
+
+    oss
+    << prefix
+    << osm2rdf::util::currentTimeFormatted()
+    << olu::config::constants::SPARQL_ENDPOINT_URI_INFO
+    << " "
+    << sparqlEndpointUri
+    << std::endl;
 
     if (!pathToOsmChangeFile.empty()) {
-        oss << prefix << olu::config::constants::PATH_TO_OSM_CHANGE_FILE_INFO << " " << pathToOsmChangeFile << std::endl;
+        oss
+        << prefix
+        << osm2rdf::util::currentTimeFormatted()
+        << olu::config::constants::PATH_TO_OSM_CHANGE_FILE_INFO
+        << " "
+        << pathToOsmChangeFile
+        << std::endl;
     } else {
         if (!osmChangeFileDirectoryUri.empty()) {
-            oss << prefix << olu::config::constants::OSM_CHANGE_FILE_DIRECTORY_URI_INFO << " " << osmChangeFileDirectoryUri << std::endl;
+            oss
+            << prefix
+            << osm2rdf::util::currentTimeFormatted()
+            << olu::config::constants::OSM_CHANGE_FILE_DIRECTORY_URI_INFO
+            << " "
+            << osmChangeFileDirectoryUri
+            << std::endl;
         }
 
         if (sequenceNumber > 0) {
-            oss << prefix << olu::config::constants::SEQUENCE_NUMBER_INFO << " " << sequenceNumber << std::endl;
+            oss
+            << prefix
+            << osm2rdf::util::currentTimeFormatted()
+            << olu::config::constants::SEQUENCE_NUMBER_INFO
+            << " "
+            << sequenceNumber
+            << std::endl;
         } else if (!timestamp.empty()) {
-            oss << prefix << olu::config::constants::TIME_STAMP_INFO << " " << timestamp << std::endl;
+            oss
+            << prefix
+            << osm2rdf::util::currentTimeFormatted()
+            << olu::config::constants::TIME_STAMP_INFO
+            << " "
+            << timestamp
+            << std::endl;
         } else {
-            oss << prefix << "As you have not entered a sequence number or timestamp, the programme will determine the starting point for you." << timestamp << std::endl;
+            oss
+            << prefix
+            << osm2rdf::util::currentTimeFormatted()
+            << olu::config::constants::NO_TIMESTAMP_OR_SEQUENCE_NUMBER_INFO
+            << timestamp
+            << std::endl;
         }
     }
 
