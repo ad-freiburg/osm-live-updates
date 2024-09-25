@@ -30,40 +30,41 @@
 
 namespace olu::util {
 
-// ____________________________________________________________________________
-std::string Decompressor::readGzip(const std::string& path) {
-    std::stringstream ss;
-    std::ifstream file(path, std::ifstream::in | std::ifstream::binary);
-    if (!file) {
-        throw std::filesystem::filesystem_error(
-                "Can't open file", std::filesystem::absolute(path.c_str()),
-                std::make_error_code(std::errc::bad_address));
+    // _____________________________________________________________________________________________
+    std::string Decompressor::readGzip(const std::string& path) {
+        std::stringstream ss;
+        std::ifstream file(path, std::ifstream::in | std::ifstream::binary);
+        if (!file) {
+            throw std::filesystem::filesystem_error(
+                    "Can't open file", std::filesystem::absolute(path.c_str()),
+                    std::make_error_code(std::errc::bad_address));
+        }
+
+        boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
+        in.push(boost::iostreams::gzip_decompressor());
+        in.push(file);
+        copy(in, ss);
+        file.close();
+
+        return ss.str();
     }
 
-    boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
-    in.push(boost::iostreams::gzip_decompressor());
-    in.push(file);
-    copy(in, ss);
-    file.close();
+    // _____________________________________________________________________________________________
+    std::string Decompressor::readBzip2(const std::string &path) {
+        std::stringstream ss;
+        std::ifstream file(path, std::ifstream::in | std::ifstream::binary);
+        if (!file) {
+            throw std::filesystem::filesystem_error(
+                    "Can't open file", std::filesystem::absolute(path.c_str()),
+                    std::make_error_code(std::errc::bad_address));
+        }
 
-    return ss.str();
-}
+        boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
+        in.push(boost::iostreams::bzip2_decompressor());
+        in.push(file);
+        copy(in, ss);
 
-std::string Decompressor::readBzip2(const std::string &path) {
-    std::stringstream ss;
-    std::ifstream file(path, std::ifstream::in | std::ifstream::binary);
-    if (!file) {
-        throw std::filesystem::filesystem_error(
-                "Can't open file", std::filesystem::absolute(path.c_str()),
-                std::make_error_code(std::errc::bad_address));
+        return ss.str();
     }
-
-    boost::iostreams::filtering_streambuf<boost::iostreams::input> in;
-    in.push(boost::iostreams::bzip2_decompressor());
-    in.push(file);
-    copy(in, ss);
-
-    return ss.str();
-}
 
 } //namespace olu::util

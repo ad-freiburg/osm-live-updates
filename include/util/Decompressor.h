@@ -23,11 +23,15 @@
 
 namespace olu::util {
 
-class Decompressor {
-public:
-    static std::string readGzip(const std::string& path);
-    static std::string readBzip2(const std::string& path);
-};
+    /**
+     * Utility class for reading files that are compressed with gzip or bzip2 using the
+     * corresponding decompressor from the `boost::iostreams` package
+     */
+    class Decompressor {
+    public:
+        static std::string readGzip(const std::string& path);
+        static std::string readBzip2(const std::string& path);
+    };
 
 } // namespace olu::util
 
