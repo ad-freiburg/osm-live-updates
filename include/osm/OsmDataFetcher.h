@@ -20,7 +20,6 @@
 #define OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 
 #include "osm/OsmDatabaseState.h"
-#include "util/CacheFile.h"
 #include "sparql/SparqlWrapper.h"
 
 #include <string>
@@ -105,8 +104,6 @@ namespace olu::osm {
          * @return The database state described by the state file
          */
         static OsmDatabaseState extractStateFromStateFile(const std::string& stateFile);
-    protected:
-        util::CacheFile _cacheFile = util::CacheFile("/tmp/dataFetcherCache");
     };
 
     /**
