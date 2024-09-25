@@ -175,6 +175,7 @@ if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     if (PACKAGE_BENCHMARKS)
         enable_testing()
         add_subdirectory(benchmarks)
+        include_directories(SYSTEM ${benchmark_SOURCE_DIR}/include)
     endif ()
 endif ()
 
