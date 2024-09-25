@@ -94,7 +94,7 @@ namespace olu::osm {
     }
 
     // _____________________________________________________________________________________________
-    std::string OsmDataFetcher::fetchNodeLocationAsWkt(const int &nodeId) {
+    std::string OsmDataFetcher::fetchNodeLocationAsWkt(const long long &nodeId) {
         auto query = olu::sparql::QueryWriter::writeQueryForNodeLocation(nodeId);
         _sparqlWrapper.setMethod(util::HttpMethod::GET);
         _sparqlWrapper.setQuery(query);

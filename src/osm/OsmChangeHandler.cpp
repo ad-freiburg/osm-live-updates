@@ -51,7 +51,7 @@ namespace olu::osm {
                                                             osmChangeElement);
             }
         } catch (std::exception &e) {
-            std::cerr << e.what();
+            std::cerr << e.what() << std::endl;
             throw OsmChangeHandlerException(
                     "Exception while trying to read the change file in a property tree");
         }
@@ -134,7 +134,7 @@ namespace olu::osm {
             try {
                 std::filesystem::remove(pathToOsmChangeFile);
             } catch (std::exception &e) {
-                std::cerr << e.what();
+                std::cerr << e.what() << std::endl;
                 std::string message = "Exception while trying to delete the change file at path: "
                         + pathToOsmChangeFile;
                 throw OsmChangeHandlerException(message.c_str());
@@ -150,7 +150,7 @@ namespace olu::osm {
         try {
             osmElements = getOsmElementsForInsert(elementTag, element);
         } catch (std::exception &e) {
-            std::cerr << e.what();
+            std::cerr << e.what() << std::endl;
             throw OsmChangeHandlerException(
                     "Exception while trying to get elements for insertion");
         }
@@ -159,7 +159,7 @@ namespace olu::osm {
         try {
             ttl = _osm2ttl.convert(osmElements);
         } catch (std::exception &e) {
-            std::cerr << e.what();
+            std::cerr << e.what() << std::endl;
             throw OsmChangeHandlerException(
                     "Exception while trying to convert osm element to ttl");
         }
@@ -185,7 +185,7 @@ namespace olu::osm {
             try {
                 _sparql.runQuery();
             } catch (std::exception &e) {
-                std::cerr << e.what();
+                std::cerr << e.what() << std::endl;
                 throw OsmChangeHandlerException(
                         "Exception while trying to run sparql query for insertion");
             }
@@ -203,7 +203,7 @@ namespace olu::osm {
         try {
             _sparql.runQuery();
         } catch (std::exception &e) {
-            std::cerr << e.what();
+            std::cerr << e.what() << std::endl;
             throw OsmChangeHandlerException(
                     "Exception while trying to run sparql query for deletion");
         }
@@ -216,18 +216,20 @@ namespace olu::osm {
     }
 
     std::vector<std::string>
-    OsmChangeHandler::getOsmElementsForInsert(const std::string &elementTag,const boost::property_tree::ptree &element) {
+    OsmChangeHandler::getOsmElementsForInsert(const std::string &elementTag,
+                                              const boost::property_tree::ptree &element) {
         std::vector<std::string> osmElements;
         osmElements.push_back(config::constants::OSM_XML_NODE_START);
         if (elementTag == config::constants::WAY_TAG) {
+            auto referencedNodeIds = getIdsOfReferencedNodes(element);
+
             std::vector<std::string> nodeReferenceElements;
             try {
-                auto referencedNodeIds = getIdsOfReferencedNodes(element);
                 nodeReferenceElements = createDummyNodes(referencedNodeIds);
             } catch (std::exception &e) {
-                std::cerr << e.what();
+                std::cerr << e.what() << std::endl;
                 throw OsmChangeHandlerException(
-                        "Exception while trying to fetch node references for way");
+                        "Exception while trying to create node references for way");
             }
 
             osmElements.insert(
@@ -288,34 +290,51 @@ namespace olu::osm {
         return triples;
     }
 
-    std::vector<int>
+    std::vector<long long>
     OsmChangeHandler::getIdsOfReferencedNodes(const boost::property_tree::ptree &way) {
-        std::vector<int> referencedNodes;
-        std::set<int> visitedNodes;
+        std::vector<long long> referencedNodes;
+        std::set<long long> visitedNodes;
 
         for (const auto &child : way.get_child("")) {
             if (child.first != config::constants::NODE_REFERENCE_TAG) {
                 continue;
             }
 
-            auto idString = util::XmlReader::readAttribute(
-                    config::constants::NODE_REFERENCE_ATTRIBUTE,
-                    child.second);
-            int id = stoi(idString);
+            std::string idAsString;
+            try {
+                idAsString = util::XmlReader::readAttribute(
+                        config::constants::NODE_REFERENCE_ATTRIBUTE,
+                        child.second);
+            } catch (std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                std::string msg = "Exception while trying to read id of node reference: "
+                        + util::XmlReader::readTree(child.second);
+                throw OsmChangeHandlerException(msg.c_str());
+            }
+
+            long long id;
+            try {
+                id = std::stol(idAsString);
+            } catch(std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                std::string msg = "Exception while trying to convert id string: "
+                        + idAsString + " to long";
+                throw OsmChangeHandlerException(msg.c_str());
+            }
 
             if (!visitedNodes.contains(id)) {
                 visitedNodes.insert(id);
             }
         }
 
-        std::vector<int> nodeIds(visitedNodes.begin(), visitedNodes.end());
+        std::vector<long long> nodeIds(visitedNodes.begin(), visitedNodes.end());
         return nodeIds;
     }
 
     std::vector<std::string>
-    OsmChangeHandler::createDummyNodes(const std::vector<int>& nodeIds) {
+    OsmChangeHandler::createDummyNodes(const std::vector<long long>& nodeIds) {
         std::vector<std::string> dummyNodes;
-        for(const int & nodeId : nodeIds) {
+        for(const long long & nodeId : nodeIds) {
             auto pointAsWkt = _odf.fetchNodeLocationAsWkt(nodeId);
             auto dummyNode = olu::osm::WktHelper::createDummyNodeFromPoint(nodeId, pointAsWkt);
             dummyNodes.emplace_back(dummyNode);

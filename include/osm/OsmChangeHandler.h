@@ -150,7 +150,7 @@ namespace olu::osm {
          * @param way The `way` element to get the ids of all referenced nodes
          * @return A vector containing the ids of all referenced nodes
          */
-        static std::vector<int> getIdsOfReferencedNodes(const boost::property_tree::ptree &way);
+        static std::vector<long long> getIdsOfReferencedNodes(const boost::property_tree::ptree &way);
 
         /**
          * Creates an vector containing dummy nodes for the given node ids. The dummy nodes contain
@@ -159,7 +159,7 @@ namespace olu::osm {
          * @param nodeIds The node ids to create dummy nodes for
          * @return A vector containing a dummy node for each given node id
          */
-        std::vector<std::string> createDummyNodes(const std::vector<int>& nodeIds);
+        std::vector<std::string> createDummyNodes(const std::vector<long long>& nodeIds);
     };
 
     /**

@@ -84,7 +84,7 @@ namespace olu::osm {
          * @param id The id of the node to fetch location for
          * @return The location of the node in as WKT point
          */
-        std::string fetchNodeLocationAsWkt(const int &nodeId);
+        std::string fetchNodeLocationAsWkt(const long long &nodeId);
 
         /**
          * Sends a query to the sparql endpoint to the latest timestamp of any node in the database
