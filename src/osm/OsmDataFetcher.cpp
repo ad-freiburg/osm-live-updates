@@ -100,6 +100,7 @@ namespace olu::osm {
         _sparqlWrapper.setQuery(query);
         _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_NODE_LOCATION);
         auto response = _sparqlWrapper.runQuery();
+
         boost::property_tree::ptree responseAsTree;
         olu::util::XmlReader::populatePTreeFromString(response, responseAsTree);
 
@@ -108,9 +109,12 @@ namespace olu::osm {
             pointAsWkt = responseAsTree.get<std::string>(
                     constants::PATH_TO_SPARQL_RESULT);
         } catch (boost::property_tree::ptree_bad_path &e) {
-            std::cerr << "Could not get location for node with id "
-                          + std::to_string(nodeId)
-                          + " from sparql endpoint" << std::endl;
+            std::cerr
+            << "Could not get location for node with id "
+            << std::to_string(nodeId)
+            << " from endpoint repsonse: "
+            << response
+            << std::endl;
             throw OsmDataFetcherException(
                     "Exception while trying to get location for node");
         }

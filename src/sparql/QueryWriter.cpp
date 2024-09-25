@@ -80,7 +80,9 @@ olu::sparql::QueryWriter::getSubjectFor(const std::string &elementTag,
 
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeQueryForNodeLocation(const long long &nodeId) {
-    std::string query = "SELECT ?o WHERE { osmnode:" + std::to_string(nodeId) + " geo:hasGeometry/geo:asWKT ?o . }";
+    // TODO: Find out why this does not always work
+//    std::string query = "SELECT ?o WHERE { osmnode:" + std::to_string(nodeId) + " geo:hasGeometry/geo:asWKT ?o . }";
+    std::string query = "SELECT ?o WHERE { osm2rdfgeom:osm_node_" + std::to_string(nodeId) + " geo:asWKT ?o . }";
     return query;
 }
 

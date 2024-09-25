@@ -121,7 +121,8 @@ namespace olu::config::constants {
 
     const static inline std::vector<std::string> PREFIXES_FOR_NODE_LOCATION{
             "PREFIX osmnode: <https://www.openstreetmap.org/node/>",
-            "PREFIX geo: <http://www.opengis.net/ont/geosparql#>"
+            "PREFIX geo: <http://www.opengis.net/ont/geosparql#>",
+            "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_LATEST_NODE_TIMESTAMP {
