@@ -36,6 +36,8 @@ namespace olu::sparql {
     void SparqlWrapper::setQuery(const std::string &query) {
         _query = query;
     }
+
+    // _____________________________________________________________________________________________
     void SparqlWrapper::setPrefixes(const std::vector<std::string> &prefixes) {
         for (const auto & prefix : prefixes) {
             _prefixes += prefix + " ";
@@ -46,7 +48,7 @@ namespace olu::sparql {
     std::string SparqlWrapper::runQuery() {
         handleFileOutput();
 
-        // Format and encode query for url
+        // Format and encode query
         std::string query = _prefixes + _query;
         std::string encodedQuery = util::URLHelper::encodeForUrlQuery(query);
 
@@ -57,15 +59,32 @@ namespace olu::sparql {
                               olu::config::constants::HTML_VALUE_CONTENT_TYPE);
             std::string body = "query=" + encodedQuery;
             request.addBody(body);
-            response = request.perform();
+            try {
+                response = request.perform();
+            } catch(std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                std::string msg =
+                        "Exception while sending `POST` request to the sparql endpoint with body: "
+                        + body;
+                throw SparqlWrapperException(msg.c_str());
+            }
         } else if (_httpMethod == util::GET) {
             std::string url = _config.sparqlEndpointUri + "?query=" + encodedQuery;
             auto request = util::HttpRequest(_httpMethod, url);
             request.addHeader(olu::config::constants::HTML_KEY_ACCEPT,
                               olu::config::constants::HTML_VALUE_ACCEPT_SPARQL_RESULT_XML);
-            response = request.perform();
+            try {
+                response = request.perform();
+            } catch(std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                std::string msg =
+                        "Exception while sending `GET` request to the sparql endpoint with url: "
+                        + url;
+                throw SparqlWrapperException(msg.c_str());
+            }
         }
 
+        // Clear query and prefixes for next request
         _query = ""; _prefixes = "";
         return response;
     }
@@ -94,7 +113,15 @@ namespace olu::sparql {
         request.addHeader(olu::config::constants::HTML_KEY_CONTENT_TYPE,
                           olu::config::constants::HTML_VALUE_CONTENT_TYPE);
         request.addBody("cmd=clear-cache");
-        auto response = request.perform();
+
+        try {
+            request.perform();
+        } catch(std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            std::string msg =
+                    "Exception while sending request to clear cache ot the sparql endpoint";
+            throw SparqlWrapperException(msg.c_str());
+        }
     }
 
 } // namespace olu::sparql
