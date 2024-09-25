@@ -25,25 +25,58 @@
 
 namespace olu::sparql {
 
-class QueryWriter {
-public:
-    // Returns the elements subject formatted for a SPARQL query:
-    // For a node element with id 178709586 the function would return 'osmnode:178709586'
-    static std::string getSubjectFor(const std::string& elementTag,
-                                     const boost::property_tree::ptree &element);
+    /**
+     *  Convenience class for some functions that return SPARQL queries.
+     */
+    class QueryWriter {
+    public:
+        /**
+         * Returns the elements (`node`, `way` or `relation`) subject formatted for a SPARQL query.
+         *
+         * Example: For a node element with id 1787 the function would return 'osmnode:1787'
+         *
+         * @param elementTag The name of the element (`node`, `way` or `relation`)
+         * @param element The osm element
+         * @return The subject of the element formatted for a SPARQL query
+         */
+        static std::string getSubjectFor(const std::string& elementTag,
+                                         const boost::property_tree::ptree &element);
 
-    // Returns a SPARQL query that inserts a list of triples
-    static std::string writeInsertQuery(const std::vector<std::string>& triples);
+        /**
+         * @returns A SPARQL query that inserts a list of triples in to the database
+         */
+        static std::string writeInsertQuery(const std::vector<std::string>& triples);
 
-    // Returns a SPARQL query that deletes all triples for a subject
-    static std::string writeDeleteQuery(const std::string& subject);
+        /**
+         * @returns A SPARQL query that deletes all triples for a given subject in the database
+         */
+        static std::string writeDeleteQuery(const std::string& subject);
 
-    // Returns a SPARQL query that asks for the location of a point in WKT format
-    static std::string writeQueryForNodeLocation(const int &nodeId);
+        /**
+        * @returns A SPARQL query for the location of the node with the given ID in WKT format
+        */
+        static std::string writeQueryForNodeLocation(const long long &nodeId);
 
-    // Returns a SPARQL query that asks for the latest timestamp of any node in the database
-    static std::string writeQueryForLatestNodeTimestamp();
-};
+        /**
+         * @returns A SPARQL query for the latest timestamp of any node in the database
+         */
+        static std::string writeQueryForLatestNodeTimestamp();
+    };
+
+    /**
+     * Exception that can appear inside the `QueryWriter` class.
+     */
+    class QueryWriterException : public std::exception {
+    private:
+        std::string message;
+
+    public:
+        explicit QueryWriterException(const char* msg) : message(msg) { }
+
+        [[nodiscard]] const char* what() const noexcept override {
+            return message.c_str();
+        }
+    };
 
 } // namespace olu::sparql
 
