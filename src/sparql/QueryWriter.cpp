@@ -40,7 +40,11 @@ std::string olu::sparql::QueryWriter::writeInsertQuery(const std::vector<std::st
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeDeleteQuery(const std::string& subject) {
     std::string query;
-    query += "DELETE { ?s ?p ?o } WHERE { "
+    // Todo: This does not work with the current implementation of sparql updates
+//    query += "DELETE { ?s ?p ?o } WHERE { "
+//             + subject +
+//             " ?p ?o . }";
+    query += "DELETE { " + subject + "?p ?o } WHERE { "
             + subject +
             " ?p ?o . }";
     return query;
