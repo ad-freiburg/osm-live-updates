@@ -164,31 +164,12 @@ namespace olu::osm {
                     "Exception while trying to convert osm element to ttl");
         }
 
-        auto prefixes = getPrefixesFromConvertedData(ttl);
-        auto triples = getTriplesFromConvertedData(ttl);
-
-        // QLever has a maximum number of triples it can handle in one query, so we have to
-        // divide the triples in batches
-        std::vector<std::vector<std::string>> triplesBatches;
-        for (auto it = triples.cbegin(), e = triples.cend(); it != triples.cend(); it = e) {
-            e = it + std::min<std::size_t>(triples.cend() - it, MAX_TRIPLE_COUNT_PER_QUERY);
-            triplesBatches.emplace_back(it, e);
-        }
-
-        // Create a sparql query for each batch and send it to the sparql endpoint.
-        for (auto & batch : triplesBatches) {
-            auto query = sparql::QueryWriter::writeInsertQuery(batch);
-            _sparql.setPrefixes(prefixes);
-            _sparql.setQuery(query);
-            _sparql.setMethod(util::POST);
-
-            try {
-                _sparql.runQuery();
-            } catch (std::exception &e) {
-                std::cerr << e.what() << std::endl;
-                throw OsmChangeHandlerException(
-                        "Exception while trying to run sparql query for insertion");
-            }
+        try {
+            createAndRunInsertQuery(ttl);
+        } catch (std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            throw OsmChangeHandlerException(
+                    "Exception while trying to create and run insert query");
         }
     }
 
@@ -341,5 +322,34 @@ namespace olu::osm {
         }
 
         return dummyNodes;
+    }
+
+    void OsmChangeHandler::createAndRunInsertQuery(const std::vector<std::string>& ttl) {
+        auto prefixes = getPrefixesFromConvertedData(ttl);
+        auto triples = getTriplesFromConvertedData(ttl);
+
+        // QLever has a maximum number of triples it can handle in one query, so we have to
+        // divide the triples in batches
+        std::vector<std::vector<std::string>> triplesBatches;
+        for (auto it = triples.cbegin(), e = triples.cend(); it != triples.cend(); it = e) {
+            e = it + std::min<std::size_t>(triples.cend() - it, MAX_TRIPLE_COUNT_PER_QUERY);
+            triplesBatches.emplace_back(it, e);
+        }
+
+        // Create a sparql query for each batch and send it to the sparql endpoint.
+        for (auto & batch : triplesBatches) {
+            auto query = sparql::QueryWriter::writeInsertQuery(batch);
+            _sparql.setPrefixes(prefixes);
+            _sparql.setQuery(query);
+            _sparql.setMethod(util::POST);
+
+            try {
+                _sparql.runQuery();
+            } catch (std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                throw OsmChangeHandlerException(
+                        "Exception while trying to run sparql query for insertion");
+            }
+        }
     }
 } // namespace olu::osm
