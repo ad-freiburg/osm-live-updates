@@ -121,7 +121,8 @@ namespace olu::config::constants {
 
     const static inline std::vector<std::string> PREFIXES_FOR_NODE_LOCATION{
             "PREFIX osmnode: <https://www.openstreetmap.org/node/>",
-            "PREFIX geo: <http://www.opengis.net/ont/geosparql#>"
+            "PREFIX geo: <http://www.opengis.net/ont/geosparql#>",
+            "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_LATEST_NODE_TIMESTAMP {
@@ -177,6 +178,9 @@ namespace olu::config::constants {
     const static inline std::string TIME_STAMP_OPTION_LONG = "timestamp";
     const static inline std::string TIME_STAMP_OPTION_HELP =
             "The time stamp to start the update process from.";
+
+    const static inline std::string NO_TIMESTAMP_OR_SEQUENCE_NUMBER_INFO =
+            "As you have not entered a sequence number or timestamp, the programme will determine the starting point for you.";
 
 } // namespace olu::config::constants
 

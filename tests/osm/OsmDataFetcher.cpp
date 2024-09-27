@@ -26,15 +26,7 @@ namespace olu {
         auto config = config::Config();
         auto sw = sparql::SparqlWrapper(config);
         auto osmDataFetcher = olu::osm::OsmDataFetcher(config);
-        auto response = osmDataFetcher.fetchLatestDatabaseState();
 
-        ASSERT_TRUE(response.timeStamp.length() > 0);
-    }
-
-    TEST(OsmDataFetcher, fetchNode) {
-        std::string nodeId = "1";
-        auto response = olu::osm::OsmDataFetcher::fetchNode(nodeId);
-
-        ASSERT_TRUE(response.length() > 0);
+        ASSERT_ANY_THROW(osmDataFetcher.fetchLatestDatabaseState());
     }
 }

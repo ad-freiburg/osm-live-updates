@@ -21,117 +21,175 @@
 #include "util/Decompressor.h"
 #include "config/Constants.h"
 #include "sparql/QueryWriter.h"
+#include "util/WktHelper.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <string>
 #include <iostream>
+#include <osm2rdf/util/ProgressBar.h>
+#include <set>
+
+/// The maximum number of triples that can be in a query to the QLever endpoint.
+const static inline int MAX_TRIPLE_COUNT_PER_QUERY = 64;
 
 namespace olu::osm {
 
-    OsmChangeHandler::OsmChangeHandler(config::Config& config)
-    : _config(config), _sparql(config), _osm2ttl(), _odf(OsmDataFetcher(config)) { }
-
     void OsmChangeHandler::handleChange(const std::string &pathToOsmChangeFile,
-                                        const bool &deleteChangeFile) {
+                                        const bool &deleteChangeFile,
+                                        const bool &showProgress) {
+        // Read the file in a property tree
         boost::property_tree::ptree osmChangeElement;
-        if (pathToOsmChangeFile.ends_with(config::constants::GZIP_EXTENSION)) {
-            auto decompressed = olu::util::Decompressor::readGzip(pathToOsmChangeFile);
-            std::cout << decompressed << std::endl;
-            olu::util::XmlReader::populatePTreeFromString(decompressed, osmChangeElement);
-        } else {
-            olu::util::XmlReader::populatePTreeFromFile(pathToOsmChangeFile,
-                                                        osmChangeElement);
+        try {
+            if (pathToOsmChangeFile.ends_with(config::constants::GZIP_EXTENSION)) {
+                auto decompressed = olu::util::Decompressor::readGzip(
+                        pathToOsmChangeFile);
+                olu::util::XmlReader::populatePTreeFromString(
+                        decompressed,
+                        osmChangeElement);
+            } else {
+                olu::util::XmlReader::populatePTreeFromFile(pathToOsmChangeFile,
+                                                            osmChangeElement);
+            }
+        } catch (std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            throw OsmChangeHandlerException(
+                    "Exception while trying to read the change file in a property tree");
         }
 
-        // Loop over all change elements in the change file ('modify', 'delete' or 'create')
-        for (const auto &child : osmChangeElement.get_child(
-                config::constants::OSM_CHANGE_TAG)) {
+        // Prepare a progress bar for the progress indicator
+        auto maxCount = countElements(osmChangeElement);
+        osm2rdf::util::ProgressBar progressBar(maxCount, showProgress);
+        size_t entryCount = 0;
 
-            if (child.first == config::constants::MODIFY_TAG) {
+        // Loop over all changesets in the change file ('modify', 'delete' or 'create')
+        auto changesets = osmChangeElement.get_child(config::constants::OSM_CHANGE_TAG);
+        for (const auto &changeset : changesets) {
+            if (changeset.first == config::constants::MODIFY_TAG) {
                 // Loop over each element ('node', 'way' or 'relation') to be modified
-                for (const auto &element : child.second) {
-                    handleModify(element.first, element.second);
+                for (const auto &element : changeset.second) {
+                    try {
+                        handleModify(element.first, element.second);
+                    } catch (std::exception &e) {
+                        std::cerr << "Could not handle modification of element with tag "
+                                  << element.first
+                                  << " and id "
+                                  << util::XmlReader::readAttribute(
+                                          olu::config::constants::ID_ATTRIBUTE, element.second)
+                                  << std::endl;
+
+                        throw OsmChangeHandlerException(
+                                "Exception while trying to modify element");
+                    }
+
+                    progressBar.update(entryCount++);
                 }
-            } else if (child.first == config::constants::CREATE_TAG) {
+            } else if (changeset.first == config::constants::CREATE_TAG) {
                 // Loop over each element ('node', 'way' or 'relation') to be created
-                for (const auto &element : child.second) {
-                    handleInsert(element.first, element.second);
+                for (const auto &element : changeset.second) {
+                    try {
+                        handleInsert(element.first, element.second);
+                    } catch (std::exception &e) {
+                        std::cerr << "Could not handle insertion of element with tag "
+                                  << element.first
+                                  << " and id "
+                                  << util::XmlReader::readAttribute(
+                                          olu::config::constants::ID_ATTRIBUTE, element.second)
+                                  << std::endl;
+
+                        throw OsmChangeHandlerException(
+                                "Exception while trying to insert element");
+                    }
 
                     // Fix: The cache needs to be cleared after each update, otherwise the
                     // sparql endpoint can send outdated data
                     _sparql.clearCache();
+                    progressBar.update(entryCount++);
                 }
-            } else if (child.first == config::constants::DELETE_TAG) {
+            } else if (changeset.first == config::constants::DELETE_TAG) {
                 // Loop over each element ('node', 'way' or 'relation') to be deleted
-                for (const auto &element : child.second) {
-                    handleDelete(element.first, element.second);
+                for (const auto &element : changeset.second) {
+                    try {
+                        handleDelete(element.first, element.second);
+                    } catch (std::exception &e) {
+                        std::cerr << "Could not handle deletion of element with tag "
+                                  << element.first
+                                  << " and id "
+                                  << util::XmlReader::readAttribute(
+                                          olu::config::constants::ID_ATTRIBUTE, element.second)
+                                  << std::endl;
+
+                        throw OsmChangeHandlerException(
+                                "Exception while trying to delete element");
+                    }
 
                     // Fix: The cache needs to be cleared after each update, otherwise the
                     // sparql endpoint can send outdated data
                     _sparql.clearCache();
+                    progressBar.update(entryCount++);
                 }
             }
         }
 
         if (deleteChangeFile) {
-            std::filesystem::remove(pathToOsmChangeFile);
+            try {
+                std::filesystem::remove(pathToOsmChangeFile);
+            } catch (std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                std::string message = "Exception while trying to delete the change file at path: "
+                        + pathToOsmChangeFile;
+                throw OsmChangeHandlerException(message.c_str());
+            }
         }
+
+        progressBar.done();
     }
-
-
 
     void olu::osm::OsmChangeHandler::handleInsert(const std::string& elementTag,
                                                   const boost::property_tree::ptree &element) {
-        // Elements without a tag are not converted to ttl
-        if (olu::util::XmlReader::readTagOfChildren("", element).empty()) {
-            return;
-        }
-
-        std::string result;
         std::vector<std::string> osmElements;
         try {
-            // Convert the osmElements in xml format to rdf turtle format
             osmElements = getOsmElementsForInsert(elementTag, element);
-            auto ttl = _osm2ttl.convert(osmElements);
-            std::vector<std::string> prefixes;
-            std::copy_if (
-                    ttl.begin(),
-                    ttl.end(),
-                    std::back_inserter(prefixes),
-                    [](const std::string& triple){
-                        return triple.starts_with("@prefix");
-                    } );
+        } catch (std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            throw OsmChangeHandlerException(
+                    "Exception while trying to get elements for insertion");
+        }
 
-            // Transform prefixes to correct format
-            for (auto & prefix : prefixes) {
-                prefix = "PREFIX " + prefix.substr(8, prefix.length() - 10);
-            }
+        std::vector<std::string> ttl;
+        try {
+            ttl = _osm2ttl.convert(osmElements);
+        } catch (std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            throw OsmChangeHandlerException(
+                    "Exception while trying to convert osm element to ttl");
+        }
 
-            std::vector<std::string> triples;
-            std::copy_if (
-                    ttl.begin(),
-                    ttl.end(),
-                    std::back_inserter(triples),
-                    [](const std::string& triple){
-                        return !triple.starts_with("@prefix");
-                    } );
+        auto prefixes = getPrefixesFromConvertedData(ttl);
+        auto triples = getTriplesFromConvertedData(ttl);
 
-            // Create a sparql query from the ttl triples and send it to the sparql endpoint
-            auto query = sparql::QueryWriter::writeInsertQuery(triples);
+        // QLever has a maximum number of triples it can handle in one query, so we have to
+        // divide the triples in batches
+        std::vector<std::vector<std::string>> triplesBatches;
+        for (auto it = triples.cbegin(), e = triples.cend(); it != triples.cend(); it = e) {
+            e = it + std::min<std::size_t>(triples.cend() - it, MAX_TRIPLE_COUNT_PER_QUERY);
+            triplesBatches.emplace_back(it, e);
+        }
+
+        // Create a sparql query for each batch and send it to the sparql endpoint.
+        for (auto & batch : triplesBatches) {
+            auto query = sparql::QueryWriter::writeInsertQuery(batch);
             _sparql.setPrefixes(prefixes);
             _sparql.setQuery(query);
             _sparql.setMethod(util::POST);
-            result = _sparql.runQuery();
-        } catch (std::exception &e) {
-            std::cerr << "Could not handle insertion of element with tag "
-                << elementTag
-                << " and content "
-                << util::XmlReader::readTree(element)
-                << std::endl;
-            return;
-        }
 
-        std::cout << "Successfully handled insertion of " << elementTag << std::endl;
+            try {
+                _sparql.runQuery();
+            } catch (std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                throw OsmChangeHandlerException(
+                        "Exception while trying to run sparql query for insertion");
+            }
+        }
     }
 
     void OsmChangeHandler::handleDelete(const std::string& elementTag,
@@ -141,10 +199,14 @@ namespace olu::osm {
         _sparql.setPrefixes(config::constants::PREFIXES_FOR_DELETE_QUERY);
         _sparql.setQuery(query);
         _sparql.setMethod(util::POST);
-        auto result = _sparql.runQuery();
 
-        std::cout << "Successfully handled deletion of " << elementTag << std::endl;
-
+        try {
+            _sparql.runQuery();
+        } catch (std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            throw OsmChangeHandlerException(
+                    "Exception while trying to run sparql query for deletion");
+        }
     }
 
     void OsmChangeHandler::handleModify(const std::string& elementTag,
@@ -153,13 +215,23 @@ namespace olu::osm {
         handleInsert(elementTag, element);
     }
 
-    std::vector<std::string> OsmChangeHandler::getOsmElementsForInsert(
-            const std::string &elementTag,
-            const boost::property_tree::ptree &element) {
+    std::vector<std::string>
+    OsmChangeHandler::getOsmElementsForInsert(const std::string &elementTag,
+                                              const boost::property_tree::ptree &element) {
         std::vector<std::string> osmElements;
         osmElements.push_back(config::constants::OSM_XML_NODE_START);
         if (elementTag == config::constants::WAY_TAG) {
-            auto nodeReferenceElements = _odf.fetchNodeReferencesForWay(element);
+            auto referencedNodeIds = getIdsOfReferencedNodes(element);
+
+            std::vector<std::string> nodeReferenceElements;
+            try {
+                nodeReferenceElements = createDummyNodes(referencedNodeIds);
+            } catch (std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                throw OsmChangeHandlerException(
+                        "Exception while trying to create node references for way");
+            }
+
             osmElements.insert(
                 osmElements.end(),
                 std::make_move_iterator(nodeReferenceElements.begin()),
@@ -169,5 +241,105 @@ namespace olu::osm {
         osmElements.push_back(olu::util::XmlReader::readTree(element, {elementTag}, 0));
         osmElements.push_back(config::constants::OSM_XML_NODE_END);
         return osmElements;
+    }
+
+    size_t OsmChangeHandler::countElements(const boost::property_tree::ptree &osmChangeElement) {
+        size_t count = 0;
+        // Loop over all change elements in the change file ('modify', 'delete' or 'create')
+        for (const auto &child : osmChangeElement.get_child(
+                config::constants::OSM_CHANGE_TAG)) {
+            if (child.first == config::constants::MODIFY_TAG ||
+                child.first == config::constants::CREATE_TAG ||
+                child.first == config::constants::DELETE_TAG) {
+                count += child.second.size();
+            }
+        }
+        return count;
+    }
+
+    std::vector<std::string>
+    OsmChangeHandler::getPrefixesFromConvertedData(std::vector<std::string> ttl) {
+        std::vector<std::string> prefixes;
+        std::copy_if (
+                ttl.begin(),
+                ttl.end(),
+                std::back_inserter(prefixes),
+                [](const std::string& triple){
+                    return triple.starts_with("@prefix");
+                } );
+
+        // Transform prefixes to correct format
+        for (auto & prefix : prefixes) {
+            // TODO: Replace with regex
+            prefix = "PREFIX " + prefix.substr(8, prefix.length() - 10);
+        }
+
+        return prefixes;
+    }
+
+    std::vector<std::string>
+    OsmChangeHandler::getTriplesFromConvertedData(std::vector<std::string> ttl) {
+        std::vector<std::string> triples;
+        std::copy_if (
+                ttl.begin(),
+                ttl.end(),
+                std::back_inserter(triples),
+                [](const std::string& triple){
+                    return !triple.starts_with("@prefix");
+                } );
+        return triples;
+    }
+
+    std::vector<long long>
+    OsmChangeHandler::getIdsOfReferencedNodes(const boost::property_tree::ptree &way) {
+        std::vector<long long> referencedNodes;
+        std::set<long long> visitedNodes;
+
+        for (const auto &child : way.get_child("")) {
+            if (child.first != config::constants::NODE_REFERENCE_TAG) {
+                continue;
+            }
+
+            std::string idAsString;
+            try {
+                idAsString = util::XmlReader::readAttribute(
+                        config::constants::NODE_REFERENCE_ATTRIBUTE,
+                        child.second);
+            } catch (std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                std::string msg = "Exception while trying to read id of node reference: "
+                        + util::XmlReader::readTree(child.second);
+                throw OsmChangeHandlerException(msg.c_str());
+            }
+
+            long long id;
+            try {
+                id = std::stol(idAsString);
+            } catch(std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                std::string msg = "Exception while trying to convert id string: "
+                        + idAsString + " to long";
+                throw OsmChangeHandlerException(msg.c_str());
+            }
+
+            if (!visitedNodes.contains(id)) {
+                visitedNodes.insert(id);
+            }
+        }
+
+        std::vector<long long> nodeIds(visitedNodes.begin(), visitedNodes.end());
+        return nodeIds;
+    }
+
+    std::vector<std::string>
+    OsmChangeHandler::createDummyNodes(const std::vector<long long>& nodeIds) {
+        std::vector<std::string> dummyNodes;
+        for(const long long & nodeId : nodeIds) {
+            auto pointAsWkt = _odf.fetchNodeLocationAsWkt(nodeId);
+            auto dummyNode = olu::osm::WktHelper::createDummyNodeFromPoint(nodeId, pointAsWkt);
+            dummyNodes.emplace_back(dummyNode);
+        }
+
+        return dummyNodes;
     }
 } // namespace olu::osm

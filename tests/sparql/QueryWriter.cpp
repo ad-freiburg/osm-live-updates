@@ -62,7 +62,7 @@ namespace olu::sparql {
     }
     TEST(QueryWriter, writeQueryForNodeLocation) {
         {
-            std::string nodeId = "1";
+            int nodeId = 1;
 
             std::string query = olu::sparql::QueryWriter::writeQueryForNodeLocation(nodeId);
             ASSERT_EQ(

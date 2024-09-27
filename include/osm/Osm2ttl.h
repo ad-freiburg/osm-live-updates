@@ -19,8 +19,8 @@
 #ifndef OSM_LIVE_UPDATES_OSM2TTL_H
 #define OSM_LIVE_UPDATES_OSM2TTL_H
 
-#include <osm2ttl/config/Config.h>
-#include <osm2ttl/util/Output.h>
+#include <osm2rdf/config/Config.h>
+#include <osm2rdf/util/Output.h>
 
 namespace olu::osm {
 
@@ -30,10 +30,10 @@ namespace olu::osm {
         std::vector<std::string> convert(std::vector<std::string> &osmData);
     private:
         template <typename T>
-        void run(const osm2ttl::config::Config& config) const;
+        void run(const osm2rdf::config::Config& config) const;
         static void writeToInputFile(std::vector<std::string> &osmElements);
         static std::string removePrefixes(const std::string& data);
-        [[nodiscard]] static std::vector<std::string> readTripletsFromOutputFile(const osm2ttl::config::Config& config) ;
+        [[nodiscard]] static std::vector<std::string> readTripletsFromOutputFile(const osm2rdf::config::Config& config) ;
     };
 
 } // namespace olu::osm

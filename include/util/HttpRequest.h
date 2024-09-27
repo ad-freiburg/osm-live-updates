@@ -39,6 +39,7 @@ namespace olu::util {
         CURL *_curl;
         HttpMethod _method;
         CURLcode _res;
+        std::string _url;
         std::string _data;
         std::string _body;
 

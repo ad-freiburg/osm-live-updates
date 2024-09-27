@@ -27,40 +27,82 @@
 
 namespace olu::sparql {
 
-class SparqlWrapper {
-public:
-    // Class that handles the connection to a sparql endpoint
-    explicit SparqlWrapper(const olu::config::Config& config) {
-        _config = config;
-        clearOutputFile();
+    /**
+     * Wrapper class that handles communication with a SPARQL endpoint. In order to successfully
+     * send a request to the SPARQL endpoint, the prefixes, query and method must be set with the
+     * corresponding functions. Then the request can be sent with `runQuery`.
+     *
+     * This class will currently only work with QLever SPARQL endpoints.
+     *
+     * If the `writeSparqlQueriesToFile` flag is set, all SPARQL queries that were send to the
+     * endpoint will be stored in a .txt file located at the path which is specified in the config
+     * (`pathToSparqlQueryOutput`)
+     */
+    class SparqlWrapper {
+    public:
+        explicit SparqlWrapper(const olu::config::Config& config) {
+            _config = config; clearOutputFile();
+        };
+
+        /**
+         * Sets the HTTP Method for the request to the SPARQL endpoint.
+         * Choose `GET' for `SELECT' queries and `POST' for update queries (`DELETE', `INSERT').
+         *
+         * @param method The HTTP method for the request to the sparql endpoint
+         */
+        void setMethod(util::HttpMethod method);
+
+        /**
+         * @param query The query to send to the SPARQL endpoint. The prefixes must be set
+         * separately
+         */
+        void setQuery(const std::string& query);
+
+        /**
+         * @param prefixes The prefixes to send to the SPARQL endpoint.
+         */
+        void setPrefixes(const std::vector<std::string> &prefixes);
+
+        /**
+         * Sends a request to clear the cache of the SPARQL endpoint.
+         */
+        void clearCache() const;
+
+        /**
+         * Sends a request with the current prefixes and query to the SPARQL endpoint.
+         *
+         * @return The response from the SPARQL endpoint.
+         */
+        std::string runQuery();
+    private:
+        olu::config::Config _config;
+        util::HttpMethod _httpMethod = util::POST;
+        std::string _query;
+        std::string _prefixes;
+
+        void clearOutputFile() const;
+
+        /**
+         * Writes the prefixes and query to the output file if the `writeSparqlQueriesToFile` flag
+         * is set
+         */
+        void handleFileOutput();
     };
 
-    // Sets the HTTP Method for the query. Typically, `SELECT` queries should be performed with
-    // `GET` and update queries (`DELETE`, `INSERT`) with `POST`
-    void setMethod(util::HttpMethod method);
+    /**
+     * Exception that can appear inside the `SparqlWrapper` class.
+     */
+    class SparqlWrapperException : public std::exception {
+    private:
+        std::string message;
 
-    // Sets the current query
-    void setQuery(const std::string& query);
+    public:
+        explicit SparqlWrapperException(const char* msg) : message(msg) { }
 
-    // Sets the prefixes for the current query
-    void setPrefixes(const std::vector<std::string> &prefixes);
-
-    // Clears the cache of the sparql endpoint
-    void clearCache() const;
-
-    // Sends the current query to the sparql endpoint and returns the response from the endpoint.
-    // Make sure that the correct HTTP method is set before running the query (POST for database
-    // updates and GET for queries with select)
-    std::string runQuery();
-private:
-    olu::config::Config _config;
-    util::HttpMethod _httpMethod = util::POST;
-    std::string _query;
-    std::string _prefixes;
-
-    void clearOutputFile() const;
-    void handleFileOutput();
-};
+        [[nodiscard]] const char* what() const noexcept override {
+            return message.c_str();
+        }
+    };
 
 } // namespace olu::sparql
 
