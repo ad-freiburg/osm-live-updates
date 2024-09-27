@@ -111,7 +111,6 @@ namespace olu::osm {
          */
         static std::vector<std::string> getTriplesFromConvertedData(std::vector<std::string> ttl);
 
-
     private:
         config::Config _config;
         sparql::SparqlWrapper _sparql;

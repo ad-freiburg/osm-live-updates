@@ -91,6 +91,24 @@ std::string olu::sparql::QueryWriter::writeQueryForNodeLocation(const long long 
 }
 
 // _________________________________________________________________________________________________
+std::string
+olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::vector<long long int> &nodeIds) {
+    std::string query;
+    query += "SELECT ?o WHERE { ";
+
+    for (const auto & nodeId : nodeIds) {
+        if (nodeId == nodeIds.front()) {
+            query +=  + " { osm2rdfgeom:osm_node_" + std::to_string(nodeId) + " geo:asWKT ?o .  }";
+        } else {
+            query +=  + " UNION { osm2rdfgeom:osm_node_" + std::to_string(nodeId) + " geo:asWKT ?o .  }";
+        }
+    }
+
+    query += "}";
+    return query;
+}
+
+// _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeQueryForLatestNodeTimestamp() {
     std::string query = "SELECT ?p WHERE { ?s rdf:type osm:node . ?s osmmeta:timestamp ?p . } "
                         "ORDER BY DESC(?p) LIMIT 1";

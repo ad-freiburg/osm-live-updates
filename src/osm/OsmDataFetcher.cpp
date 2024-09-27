@@ -106,8 +106,7 @@ namespace olu::osm {
 
         std::string pointAsWkt;
         try {
-            pointAsWkt = responseAsTree.get<std::string>(
-                    constants::PATH_TO_SPARQL_RESULT);
+            pointAsWkt = responseAsTree.get<std::string>("sparql.results.result.binding.literal");
         } catch (boost::property_tree::ptree_bad_path &e) {
             std::cerr
             << "Could not get location for node with id "
@@ -120,6 +119,48 @@ namespace olu::osm {
         }
 
         return pointAsWkt;
+    }
+
+    std::vector<std::string>
+    OsmDataFetcher::fetchNodeLocationsAsWkt(const std::vector<long long int> &nodeIds) {
+        auto query = olu::sparql::QueryWriter::writeQueryForNodeLocations(nodeIds);
+        _sparqlWrapper.setMethod(util::HttpMethod::GET);
+        _sparqlWrapper.setQuery(query);
+        _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_NODE_LOCATION);
+        auto response = _sparqlWrapper.runQuery();
+
+        boost::property_tree::ptree responseAsTree;
+        olu::util::XmlReader::populatePTreeFromString(response, responseAsTree);
+
+        std::vector<std::string> pointsAsWkt;
+        for (const auto &result : responseAsTree.get_child("sparql.results")) {
+            auto pointAsWkt = result.second.get<std::string>("binding.literal");
+            pointsAsWkt.emplace_back(pointAsWkt);
+        }
+
+        if (pointsAsWkt.size() > nodeIds.size()) {
+            std::cout
+                << "The SPARQL endpoint returned "
+                << std::to_string(pointsAsWkt.size())
+                << " locations, but we only requested the location for "
+                << std::to_string(nodeIds.size())
+                << " nodeIds. It is possible that there are nodes with multiple locations in the database."
+                << std::endl;
+            throw OsmDataFetcherException("Exception while trying to fetch nodes locations");
+        }
+
+        if (pointsAsWkt.size() < nodeIds.size()) {
+            std::cout
+                << "The SPARQL endpoint returned "
+                << std::to_string(pointsAsWkt.size())
+                << " locations, but we have "
+                << std::to_string(nodeIds.size())
+                << " nodeIds. It is possible that there are nodes without a location in the database."
+                << std::endl;
+            throw OsmDataFetcherException("Exception while trying to fetch nodes locations");
+        }
+
+        return pointsAsWkt;
     }
 
     // _____________________________________________________________________________________________
