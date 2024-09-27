@@ -16,56 +16,32 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "osm/Osm2ttl.h"
 #include "osm/OsmDataFetcher.h"
-
 #include "benchmark/benchmark.h"
 #include "config/Constants.h"
-#include "sparql/QueryWriter.h"
 
 // ---------------------------------------------------------------------------
-static void Run_Query_For_Node_Location(benchmark::State& state) {
+static void Fetch_Latest_Timestamp_Of_Any_Node(benchmark::State& state) {
     auto config((olu::config::Config()));
     config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
 
-    auto sparqlWrapper = olu::sparql::SparqlWrapper(config);
-    auto query = olu::sparql::QueryWriter::writeQueryForNodeLocation(1);
-    sparqlWrapper.setMethod(olu::util::GET);
-    sparqlWrapper.setQuery(query);
-    sparqlWrapper.setPrefixes(olu::config::constants::PREFIXES_FOR_NODE_LOCATION);
+    auto odf = olu::osm::OsmDataFetcher(config);
 
     for (auto _ : state) {
-        auto response = sparqlWrapper.runQuery();
+        odf.fetchLatestTimestampOfAnyNode();
     }
 }
-BENCHMARK(Run_Query_For_Node_Location);
+BENCHMARK(Fetch_Latest_Timestamp_Of_Any_Node);
 
 // ---------------------------------------------------------------------------
-static void Run_Query_For_Node_Deletion(benchmark::State& state) {
+static void Fetch_Node_Location_As_Wkt(benchmark::State& state) {
     auto config((olu::config::Config()));
     config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
 
-    auto sparqlWrapper = olu::sparql::SparqlWrapper(config);
-    auto query = olu::sparql::QueryWriter::writeDeleteQuery("osmnode:1");
-    sparqlWrapper.setPrefixes(olu::config::constants::PREFIXES_FOR_DELETE_QUERY);
-    sparqlWrapper.setQuery(query);
-    sparqlWrapper.setMethod(olu::util::POST);
+    auto odf = olu::osm::OsmDataFetcher(config);
 
     for (auto _ : state) {
-        auto response = sparqlWrapper.runQuery();
+        odf.fetchNodeLocationAsWkt(2186958084);
     }
 }
-BENCHMARK(Run_Query_For_Node_Deletion);
-
-// ---------------------------------------------------------------------------
-static void Clear_Cache(benchmark::State& state) {
-    auto config((olu::config::Config()));
-    config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
-
-    auto sparqlWrapper = olu::sparql::SparqlWrapper(config);
-
-    for (auto _ : state) {
-        sparqlWrapper.clearCache();
-    }
-}
-BENCHMARK(Clear_Cache);
+BENCHMARK(Fetch_Node_Location_As_Wkt);

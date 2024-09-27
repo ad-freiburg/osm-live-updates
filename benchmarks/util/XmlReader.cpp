@@ -1,6 +1,20 @@
+// Copyright 2024, University of Freiburg
+// Authors: Nicolas von Trott <nicolasvontrott@gmail.com>.
+
+// This file is part of osm-live-updates.
 //
-// Created by Nicolas von Trott on 25.09.24.
+// osm-live-updates is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
+// osm-live-updates is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <fstream>
 #include <boost/property_tree/ptree.hpp>
@@ -10,7 +24,7 @@
 #include "config/Constants.h"
 
 // ---------------------------------------------------------------------------
-static void readAttribute(benchmark::State& state) {
+static void Read_Attribute(benchmark::State& state) {
     std::string path = "/src/tests/data/";
     std::ifstream xmlFile (path + "node.osm");
     std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
@@ -25,10 +39,10 @@ static void readAttribute(benchmark::State& state) {
                 tree);
     }
 }
-BENCHMARK(readAttribute);
+BENCHMARK(Read_Attribute);
 
 // ---------------------------------------------------------------------------
-static void populatePTreeFromString(benchmark::State& state) {
+static void Populate_PTree_From_String_Node(benchmark::State& state) {
     std::string path = "/src/tests/data/";
     std::ifstream xmlFile (path + "node.osm");
     std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
@@ -39,10 +53,10 @@ static void populatePTreeFromString(benchmark::State& state) {
         olu::util::XmlReader::populatePTreeFromString(content, tree);
     }
 }
-BENCHMARK(populatePTreeFromString);
+BENCHMARK(Populate_PTree_From_String_Node);
 
 // ---------------------------------------------------------------------------
-static void populatePTreeFromStringLarge(benchmark::State& state) {
+static void Populate_PTree_From_String_Change_File(benchmark::State& state) {
     std::string path = "/src/tests/data/";
     std::ifstream xmlFile (path + "427.osc");
     std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
@@ -53,10 +67,10 @@ static void populatePTreeFromStringLarge(benchmark::State& state) {
         olu::util::XmlReader::populatePTreeFromString(content, tree);
     }
 }
-BENCHMARK(populatePTreeFromStringLarge);
+BENCHMARK(Populate_PTree_From_String_Change_File);
 
 // ---------------------------------------------------------------------------
-static void readTagOfChildren(benchmark::State& state) {
+static void Read_Tag_Of_Children(benchmark::State& state) {
     std::string path = "/src/tests/data/";
     std::ifstream xmlFile (path + "node.osm");
     std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
@@ -72,7 +86,7 @@ static void readTagOfChildren(benchmark::State& state) {
                 false);
     }
 }
-BENCHMARK(readTagOfChildren);
+BENCHMARK(Read_Tag_Of_Children);
 
 
 
