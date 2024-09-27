@@ -16,6 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <iostream>
 #include "osm/Osm2ttl.h"
 
 #include "benchmark/benchmark.h"
@@ -53,3 +54,21 @@ static void Convert_Way(benchmark::State& state) {
     }
 }
 BENCHMARK(Convert_Way);
+
+
+// ---------------------------------------------------------------------------
+static void Convert_Relation_Large(benchmark::State& state) {
+    std::string path = "/src/tests/data/";
+
+    std::ifstream ifs(path + "relation_large.osm");
+    std::string nodeElement((std::istreambuf_iterator<char>(ifs)),
+                            (std::istreambuf_iterator<char>()));
+    std::vector<std::string> elements;
+    elements.push_back(nodeElement);
+
+    for (auto _ : state) {
+        auto osm2rdf = olu::osm::Osm2ttl();
+        auto result = osm2rdf.convert(elements);
+    }
+}
+BENCHMARK(Convert_Relation_Large);
