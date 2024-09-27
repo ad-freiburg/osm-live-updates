@@ -23,6 +23,7 @@
 #include "config/Config.h"
 #include "osm/Osm2ttl.h"
 #include "osm/OsmDataFetcher.h"
+#include "gtest/gtest.h"
 
 #include <boost/property_tree/ptree.hpp>
 
@@ -57,6 +58,15 @@ namespace olu::osm {
         void handleChange(const std::string &pathToOsmChangeFile,
                           const bool &deleteChangeFile,
                           const bool &showProgress = true);
+
+        /**
+         * Counts the osm elements (`node`, `way` or `relation`) in the osm change file that are in
+         * contained in the changesets.
+         *
+         * @param osmChangeElement the osm change element
+         * @return The number of elements to be processed
+         */
+        static size_t countElements(const boost::property_tree::ptree &osmChangeElement);
 
     private:
         config::Config _config;
@@ -115,15 +125,6 @@ namespace olu::osm {
          */
         std::vector<std::string> getOsmElementsForInsert(const std::string& elementTag,
                                                          const pt::ptree& element);
-
-        /**
-         * Counts the osm elements (`node`, `way` or `relation`) in the osm change file that are in
-         * contained in the changesets.
-         *
-         * @param osmChangeElement the osm change element
-         * @return The number of elements to be processed
-         */
-        static size_t countElements(const boost::property_tree::ptree &osmChangeElement);
 
         /**
          * Filters the prefixes from the converted ttl data and formats it for SPARQL:
