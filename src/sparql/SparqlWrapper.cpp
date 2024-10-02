@@ -84,6 +84,8 @@ namespace olu::sparql {
             }
         }
 
+        // Todo: Check response for status `OK`
+
         // Clear query and prefixes for next request
         _query = ""; _prefixes = "";
         return response;

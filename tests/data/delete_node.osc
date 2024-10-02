@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osmChange version="0.6" generator="osmium/1.14.0">
+    <delete>
+     <node id="1" visible="true" version="37" changeset="153676518" timestamp="2024-07-07T19:48:37Z" user="tyr_asd" uid="115612" lat="42.7957187" lon="13.5690032">
+     </node>
+    </delete>
+</osmChange>

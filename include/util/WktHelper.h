@@ -22,7 +22,7 @@ namespace olu::osm {
          * @return A dummy node containing the given node id and location
          */
         static std::string
-        createDummyNodeFromPoint(const int &nodeId, const std::string& pointAsWkt);
+        createDummyNodeFromPoint(const long long &nodeId, const std::string& pointAsWkt);
     };
 
     /**

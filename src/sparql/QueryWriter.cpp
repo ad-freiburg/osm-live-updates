@@ -40,7 +40,11 @@ std::string olu::sparql::QueryWriter::writeInsertQuery(const std::vector<std::st
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeDeleteQuery(const std::string& subject) {
     std::string query;
-    query += "DELETE { ?s ?p ?o } WHERE { "
+    // Todo: This does not work with the current implementation of sparql updates
+//    query += "DELETE { ?s ?p ?o } WHERE { "
+//             + subject +
+//             " ?p ?o . }";
+    query += "DELETE { " + subject + "?p ?o } WHERE { "
             + subject +
             " ?p ?o . }";
     return query;
@@ -83,6 +87,24 @@ std::string olu::sparql::QueryWriter::writeQueryForNodeLocation(const long long 
     // TODO: Find out why this does not always work
 //    std::string query = "SELECT ?o WHERE { osmnode:" + std::to_string(nodeId) + " geo:hasGeometry/geo:asWKT ?o . }";
     std::string query = "SELECT ?o WHERE { osm2rdfgeom:osm_node_" + std::to_string(nodeId) + " geo:asWKT ?o . }";
+    return query;
+}
+
+// _________________________________________________________________________________________________
+std::string
+olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::vector<long long int> &nodeIds) {
+    std::string query;
+    query += "SELECT ?o WHERE { ";
+
+    for (const auto & nodeId : nodeIds) {
+        if (nodeId == nodeIds.front()) {
+            query +=  + " { osm2rdfgeom:osm_node_" + std::to_string(nodeId) + " geo:asWKT ?o .  }";
+        } else {
+            query +=  + " UNION { osm2rdfgeom:osm_node_" + std::to_string(nodeId) + " geo:asWKT ?o .  }";
+        }
+    }
+
+    query += "}";
     return query;
 }
 

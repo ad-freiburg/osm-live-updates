@@ -68,6 +68,49 @@ namespace olu::osm {
          */
         static size_t countElements(const boost::property_tree::ptree &osmChangeElement);
 
+        /**
+         * Returns a vector with all osm elements needed for conversion to ttl format. For `nodes`
+         * and `relation`, this is only the passed element. If the element is a `way` all the nodes
+         * referenced in this way are fetched and added to the vector.
+         *
+         * The first entry of the returned vector is always: `<osm version="0.6">` and the last one
+         * `</osm>`
+         *
+         * @param elementTag The tag of the element
+         * @param element The xml element of to get the informations for
+         * @return A vector containig all informations needed for the conversion to ttl
+         */
+        std::vector<std::string> getOsmElementsForInsert(const std::string& elementTag,
+                                                         const pt::ptree& element);
+
+        /**
+         * Creates a SPARQL query from the given ttl data to add the contained triples into the
+         * database and sends it to the SPARQL endpoint.
+         *
+         * @param ttl The ttl data containing the triples that should be inserted to the datatbase
+         * as well as the needed prefixes
+         */
+        void createAndRunInsertQuery(const std::vector<std::string>& ttl);
+
+        /**
+         * Filters the prefixes from the converted ttl data and formats it for SPARQL:
+         *
+         * e.g. `@prefix ohmnode: <https://www.openhistoricalmap.org/node/> .` is formatted to
+         * `PREFIX ohmnode: <https://www.openhistoricalmap.org/node/> .`
+         *
+         * @param ttl the ttl data form the conversion
+         * @return A vector with all prefixes in the conversion data formatted for SPARQL
+         */
+        static std::vector<std::string> getPrefixesFromConvertedData(std::vector<std::string> ttl);
+
+        /**
+         * Filters the triples from the converted ttl data.
+         *
+         * @param ttl the ttl data form the conversion
+         * @return A vector with all triples in the conversion data
+         */
+        static std::vector<std::string> getTriplesFromConvertedData(std::vector<std::string> ttl);
+
     private:
         config::Config _config;
         sparql::SparqlWrapper _sparql;
@@ -110,40 +153,6 @@ namespace olu::osm {
          * @param element The xml element to modify
          */
         void handleModify(const std::string& elementTag, const pt::ptree& element);
-
-        /**
-         * Returns a vector with all osm elements needed for conversion to ttl format. For `nodes`
-         * and `relation`, this is only the passed element. If the element is a `way` all the nodes
-         * referenced in this way are fetched and added to the vector.
-         *
-         * The first entry of the returned vector is always: `<osm version="0.6">` and the last one
-         * `</osm>`
-         *
-         * @param elementTag The tag of the element
-         * @param element The xml element of to get the informations for
-         * @return A vector containig all informations needed for the conversion to ttl
-         */
-        std::vector<std::string> getOsmElementsForInsert(const std::string& elementTag,
-                                                         const pt::ptree& element);
-
-        /**
-         * Filters the prefixes from the converted ttl data and formats it for SPARQL:
-         *
-         * e.g. `@prefix ohmnode: <https://www.openhistoricalmap.org/node/> .` is formatted to
-         * `PREFIX ohmnode: <https://www.openhistoricalmap.org/node/> .`
-         *
-         * @param ttl the ttl data form the conversion
-         * @return A vector with all prefixes in the conversion data formatted for SPARQL
-         */
-        static std::vector<std::string> getPrefixesFromConvertedData(std::vector<std::string> ttl);
-
-        /**
-         * Filters the triples from the converted ttl data.
-         *
-         * @param ttl the ttl data form the conversion
-         * @return A vector with all triples in the conversion data
-         */
-        static std::vector<std::string> getTriplesFromConvertedData(std::vector<std::string> ttl);
 
         /**
          * Gets the id of each node that is referenced in the passed `way` element

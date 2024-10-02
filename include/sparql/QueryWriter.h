@@ -58,6 +58,11 @@ namespace olu::sparql {
         static std::string writeQueryForNodeLocation(const long long &nodeId);
 
         /**
+        * @returns A SPARQL query for the locations of the nodes with the given ID in WKT format
+        */
+        static std::string writeQueryForNodeLocations(const std::vector<long long> &nodeIds);
+
+        /**
          * @returns A SPARQL query for the latest timestamp of any node in the database
          */
         static std::string writeQueryForLatestNodeTimestamp();
