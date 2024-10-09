@@ -67,6 +67,8 @@ namespace olu::osm {
             if (changeset.first == config::constants::MODIFY_TAG) {
                 // Loop over each element ('node', 'way' or 'relation') to be modified
                 for (const auto &element : changeset.second) {
+                    _stats.add(ChangesetStat { element.first, MODIFY });
+
                     try {
                         handleModify(element.first, element.second);
                     } catch (std::exception &e) {
@@ -86,6 +88,8 @@ namespace olu::osm {
             } else if (changeset.first == config::constants::CREATE_TAG) {
                 // Loop over each element ('node', 'way' or 'relation') to be created
                 for (const auto &element : changeset.second) {
+                    _stats.add(ChangesetStat { element.first, INSERT });
+
                     try {
                         handleInsert(element.first, element.second);
                     } catch (std::exception &e) {
@@ -108,6 +112,8 @@ namespace olu::osm {
             } else if (changeset.first == config::constants::DELETE_TAG) {
                 // Loop over each element ('node', 'way' or 'relation') to be deleted
                 for (const auto &element : changeset.second) {
+                    _stats.add(ChangesetStat { element.first, DELETE });
+
                     try {
                         handleDelete(element.first, element.second);
                     } catch (std::exception &e) {
@@ -142,6 +148,8 @@ namespace olu::osm {
         }
 
         progressBar.done();
+
+        _stats.printResults();
     }
 
     void olu::osm::OsmChangeHandler::handleInsert(const std::string& elementTag,

@@ -23,6 +23,7 @@
 #include "config/Config.h"
 #include "osm/Osm2ttl.h"
 #include "osm/OsmDataFetcher.h"
+#include "config/Stats.h"
 #include "gtest/gtest.h"
 
 #include <boost/property_tree/ptree.hpp>
@@ -116,6 +117,7 @@ namespace olu::osm {
         sparql::SparqlWrapper _sparql;
         Osm2ttl _osm2ttl;
         OsmDataFetcher _odf;
+        Stats _stats;
 
         /**
          * @brief Handles the insertion of elements.
