@@ -172,6 +172,13 @@ namespace olu::osm {
          * @return A vector containing a dummy node for each given node id
          */
         std::vector<std::string> createDummyNodes(const std::vector<long long>& nodeIds);
+
+        /**
+         * @brief Handles the deletion of members of a relation.
+         *
+         * @param relationId The realtion osm element for wich the members should be deleted
+         */
+        void handleRelationMemberDeletion(const long long &relationId);
     };
 
     /**

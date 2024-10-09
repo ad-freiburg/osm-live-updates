@@ -38,61 +38,56 @@ std::string olu::sparql::QueryWriter::writeInsertQuery(const std::vector<std::st
 }
 
 // _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeDeleteQuery(const std::string& subject) {
+std::string olu::sparql::QueryWriter::writeDeleteQuery(const std::vector<std::string>& subjects) {
     std::string query;
-    // Todo: This does not work with the current implementation of sparql updates
-//    query += "DELETE { ?s ?p ?o } WHERE { "
-//             + subject +
-//             " ?p ?o . }";
-    query += "DELETE { " + subject + "?p ?o } WHERE { "
-            + subject +
-            " ?p ?o . }";
+    query += "DELETE WHERE { ";
+
+    for (size_t i = 0; i < subjects.size(); ++i) {
+        query += subjects[i] + " ?p" + std::to_string(i) + " ?o" + std::to_string(i) + " . ";
+    }
+
+    query += "}";
     return query;
 }
 
 // _________________________________________________________________________________________________
-std::string
-olu::sparql::QueryWriter::getSubjectFor(const std::string &elementTag,
-                                        const boost::property_tree::ptree &element) {
-    std::string identifier;
-    try {
-        identifier = olu::util::XmlReader::readAttribute(
-                olu::config::constants::ID_ATTRIBUTE,
-                element);
-    } catch (std::exception &e) {
-        std::cerr << e.what() << std::endl;
-        std::string msg = "Could not identifier of element: " + util::XmlReader::readTree(element);
-        throw QueryWriterException(msg.c_str());
-    }
+std::string olu::sparql::QueryWriter::writeNodeDeleteQuery(const long long &nodeId) {
+    std::vector<std::string> triples {
+            "osmnode:" + std::to_string(nodeId),
+            "osm2rdfgeom:osm_node_" + std::to_string(nodeId)
+    };
 
-    if (elementTag == config::constants::NODE_TAG) {
-        return "osmnode:" + identifier;
-    }
+    return writeDeleteQuery(triples);
+}
 
-    if (elementTag == config::constants::WAY_TAG) {
-        return config::constants::WAY_SUBJECT + ":" + identifier;
-    }
+// _________________________________________________________________________________________________
+std::string olu::sparql::QueryWriter::writeWayDeleteQuery(const long long &wayId) {
+    std::vector<std::string> triples {
+            "osmway:" + std::to_string(wayId),
+            "osm2rdf:way_" + std::to_string(wayId)
+    };
 
-    if (elementTag == config::constants::RELATION_TAG) {
-        return config::constants::RELATION_SUBJECT + ":" + identifier;
-    }
+    return writeDeleteQuery(triples);
+}
 
-    std::string msg = "Could not determine subject for element: "
-            + util::XmlReader::readTree(element);
-    throw QueryWriterException(msg.c_str());
+// _________________________________________________________________________________________________
+std::string olu::sparql::QueryWriter::writeRelationDeleteQuery(const long long &relationId) {
+    std::vector<std::string> triples {
+            "osmrel:" + std::to_string(relationId)
+    };
+
+    return writeDeleteQuery(triples);
 }
 
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeQueryForNodeLocation(const long long &nodeId) {
-    // TODO: Find out why this does not always work
-//    std::string query = "SELECT ?o WHERE { osmnode:" + std::to_string(nodeId) + " geo:hasGeometry/geo:asWKT ?o . }";
     std::string query = "SELECT ?o WHERE { osm2rdfgeom:osm_node_" + std::to_string(nodeId) + " geo:asWKT ?o . }";
     return query;
 }
 
 // _________________________________________________________________________________________________
 std::string
-olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::vector<long long int> &nodeIds) {
+olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::vector<long long> &nodeIds) {
     std::string query;
     query += "SELECT ?o WHERE { ";
 
@@ -112,5 +107,14 @@ olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::vector<long long
 std::string olu::sparql::QueryWriter::writeQueryForLatestNodeTimestamp() {
     std::string query = "SELECT ?p WHERE { ?s rdf:type osm:node . ?s osmmeta:timestamp ?p . } "
                         "ORDER BY DESC(?p) LIMIT 1";
+    return query;
+}
+
+// _________________________________________________________________________________________________
+std::string
+olu::sparql::QueryWriter::writeQueryForRelationMembers(const long long &relationId) {
+    std::string query = "SELECT ?o WHERE { "
+                        "osmrel:" + std::to_string(relationId) + " osmrel:member ?o . "
+                        "}";
     return query;
 }

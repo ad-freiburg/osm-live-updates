@@ -58,14 +58,6 @@ namespace olu::util {
                           bool excludeXmlAttr = true);
 
         /**
-         * Extracts a node element that is embedded in an osm element:
-         *
-         * @param osmElement The osm element that contains the node element
-         * @return The node element
-         */
-        static std::string extractNodeElement(const std::string& osmElement);
-
-        /**
          * Populates the given property tree with the contents of the xml file.
          *
          * @param pathToFile The path to the xml file

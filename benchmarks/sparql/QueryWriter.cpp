@@ -43,27 +43,10 @@ BENCHMARK(Write_Query_For_Node_Location);
 // ---------------------------------------------------------------------------
 static void Write_Delete_Query(benchmark::State& state) {
     for (auto _ : state) {
-        olu::sparql::QueryWriter::writeDeleteQuery("osmnode:123456789");
+        olu::sparql::QueryWriter::writeNodeDeleteQuery(1);
     }
 }
 BENCHMARK(Write_Delete_Query);
-
-// ---------------------------------------------------------------------------
-static void Get_Subject_For(benchmark::State& state) {
-    std::string path = "/src/tests/data/";
-    std::ifstream xmlFile (path + "node.osm");
-    std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
-                         (std::istreambuf_iterator<char>()) );
-
-    pt::ptree tree;
-    olu::util::XmlReader::populatePTreeFromString(content, tree);
-    auto nodeElement = tree.get_child("osm.node");
-
-    for (auto _ : state) {
-        olu::sparql::QueryWriter::getSubjectFor("node", nodeElement);
-    }
-}
-BENCHMARK(Get_Subject_For);
 
 // ---------------------------------------------------------------------------
 static void Write_Insert_Query_Node(benchmark::State& state) {

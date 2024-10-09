@@ -22,21 +22,6 @@
 
 #include <fstream>
 
-// _________________________________________________________________________________________________
-TEST(XmlReader, readNodeElement) {
-    {
-        // Todo: Read path from environment
-        std::string path = "/src/tests/data/";
-        std::ifstream xmlFile (path + "node.osm");
-        std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
-                             (std::istreambuf_iterator<char>()) );
-
-        std::string nodeElement = olu::util::XmlReader::extractNodeElement(content);
-        std::string correctNodeElement = R"(<node id="1" visible="true" version="37" changeset="153676518" timestamp="2024-07-07T19:48:37Z" user="tyr_asd" uid="115612" lat="42.7957187" lon="13.5690032"><tag k="communication:microwave" v="yes"/><tag k="communication:radio" v="fm"/><tag k="description" v="Radio Subasio"/><tag k="frequency" v="105.5 MHz"/><tag k="man_made" v="mast"/><tag k="name" v="Monte Piselli - San Giacomo"/><tag k="note" v="This is the very first node on OpenStreetMap."/><tag k="tower:construction" v="lattice"/><tag k="tower:type" v="communication"/></node>)";
-        ASSERT_EQ(nodeElement, correctNodeElement);
-    }
-}
-
 TEST(XmlReader, readAttribute) {
     {
         // Todo: Read path from environment
@@ -66,32 +51,7 @@ TEST(XmlReader, readAttribute) {
         pt::ptree tree;
         olu::util::XmlReader::populatePTreeFromString(content, tree);
 
-        std::string attribute = olu::util::XmlReader::readAttribute(
-                "osm.node.<xmlattr>.notExisting",
-                tree);
-
-        ASSERT_EQ(attribute, "");
-
-        tree.clear();
-    }
-
-    {
-        // Todo: Read path from environment
-        std::string path = "/src/tests/data/";
-        std::ifstream xmlFile (path + "node.osm");
-        std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
-                             (std::istreambuf_iterator<char>()) );
-
-        pt::ptree tree;
-        olu::util::XmlReader::populatePTreeFromString(content, tree);
-
-        std::string attribute = olu::util::XmlReader::readAttribute(
-                olu::config::constants::OSM_TAG + "." +
-                olu::config::constants::NODE_TAG + "." +
-                olu::config::constants::XML_ATTRIBUTE_TAG + ".notExisting",
-                tree);
-
-        ASSERT_EQ(attribute, "");
+        EXPECT_ANY_THROW(olu::util::XmlReader::readAttribute("osm.node.<xmlattr>.notExisting", tree));
 
         tree.clear();
     }

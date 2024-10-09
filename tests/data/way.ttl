@@ -1,0 +1,113 @@
+@prefix ohmnode: <https://www.openhistoricalmap.org/node/> .
+@prefix osmrel: <https://www.openstreetmap.org/relation/> .
+@prefix osmnode: <https://www.openstreetmap.org/node/> .
+@prefix osmkey: <https://www.openstreetmap.org/wiki/Key:> .
+@prefix osmway: <https://www.openstreetmap.org/way/> .
+@prefix osmmeta: <https://www.openstreetmap.org/meta/> .
+@prefix osm: <https://www.openstreetmap.org/> .
+@prefix osm2rdfmeta: <https://osm2rdf.cs.uni-freiburg.de/rdf/meta#> .
+@prefix ohmrel: <https://www.openhistoricalmap.org/relation/> .
+@prefix osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#> .
+@prefix osm2rdfkey: <https://osm2rdf.cs.uni-freiburg.de/rdf/key#> .
+@prefix osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#> .
+@prefix ohmway: <https://www.openhistoricalmap.org/way/> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ohm: <https://www.openhistoricalmap.org/> .
+@prefix wd: <http://www.wikidata.org/entity/> .
+@prefix osm2rdf: <https://osm2rdf.cs.uni-freiburg.de/rdf#> .
+@prefix ogc: <http://www.opengis.net/rdf#> .
+@prefix geo: <http://www.opengis.net/ont/geosparql#> .
+osmnode:2287019214 rdf:type osm:node .
+osmnode:2287019214 osmmeta:timestamp "2024-09-19T17:09:58"^^xsd:dateTime .
+osmnode:2287019214 osm2rdf:facts "0"^^xsd:integer .
+osmnode:2287019214 geo:hasGeometry osm2rdfgeom:osm_node_2287019214 .
+osm2rdfgeom:osm_node_2287019214 geo:asWKT "POINT(1.5407031 42.5087367)"^^geo:wktLiteral .
+osmnode:2287019214 osm2rdfgeom:convex_hull "POLYGON((1.5407031 42.5087367,1.5407031 42.5087367,1.5407031 42.5087367,1.5407031 42.5087367,1.5407031 42.5087367))"^^geo:wktLiteral .
+osmnode:2287019214 osm2rdfgeom:envelope "POLYGON((1.5407031 42.5087367,1.5407031 42.5087367,1.5407031 42.5087367,1.5407031 42.5087367,1.5407031 42.5087367))"^^geo:wktLiteral .
+osmnode:2287019214 osm2rdfgeom:obb "POLYGON((1.5407031 42.5087367,1.5407031 42.5087367,1.5407031 42.5087367,1.5407031 42.5087367,1.5407031 42.5087367))"^^geo:wktLiteral .
+osmnode:5043815480 rdf:type osm:node .
+osmnode:5043815480 osmmeta:timestamp "2024-09-19T17:11:57"^^xsd:dateTime .
+osmnode:5043815480 osm2rdf:facts "0"^^xsd:integer .
+osmnode:5043815480 geo:hasGeometry osm2rdfgeom:osm_node_5043815480 .
+osm2rdfgeom:osm_node_5043815480 geo:asWKT "POINT(1.5426687 42.5089421)"^^geo:wktLiteral .
+osmnode:5043815480 osm2rdfgeom:convex_hull "POLYGON((1.5426687 42.5089421,1.5426687 42.5089421,1.5426687 42.5089421,1.5426687 42.5089421,1.5426687 42.5089421))"^^geo:wktLiteral .
+osmnode:5043815480 osm2rdfgeom:envelope "POLYGON((1.5426687 42.5089421,1.5426687 42.5089421,1.5426687 42.5089421,1.5426687 42.5089421,1.5426687 42.5089421))"^^geo:wktLiteral .
+osmnode:5043815480 osm2rdfgeom:obb "POLYGON((1.5426687 42.5089421,1.5426687 42.5089421,1.5426687 42.5089421,1.5426687 42.5089421,1.5426687 42.5089421))"^^geo:wktLiteral .
+osmway:6177369 rdf:type osm:way .
+osmway:6177369 osmmeta:timestamp "2024-09-20T14:42:58"^^xsd:dateTime .
+osmway:6177369 osmkey:oneway "no" .
+osmway:6177369 osmkey:ref "CG-2" .
+osmway:6177369 osmkey:lanes "2" .
+osmway:6177369 osmkey:foot "no" .
+osmway:6177369 osmkey:surface "asphalt" .
+osmway:6177369 osmkey:maxspeed "50" .
+osmway:6177369 osmkey:cycleway "no" .
+osmway:6177369 osmkey:source "yahoo" .
+osmway:6177369 osmkey:bicycle "yes" .
+osmway:6177369 osmkey:highway "primary" .
+osmway:6177369 osmkey:access "yes" .
+osmway:6177369 osm2rdf:facts "11"^^xsd:integer .
+osmway:6177369 geo:hasGeometry osm2rdf:way_6177369 .
+osm2rdf:way_6177369 geo:asWKT "LINESTRING(1.5388551 42.5077891,1.5390663 42.5077919,1.5389817 42.5078050,1.5386306 42.5077990,1.5393683 42.5086830,1.5406269 42.5087285,1.5407031 42.5087367,1.5426687 42.5089421,1.5427093 42.5091105)"^^geo:wktLiteral .
+osmway:6177369 osm2rdfgeom:convex_hull "POLYGON((1.5386306 42.5077990,1.5393683 42.5086830,1.5427093 42.5091105,1.5426687 42.5089421,1.5390663 42.5077919,1.5388551 42.5077891,1.5386306 42.5077990))"^^geo:wktLiteral .
+osmway:6177369 osm2rdfgeom:envelope "POLYGON((1.5386306 42.5077891,1.5386306 42.5091105,1.5427093 42.5091105,1.5427093 42.5077891,1.5386306 42.5077891))"^^geo:wktLiteral .
+osmway:6177369 osm2rdfgeom:obb "POLYGON((1.5409501 42.5105785,1.5427682 42.5090613,1.5404487 42.5062818,1.5386306 42.5077990,1.5409501 42.5105785))"^^geo:wktLiteral .
+osmway:6177369 osm2rdf:length "0.005285"^^xsd:double .
+osmnode:12188412742 rdf:type osm:node .
+osmnode:12188412742 osmmeta:timestamp "2024-09-19T17:07:38"^^xsd:dateTime .
+osmnode:12188412742 osm2rdf:facts "0"^^xsd:integer .
+osmnode:12188412742 geo:hasGeometry osm2rdfgeom:osm_node_12188412742 .
+osm2rdfgeom:osm_node_12188412742 geo:asWKT "POINT(1.5390663 42.5077919)"^^geo:wktLiteral .
+osmnode:12188412742 osm2rdfgeom:convex_hull "POLYGON((1.5390663 42.5077919,1.5390663 42.5077919,1.5390663 42.5077919,1.5390663 42.5077919,1.5390663 42.5077919))"^^geo:wktLiteral .
+osmnode:12188412742 osm2rdfgeom:envelope "POLYGON((1.5390663 42.5077919,1.5390663 42.5077919,1.5390663 42.5077919,1.5390663 42.5077919,1.5390663 42.5077919))"^^geo:wktLiteral .
+osmnode:12188412742 osm2rdfgeom:obb "POLYGON((1.5390663 42.5077919,1.5390663 42.5077919,1.5390663 42.5077919,1.5390663 42.5077919,1.5390663 42.5077919))"^^geo:wktLiteral .
+osmnode:12029676311 rdf:type osm:node .
+osmnode:12029676311 osmmeta:timestamp "2024-09-19T17:09:58"^^xsd:dateTime .
+osmnode:12029676311 osm2rdf:facts "0"^^xsd:integer .
+osmnode:12029676311 geo:hasGeometry osm2rdfgeom:osm_node_12029676311 .
+osm2rdfgeom:osm_node_12029676311 geo:asWKT "POINT(1.5406269 42.5087285)"^^geo:wktLiteral .
+osmnode:12029676311 osm2rdfgeom:convex_hull "POLYGON((1.5406269 42.5087285,1.5406269 42.5087285,1.5406269 42.5087285,1.5406269 42.5087285,1.5406269 42.5087285))"^^geo:wktLiteral .
+osmnode:12029676311 osm2rdfgeom:envelope "POLYGON((1.5406269 42.5087285,1.5406269 42.5087285,1.5406269 42.5087285,1.5406269 42.5087285,1.5406269 42.5087285))"^^geo:wktLiteral .
+osmnode:12029676311 osm2rdfgeom:obb "POLYGON((1.5406269 42.5087285,1.5406269 42.5087285,1.5406269 42.5087285,1.5406269 42.5087285,1.5406269 42.5087285))"^^geo:wktLiteral .
+osmnode:12188412753 rdf:type osm:node .
+osmnode:12188412753 osmmeta:timestamp "2024-09-19T17:07:38"^^xsd:dateTime .
+osmnode:12188412753 osm2rdf:facts "0"^^xsd:integer .
+osmnode:12188412753 geo:hasGeometry osm2rdfgeom:osm_node_12188412753 .
+osm2rdfgeom:osm_node_12188412753 geo:asWKT "POINT(1.5386306 42.5077990)"^^geo:wktLiteral .
+osmnode:12188412753 osm2rdfgeom:convex_hull "POLYGON((1.5386306 42.5077990,1.5386306 42.5077990,1.5386306 42.5077990,1.5386306 42.5077990,1.5386306 42.5077990))"^^geo:wktLiteral .
+osmnode:12188412753 osm2rdfgeom:envelope "POLYGON((1.5386306 42.5077990,1.5386306 42.5077990,1.5386306 42.5077990,1.5386306 42.5077990,1.5386306 42.5077990))"^^geo:wktLiteral .
+osmnode:12188412753 osm2rdfgeom:obb "POLYGON((1.5386306 42.5077990,1.5386306 42.5077990,1.5386306 42.5077990,1.5386306 42.5077990,1.5386306 42.5077990))"^^geo:wktLiteral .
+osmnode:625256 rdf:type osm:node .
+osmnode:625256 osmmeta:timestamp "2024-09-19T17:07:38"^^xsd:dateTime .
+osmnode:625256 osm2rdf:facts "0"^^xsd:integer .
+osmnode:625256 geo:hasGeometry osm2rdfgeom:osm_node_625256 .
+osm2rdfgeom:osm_node_625256 geo:asWKT "POINT(1.5388551 42.5077891)"^^geo:wktLiteral .
+osmnode:625256 osm2rdfgeom:convex_hull "POLYGON((1.5388551 42.5077891,1.5388551 42.5077891,1.5388551 42.5077891,1.5388551 42.5077891,1.5388551 42.5077891))"^^geo:wktLiteral .
+osmnode:625256 osm2rdfgeom:envelope "POLYGON((1.5388551 42.5077891,1.5388551 42.5077891,1.5388551 42.5077891,1.5388551 42.5077891,1.5388551 42.5077891))"^^geo:wktLiteral .
+osmnode:625256 osm2rdfgeom:obb "POLYGON((1.5388551 42.5077891,1.5388551 42.5077891,1.5388551 42.5077891,1.5388551 42.5077891,1.5388551 42.5077891))"^^geo:wktLiteral .
+osmnode:625257 rdf:type osm:node .
+osmnode:625257 osmmeta:timestamp "2024-09-19T17:07:38"^^xsd:dateTime .
+osmnode:625257 osm2rdf:facts "0"^^xsd:integer .
+osmnode:625257 geo:hasGeometry osm2rdfgeom:osm_node_625257 .
+osm2rdfgeom:osm_node_625257 geo:asWKT "POINT(1.5389817 42.5078050)"^^geo:wktLiteral .
+osmnode:625257 osm2rdfgeom:convex_hull "POLYGON((1.5389817 42.5078050,1.5389817 42.5078050,1.5389817 42.5078050,1.5389817 42.5078050,1.5389817 42.5078050))"^^geo:wktLiteral .
+osmnode:625257 osm2rdfgeom:envelope "POLYGON((1.5389817 42.5078050,1.5389817 42.5078050,1.5389817 42.5078050,1.5389817 42.5078050,1.5389817 42.5078050))"^^geo:wktLiteral .
+osmnode:625257 osm2rdfgeom:obb "POLYGON((1.5389817 42.5078050,1.5389817 42.5078050,1.5389817 42.5078050,1.5389817 42.5078050,1.5389817 42.5078050))"^^geo:wktLiteral .
+osmnode:262892996 rdf:type osm:node .
+osmnode:262892996 osmmeta:timestamp "2024-09-19T17:11:57"^^xsd:dateTime .
+osmnode:262892996 osm2rdf:facts "0"^^xsd:integer .
+osmnode:262892996 geo:hasGeometry osm2rdfgeom:osm_node_262892996 .
+osm2rdfgeom:osm_node_262892996 geo:asWKT "POINT(1.5427093 42.5091105)"^^geo:wktLiteral .
+osmnode:262892996 osm2rdfgeom:convex_hull "POLYGON((1.5427093 42.5091105,1.5427093 42.5091105,1.5427093 42.5091105,1.5427093 42.5091105,1.5427093 42.5091105))"^^geo:wktLiteral .
+osmnode:262892996 osm2rdfgeom:envelope "POLYGON((1.5427093 42.5091105,1.5427093 42.5091105,1.5427093 42.5091105,1.5427093 42.5091105,1.5427093 42.5091105))"^^geo:wktLiteral .
+osmnode:262892996 osm2rdfgeom:obb "POLYGON((1.5427093 42.5091105,1.5427093 42.5091105,1.5427093 42.5091105,1.5427093 42.5091105,1.5427093 42.5091105))"^^geo:wktLiteral .
+osmnode:5981148547 rdf:type osm:node .
+osmnode:5981148547 osmmeta:timestamp "2024-09-19T17:07:38"^^xsd:dateTime .
+osmnode:5981148547 osm2rdf:facts "0"^^xsd:integer .
+osmnode:5981148547 geo:hasGeometry osm2rdfgeom:osm_node_5981148547 .
+osm2rdfgeom:osm_node_5981148547 geo:asWKT "POINT(1.5393683 42.5086830)"^^geo:wktLiteral .
+osmnode:5981148547 osm2rdfgeom:convex_hull "POLYGON((1.5393683 42.5086830,1.5393683 42.5086830,1.5393683 42.5086830,1.5393683 42.5086830,1.5393683 42.5086830))"^^geo:wktLiteral .
+osmnode:5981148547 osm2rdfgeom:envelope "POLYGON((1.5393683 42.5086830,1.5393683 42.5086830,1.5393683 42.5086830,1.5393683 42.5086830,1.5393683 42.5086830))"^^geo:wktLiteral .
+osmnode:5981148547 osm2rdfgeom:obb "POLYGON((1.5393683 42.5086830,1.5393683 42.5086830,1.5393683 42.5086830,1.5393683 42.5086830,1.5393683 42.5086830))"^^geo:wktLiteral .
+

@@ -183,9 +183,27 @@ namespace olu::osm {
 
     void OsmChangeHandler::handleDelete(const std::string& elementTag,
                                         const boost::property_tree::ptree &element) {
-        auto subject = olu::sparql::QueryWriter::getSubjectFor(elementTag, element);
-        auto query = sparql::QueryWriter::writeDeleteQuery(subject);
-        _sparql.setPrefixes(config::constants::PREFIXES_FOR_DELETE_QUERY);
+        std::string query;
+        if (elementTag == config::constants::NODE_TAG) {
+            auto id = olu::osm::OsmDataFetcher::getIdFor(element);
+            query = sparql::QueryWriter::writeNodeDeleteQuery(id);
+            _sparql.setPrefixes(config::constants::PREFIXES_FOR_NODE_DELETE_QUERY);
+        } else if (elementTag == config::constants::WAY_TAG) {
+            auto id = olu::osm::OsmDataFetcher::getIdFor(element);
+            query = sparql::QueryWriter::writeWayDeleteQuery(id);
+            _sparql.setPrefixes(config::constants::PREFIXES_FOR_WAY_DELETE_QUERY);
+        } else if (elementTag == config::constants::RELATION_TAG) {
+            auto id = olu::osm::OsmDataFetcher::getIdFor(element);
+            query = sparql::QueryWriter::writeRelationDeleteQuery(id);
+            _sparql.setPrefixes(config::constants::PREFIXES_FOR_RELATION_DELETE_QUERY);
+
+            handleRelationMemberDeletion(id);
+        } else {
+            std::string msg = "Could not determine osm type for element: "
+                              + util::XmlReader::readTree(element);
+            throw OsmChangeHandlerException(msg.c_str());
+        }
+
         _sparql.setQuery(query);
         _sparql.setMethod(util::POST);
 
@@ -195,6 +213,31 @@ namespace olu::osm {
             std::cerr << e.what() << std::endl;
             throw OsmChangeHandlerException(
                     "Exception while trying to run sparql query for deletion");
+        }
+    }
+
+    void
+    OsmChangeHandler::handleRelationMemberDeletion(const long long &relationId) {
+        auto memberSubjects = _odf.fetchSubjectsOfRelationMembers(relationId);
+
+        std::vector<std::vector<std::string>> memberSubjectsBatches;
+        for (auto it = memberSubjects.cbegin(), e = memberSubjects.cend(); it != memberSubjects.cend(); it = e) {
+            e = it + std::min<std::size_t>(memberSubjects.cend() - it, MAX_TRIPLE_COUNT_PER_QUERY);
+            memberSubjectsBatches.emplace_back(it, e);
+        }
+
+        for (auto & batch : memberSubjectsBatches) {
+            auto query = sparql::QueryWriter::writeDeleteQuery(batch);
+            _sparql.setPrefixes(config::constants::PREFIXES_FOR_RELATION_DELETE_QUERY);
+            _sparql.setQuery(query);
+            _sparql.setMethod(util::POST);
+            try {
+                _sparql.runQuery();
+            } catch (std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                throw OsmChangeHandlerException(
+                        "Exception while trying to run sparql query for deletion");
+            }
         }
     }
 
