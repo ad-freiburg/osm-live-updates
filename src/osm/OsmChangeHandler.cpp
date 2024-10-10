@@ -173,7 +173,7 @@ namespace olu::osm {
         }
 
         try {
-            createAndRunInsertQuery(ttl);
+            createAndRunInsertQuery(ttl, elementTag, element);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
             throw OsmChangeHandlerException(
@@ -310,14 +310,26 @@ namespace olu::osm {
     }
 
     std::vector<std::string>
-    OsmChangeHandler::getTriplesFromConvertedData(std::vector<std::string> ttl) {
+    OsmChangeHandler::getTriplesFromConvertedData(std::vector<std::string> ttl,
+                                                  const std::string &elementTag,
+                                                  const pt::ptree &element) {
         std::vector<std::string> triples;
         std::copy_if (
                 ttl.begin(),
                 ttl.end(),
                 std::back_inserter(triples),
-                [](const std::string& triple){
-                    return !triple.starts_with("@prefix");
+                [&elementTag, &element](const std::string& triple){
+                    bool isPrefix = triple.starts_with("@prefix");
+
+                    bool isRelevant = true;
+                    // For ways, we filter out all triples that originated from the reference nodes
+                    if (elementTag == config::constants::WAY_TAG &&
+                        !triple.starts_with("osmway") &&
+                        !triple.starts_with("osm2rdf:way_")) {
+                        isRelevant = false;
+                    }
+
+                    return !isPrefix && isRelevant;
                 } );
         return triples;
     }
@@ -391,9 +403,11 @@ namespace olu::osm {
         return dummyNodes;
     }
 
-    void OsmChangeHandler::createAndRunInsertQuery(const std::vector<std::string>& ttl) {
-        auto prefixes = getPrefixesFromConvertedData(ttl);
-        auto triples = getTriplesFromConvertedData(ttl);
+    void OsmChangeHandler::createAndRunInsertQuery(const std::vector<std::string> &convertedData,
+                                                   const std::string &elementTag,
+                                                   const pt::ptree &element) {
+        auto prefixes = getPrefixesFromConvertedData(convertedData);
+        auto triples = getTriplesFromConvertedData(convertedData, elementTag, element);
 
         // QLever has a maximum number of triples it can handle in one query, so we have to
         // divide the triples in batches

@@ -88,10 +88,12 @@ namespace olu::osm {
          * Creates a SPARQL query from the given ttl data to add the contained triples into the
          * database and sends it to the SPARQL endpoint.
          *
-         * @param ttl The ttl data containing the triples that should be inserted to the datatbase
+         * @param convertedData The ttl data containing the triples that should be inserted to the datatbase
          * as well as the needed prefixes
          */
-        void createAndRunInsertQuery(const std::vector<std::string>& ttl);
+        void createAndRunInsertQuery(const std::vector<std::string> &convertedData,
+                                     const std::string &elementTag,
+                                     const pt::ptree &element);
 
         /**
          * Filters the prefixes from the converted ttl data and formats it for SPARQL:
@@ -105,12 +107,15 @@ namespace olu::osm {
         static std::vector<std::string> getPrefixesFromConvertedData(std::vector<std::string> ttl);
 
         /**
-         * Filters the triples from the converted ttl data.
+         * Filters the triples from the converted ttl data. For Ways all triples that result from
+         * from the node references that where needed for conversion are also filtered out.
          *
          * @param ttl the ttl data form the conversion
          * @return A vector with all triples in the conversion data
          */
-        static std::vector<std::string> getTriplesFromConvertedData(std::vector<std::string> ttl);
+        static std::vector<std::string> getTriplesFromConvertedData(std::vector<std::string> ttl,
+                                                             const std::string &elementTag,
+                                                             const pt::ptree &element);
 
     private:
         config::Config _config;

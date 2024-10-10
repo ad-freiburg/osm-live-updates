@@ -60,7 +60,7 @@ static void Create_And_Run_Insert_Query_Node(benchmark::State& state) {
     auto ttl = osm2ttl.convert(osmElements);
 
     for (auto _ : state) {
-        och.createAndRunInsertQuery(ttl);
+        och.createAndRunInsertQuery(ttl, "node", nodeElement);
     }
 }
 BENCHMARK(Create_And_Run_Insert_Query_Node);
@@ -86,7 +86,7 @@ static void Get_Triples_From_Converted_Data(benchmark::State& state) {
     auto ttl = osm2ttl.convert(osmElements);
 
     for (auto _ : state) {
-        olu::osm::OsmChangeHandler::getTriplesFromConvertedData(ttl);
+        olu::osm::OsmChangeHandler::getTriplesFromConvertedData(ttl, "node", nodeElement);
     }
 }
 BENCHMARK(Get_Triples_From_Converted_Data);

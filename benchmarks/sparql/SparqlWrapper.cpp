@@ -59,7 +59,7 @@ static void Set_Query(benchmark::State& state) {
     auto ttl = osm2ttl.convert(osmElements);
 
     auto prefixes = olu::osm::OsmChangeHandler::getPrefixesFromConvertedData(ttl);
-    auto triples = olu::osm::OsmChangeHandler::getTriplesFromConvertedData(ttl);
+    auto triples = olu::osm::OsmChangeHandler::getTriplesFromConvertedData(ttl, "node", nodeElement);
 
     auto sparqlWrapper = olu::sparql::SparqlWrapper(config);
     auto query = olu::sparql::QueryWriter::writeInsertQuery(triples);
@@ -103,7 +103,7 @@ static void Run_Query_For_Node_Insertion(benchmark::State& state) {
     auto ttl = osm2ttl.convert(osmElements);
 
     auto prefixes = olu::osm::OsmChangeHandler::getPrefixesFromConvertedData(ttl);
-    auto triples = olu::osm::OsmChangeHandler::getTriplesFromConvertedData(ttl);
+    auto triples = olu::osm::OsmChangeHandler::getTriplesFromConvertedData(ttl, "node", nodeElement);
 
     auto sparqlWrapper = olu::sparql::SparqlWrapper(config);
     auto query = olu::sparql::QueryWriter::writeInsertQuery(triples);
