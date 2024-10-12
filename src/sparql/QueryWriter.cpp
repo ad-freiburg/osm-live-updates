@@ -64,7 +64,8 @@ std::string olu::sparql::QueryWriter::writeNodeDeleteQuery(const long long &node
 std::string olu::sparql::QueryWriter::writeWayDeleteQuery(const long long &wayId) {
     std::vector<std::string> triples {
             "osmway:" + std::to_string(wayId),
-            "osm2rdf:way_" + std::to_string(wayId)
+            "osm2rdf:way_" + std::to_string(wayId),
+            "osm2rdfgeom:osm_wayarea_" + std::to_string(wayId),
     };
 
     return writeDeleteQuery(triples);
@@ -73,7 +74,8 @@ std::string olu::sparql::QueryWriter::writeWayDeleteQuery(const long long &wayId
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeRelationDeleteQuery(const long long &relationId) {
     std::vector<std::string> triples {
-            "osmrel:" + std::to_string(relationId)
+            "osmrel:" + std::to_string(relationId),
+            "osm2rdfgeom:osm_relarea_" + std::to_string(relationId),
     };
 
     return writeDeleteQuery(triples);

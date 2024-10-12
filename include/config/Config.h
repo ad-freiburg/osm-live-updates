@@ -33,7 +33,7 @@ struct Config {
 //    std::string osmDatabaseDirectoryPath = "http://download.geofabrik.de/europe/andorra-updates";
 //    std::string sparqlEndpointUri = "https://qlever.cs.uni-freiburg.de/api/osm-planet/";
 //    std::string osmDatabaseDirectoryPath = "https://planet.openstreetmap.org/replication/minute/";
-//    apps/olu -u http://host.docker.internal:7007/osm-planet/ -f /src/tests/data/184.osc
+//
 //    apps/olu -u http://host.docker.internal:7007/osm-planet/ -d http://download.geofabrik.de/europe/andorra-updates
 
     int sequenceNumber = -1;

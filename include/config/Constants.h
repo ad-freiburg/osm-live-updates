@@ -142,7 +142,8 @@ namespace olu::config::constants {
 
     const static inline std::vector<std::string> PREFIXES_FOR_WAY_DELETE_QUERY {
             "PREFIX osmnode: <https://www.openstreetmap.org/node/>",
-            "PREFIX osm2rdf: <https://osm2rdf.cs.uni-freiburg.de/rdf#>"
+            "PREFIX osm2rdf: <https://osm2rdf.cs.uni-freiburg.de/rdf#>",
+            "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_RELATION_DELETE_QUERY {
