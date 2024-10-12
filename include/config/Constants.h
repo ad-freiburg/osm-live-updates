@@ -141,13 +141,13 @@ namespace olu::config::constants {
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_WAY_DELETE_QUERY {
-            "PREFIX osmnode: <https://www.openstreetmap.org/node/>",
+            "PREFIX osmway: <https://www.openstreetmap.org/way/>",
             "PREFIX osm2rdf: <https://osm2rdf.cs.uni-freiburg.de/rdf#>",
             "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_RELATION_DELETE_QUERY {
-            "PREFIX osmway: <https://www.openstreetmap.org/way/>",
+            "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
             "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
     };
 
