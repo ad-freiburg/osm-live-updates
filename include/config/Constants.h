@@ -125,16 +125,30 @@ namespace olu::config::constants {
             "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
     };
 
+    const static inline std::vector<std::string> PREFIXES_FOR_RELATION_MEMBERS{
+            "PREFIX osmrel: <https://www.openstreetmap.org/relation/>"
+    };
+
     const static inline std::vector<std::string> PREFIXES_FOR_LATEST_NODE_TIMESTAMP {
             "PREFIX osmmeta: <https://www.openstreetmap.org/meta/>",
             "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
             "PREFIX osm: <https://www.openstreetmap.org/>"
     };
 
-    const static inline std::vector<std::string> PREFIXES_FOR_DELETE_QUERY {
-        "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
+    const static inline std::vector<std::string> PREFIXES_FOR_NODE_DELETE_QUERY {
         "PREFIX osmnode: <https://www.openstreetmap.org/node/>",
-        "PREFIX osmway: <https://www.openstreetmap.org/way/>"
+        "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
+    };
+
+    const static inline std::vector<std::string> PREFIXES_FOR_WAY_DELETE_QUERY {
+            "PREFIX osmway: <https://www.openstreetmap.org/way/>",
+            "PREFIX osm2rdf: <https://osm2rdf.cs.uni-freiburg.de/rdf#>",
+            "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
+    };
+
+    const static inline std::vector<std::string> PREFIXES_FOR_RELATION_DELETE_QUERY {
+            "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
+            "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
     };
 
     // Qlever

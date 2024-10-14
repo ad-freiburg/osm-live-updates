@@ -67,6 +67,8 @@ namespace olu::osm {
             if (changeset.first == config::constants::MODIFY_TAG) {
                 // Loop over each element ('node', 'way' or 'relation') to be modified
                 for (const auto &element : changeset.second) {
+                    _stats.add(ChangesetStat { element.first, MODIFY });
+
                     try {
                         handleModify(element.first, element.second);
                     } catch (std::exception &e) {
@@ -86,6 +88,8 @@ namespace olu::osm {
             } else if (changeset.first == config::constants::CREATE_TAG) {
                 // Loop over each element ('node', 'way' or 'relation') to be created
                 for (const auto &element : changeset.second) {
+                    _stats.add(ChangesetStat { element.first, INSERT });
+
                     try {
                         handleInsert(element.first, element.second);
                     } catch (std::exception &e) {
@@ -108,6 +112,8 @@ namespace olu::osm {
             } else if (changeset.first == config::constants::DELETE_TAG) {
                 // Loop over each element ('node', 'way' or 'relation') to be deleted
                 for (const auto &element : changeset.second) {
+                    _stats.add(ChangesetStat { element.first, DELETE });
+
                     try {
                         handleDelete(element.first, element.second);
                     } catch (std::exception &e) {
@@ -142,6 +148,8 @@ namespace olu::osm {
         }
 
         progressBar.done();
+
+        _stats.printResults();
     }
 
     void olu::osm::OsmChangeHandler::handleInsert(const std::string& elementTag,
@@ -165,7 +173,7 @@ namespace olu::osm {
         }
 
         try {
-            createAndRunInsertQuery(ttl);
+            createAndRunInsertQuery(ttl, elementTag, element);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
             throw OsmChangeHandlerException(
@@ -175,9 +183,27 @@ namespace olu::osm {
 
     void OsmChangeHandler::handleDelete(const std::string& elementTag,
                                         const boost::property_tree::ptree &element) {
-        auto subject = olu::sparql::QueryWriter::getSubjectFor(elementTag, element);
-        auto query = sparql::QueryWriter::writeDeleteQuery(subject);
-        _sparql.setPrefixes(config::constants::PREFIXES_FOR_DELETE_QUERY);
+        std::string query;
+        if (elementTag == config::constants::NODE_TAG) {
+            auto id = olu::osm::OsmDataFetcher::getIdFor(element);
+            query = sparql::QueryWriter::writeNodeDeleteQuery(id);
+            _sparql.setPrefixes(config::constants::PREFIXES_FOR_NODE_DELETE_QUERY);
+        } else if (elementTag == config::constants::WAY_TAG) {
+            auto id = olu::osm::OsmDataFetcher::getIdFor(element);
+            query = sparql::QueryWriter::writeWayDeleteQuery(id);
+            _sparql.setPrefixes(config::constants::PREFIXES_FOR_WAY_DELETE_QUERY);
+        } else if (elementTag == config::constants::RELATION_TAG) {
+            auto id = olu::osm::OsmDataFetcher::getIdFor(element);
+            query = sparql::QueryWriter::writeRelationDeleteQuery(id);
+            _sparql.setPrefixes(config::constants::PREFIXES_FOR_RELATION_DELETE_QUERY);
+
+            handleRelationMemberDeletion(id);
+        } else {
+            std::string msg = "Could not determine osm type for element: "
+                              + util::XmlReader::readTree(element);
+            throw OsmChangeHandlerException(msg.c_str());
+        }
+
         _sparql.setQuery(query);
         _sparql.setMethod(util::POST);
 
@@ -187,6 +213,31 @@ namespace olu::osm {
             std::cerr << e.what() << std::endl;
             throw OsmChangeHandlerException(
                     "Exception while trying to run sparql query for deletion");
+        }
+    }
+
+    void
+    OsmChangeHandler::handleRelationMemberDeletion(const long long &relationId) {
+        auto memberSubjects = _odf.fetchSubjectsOfRelationMembers(relationId);
+
+        std::vector<std::vector<std::string>> memberSubjectsBatches;
+        for (auto it = memberSubjects.cbegin(), e = memberSubjects.cend(); it != memberSubjects.cend(); it = e) {
+            e = it + std::min<std::size_t>(memberSubjects.cend() - it, MAX_TRIPLE_COUNT_PER_QUERY);
+            memberSubjectsBatches.emplace_back(it, e);
+        }
+
+        for (auto & batch : memberSubjectsBatches) {
+            auto query = sparql::QueryWriter::writeDeleteQuery(batch);
+            _sparql.setPrefixes(config::constants::PREFIXES_FOR_RELATION_DELETE_QUERY);
+            _sparql.setQuery(query);
+            _sparql.setMethod(util::POST);
+            try {
+                _sparql.runQuery();
+            } catch (std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                throw OsmChangeHandlerException(
+                        "Exception while trying to run sparql query for deletion");
+            }
         }
     }
 
@@ -259,14 +310,26 @@ namespace olu::osm {
     }
 
     std::vector<std::string>
-    OsmChangeHandler::getTriplesFromConvertedData(std::vector<std::string> ttl) {
+    OsmChangeHandler::getTriplesFromConvertedData(std::vector<std::string> ttl,
+                                                  const std::string &elementTag,
+                                                  const pt::ptree &element) {
         std::vector<std::string> triples;
         std::copy_if (
                 ttl.begin(),
                 ttl.end(),
                 std::back_inserter(triples),
-                [](const std::string& triple){
-                    return !triple.starts_with("@prefix");
+                [&elementTag, &element](const std::string& triple){
+                    bool isPrefix = triple.starts_with("@prefix");
+
+                    bool isRelevant = true;
+                    // For ways, we filter out all triples that originated from the reference nodes
+                    if (elementTag == config::constants::WAY_TAG &&
+                        !triple.starts_with("osmway") &&
+                        !triple.starts_with("osm2rdf:way_")) {
+                        isRelevant = false;
+                    }
+
+                    return !isPrefix && isRelevant;
                 } );
         return triples;
     }
@@ -340,9 +403,11 @@ namespace olu::osm {
         return dummyNodes;
     }
 
-    void OsmChangeHandler::createAndRunInsertQuery(const std::vector<std::string>& ttl) {
-        auto prefixes = getPrefixesFromConvertedData(ttl);
-        auto triples = getTriplesFromConvertedData(ttl);
+    void OsmChangeHandler::createAndRunInsertQuery(const std::vector<std::string> &convertedData,
+                                                   const std::string &elementTag,
+                                                   const pt::ptree &element) {
+        auto prefixes = getPrefixesFromConvertedData(convertedData);
+        auto triples = getTriplesFromConvertedData(convertedData, elementTag, element);
 
         // QLever has a maximum number of triples it can handle in one query, so we have to
         // divide the triples in batches

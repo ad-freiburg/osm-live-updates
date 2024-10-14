@@ -23,6 +23,7 @@
 #include "config/Config.h"
 #include "osm/Osm2ttl.h"
 #include "osm/OsmDataFetcher.h"
+#include "config/Stats.h"
 #include "gtest/gtest.h"
 
 #include <boost/property_tree/ptree.hpp>
@@ -87,10 +88,12 @@ namespace olu::osm {
          * Creates a SPARQL query from the given ttl data to add the contained triples into the
          * database and sends it to the SPARQL endpoint.
          *
-         * @param ttl The ttl data containing the triples that should be inserted to the datatbase
+         * @param convertedData The ttl data containing the triples that should be inserted to the datatbase
          * as well as the needed prefixes
          */
-        void createAndRunInsertQuery(const std::vector<std::string>& ttl);
+        void createAndRunInsertQuery(const std::vector<std::string> &convertedData,
+                                     const std::string &elementTag,
+                                     const pt::ptree &element);
 
         /**
          * Filters the prefixes from the converted ttl data and formats it for SPARQL:
@@ -104,18 +107,22 @@ namespace olu::osm {
         static std::vector<std::string> getPrefixesFromConvertedData(std::vector<std::string> ttl);
 
         /**
-         * Filters the triples from the converted ttl data.
+         * Filters the triples from the converted ttl data. For Ways all triples that result from
+         * from the node references that where needed for conversion are also filtered out.
          *
          * @param ttl the ttl data form the conversion
          * @return A vector with all triples in the conversion data
          */
-        static std::vector<std::string> getTriplesFromConvertedData(std::vector<std::string> ttl);
+        static std::vector<std::string> getTriplesFromConvertedData(std::vector<std::string> ttl,
+                                                             const std::string &elementTag,
+                                                             const pt::ptree &element);
 
     private:
         config::Config _config;
         sparql::SparqlWrapper _sparql;
         Osm2ttl _osm2ttl;
         OsmDataFetcher _odf;
+        Stats _stats;
 
         /**
          * @brief Handles the insertion of elements.
@@ -170,6 +177,13 @@ namespace olu::osm {
          * @return A vector containing a dummy node for each given node id
          */
         std::vector<std::string> createDummyNodes(const std::vector<long long>& nodeIds);
+
+        /**
+         * @brief Handles the deletion of members of a relation.
+         *
+         * @param relationId The realtion osm element for wich the members should be deleted
+         */
+        void handleRelationMemberDeletion(const long long &relationId);
     };
 
     /**

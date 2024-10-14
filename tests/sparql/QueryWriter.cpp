@@ -16,6 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <boost/property_tree/ptree.hpp>
 #include "sparql/QueryWriter.h"
 #include "config/Constants.h"
 #include "gtest/gtest.h"
@@ -51,11 +52,51 @@ namespace olu::sparql {
     }
     TEST(QueryWriter, deleteQueries) {
         {
-            std::string subject = "osmrel:1960198";
+            std::vector<std::string> subjects;
+            subjects.emplace_back("osmrel:1960198");
 
-            std::string query = olu::sparql::QueryWriter::writeDeleteQuery(subject);
+            std::string query = olu::sparql::QueryWriter::writeDeleteQuery(subjects);
             ASSERT_EQ(
-                    "DELETE { ?s ?p ?o } WHERE { osmrel:1960198 ?p ?o . }",
+                    "DELETE WHERE { osmrel:1960198 ?p0 ?o0 . }",
+                    query
+            );
+        }
+
+        {
+            std::vector<std::string> subjects;
+            subjects.emplace_back("osmrel:1960198");
+            subjects.emplace_back("osmnode:1");
+
+            std::string query = olu::sparql::QueryWriter::writeDeleteQuery(subjects);
+            ASSERT_EQ(
+                    "DELETE WHERE { osmrel:1960198 ?p0 ?o0 . osmnode:1 ?p1 ?o1 . }",
+                    query
+            );
+        }
+    }
+    TEST(QueryWriter, deleteNodeQuery) {
+        {
+            std::string query = olu::sparql::QueryWriter::writeNodeDeleteQuery(1);
+            ASSERT_EQ(
+                    "DELETE WHERE { osmnode:1 ?p0 ?o0 . osm2rdfgeom:osm_node_1 ?p1 ?o1 . }",
+                    query
+            );
+        }
+    }
+    TEST(QueryWriter, deleteWayQuery) {
+        {
+            std::string query = olu::sparql::QueryWriter::writeWayDeleteQuery(1);
+            ASSERT_EQ(
+                    "DELETE WHERE { osmway:1 ?p0 ?o0 . osm2rdf:way_1 ?p1 ?o1 . }",
+                    query
+            );
+        }
+    }
+    TEST(QueryWriter, deleteRelationQuery) {
+        {
+            std::string query = olu::sparql::QueryWriter::writeRelationDeleteQuery(1);
+            ASSERT_EQ(
+                    "DELETE WHERE { osmrel:1 ?p0 ?o0 . }",
                     query
             );
         }
@@ -66,9 +107,7 @@ namespace olu::sparql {
 
             std::string query = olu::sparql::QueryWriter::writeQueryForNodeLocation(nodeId);
             ASSERT_EQ(
-                    "SELECT ?o WHERE { "
-                    "osmnode:1 geo:hasGeometry/geo:asWKT ?o . "
-                    "}",
+                    "SELECT ?o WHERE { osm2rdfgeom:osm_node_1 geo:asWKT ?o . }",
                     query
             );
         }

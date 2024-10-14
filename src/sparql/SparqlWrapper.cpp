@@ -20,10 +20,13 @@
 #include "util/URLHelper.h"
 #include "util/HttpRequest.h"
 #include "config/Constants.h"
+#include "util/XmlReader.h"
 
 #include <string>
 #include <fstream>
 #include <iostream>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 namespace olu::sparql {
 
@@ -84,7 +87,20 @@ namespace olu::sparql {
             }
         }
 
-        // Todo: Check response for status `OK`
+        boost::property_tree::ptree pt;
+        std::istringstream json_stream(response);
+        try {
+            boost::property_tree::read_json(json_stream, pt);
+        } catch(std::exception &e) {
+            std::string msg = "Could not parse response from SPARQL endpoint: " + response;
+            throw SparqlWrapperException(msg.c_str());
+        }
+
+        if (pt.get<std::string>("status") == "ERROR") {
+            auto exception = pt.get<std::string>("exception");
+            std::string msg = "SPARQL endpoint returned status ERROR with exception: " + exception;
+            throw SparqlWrapperException(msg.c_str());
+        }
 
         // Clear query and prefixes for next request
         _query = ""; _prefixes = "";

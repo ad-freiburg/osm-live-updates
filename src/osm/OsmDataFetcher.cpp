@@ -233,6 +233,47 @@ namespace olu::osm {
         return ods;
     }
 
+    std::vector<std::string>
+    OsmDataFetcher::fetchSubjectsOfRelationMembers(const long long &relationId) {
+        auto query = olu::sparql::QueryWriter::writeQueryForRelationMembers(relationId);
+        _sparqlWrapper.setMethod(util::HttpMethod::GET);
+        _sparqlWrapper.setQuery(query);
+        _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_RELATION_MEMBERS);
+        auto response = _sparqlWrapper.runQuery();
+
+        boost::property_tree::ptree responseAsTree;
+        olu::util::XmlReader::populatePTreeFromString(response, responseAsTree);
+
+        std::vector<std::string> memberSubjects;
+        for (const auto &result : responseAsTree.get_child("sparql.results")) {
+            auto memberSubject = result.second.get<std::string>("binding.bnode");
+            memberSubjects.emplace_back(memberSubject);
+        }
+
+        return memberSubjects;
+    }
+
+    // _________________________________________________________________________________________________
+    long long OsmDataFetcher::getIdFor(const boost::property_tree::ptree &element) {
+        std::string identifier;
+        try {
+            identifier = olu::util::XmlReader::readAttribute(
+                    olu::config::constants::ID_ATTRIBUTE,
+                    element);
+        } catch (std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            std::string msg = "Could not identifier of element: " + util::XmlReader::readTree(element);
+            throw OsmDataFetcherException(msg.c_str());
+        }
+
+        try {
+            return std::stoll(identifier);
+        } catch (std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            std::string msg = "Could not cast identifier: " + identifier + " to long long";
+            throw OsmDataFetcherException(msg.c_str());
+        }
+    }
 } // namespace olu
 
 

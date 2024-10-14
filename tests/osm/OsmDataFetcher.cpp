@@ -24,7 +24,6 @@
 namespace olu {
     TEST(OsmDataFetcher, fetchLatestDatabaseState) {
         auto config = config::Config();
-        auto sw = sparql::SparqlWrapper(config);
         auto osmDataFetcher = olu::osm::OsmDataFetcher(config);
 
         ASSERT_ANY_THROW(osmDataFetcher.fetchLatestDatabaseState());

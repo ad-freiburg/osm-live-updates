@@ -95,11 +95,29 @@ namespace olu::osm {
         std::vector<std::string> fetchNodeLocationsAsWkt(const std::vector<long long> &nodeIds);
 
         /**
+         * Sends a query to the sparql endpoint to get the subject of all members of the given
+         * relation
+         *
+         * @return The subjects of all members
+         */
+        std::vector<std::string> fetchSubjectsOfRelationMembers(const long long &relationId);
+
+        /**
          * Sends a query to the sparql endpoint to the latest timestamp of any node in the database
          *
          * @return The latest timestamp of any node
          */
         std::string fetchLatestTimestampOfAnyNode();
+
+        /**
+         * Returns the elements id.
+         *
+         * Example: For a node element with id 1787 the function would return '1787'
+         *
+         * @param element The osm element
+         * @return The id of the element
+         */
+        static long long int getIdFor(const boost::property_tree::ptree &element);
 
     private:
         olu::config::Config _config;
