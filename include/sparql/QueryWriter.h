@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 #include <boost/property_tree/ptree.hpp>
+#include <set>
 
 namespace olu::sparql {
 
@@ -44,6 +45,14 @@ namespace olu::sparql {
          * @returns A SPARQL query that deletes all triples for a given node element in the database
          */
         static std::string writeNodeDeleteQuery(const long long &nodeId);
+
+        /**
+         * @returns A SPARQL query that deletes all triples for the given node ids.
+         * @example For one node with id 1:
+         *
+         */
+        static std::string writeNodesDeleteQuery(const std::set<long long> &nodeIds);
+
 
         /**
          * @returns A SPARQL query that deletes all triples for a given way element in the database
@@ -75,6 +84,11 @@ namespace olu::sparql {
         * @returns A SPARQL query for the subject of all members of the given relation
         */
         static std::string writeQueryForRelationMembers(const long long &relationId);
+
+        /**
+        * @returns A SPARQL query for all ways in which the given node is a member
+        */
+        static std::string writeQueryForWaysReferencingNodes(const std::set<long long> &nodeIds);
     };
 
     /**

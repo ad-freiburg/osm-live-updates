@@ -120,3 +120,33 @@ olu::sparql::QueryWriter::writeQueryForRelationMembers(const long long &relation
                         "}";
     return query;
 }
+
+// _________________________________________________________________________________________________
+std::string
+olu::sparql::QueryWriter::writeQueryForWaysReferencingNodes(const std::set<long long> &nodeIds) {
+    std::string query;
+    query += "SELECT ?s2 WHERE { ";
+
+    bool isFirst = true;
+    for (const auto & nodeId : nodeIds) {
+        if (!isFirst) {
+            query +=  + " UNION ";
+        }
+
+        query += "{ ?s1 osmway:node osmnode:" + std::to_string(nodeId) + " . " "?s2 osmway:node ?s1 . }";
+        isFirst = false;
+    }
+
+    query += "} GROUP BY ?s2";
+    return query;
+}
+
+std::string olu::sparql::QueryWriter::writeNodesDeleteQuery(const std::set<long long> &nodeIds) {
+    std::vector<std::string> subjects;
+    for (const auto & nodeId : nodeIds) {
+        subjects.push_back("osmnode:" + std::to_string(nodeId));
+        subjects.push_back("osm2rdfgeom:osm_node_" + std::to_string(nodeId));
+    }
+
+    return writeDeleteQuery(subjects);
+}
