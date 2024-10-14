@@ -43,7 +43,8 @@ namespace olu::osm {
                                                olu::config::constants::PATH_TO_OUTPUT_FILE,
                                                "-t",
                                                olu::config::constants::PATH_TO_SCRATCH_DIRECTORY,
-                                               "--" + osm2rdf::config::constants::ADD_NODES_WITHOUT_TAG_OPTION_LONG
+                                               "--" + osm2rdf::config::constants::ADD_NODES_WITHOUT_TAG_OPTION_LONG,
+                                               "--" + osm2rdf::config::constants::ADD_WAY_NODE_ORDER_OPTION_LONG
 //                                               "--" + osm2rdf::config::constants::OUTPUT_NO_COMPRESS_OPTION_LONG
                                                };
         std::vector<char*> argv;
