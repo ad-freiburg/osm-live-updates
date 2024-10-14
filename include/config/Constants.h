@@ -96,6 +96,8 @@ namespace olu::config::constants {
             OSM_TAG + "." + RELATION_TAG + "." + ID_ATTRIBUTE;
 
     // SPARQL
+    const static inline std::string OSM_WAY_LINK = "https://www.openstreetmap.org/way/";
+
     const static inline std::string DEFAULT_PREFIXES =
         "PREFIX ohmnode: <https://www.openhistoricalmap.org/node/>\n"
         "PREFIX osmrel: <https://www.openstreetmap.org/relation/>\n"
@@ -149,6 +151,11 @@ namespace olu::config::constants {
     const static inline std::vector<std::string> PREFIXES_FOR_RELATION_DELETE_QUERY {
             "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
             "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
+    };
+
+    const static inline std::vector<std::string> PREFIXES_FOR_WAYS_REFERENCING_NODE {
+            "PREFIX osmway: <https://www.openstreetmap.org/way/>",
+            "PREFIX osmnode: <https://www.openstreetmap.org/node/>"
     };
 
     // Qlever
