@@ -52,7 +52,7 @@ static void Set_Query(benchmark::State& state) {
     olu::util::XmlReader::populatePTreeFromString(content, tree);
     auto nodeElement = tree.get_child("osm.node");
 
-    auto och = olu::osm::OsmChangeHandler(config);
+    auto och = olu::osm::OsmChangeHandler(config, std::string());
     auto osmElements = och.getOsmElementsForInsert("node", nodeElement);
 
     auto osm2ttl = olu::osm::Osm2ttl();
@@ -96,7 +96,7 @@ static void Run_Query_For_Node_Insertion(benchmark::State& state) {
     olu::util::XmlReader::populatePTreeFromString(content, tree);
     auto nodeElement = tree.get_child("osm.node");
 
-    auto och = olu::osm::OsmChangeHandler(config);
+    auto och = olu::osm::OsmChangeHandler(config, std::string());
     auto osmElements = och.getOsmElementsForInsert("node", nodeElement);
 
     auto osm2ttl = olu::osm::Osm2ttl();

@@ -87,13 +87,27 @@ namespace olu::sparql {
             }
         }
 
+        // Clear query and prefixes for next request
+        _query = ""; _prefixes = "";
+
+        if (response.empty()) {
+            throw SparqlWrapperException("Empty response from SPARQL endpoint");
+        }
+
         boost::property_tree::ptree pt;
         std::istringstream json_stream(response);
+        // The QLever endpoint will return the content in json if an exception occurred, so we check
+        // If we can parse the response as json. If that fails the response is in xml format and we
+        // can carry on
         try {
             boost::property_tree::read_json(json_stream, pt);
         } catch(std::exception &e) {
-            std::string msg = "Could not parse response from SPARQL endpoint: " + response;
-            throw SparqlWrapperException(msg.c_str());
+            // If the json parsing failed that means we got a valid response from the endpoint
+            return response;
+        }
+
+        if (pt.get<std::string>("status") != "ERROR") {
+            return response;
         }
 
         if (pt.get<std::string>("status") == "ERROR") {
@@ -102,9 +116,8 @@ namespace olu::sparql {
             throw SparqlWrapperException(msg.c_str());
         }
 
-        // Clear query and prefixes for next request
-        _query = ""; _prefixes = "";
-        return response;
+        std::string msg = "Could not interpret response from SPARQL endpoint: " + response;
+        throw SparqlWrapperException(msg.c_str());
     }
 
     void SparqlWrapper::clearOutputFile() const {
