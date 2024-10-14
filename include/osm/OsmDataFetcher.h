@@ -24,6 +24,7 @@
 
 #include <string>
 #include <boost/property_tree/ptree.hpp>
+#include <set>
 
 namespace olu::osm {
 
@@ -118,6 +119,11 @@ namespace olu::osm {
          * @return The id of the element
          */
         static long long int getIdFor(const boost::property_tree::ptree &element);
+
+        /**
+         * @return The id of all ways that reference the given nodes.
+         */
+        std::vector<long long> fetchWaysReferencingNodes(const std::set<long long int> &nodeIds);
 
     private:
         olu::config::Config _config;

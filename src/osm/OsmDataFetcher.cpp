@@ -233,6 +233,7 @@ namespace olu::osm {
         return ods;
     }
 
+    // _________________________________________________________________________________________________
     std::vector<std::string>
     OsmDataFetcher::fetchSubjectsOfRelationMembers(const long long &relationId) {
         auto query = olu::sparql::QueryWriter::writeQueryForRelationMembers(relationId);
@@ -248,6 +249,45 @@ namespace olu::osm {
         for (const auto &result : responseAsTree.get_child("sparql.results")) {
             auto memberSubject = result.second.get<std::string>("binding.bnode");
             memberSubjects.emplace_back(memberSubject);
+        }
+
+        return memberSubjects;
+    }
+
+    // _________________________________________________________________________________________________
+    std::vector<long long> OsmDataFetcher::fetchWaysReferencingNodes(
+            const std::set<long long int> &nodeIds) {
+        auto query = olu::sparql::QueryWriter::writeQueryForWaysReferencingNodes(nodeIds);
+
+        _sparqlWrapper.setMethod(util::HttpMethod::GET);
+        _sparqlWrapper.setQuery(query);
+        _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_WAYS_REFERENCING_NODE);
+        auto response = _sparqlWrapper.runQuery();
+
+        boost::property_tree::ptree responseAsTree;
+        olu::util::XmlReader::populatePTreeFromString(response, responseAsTree);
+
+        std::vector<long long> memberSubjects;
+        for (const auto &result : responseAsTree.get_child(
+                "sparql.results")) {
+            auto memberSubject = result.second.get<std::string>("binding.uri");
+
+            // The endpoint will return the uri of the way, so we have to extract the id from it
+            std::string wayIdAsString = memberSubject.substr(constants::OSM_WAY_LINK.length());
+            long long wayId = -1;
+            try {
+                wayId = std::stoll(wayIdAsString);
+
+                if (wayId < 0) {
+                    throw;
+                }
+            } catch (std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                std::string msg = "Could extract way id from uri: " + memberSubject;
+                throw OsmDataFetcherException(msg.c_str());
+            }
+
+            memberSubjects.emplace_back(wayId);
         }
 
         return memberSubjects;
