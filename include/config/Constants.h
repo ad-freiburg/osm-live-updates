@@ -96,7 +96,9 @@ namespace olu::config::constants {
             OSM_TAG + "." + RELATION_TAG + "." + ID_ATTRIBUTE;
 
     // SPARQL
-    const static inline std::string OSM_WAY_LINK = "https://www.openstreetmap.org/way/";
+    const static inline std::string OSM_WAY_URI = "https://www.openstreetmap.org/way/";
+    const static inline std::string OSM_NODE_URI = "https://www.openstreetmap.org/node/";
+    const static inline std::string OSM_REL_URI = "https://www.openstreetmap.org/relation/";
 
     const static inline std::string DEFAULT_PREFIXES =
         "PREFIX ohmnode: <https://www.openhistoricalmap.org/node/>\n"
@@ -131,6 +133,10 @@ namespace olu::config::constants {
             "PREFIX osmrel: <https://www.openstreetmap.org/relation/>"
     };
 
+    const static inline std::vector<std::string> PREFIXES_FOR_WAY_MEMBERS{
+            "PREFIX osmway: <https://www.openstreetmap.org/way/>"
+    };
+
     const static inline std::vector<std::string> PREFIXES_FOR_LATEST_NODE_TIMESTAMP {
             "PREFIX osmmeta: <https://www.openstreetmap.org/meta/>",
             "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
@@ -157,6 +163,13 @@ namespace olu::config::constants {
             "PREFIX osmway: <https://www.openstreetmap.org/way/>",
             "PREFIX osmnode: <https://www.openstreetmap.org/node/>"
     };
+
+    const static inline std::vector<std::string> PREFIXES_FOR_RELATIONS_REFERENCING_NODE {
+            "PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>",
+            "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
+            "PREFIX osmnode: <https://www.openstreetmap.org/node/>"
+    };
+
 
     // Qlever
     const static inline std::string PATH_TO_SPARQL_RESULT =
