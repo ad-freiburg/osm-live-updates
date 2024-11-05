@@ -23,6 +23,11 @@ namespace olu::osm {
          */
         static std::string
         createDummyNodeFromPoint(const long long &nodeId, const std::string& pointAsWkt);
+
+        /**
+         * @return A pair of doubles resembling the latitude and longitude of the given WKT point
+         */
+        static std::pair<double, double> getLatLonFromPoint(const std::string& pointAsWkt);
     };
 
     /**
