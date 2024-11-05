@@ -89,16 +89,18 @@ std::string olu::sparql::QueryWriter::writeQueryForNodeLocation(const long long 
 
 // _________________________________________________________________________________________________
 std::string
-olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::vector<long long> &nodeIds) {
+olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::set<long long int> &nodeIds) {
     std::string query;
     query += "SELECT ?o WHERE { ";
 
+    bool isFirst = true;
     for (const auto & nodeId : nodeIds) {
-        if (nodeId == nodeIds.front()) {
-            query +=  + " { osm2rdfgeom:osm_node_" + std::to_string(nodeId) + " geo:asWKT ?o .  }";
-        } else {
-            query +=  + " UNION { osm2rdfgeom:osm_node_" + std::to_string(nodeId) + " geo:asWKT ?o .  }";
+        if (!isFirst) {
+            query +=  + " UNION ";
         }
+
+        query +=  + " { osm2rdfgeom:osm_node_" + std::to_string(nodeId) + " geo:asWKT ?o .  }";
+        isFirst = false;
     }
 
     query += "}";
@@ -123,6 +125,16 @@ olu::sparql::QueryWriter::writeQueryForRelationMembers(const long long &relation
 
 // _________________________________________________________________________________________________
 std::string
+olu::sparql::QueryWriter::writeQueryForWayMembers(const long long &wayId) {
+    std::string query = "SELECT ?node WHERE { "
+                        "osmway:" + std::to_string(wayId) + " osmway:node ?member . "
+                        "?member osmway:node ?node ."
+                        "}";
+    return query;
+}
+
+// _________________________________________________________________________________________________
+std::string
 olu::sparql::QueryWriter::writeQueryForWaysReferencingNodes(const std::set<long long> &nodeIds) {
     std::string query;
     query += "SELECT ?s2 WHERE { ";
@@ -141,11 +153,57 @@ olu::sparql::QueryWriter::writeQueryForWaysReferencingNodes(const std::set<long 
     return query;
 }
 
+// _________________________________________________________________________________________________
+std::string
+olu::sparql::QueryWriter::writeQueryForRelationsReferencingNodes(const std::set<long long> &nodeIds) {
+    std::string query;
+    query += "SELECT ?s WHERE { ";
+
+    size_t c = 0;
+    bool isFirst = true;
+    for (const auto & nodeId : nodeIds) {
+        if (!isFirst) {
+            query +=  + " UNION ";
+        }
+
+        query += "{ ?s osmrel:member ?o" + std::to_string(c) + " . ?o" + std::to_string(c) + " osm2rdfmember:id osmnode:" + std::to_string(nodeId) + " . }";
+        isFirst = false;
+        c++;
+    }
+
+    query += "} GROUP BY ?s";
+    return query;
+}
+
+// _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeNodesDeleteQuery(const std::set<long long> &nodeIds) {
     std::vector<std::string> subjects;
     for (const auto & nodeId : nodeIds) {
         subjects.push_back("osmnode:" + std::to_string(nodeId));
         subjects.push_back("osm2rdfgeom:osm_node_" + std::to_string(nodeId));
+    }
+
+    return writeDeleteQuery(subjects);
+}
+
+// _________________________________________________________________________________________________
+std::string olu::sparql::QueryWriter::writeWaysDeleteQuery(const std::set<long long int> &wayIds) {
+    std::vector<std::string> subjects;
+    for (const auto & wayId : wayIds) {
+        subjects.push_back("osmway:" + std::to_string(wayId));
+        subjects.push_back("osm2rdf:way_" + std::to_string(wayId));
+        subjects.push_back("osm2rdfgeom:osm_wayarea_" + std::to_string(wayId));
+    }
+
+    return writeDeleteQuery(subjects);
+}
+
+// _________________________________________________________________________________________________
+std::string olu::sparql::QueryWriter::writeRelationsDeleteQuery(const std::set<long long int> &relationIds) {
+    std::vector<std::string> subjects;
+    for (const auto & relationId : relationIds) {
+        subjects.push_back("osmrel:" + std::to_string(relationId));
+        subjects.push_back("osm2rdfgeom:osm_relarea_" + std::to_string(relationId));
     }
 
     return writeDeleteQuery(subjects);

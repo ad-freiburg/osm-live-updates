@@ -48,11 +48,18 @@ namespace olu::sparql {
 
         /**
          * @returns A SPARQL query that deletes all triples for the given node ids.
-         * @example For one node with id 1:
-         *
          */
         static std::string writeNodesDeleteQuery(const std::set<long long> &nodeIds);
 
+        /**
+        * @returns A SPARQL query that deletes all triples for the given way ids.
+        */
+        static std::string writeWaysDeleteQuery(const std::set<long long int> &wayIds);
+
+        /**
+        * @returns A SPARQL query that deletes all triples for the given relation ids.
+        */
+        static std::string writeRelationsDeleteQuery(const std::set<long long int> &relationIds);
 
         /**
          * @returns A SPARQL query that deletes all triples for a given way element in the database
@@ -73,7 +80,7 @@ namespace olu::sparql {
         /**
         * @returns A SPARQL query for the locations of the nodes with the given ID in WKT format
         */
-        static std::string writeQueryForNodeLocations(const std::vector<long long> &nodeIds);
+        static std::string writeQueryForNodeLocations(const std::set<long long int> &nodeIds);
 
         /**
          * @returns A SPARQL query for the latest timestamp of any node in the database
@@ -86,9 +93,20 @@ namespace olu::sparql {
         static std::string writeQueryForRelationMembers(const long long &relationId);
 
         /**
+        * @returns A SPARQL query for the subject of all members of the given relation
+        */
+        static std::string writeQueryForWayMembers(const long long &wayId);
+
+
+        /**
         * @returns A SPARQL query for all ways in which the given node is a member
         */
         static std::string writeQueryForWaysReferencingNodes(const std::set<long long> &nodeIds);
+
+        /**
+        * @returns A SPARQL query for all ways in which the given node is a member
+        */
+        static std::string writeQueryForRelationsReferencingNodes(const std::set<long long> &nodeIds);
     };
 
     /**
