@@ -93,7 +93,7 @@ namespace olu::osm {
          * @param nodeIds The ids of the nodes to fetch location for
          * @return The locations of the nodes as WKT point
          */
-        std::vector<std::string> fetchNodeLocationsAsWkt(const std::vector<long long> &nodeIds);
+        std::vector<std::string> fetchNodeLocationsAsWkt(const std::set<long long int> &nodeIds);
 
         /**
          * Sends a query to the sparql endpoint to get the subject of all members of the given
@@ -102,6 +102,14 @@ namespace olu::osm {
          * @return The subjects of all members
          */
         std::vector<std::string> fetchSubjectsOfRelationMembers(const long long &relationId);
+
+        /**
+         * Sends a query to the sparql endpoint to get the the ids of all nodes that are referenced
+         * in the given way
+         *
+         * @return The subjects of all members
+         */
+        std::vector<long long> fetchWayMembers(const long long &wayId);
 
         /**
          * Sends a query to the sparql endpoint to the latest timestamp of any node in the database
@@ -121,9 +129,15 @@ namespace olu::osm {
         static long long int getIdFor(const boost::property_tree::ptree &element);
 
         /**
-         * @return The id of all ways that reference the given nodes.
+         * @return The ids of all ways that reference the given nodes.
          */
         std::vector<long long> fetchWaysReferencingNodes(const std::set<long long int> &nodeIds);
+
+        /**
+         * @return The ids of all relations that reference the given nodes.
+         */
+        std::vector<long long> fetchRelationsReferencingNodes(const std::set<long long int> &nodeIds);
+
 
     private:
         olu::config::Config _config;
