@@ -101,7 +101,7 @@ namespace olu::osm {
          *
          * @return The subjects of all members
          */
-        std::vector<std::string> fetchSubjectsOfRelationMembers(const long long &relationId);
+        std::vector<std::string> fetchRelationMembers(const long long &relationId);
 
         /**
          * Sends a query to the sparql endpoint to get the the ids of all nodes that are referenced
@@ -109,7 +109,25 @@ namespace olu::osm {
          *
          * @return The subjects of all members
          */
-        std::vector<long long> fetchWayMembers(const long long &wayId);
+        std::set<long long int> fetchWayMembers(const long long &wayId);
+
+        /**
+          * Sends a query to the sparql endpoint to get the the ids of all nodes that are referenced
+          * in the given way
+          *
+          * @return The subjects of all members
+          */
+        std::vector<long long> fetchWaysMembers(const std::set<long long> &wayIds);
+
+        /**
+         * @return The ids of all ways that are referenced by the given relations
+         */
+        std::vector<long long> fetchRelationMembersWay(const std::set<long long> &relIds);
+
+        /**
+         * @return The ids of all nodes that are referenced by the given relations
+         */
+        std::vector<long long> fetchRelationMembersNode(const std::set<long long> &relIds);
 
         /**
          * Sends a query to the sparql endpoint to the latest timestamp of any node in the database
@@ -137,6 +155,16 @@ namespace olu::osm {
          * @return The ids of all relations that reference the given nodes.
          */
         std::vector<long long> fetchRelationsReferencingNodes(const std::set<long long int> &nodeIds);
+
+        /**
+         * @return The ids of all relations that reference the given ways.
+         */
+        std::vector<long long> fetchRelationsReferencingWays(const std::set<long long int> &wayIds);
+
+        /**
+         * @return The ids of all relations that reference the given relations.
+         */
+        std::vector<long long> fetchRelationsReferencingRelations(const std::set<long long int> &relationIds);
 
 
     private:
