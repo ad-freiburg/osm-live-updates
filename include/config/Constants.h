@@ -36,17 +36,8 @@ namespace olu::config::constants {
             "application/sparql-results+xml";
 
     // File extensions
-    const static inline std::string OSM_FILE_EXTENSION = ".osm";
     const static inline std::string OSM_CHANGE_FILE_EXTENSION = ".osc";
     const static inline std::string GZIP_EXTENSION = ".gz";
-    const static inline std::string BZIP2_EXTENSION = ".bz2";
-    const static inline std::string RDF_TURTLE_EXTENSION = ".ttl";
-    const static inline std::string TXT_EXTENSION = ".txt";
-
-    // File names
-    const static inline std::string OSM_DIFF_STATE_FILE = "state";
-    const static inline std::string OSM_2_RDF_INPUT_FILE = "tmp_input";
-    const static inline std::string OSM_2_RDF_OUTPUT_FILE = "tmp_output";
 
     const static inline std::string DIFF_CACHE_FILE = "cache_for_seq_";
 
@@ -54,9 +45,14 @@ namespace olu::config::constants {
     const static inline char *const EXCEPTION_MSG_SEQUENCE_NUMBER_IS_INVALID =
             "Sequence number is invalid.";
 
+    const static inline std::string PATH_TO_NODE_FILE = "nodes.osm";
+    const static inline std::string PATH_TO_WAY_FILE = "ways.osm";
+    const static inline std::string PATH_TO_RELATION_FILE = "relations.osm";
+    const static inline std::string PATH_TO_TRIPLES_FILE = "triples.ttl";
+
     // Osm2rdf
-    const static inline std::string PATH_TO_INPUT_FILE = "/input/input.osm";
-    const static inline std::string PATH_TO_OUTPUT_FILE = "/output/output.ttl";
+    const static inline std::string PATH_TO_INPUT_FILE = "input.osm";
+    const static inline std::string PATH_TO_OUTPUT_FILE = "output.ttl";
     const static inline std::string PATH_TO_SCRATCH_DIRECTORY = "/scratch/";
 
     // OsmChangeHandler
@@ -72,28 +68,8 @@ namespace olu::config::constants {
     const static inline std::string DELETE_TAG = "delete";
     const static inline std::string CREATE_TAG = "create";
 
-    const static inline std::string OSM_XML_NODE_START = "<osm version=\"0.6\">";
-    const static inline std::string OSM_XML_NODE_END = "</osm>";
-
-    const static inline std::string NODE_SUBJECT = "osmnode";
-    const static inline std::string WAY_SUBJECT = "osmway";
-    const static inline std::string RELATION_SUBJECT = "osmrel";
-
-    const static inline std::string LOCATION_AS_WKT_PREDICATE = "geo:hasGeometry/geo:asWKT";
-    const static inline std::string RDF_TYPE_PREDICATE = "rdf:type";
-    const static inline std::string OSM_META_TIMESTAMP_PREDICATE = "osmmeta:timestamp";
-
-    const static inline std::string OSM_NODE_OBJECT = "osm:node";
-
     const static inline std::string NODE_REFERENCE_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "ref";
     const static inline std::string ID_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "id";
-
-    const static inline std::string ATTRIBUTE_PATH_FOR_NODE_ID =
-            OSM_TAG + "." + NODE_TAG + "." + ID_ATTRIBUTE;
-    const static inline std::string ATTRIBUTE_PATH_FOR_WAY_ID =
-            OSM_TAG + "." + WAY_TAG + "." + ID_ATTRIBUTE;
-    const static inline std::string ATTRIBUTE_PATH_FOR_RELATION_ID =
-            OSM_TAG + "." + RELATION_TAG + "." + ID_ATTRIBUTE;
 
     // SPARQL
     const static inline std::string OSM_WAY_URI = "https://www.openstreetmap.org/way/";
@@ -130,7 +106,10 @@ namespace olu::config::constants {
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_RELATION_MEMBERS{
-            "PREFIX osmrel: <https://www.openstreetmap.org/relation/>"
+            "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
+            "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
+            "PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>",
+            "PREFIX osm: <https://www.openstreetmap.org/>"
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_WAY_MEMBERS{
@@ -170,6 +149,16 @@ namespace olu::config::constants {
             "PREFIX osmnode: <https://www.openstreetmap.org/node/>"
     };
 
+    const static inline std::vector<std::string> PREFIXES_FOR_RELATIONS_REFERENCING_WAY {
+            "PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>",
+            "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
+            "PREFIX osmway: <https://www.openstreetmap.org/way/>"
+    };
+
+    const static inline std::vector<std::string> PREFIXES_FOR_RELATIONS_REFERENCING_RELATIONS {
+            "PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>",
+            "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
+    };
 
     // Qlever
     const static inline std::string PATH_TO_SPARQL_RESULT =
