@@ -31,10 +31,10 @@ namespace olu::osm {
         elements.push_back(nodeElement);
 
         auto osm2rdf = olu::osm::Osm2ttl();
-        auto result = osm2rdf.convert(elements);
+        auto result = osm2rdf.convert();
         std::string resultAsString;
         for (auto & element : result) {
-            resultAsString += element + "\n";
+//            resultAsString += element + "\n";
         }
 
         std::ifstream ifs2(path + "node.ttl");
@@ -54,10 +54,10 @@ namespace olu::osm {
         elements.push_back(nodeElement);
 
         auto osm2rdf = olu::osm::Osm2ttl();
-        auto result = osm2rdf.convert(elements);
+        auto result = osm2rdf.convert();
         std::string resultAsString;
         for (auto & element : result) {
-            resultAsString += element + "\n";
+//            resultAsString += element + "\n";
         }
 
         std::ifstream ifs2(path + "way.ttl");
@@ -77,10 +77,10 @@ namespace olu::osm {
         elements.push_back(nodeElement);
 
         auto osm2rdf = olu::osm::Osm2ttl();
-        auto result = osm2rdf.convert(elements);
+        auto result = osm2rdf.convert();
         std::string resultAsString;
         for (auto & element : result) {
-            resultAsString += element + "\n";
+//            resultAsString += element + "\n";
         }
 
         std::ifstream ifs2(path + "relation.ttl");

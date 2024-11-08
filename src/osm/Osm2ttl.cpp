@@ -30,11 +30,13 @@
 #include <osm2rdf/ttl/Format.h>
 #include <iostream>
 
+namespace cnst = olu::config::constants;
+
 namespace olu::osm {
 
     // _____________________________________________________________________________________________
-    std::vector<std::string> Osm2ttl::convert(std::vector<std::string> &osmData) {
-        writeToInputFile(osmData);
+    std::filesystem::path Osm2ttl::convert() {
+        writeToInputFile();
 
         auto config = osm2rdf::config::Config();
         std::vector<std::string> arguments = { " ",
@@ -43,7 +45,7 @@ namespace olu::osm {
                                                olu::config::constants::PATH_TO_OUTPUT_FILE,
                                                "-t",
                                                olu::config::constants::PATH_TO_SCRATCH_DIRECTORY,
-                                               "--" + osm2rdf::config::constants::ADD_NODES_WITHOUT_TAG_OPTION_LONG,
+                                               "--" + osm2rdf::config::constants::ADD_WAY_NODE_GEOMETRY_OPTION_LONG,
                                                "--" + osm2rdf::config::constants::ADD_WAY_NODE_ORDER_OPTION_LONG
 //                                               "--" + osm2rdf::config::constants::OUTPUT_NO_COMPRESS_OPTION_LONG
                                                };
@@ -95,11 +97,18 @@ namespace olu::osm {
 //                  << "osm2ttl :: " << osm2rdf::version::GIT_INFO << " :: FINISHED"
 //                  << std::endl;
 
-        return readTripletsFromOutputFile(config);
+
+        clearInputFile();
+
+        return config.output;
     }
 
     // _____________________________________________________________________________________________
-    void Osm2ttl::writeToInputFile(std::vector<std::string> &osmElements) {
+    void Osm2ttl::writeToInputFile() {
+        std::ifstream nodes(cnst::PATH_TO_NODE_FILE);
+        std::ifstream ways(cnst::PATH_TO_WAY_FILE);
+        std::ifstream relations(cnst::PATH_TO_RELATION_FILE);
+
         std::ofstream input;
         input.open(olu::config::constants::PATH_TO_INPUT_FILE);
         if (!input) {
@@ -107,50 +116,20 @@ namespace olu::osm {
             exit(1);
         }
 
-        for (auto & element : osmElements) {
-            input << element;
-        }
+        input << "<osm version=\"0.6\">"
+            << nodes.rdbuf()
+            << ways.rdbuf()
+            << relations.rdbuf()
+            << "</osm>";
 
         input.close();
+        nodes.close();
+        ways.close();
+        relations.close();
     }
 
-    // _____________________________________________________________________________________________
-    std::vector<std::string> Osm2ttl::readTripletsFromOutputFile(const osm2rdf::config::Config& config) {
-//        std::ifstream ifs(config.output);
-//        std::string data((std::istreambuf_iterator<char>(ifs)),
-//                         (std::istreambuf_iterator<char>()));
+    void Osm2ttl::clearInputFile() {
 
-        std::string dataDecompressed = olu::util::Decompressor::readBzip2(config.output);
-        std::vector<std::string> triplets;
-
-        std::istringstream iss(dataDecompressed);
-        for (std::string line; std::getline(iss, line); )
-        {
-            triplets.push_back(line);
-        }
-
-        return triplets;
-    }
-
-    // _____________________________________________________________________________________________
-    std::string Osm2ttl::removePrefixes(const std::string &data) {
-        std::string result;
-        std::istringstream stream(data);
-        std::string line;
-
-        // Process each line
-        while (std::getline(stream, line)) {
-            if (line.empty() || line[0] != '@') {
-                result += line + "\n";
-            }
-        }
-
-        // Remove the trailing newline character if needed
-        if (!result.empty() && result.back() == '\n') {
-            result.pop_back();
-        }
-
-        return result;
     }
 
     template <typename T>

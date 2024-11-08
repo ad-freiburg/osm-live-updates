@@ -22,53 +22,8 @@
 #include "benchmark/benchmark.h"
 
 // ---------------------------------------------------------------------------
-static void Convert_Node(benchmark::State& state) {
-    std::string path = "/src/tests/data/";
+static void Convert(benchmark::State& state) {
 
-    std::ifstream ifs(path + "node.osm");
-    std::string nodeElement((std::istreambuf_iterator<char>(ifs)),
-                            (std::istreambuf_iterator<char>()));
-    std::vector<std::string> elements;
-    elements.push_back(nodeElement);
-
-    for (auto _ : state) {
-        auto osm2rdf = olu::osm::Osm2ttl();
-        auto result = osm2rdf.convert(elements);
-    }
 }
-BENCHMARK(Convert_Node);
+BENCHMARK(Convert);
 
-// ---------------------------------------------------------------------------
-static void Convert_Way(benchmark::State& state) {
-    std::string path = "/src/tests/data/";
-
-    std::ifstream ifs(path + "wayWithReferences.osm");
-    std::string nodeElement((std::istreambuf_iterator<char>(ifs)),
-                            (std::istreambuf_iterator<char>()));
-    std::vector<std::string> elements;
-    elements.push_back(nodeElement);
-
-    for (auto _ : state) {
-        auto osm2rdf = olu::osm::Osm2ttl();
-        auto result = osm2rdf.convert(elements);
-    }
-}
-BENCHMARK(Convert_Way);
-
-
-// ---------------------------------------------------------------------------
-static void Convert_Relation_Large(benchmark::State& state) {
-    std::string path = "/src/tests/data/";
-
-    std::ifstream ifs(path + "relation_large.osm");
-    std::string nodeElement((std::istreambuf_iterator<char>(ifs)),
-                            (std::istreambuf_iterator<char>()));
-    std::vector<std::string> elements;
-    elements.push_back(nodeElement);
-
-    for (auto _ : state) {
-        auto osm2rdf = olu::osm::Osm2ttl();
-        auto result = osm2rdf.convert(elements);
-    }
-}
-BENCHMARK(Convert_Relation_Large);
