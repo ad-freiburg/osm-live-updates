@@ -40,7 +40,7 @@ namespace olu::osm {
         std::string seqNumberFormatted =
                 util::URLHelper::formatSequenceNumberForUrl(sequenceNumber);
         std::string stateFileName =
-                seqNumberFormatted + "." + constants::OSM_DIFF_STATE_FILE + constants::TXT_EXTENSION;
+                seqNumberFormatted + ".state.txt";
 
         std::vector<std::string> pathSegments { };
         pathSegments.emplace_back(_config.osmChangeFileDirectoryUri);
@@ -61,7 +61,7 @@ namespace olu::osm {
         // Build url for state file
         std::vector<std::string> pathSegments { };
         pathSegments.emplace_back(_config.osmChangeFileDirectoryUri);
-        pathSegments.emplace_back(constants::OSM_DIFF_STATE_FILE + constants::TXT_EXTENSION);
+        pathSegments.emplace_back("state.txt");
         std::string url = util::URLHelper::buildUrl(pathSegments);
 
         // Get state file from osm server
