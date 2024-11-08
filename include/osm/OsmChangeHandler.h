@@ -26,6 +26,7 @@
 #include "config/Stats.h"
 #include "gtest/gtest.h"
 
+#include <set>
 #include <boost/property_tree/ptree.hpp>
 
 namespace pt = boost::property_tree;
@@ -43,22 +44,32 @@ namespace olu::osm {
      */
     class OsmChangeHandler {
     public:
-        explicit OsmChangeHandler(config::Config& config)
-        : _config(config), _sparql(config), _osm2ttl(), _odf(OsmDataFetcher(config)) { }
+        explicit OsmChangeHandler(config::Config &config,const std::string& pathToOsmChangeFile);
 
         /**
-         * @brief Processes an osm change file.
-         *
-         * Reads the contents of an osm change file, loops over the changesets with `create`,
-         * `modify` or `delete` tag and processes the contained osm elements
-         *
-         * @param pathToOsmChangeFile The path to the change file
-         * @param deleteChangeFile If `True` the change file will be deleted after finishing
-         * @param showProgress Show a progress bar in the command line
+         * Process the content of the changeFile. We loop two times over the changeFile.
+         * The first time we store the ids of all occuring elements in the corresponding array (
+         * _createdNodes, _modifiedNodes, _deletedNodes, etc.). The second time we
          */
-        void handleChange(const std::string &pathToOsmChangeFile,
-                          const bool &deleteChangeFile,
-                          const bool &showProgress = true);
+        void processChangeFile();
+        void storeIdsOfElementsInChangeFile();
+        void processElementsInChangeFile();
+
+        void getIdsForGeometryUpdate();
+        void getReferencedRelations();
+        void getReferencedWays();
+        void getReferencedNodes();
+
+
+        void run();
+//        void deleteAllMarkedNodesFromDatabase();
+//        void insertAllMarkedNodesToDatabase();
+//
+//        void deleteAllMarkedWaysFromDatabase();
+//        void insertAllMarkedWaysToDatabase();
+//
+//        void deleteAllMarkedRelationsFromDatabase();
+//        void insertAllMarkedRelationsToDatabase();
 
         /**
          * Counts the osm elements (`node`, `way` or `relation`) in the osm change file that are in
@@ -81,8 +92,8 @@ namespace olu::osm {
          * @param element The xml element of to get the informations for
          * @return A vector containig all informations needed for the conversion to ttl
          */
-        std::vector<std::string> getOsmElementsForInsert(const std::string& elementTag,
-                                                         const pt::ptree& element);
+//        std::vector<std::string> getOsmElementsForInsert(const std::string& elementTag,
+//                                                         const pt::ptree& element);
 
         /**
          * Creates a SPARQL query from the given ttl data to add the contained triples into the
@@ -91,9 +102,7 @@ namespace olu::osm {
          * @param convertedData The ttl data containing the triples that should be inserted to the datatbase
          * as well as the needed prefixes
          */
-        void createAndRunInsertQuery(const std::vector<std::string> &convertedData,
-                                     const std::string &elementTag,
-                                     const pt::ptree &element);
+        void createAndRunInsertQuery();
 
         /**
          * Filters the prefixes from the converted ttl data and formats it for SPARQL:
@@ -104,7 +113,7 @@ namespace olu::osm {
          * @param ttl the ttl data form the conversion
          * @return A vector with all prefixes in the conversion data formatted for SPARQL
          */
-        static std::vector<std::string> getPrefixesFromConvertedData(std::vector<std::string> ttl);
+        static std::vector<std::string> getPrefixesFromConvertedData();
 
         /**
          * Filters the triples from the converted ttl data. For Ways all triples that result from
@@ -114,8 +123,7 @@ namespace olu::osm {
          * @return A vector with all triples in the conversion data
          */
         static std::vector<std::string> getTriplesFromConvertedData(std::vector<std::string> ttl,
-                                                             const std::string &elementTag,
-                                                             const pt::ptree &element);
+                                                                    const std::string &elementTag);
 
     private:
         config::Config _config;
@@ -124,42 +132,81 @@ namespace olu::osm {
         OsmDataFetcher _odf;
         Stats _stats;
 
-        /**
-         * @brief Handles the insertion of elements.
-         *
-         *  Inserts the provided element into the database, by converting the xml element to ttl
-         *  triples and updating the sparql endpoint.
-         *
-         * @param elementTag The tag of the element to insert, which can either be `node`, `way` or
-         * `relation`
-         * @param element The xml element to insert
-         */
-        void handleInsert(const std::string& elementTag, const pt::ptree& element);
+        boost::property_tree::ptree _osmChangeElement;
+
+        // Nodes that are in a delete-changeset in the change file.
+        std::set<long long> _deletedNodes;
+        // Nodes that are in a create-changeset in the change file.
+        std::set<long long> _createdNodes;
+        // Nodes that are in a modify-changeset in the change file.
+        std::set<long long> _modifiedNodes;
+        // Nodes that are referenced by a way or relation that are NOT present in the change file,
+        // meaning they have to be fetched from the database
+        std::set<long long> _referencedNodes;
+
+        // Ways that are in a delete-changeset in the change file.
+        std::set<long long> _deletedWays;
+        // Ways that are in a create-changeset in the change file.
+        std::set<long long> _createdWays;
+        // Ways that are in a modify-changeset in the change file.
+        std::set<long long> _modifiedWays;
+        // Ways that reference a node which was modified in the changeset.
+        std::set<long long> _waysToUpdateGeometry;
+        // Ways that are referenced by a relation that are NOT present in the change file,
+        // meaning they have to be fetched from the database
+        std::set<long long> _referencedWays;
+
+        // Relations that are in a delete-changeset in the change file.
+        std::set<long long> _deletedRelations;
+        // Relations that are in a create-changeset in the change file.
+        std::set<long long> _createdRelations;
+        // Relations that are in a modify-changeset in the change file.
+        std::set<long long> _modifiedRelations;
+        // Relations that reference a node, way or relation which was modified in the changeset.
+        std::set<long long> _relationsToUpdateGeometry;
+        // Relations that are referenced by a relation that are NOT present in the change file,
+        // meaning they have to be fetched from the database
+        std::set<long long> _referencedRelations;
 
         /**
-         * @brief Handles the deletion of elements.
+         * @Returns TRUE if the node with the given ID is contained in a `create` or `modify`
+         * changeset in the changeFile.
          *
-         *  Deletes the provided xml element from the database, by getting the subject of the
-         *  element and sending a sparql query to the endpoint which deletes all triples containing
-         *  the subject
-         *
-         * @param elementTag The tag of the element to delete, which can either be `node`, `way` or
-         * `relation`
-         * @param element The xml element to delete
+         * @warning All nodes inside the ChangeFile have to be processed BEFORE using this function.
+         * Therefore, the earliest time this function can be called is inside the loop over the osm
+         * elements inside `storeIdsOfElementsInChangeFile()` after the first way has occured.
          */
-        void handleDelete(const std::string& elementTag, const pt::ptree& element);
+        bool nodeInChangeFile(const long long &nodeId) {
+            return _modifiedNodes.contains(nodeId) || _createdNodes.contains(nodeId);
+        }
 
         /**
-         * @brief Handles the modification of elements.
+         * @Returns TRUE if the way with the given ID is contained in a `create` or `modify`
+         * changeset in the changeFile.
          *
-         *  Modifies the provided element in the database, by deleting the old data and inserting
-         *  new element
-         *
-         * @param elementTag The tag of the element to modify, which can either be `node`, `way` or
-         * `relation`
-         * @param element The xml element to modify
+         * @warning All ways inside the ChangeFile have to be processed BEFORE using this function.
+         * Therefore, the earliest time this function can be called is inside the loop over the osm
+         * elements inside `storeIdsOfElementsInChangeFile()` after the first way has occured.
          */
-        void handleModify(const std::string& elementTag, const pt::ptree& element);
+        bool wayInChangeFile(const long long &wayId) {
+            return _modifiedWays.contains(wayId) || _createdWays.contains(wayId);
+        }
+
+        /**
+         * @Returns TRUE if the relation with the given ID is contained in a `create` or `modify`
+         * changeset in the changeFile.
+         *
+         * @warning All relations inside the ChangeFile have to be processed BEFORE using this function.
+         * Therefore, the earliest time this function can be called is after calling
+         * `storeIdsOfElementsInChangeFile()`
+         */
+        bool relationInChangeFile(const long long &relationId) {
+            return _modifiedRelations.contains(relationId) || _createdRelations.contains(relationId);
+        }
+
+        void createOrClearTmpFiles() const;
+        void addToTmpFile(const boost::property_tree::ptree& element, const std::string& elementTag) const;
+        void addToTmpFile(const std::string& element, const std::string& elementTag) const;
 
         /**
          * Gets the id of each node that is referenced in the passed `way` element
@@ -167,7 +214,14 @@ namespace olu::osm {
          * @param way The `way` element to get the ids of all referenced nodes
          * @return A vector containing the ids of all referenced nodes
          */
-        static std::vector<long long> getIdsOfReferencedNodes(const boost::property_tree::ptree &way);
+        void getIdsOfReferencedNodesInWays();
+
+        void storeIdsOfReferencedNodes(const boost::property_tree::ptree& wayElement);
+
+//        std::tuple<std::set<long long int>, std::set<long long int>, std::set<long long int>>
+//        getIdsOfReferencedElementsInRelations();
+
+        void storeIdsOfReferencedElements(const boost::property_tree::ptree& relElement);
 
         /**
          * Creates an vector containing dummy nodes for the given node ids. The dummy nodes contain
@@ -176,14 +230,15 @@ namespace olu::osm {
          * @param nodeIds The node ids to create dummy nodes for
          * @return A vector containing a dummy node for each given node id
          */
-        std::vector<std::string> createDummyNodes(const std::vector<long long>& nodeIds);
+        void createDummyNodes();
+        void createDummyWays();
+        void createDummyRelations();
+        void sortFile(std::string elementTag);
+        void deleteElementsFromDatabase();
+        void insertElementsToDatabase();
+        void filterRelevantTriples();
 
-        /**
-         * @brief Handles the deletion of members of a relation.
-         *
-         * @param relationId The realtion osm element for wich the members should be deleted
-         */
-        void handleRelationMemberDeletion(const long long &relationId);
+//        boost::property_tree::ptree getOsmElementWithId(long long id, const std::string& elementTag);
     };
 
     /**

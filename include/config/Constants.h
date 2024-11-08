@@ -76,28 +76,28 @@ namespace olu::config::constants {
     const static inline std::string OSM_NODE_URI = "https://www.openstreetmap.org/node/";
     const static inline std::string OSM_REL_URI = "https://www.openstreetmap.org/relation/";
 
-    const static inline std::string DEFAULT_PREFIXES =
-        "PREFIX ohmnode: <https://www.openhistoricalmap.org/node/>\n"
-        "PREFIX osmrel: <https://www.openstreetmap.org/relation/>\n"
-        "PREFIX osmnode: <https://www.openstreetmap.org/node/>\n"
-        "PREFIX osmkey: <https://www.openstreetmap.org/wiki/Key:>\n"
-        "PREFIX osmway: <https://www.openstreetmap.org/way/>\n"
-        "PREFIX osmmeta: <https://www.openstreetmap.org/meta/>\n"
-        "PREFIX osm: <https://www.openstreetmap.org/>\n"
-        "PREFIX osm2rdfmeta: <https://osm2rdf.cs.uni-freiburg.de/rdf/meta#>\n"
-        "PREFIX ohmrel: <https://www.openhistoricalmap.org/relation/>\n"
-        "PREFIX osmt: <https://www.openstreetmap.org/wiki/Key:>\n"
-        "PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>\n"
-        "PREFIX osm2rdfkey: <https://osm2rdf.cs.uni-freiburg.de/rdf/key#>\n"
-        "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>\n"
-        "PREFIX ohmway: <https://www.openhistoricalmap.org/way/>\n"
-        "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n"
-        "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>\n"
-        "PREFIX ohm: <https://www.openhistoricalmap.org/>\n"
-        "PREFIX wd: <http://www.wikidata.org/entity/>\n"
-        "PREFIX osm2rdf: <https://osm2rdf.cs.uni-freiburg.de/rdf#>\n"
-        "PREFIX ogc: <http://www.opengis.net/rdf#>\n"
-        "PREFIX geo: <http://www.opengis.net/ont/geosparql#>\n";
+    const static inline std::vector<std::string> DEFAULT_PREFIXES{
+        "PREFIX ohmnode: <https://www.openhistoricalmap.org/node/>"
+        "PREFIX osmrel: <https://www.openstreetmap.org/relation/>"
+        "PREFIX osmnode: <https://www.openstreetmap.org/node/>"
+        "PREFIX osmkey: <https://www.openstreetmap.org/wiki/Key:>"
+        "PREFIX osmway: <https://www.openstreetmap.org/way/>"
+        "PREFIX osmmeta: <https://www.openstreetmap.org/meta/>"
+        "PREFIX osm: <https://www.openstreetmap.org/>"
+        "PREFIX osm2rdfmeta: <https://osm2rdf.cs.uni-freiburg.de/rdf/meta#>"
+        "PREFIX ohmrel: <https://www.openhistoricalmap.org/relation/>"
+        "PREFIX osmt: <https://www.openstreetmap.org/wiki/Key:>"
+        "PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>"
+        "PREFIX osm2rdfkey: <https://osm2rdf.cs.uni-freiburg.de/rdf/key#>"
+        "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
+        "PREFIX ohmway: <https://www.openhistoricalmap.org/way/>"
+        "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>"
+        "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>"
+        "PREFIX ohm: <https://www.openhistoricalmap.org/>"
+        "PREFIX wd: <http://www.wikidata.org/entity/>"
+        "PREFIX osm2rdf: <https://osm2rdf.cs.uni-freiburg.de/rdf#>"
+        "PREFIX ogc: <http://www.opengis.net/rdf#>"
+        "PREFIX geo: <http://www.opengis.net/ont/geosparql#>"};
 
     const static inline std::vector<std::string> PREFIXES_FOR_NODE_LOCATION{
             "PREFIX osmnode: <https://www.openstreetmap.org/node/>",

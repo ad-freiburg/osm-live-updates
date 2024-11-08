@@ -8,7 +8,7 @@
 
 namespace olu::osm {
     OsmUpdater::OsmUpdater(config::Config &config)
-    : _config(config), _odf(OsmDataFetcher(config)), _och(OsmChangeHandler(config)) { }
+    : _config(config), _odf(OsmDataFetcher(config)) { }
 
     void OsmUpdater::run() {
         // If the user has provided the path to an osm change file, only this change file will be
@@ -19,7 +19,8 @@ namespace olu::osm {
             << "Start handling change file: "
             << std::endl;
 
-            _och.handleChange(_config.pathToOsmChangeFile, false);
+            auto och(OsmChangeHandler(_config, _config.pathToOsmChangeFile));
+            och.run();
         } else {
             _latestState = _odf.fetchLatestDatabaseState();
             auto sequenceNumber = decideStartSequenceNumber();
@@ -44,7 +45,8 @@ namespace olu::osm {
                 << sequenceNumber
                 << std::endl;
 
-                _och.handleChange(pathToOsmChangeFile, true);
+                auto och(OsmChangeHandler(_config, pathToOsmChangeFile));
+                och.run();
                 sequenceNumber++;
             }
         }
