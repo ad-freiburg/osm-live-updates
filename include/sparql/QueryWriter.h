@@ -97,16 +97,40 @@ namespace olu::sparql {
         */
         static std::string writeQueryForWayMembers(const long long &wayId);
 
+        /**
+         * @returns A SPARQL query for all nodes that are referenced by the given way
+         */
+        static std::string writeQueryForWaysMembers(const std::set<long long> &wayIds);
 
         /**
-        * @returns A SPARQL query for all ways in which the given node is a member
+         * @returns A SPARQL query for all ways that are referenced by the given relation
+         */
+        static std::string writeQueryForRelationMembersWay(const std::set<long long> &relIds);
+
+        /**
+         * @returns A SPARQL query for all nodes that are referenced by the given relation
+         */
+        static std::string writeQueryForRelationMembersNode(const std::set<long long> &relIds);
+
+        /**
+        * @returns A SPARQL query for all ways that reference the given nodes
         */
         static std::string writeQueryForWaysReferencingNodes(const std::set<long long> &nodeIds);
 
         /**
-        * @returns A SPARQL query for all ways in which the given node is a member
+        * @returns A SPARQL query for relations that reference the given nodes
         */
         static std::string writeQueryForRelationsReferencingNodes(const std::set<long long> &nodeIds);
+
+        /**
+        * @returns A SPARQL query for relations that reference the given ways
+        */
+        static std::string writeQueryForRelationsReferencingWays(const std::set<long long> &wayIds);
+
+        /**
+        * @returns A SPARQL query for relations that reference the given relations
+        */
+        static std::string writeQueryForRelationsReferencingRelations(const std::set<long long> &relationIds);
     };
 
     /**

@@ -58,11 +58,21 @@ static void Write_Insert_Query_Node(benchmark::State& state) {
     std::vector<std::string> elements;
     elements.push_back(nodeElement);
 
-    auto osm2rdf = olu::osm::Osm2ttl();
-    auto result = osm2rdf.convert(elements);
+    auto osm2ttl = olu::osm::Osm2ttl();
+    auto output = osm2ttl.convert();
+
+    std::ifstream ifs2(output);
+    std::string data((std::istreambuf_iterator<char>(ifs2)),
+                     (std::istreambuf_iterator<char>()));
+
+    std::vector<std::string> triplets;
+    for (std::string line; std::getline(ifs2, line); )
+    {
+        triplets.push_back(line);
+    }
 
     for (auto _ : state) {
-        olu::sparql::QueryWriter::writeInsertQuery(result);
+        olu::sparql::QueryWriter::writeInsertQuery(triplets);
     }
 }
 BENCHMARK(Write_Insert_Query_Node);
@@ -77,11 +87,25 @@ static void Write_Insert_Query_Way(benchmark::State& state) {
     std::vector<std::string> elements;
     elements.push_back(nodeElement);
 
-    auto osm2rdf = olu::osm::Osm2ttl();
-    auto result = osm2rdf.convert(elements);
+    auto osm2ttl = olu::osm::Osm2ttl();
+    auto output = osm2ttl.convert();
+
+    std::ifstream ifs2(output);
+    std::string data((std::istreambuf_iterator<char>(ifs2)),
+                     (std::istreambuf_iterator<char>()));
+
+    std::vector<std::string> triplets;
+    for (std::string line; std::getline(ifs2, line); )
+    {
+        triplets.push_back(line);
+    }
 
     for (auto _ : state) {
-        olu::sparql::QueryWriter::writeInsertQuery(result);
+        olu::sparql::QueryWriter::writeInsertQuery(triplets);
+    }
+
+    for (auto _ : state) {
+        olu::sparql::QueryWriter::writeInsertQuery(triplets);
     }
 }
 BENCHMARK(Write_Insert_Query_Way);

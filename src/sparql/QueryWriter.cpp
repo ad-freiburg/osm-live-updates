@@ -117,8 +117,8 @@ std::string olu::sparql::QueryWriter::writeQueryForLatestNodeTimestamp() {
 // _________________________________________________________________________________________________
 std::string
 olu::sparql::QueryWriter::writeQueryForRelationMembers(const long long &relationId) {
-    std::string query = "SELECT ?o WHERE { "
-                        "osmrel:" + std::to_string(relationId) + " osmrel:member ?o . "
+    std::string query = "SELECT ?p WHERE { "
+                        "osmrel:" + std::to_string(relationId) + " osmrel:member ?o . ?o osm2rdfmember:id ?p"
                         "}";
     return query;
 }
@@ -130,6 +130,66 @@ olu::sparql::QueryWriter::writeQueryForWayMembers(const long long &wayId) {
                         "osmway:" + std::to_string(wayId) + " osmway:node ?member . "
                         "?member osmway:node ?node ."
                         "}";
+    return query;
+}
+
+// _________________________________________________________________________________________________
+std::string
+olu::sparql::QueryWriter::writeQueryForWaysMembers(const std::set<long long> &wayIds) {
+    std::string query;
+    query += "SELECT ?node WHERE { ";
+
+    bool isFirst = true;
+    for (const auto & wayId : wayIds) {
+        if (!isFirst) {
+            query +=  + " UNION ";
+        }
+
+        query += "{ osmway:" + std::to_string(wayId) + " osmway:node ?member . ?member osmway:node ?node . }";
+        isFirst = false;
+    }
+
+    query += "} GROUP BY ?node";
+    return query;
+}
+
+// _________________________________________________________________________________________________
+std::string
+olu::sparql::QueryWriter::writeQueryForRelationMembersWay(const std::set<long long> &relIds) {
+    std::string query;
+    query += "SELECT ?p WHERE { ";
+
+    bool isFirst = true;
+    for (const auto & relId : relIds) {
+        if (!isFirst) {
+            query +=  + " UNION ";
+        }
+
+        query += "{ osmrel:" + std::to_string(relId) + " osmrel:member ?o . ?o osm2rdfmember:id ?p . ?p rdf:type osm:way }";
+        isFirst = false;
+    }
+
+    query += "} GROUP BY ?p";
+    return query;
+}
+
+// _________________________________________________________________________________________________
+std::string
+olu::sparql::QueryWriter::writeQueryForRelationMembersNode(const std::set<long long> &relIds) {
+    std::string query;
+    query += "SELECT ?p WHERE { ";
+
+    bool isFirst = true;
+    for (const auto & relId : relIds) {
+        if (!isFirst) {
+            query +=  + " UNION ";
+        }
+
+        query += "{ osmrel:" + std::to_string(relId) + " osmrel:member ?o . ?o osm2rdfmember:id ?p . ?p rdf:type osm:node }";
+        isFirst = false;
+    }
+
+    query += "} GROUP BY ?p";
     return query;
 }
 
@@ -167,6 +227,50 @@ olu::sparql::QueryWriter::writeQueryForRelationsReferencingNodes(const std::set<
         }
 
         query += "{ ?s osmrel:member ?o" + std::to_string(c) + " . ?o" + std::to_string(c) + " osm2rdfmember:id osmnode:" + std::to_string(nodeId) + " . }";
+        isFirst = false;
+        c++;
+    }
+
+    query += "} GROUP BY ?s";
+    return query;
+}
+
+// _________________________________________________________________________________________________
+std::string
+olu::sparql::QueryWriter::writeQueryForRelationsReferencingWays(const std::set<long long> &wayIds) {
+    std::string query;
+    query += "SELECT ?s WHERE { ";
+
+    size_t c = 0;
+    bool isFirst = true;
+    for (const auto & wayId : wayIds) {
+        if (!isFirst) {
+            query +=  + " UNION ";
+        }
+
+        query += "{ ?s osmrel:member ?o" + std::to_string(c) + " . ?o" + std::to_string(c) + " osm2rdfmember:id osmway:" + std::to_string(wayId) + " . }";
+        isFirst = false;
+        c++;
+    }
+
+    query += "} GROUP BY ?s";
+    return query;
+}
+
+// _________________________________________________________________________________________________
+std::string
+olu::sparql::QueryWriter::writeQueryForRelationsReferencingRelations(const std::set<long long> &relationIds) {
+    std::string query;
+    query += "SELECT ?s WHERE { ";
+
+    size_t c = 0;
+    bool isFirst = true;
+    for (const auto & relId : relationIds) {
+        if (!isFirst) {
+            query +=  + " UNION ";
+        }
+
+        query += "{ ?s osmrel:member ?o" + std::to_string(c) + " . ?o" + std::to_string(c) + " osm2rdfmember:id osmrel:" + std::to_string(relId) + " . }";
         isFirst = false;
         c++;
     }
