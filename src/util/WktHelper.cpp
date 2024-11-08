@@ -24,12 +24,12 @@ std::string olu::osm::WktHelper::createNodeFromPoint(const long long &nodeId,
         throw WktHelperException(message.c_str());
     }
 
-    return "<node id=\"" + std::to_string(nodeId) + "\" lat=\"" + lat + "\" lon=\"" + lon + "\"/>";
+    return "<node id=\"" + std::to_string(nodeId) + "\" lat=\"" + lat + "\" lon=\"" + lon + "\" version=\"1\" timestamp=\"2000-01-01T00:00:00Z\"/>";
 }
 
 std::string
 olu::osm::WktHelper::createWayFromReferences(long long wayId, const std::set<long long> &nodeRefs) {
-    std::string dummyWay = "<way id=\"" + std::to_string(wayId) + "\">";
+    std::string dummyWay = "<way id=\"" + std::to_string(wayId) + "\" version=\"1\" timestamp=\"2000-01-01T00:00:00Z\">";
     for (auto nodeId: nodeRefs) {
         dummyWay += "<nd ref=\"" + std::to_string(nodeId) + "\"/>";
     }
@@ -59,12 +59,12 @@ olu::osm::WktHelper::createRelationFromReferences(long long relationId,
 
         if (member.starts_with(cnst::OSM_REL_URI)) {
             std::string id = member.substr(cnst::OSM_REL_URI.length());
-            std::string reference = R"(<member type="relation" ref=")" + id + "\"/>";
+            std::string reference = R"(<member type="relation" ref=")" + id + "\" role=\"outer\"/>";
             relationReferences.emplace_back(reference);
         }
     }
 
-    std::string dummyRelation = "<relation id=\"" + std::to_string(relationId) + "\" >";
+    std::string dummyRelation = "<relation id=\"" + std::to_string(relationId) + "\" version=\"1\" timestamp=\"2000-01-01T00:00:00Z\">";
     for (const auto& nodeRef: nodeReferences) {
         dummyRelation += nodeRef;
     }
