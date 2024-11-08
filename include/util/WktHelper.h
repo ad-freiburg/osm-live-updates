@@ -6,28 +6,51 @@
 #define OSM_LIVE_UPDATES_WKTHELPER_H
 
 #include <string>
+#include <set>
+#include <vector>
 
 namespace olu::osm {
     class WktHelper {
     public:
         /**
-         * Creates a dummy node with an id and a location which is extracted from an WKT point.
+         * Returns a node with an id and a location which is extracted from an WKT point.
          *
-         * Example: Foe node id: `1` and pointAsWkt: `POINT(13.5690032 42.7957187)` the function
+         * @example For nodeId: `1` and pointAsWkt: `POINT(13.5690032 42.7957187)` the function
          * would return: `<node id="1" lat="42.7957187" lon="13.5690032"/>`
          *
-         * @param nodeId The node id that should be used for the dummy node
+         * @param nodeId The node id that should be used for the node
          * @param pointAsWkt The point in WKT format from which the location of the dummy node
          * should be extracted
-         * @return A dummy node containing the given node id and location
          */
         static std::string
-        createDummyNodeFromPoint(const long long &nodeId, const std::string& pointAsWkt);
+        createNodeFromPoint(const long long &nodeId, const std::string& pointAsWkt);
 
         /**
-         * @return A pair of doubles resembling the latitude and longitude of the given WKT point
+         * Returns a way with an id and node references.
+         *
+         * @example For wayId: `1` and nodeRefs: `{1,2,3}` the function
+         * would return: `<way id="1"><nd ref="1"/><nd ref="2"/><nd ref="3"/></way>`
+         *
+         * @param wayId The way id that should be used for the way
+         * @param nodeRefs The ids of the nodes that are referenced by the way
          */
-        static std::pair<double, double> getLatLonFromPoint(const std::string& pointAsWkt);
+        static std::string
+        createWayFromReferences(long long wayId, const std::set<long long> &nodeRefs);
+
+        /**
+         * Returns a relation with an id and members.
+         *
+         * @example For relationId: `1` and members: `{https://www.openstreetmap.org/node/1,
+         * https://www.openstreetmap.org/way/1,https://www.openstreetmap.org/relation/1}` the
+         * function would return: `<relation id="1"><member type="node" ref="1">
+         * <member type="way" ref="1"><member type="relation" ref="1"></relation>`
+         *
+         * @param relationId The relation id that should be used for the relation
+         * @param members The URI`s of the members of the relation
+         */
+        static std::string
+        createRelationFromReferences(long long relationId,
+                                     const std::vector<std::string> &members);
     };
 
     /**
