@@ -34,7 +34,7 @@ TEST(XmlReader, readAttribute) {
         olu::util::XmlReader::populatePTreeFromString(content, tree);
 
         std::string attribute = olu::util::XmlReader::readAttribute(
-                "osm.node.id",
+                "osm.node.<xmlattr>.id",
                 tree);
         ASSERT_EQ(attribute, "1");
 
