@@ -22,10 +22,11 @@
 #include "config/Constants.h"
 #include "sparql/QueryWriter.h"
 
+namespace cnst = olu::config::constants;
+
 // ---------------------------------------------------------------------------
 static void Set_Prefixes(benchmark::State& state) {
     auto config((olu::config::Config()));
-    config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
     auto sparqlWrapper = olu::sparql::SparqlWrapper(config);
 
     for (auto _ : state) {
@@ -37,10 +38,10 @@ BENCHMARK(Set_Prefixes);
 // ---------------------------------------------------------------------------
 static void Run_Query_For_Node_Location(benchmark::State& state) {
     auto config((olu::config::Config()));
-    config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
+    config.sparqlEndpointUri = cnst::QLEVER_LOCAL_HOST_URI;
 
     auto sparqlWrapper = olu::sparql::SparqlWrapper(config);
-    auto query = olu::sparql::QueryWriter::writeQueryForNodeLocation(1);
+    auto query = olu::sparql::QueryWriter::writeQueryForNodeLocations({1});
 
     for (auto _ : state) {
         sparqlWrapper.setQuery(query);
@@ -51,28 +52,27 @@ static void Run_Query_For_Node_Location(benchmark::State& state) {
 }
 BENCHMARK(Run_Query_For_Node_Location);
 
-//// ---------------------------------------------------------------------------
-//static void Run_Query_For_Node_Deletion(benchmark::State& state) {
-//    auto config((olu::config::Config()));
-//    config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
-//
-//    auto sparqlWrapper = olu::sparql::SparqlWrapper(config);
-//    auto query = olu::sparql::QueryWriter::writeDeleteQuery("osmnode:1");
-//
-//    for (auto _ : state) {
-//        sparqlWrapper.setPrefixes(olu::config::constants::PREFIXES_FOR_DELETE_QUERY);
-//        sparqlWrapper.setQuery(query);
-//        sparqlWrapper.setMethod(olu::util::POST);
-//
-//        auto response = sparqlWrapper.runQuery();
-//    }
-//}
-//BENCHMARK(Run_Query_For_Node_Deletion);
+// ---------------------------------------------------------------------------
+static void Run_Query_For_Node_Deletion(benchmark::State& state) {
+    auto config((olu::config::Config()));
+    config.sparqlEndpointUri = cnst::QLEVER_LOCAL_HOST_URI;
+
+    auto sparqlWrapper = olu::sparql::SparqlWrapper(config);
+    auto query = olu::sparql::QueryWriter::writeDeleteQuery({"osmnode:1"});
+
+    for (auto _ : state) {
+        sparqlWrapper.setPrefixes(cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
+        sparqlWrapper.setQuery(query);
+
+        auto response = sparqlWrapper.runQuery();
+    }
+}
+BENCHMARK(Run_Query_For_Node_Deletion);
 
 // ---------------------------------------------------------------------------
 static void Clear_Cache(benchmark::State& state) {
     auto config((olu::config::Config()));
-    config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
+    config.sparqlEndpointUri = cnst::QLEVER_LOCAL_HOST_URI;
 
     for (auto _ : state) {
         auto sparqlWrapper = olu::sparql::SparqlWrapper(config);

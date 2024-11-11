@@ -45,13 +45,13 @@ namespace olu::sparql {
         };
 
         /**
-         * @param query The query to send to the SPARQL endpoint. The prefixes must be set
-         * separately
+         * Sets the query to send to the SPARQL endpoint. The prefixes must be set
+         * with `setPrefixes`.
          */
         void setQuery(const std::string& query);
 
         /**
-         * @param prefixes The prefixes to send to the SPARQL endpoint.
+         * Sets the prefixes for the query to send to the SPARQL endpoint.
          */
         void setPrefixes(const std::vector<std::string> &prefixes);
 
@@ -61,7 +61,7 @@ namespace olu::sparql {
         void clearCache() const;
 
         /**
-         * Sends a request with the current prefixes and query to the SPARQL endpoint.
+         * Sends a POST request with the encoded prefixes and query as body to the SPARQL endpoint.
          *
          * @return The response from the SPARQL endpoint.
          */

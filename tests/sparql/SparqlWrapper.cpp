@@ -16,12 +16,29 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "sparql/QueryWriter.h"
 #include "config/Constants.h"
 #include "gtest/gtest.h"
+#include "config/Config.h"
+#include "sparql/SparqlWrapper.h"
+
+namespace cnst = olu::config::constants;
 
 namespace olu::sparql {
-    TEST(SparqlWrapper, insertQueries) {
-        // TODO:
+    TEST(SparqlWrapper, emptyQuery) {
+        auto config((olu::config::Config()));
+        config.sparqlEndpointUri = cnst::QLEVER_OSM_PLANET_URI;
+        auto sparqlWrapper((olu::sparql::SparqlWrapper(config)));
+
+        ASSERT_THROW(sparqlWrapper.runQuery(), olu::sparql::SparqlWrapperException);
+    }
+
+    TEST(SparqlWrapper, nonEmptyResponseFromEndpoint) {
+        auto config((olu::config::Config()));
+        config.sparqlEndpointUri = cnst::QLEVER_OSM_PLANET_URI;
+        auto sparqlWrapper((olu::sparql::SparqlWrapper(config)));
+        sparqlWrapper.setPrefixes({"PREFIX osmnode: <https://www.openstreetmap.org/node/>"});
+        sparqlWrapper.setQuery("SELECT * WHERE { osmnode:1 ?p ?o }");
+
+        ASSERT_FALSE(sparqlWrapper.runQuery().empty());
     }
 }
