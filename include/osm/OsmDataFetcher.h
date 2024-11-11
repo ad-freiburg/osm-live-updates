@@ -76,16 +76,6 @@ namespace olu::osm {
         [[nodiscard]] OsmDatabaseState
         fetchDatabaseStateForTimestamp(const std::string& timeStamp) const;
 
-        // Fetch from SPARQL Endpoint --------------------------------------------------------------
-        /**
-         * Sends a query to the sparql endpoint to get the location of the node with the given id
-         * and returns the location as point in WKT format
-         *
-         * @param nodeId The id of the node to fetch location for
-         * @return The location of the node as WKT point
-         */
-        std::string fetchNodeLocationAsWkt(const long long &nodeId);
-
         /**
          * Sends a query to the sparql endpoint to get the location of the nodes with the given ids
          * and returns the locations as points in WKT format

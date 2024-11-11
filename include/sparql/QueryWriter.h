@@ -42,11 +42,6 @@ namespace olu::sparql {
         static std::string writeDeleteQuery(const std::vector<std::string>& subjects);
 
         /**
-         * @returns A SPARQL query that deletes all triples for a given node element in the database
-         */
-        static std::string writeNodeDeleteQuery(const long long &nodeId);
-
-        /**
          * @returns A SPARQL query that deletes all triples for the given node ids.
          */
         static std::string writeNodesDeleteQuery(const std::set<long long> &nodeIds);
@@ -60,22 +55,6 @@ namespace olu::sparql {
         * @returns A SPARQL query that deletes all triples for the given relation ids.
         */
         static std::string writeRelationsDeleteQuery(const std::set<long long int> &relationIds);
-
-        /**
-         * @returns A SPARQL query that deletes all triples for a given way element in the database
-         */
-        static std::string writeWayDeleteQuery(const long long &wayId);
-
-        /**
-         * @returns A SPARQL query that deletes all triples for a given relation element in the
-         * database
-         */
-        static std::string writeRelationDeleteQuery(const long long &relationId);
-
-        /**
-        * @returns A SPARQL query for the location of the node with the given ID in WKT format
-        */
-        static std::string writeQueryForNodeLocation(const long long &nodeId);
 
         /**
         * @returns A SPARQL query for the locations of the nodes with the given ID in WKT format
@@ -132,22 +111,6 @@ namespace olu::sparql {
         */
         static std::string writeQueryForRelationsReferencingRelations(const std::set<long long> &relationIds);
     };
-
-    /**
-     * Exception that can appear inside the `QueryWriter` class.
-     */
-    class QueryWriterException : public std::exception {
-    private:
-        std::string message;
-
-    public:
-        explicit QueryWriterException(const char* msg) : message(msg) { }
-
-        [[nodiscard]] const char* what() const noexcept override {
-            return message.c_str();
-        }
-    };
-
 } // namespace olu::sparql
 
 #endif //OSM_LIVE_UPDATES_QUERYWRITER_H

@@ -93,33 +93,6 @@ namespace olu::osm {
         return filePath;
     }
 
-    // _____________________________________________________________________________________________
-    std::string OsmDataFetcher::fetchNodeLocationAsWkt(const long long &nodeId) {
-        auto query = olu::sparql::QueryWriter::writeQueryForNodeLocation(nodeId);
-        _sparqlWrapper.setQuery(query);
-        _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_NODE_LOCATION);
-        auto response = _sparqlWrapper.runQuery();
-
-        boost::property_tree::ptree responseAsTree;
-        olu::util::XmlReader::populatePTreeFromString(response, responseAsTree);
-
-        std::string pointAsWkt;
-        try {
-            pointAsWkt = responseAsTree.get<std::string>("sparql.results.result.binding.literal");
-        } catch (boost::property_tree::ptree_bad_path &e) {
-            std::cerr
-            << "Could not get location for node with id "
-            << std::to_string(nodeId)
-            << " from endpoint repsonse: "
-            << response
-            << std::endl;
-            throw OsmDataFetcherException(
-                    "Exception while trying to get location for node");
-        }
-
-        return pointAsWkt;
-    }
-
     std::vector<std::string>
     OsmDataFetcher::fetchNodeLocationsAsWkt(const std::set<long long int> &nodeIds) {
         auto query = olu::sparql::QueryWriter::writeQueryForNodeLocations(nodeIds);

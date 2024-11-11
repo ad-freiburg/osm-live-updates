@@ -60,16 +60,7 @@ namespace olu::osm {
         void getReferencedWays();
         void getReferencedNodes();
 
-
         void run();
-//        void deleteAllMarkedNodesFromDatabase();
-//        void insertAllMarkedNodesToDatabase();
-//
-//        void deleteAllMarkedWaysFromDatabase();
-//        void insertAllMarkedWaysToDatabase();
-//
-//        void deleteAllMarkedRelationsFromDatabase();
-//        void insertAllMarkedRelationsToDatabase();
 
         /**
          * Counts the osm elements (`node`, `way` or `relation`) in the osm change file that are in
@@ -81,21 +72,6 @@ namespace olu::osm {
         static size_t countElements(const boost::property_tree::ptree &osmChangeElement);
 
         /**
-         * Returns a vector with all osm elements needed for conversion to ttl format. For `nodes`
-         * and `relation`, this is only the passed element. If the element is a `way` all the nodes
-         * referenced in this way are fetched and added to the vector.
-         *
-         * The first entry of the returned vector is always: `<osm version="0.6">` and the last one
-         * `</osm>`
-         *
-         * @param elementTag The tag of the element
-         * @param element The xml element of to get the informations for
-         * @return A vector containig all informations needed for the conversion to ttl
-         */
-//        std::vector<std::string> getOsmElementsForInsert(const std::string& elementTag,
-//                                                         const pt::ptree& element);
-
-        /**
          * Creates a SPARQL query from the given ttl data to add the contained triples into the
          * database and sends it to the SPARQL endpoint.
          *
@@ -103,27 +79,6 @@ namespace olu::osm {
          * as well as the needed prefixes
          */
         void createAndRunInsertQuery();
-
-        /**
-         * Filters the prefixes from the converted ttl data and formats it for SPARQL:
-         *
-         * e.g. `@prefix ohmnode: <https://www.openhistoricalmap.org/node/> .` is formatted to
-         * `PREFIX ohmnode: <https://www.openhistoricalmap.org/node/> .`
-         *
-         * @param ttl the ttl data form the conversion
-         * @return A vector with all prefixes in the conversion data formatted for SPARQL
-         */
-        static std::vector<std::string> getPrefixesFromConvertedData();
-
-        /**
-         * Filters the triples from the converted ttl data. For Ways all triples that result from
-         * from the node references that where needed for conversion are also filtered out.
-         *
-         * @param ttl the ttl data form the conversion
-         * @return A vector with all triples in the conversion data
-         */
-        static std::vector<std::string> getTriplesFromConvertedData(std::vector<std::string> ttl,
-                                                                    const std::string &elementTag);
 
     private:
         config::Config _config;
@@ -208,19 +163,7 @@ namespace olu::osm {
         static void addToTmpFile(const boost::property_tree::ptree& element, const std::string& elementTag) ;
         static void addToTmpFile(const std::string& element, const std::string& elementTag) ;
 
-        /**
-         * Gets the id of each node that is referenced in the passed `way` element
-         *
-         * @param way The `way` element to get the ids of all referenced nodes
-         * @return A vector containing the ids of all referenced nodes
-         */
-        void getIdsOfReferencedNodesInWays();
-
         void storeIdsOfReferencedNodes(const boost::property_tree::ptree& wayElement);
-
-//        std::tuple<std::set<long long int>, std::set<long long int>, std::set<long long int>>
-//        getIdsOfReferencedElementsInRelations();
-
         void storeIdsOfReferencedElements(const boost::property_tree::ptree& relElement);
 
         /**
@@ -237,8 +180,6 @@ namespace olu::osm {
         void deleteElementsFromDatabase();
         void insertElementsToDatabase();
         void filterRelevantTriples();
-
-//        boost::property_tree::ptree getOsmElementWithId(long long id, const std::string& elementTag);
     };
 
     /**

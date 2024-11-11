@@ -51,43 +51,6 @@ std::string olu::sparql::QueryWriter::writeDeleteQuery(const std::vector<std::st
 }
 
 // _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeNodeDeleteQuery(const long long &nodeId) {
-    std::vector<std::string> triples {
-            "osmnode:" + std::to_string(nodeId),
-            "osm2rdfgeom:osm_node_" + std::to_string(nodeId)
-    };
-
-    return writeDeleteQuery(triples);
-}
-
-// _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeWayDeleteQuery(const long long &wayId) {
-    std::vector<std::string> triples {
-            "osmway:" + std::to_string(wayId),
-            "osm2rdf:way_" + std::to_string(wayId),
-            "osm2rdfgeom:osm_wayarea_" + std::to_string(wayId),
-    };
-
-    return writeDeleteQuery(triples);
-}
-
-// _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeRelationDeleteQuery(const long long &relationId) {
-    std::vector<std::string> triples {
-            "osmrel:" + std::to_string(relationId),
-            "osm2rdfgeom:osm_relarea_" + std::to_string(relationId),
-    };
-
-    return writeDeleteQuery(triples);
-}
-
-// _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeQueryForNodeLocation(const long long &nodeId) {
-    std::string query = "SELECT ?o WHERE { osm2rdfgeom:osm_node_" + std::to_string(nodeId) + " geo:asWKT ?o . }";
-    return query;
-}
-
-// _________________________________________________________________________________________________
 std::string
 olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::set<long long int> &nodeIds) {
     std::string query;
