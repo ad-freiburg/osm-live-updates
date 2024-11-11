@@ -16,24 +16,24 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "util/WktHelper.h"
+#include "util/OsmObjectHelper.h"
 #include "gtest/gtest.h"
 
-TEST(WktHelper, createDummyNodeFromPoint) {
+TEST(OsmObjectHelper, createDummyNodeFromPoint) {
     {
         std::string pointAsWkt = "POINT(13.5690032 42.7957187)";
         int nodeId = 1;
 
-        auto dummyNode = olu::osm::WktHelper::createNodeFromPoint(nodeId, pointAsWkt);
+        auto dummyNode = olu::osm::OsmObjectHelper::createNodeFromPoint(nodeId, pointAsWkt);
         ASSERT_EQ(dummyNode,
-                  "<node id=\"1\" lat=\"42.7957187\" lon=\"13.5690032\"/>");
+                  "<node id=\"1\" lat=\"42.7957187\" lon=\"13.5690032\" version=\"1\" timestamp=\"2000-01-01T00:00:00Z\"/>");
     }
     {
         std::string pointAsWkt = "POINT(42.7957187)";
         int nodeId = 1;
 
         ASSERT_THROW(
-                olu::osm::WktHelper::createNodeFromPoint(nodeId, pointAsWkt),
+                olu::osm::OsmObjectHelper::createNodeFromPoint(nodeId, pointAsWkt),
                 olu::osm::WktHelperException);
     }
     {
@@ -41,7 +41,7 @@ TEST(WktHelper, createDummyNodeFromPoint) {
         int nodeId = 1;
 
         ASSERT_THROW(
-                olu::osm::WktHelper::createNodeFromPoint(nodeId, pointAsWkt),
+                olu::osm::OsmObjectHelper::createNodeFromPoint(nodeId, pointAsWkt),
                 olu::osm::WktHelperException);
     }
     {
@@ -49,7 +49,7 @@ TEST(WktHelper, createDummyNodeFromPoint) {
         int nodeId = 1;
 
         ASSERT_THROW(
-                olu::osm::WktHelper::createNodeFromPoint(nodeId, pointAsWkt),
+                olu::osm::OsmObjectHelper::createNodeFromPoint(nodeId, pointAsWkt),
                 olu::osm::WktHelperException);
     }
     {
@@ -57,7 +57,30 @@ TEST(WktHelper, createDummyNodeFromPoint) {
         int nodeId = 1;
 
         ASSERT_THROW(
-                olu::osm::WktHelper::createNodeFromPoint(nodeId, pointAsWkt),
+                olu::osm::OsmObjectHelper::createNodeFromPoint(nodeId, pointAsWkt),
                 olu::osm::WktHelperException);
     }
+}
+
+TEST(OsmObjectHelper, createWayFromReferences) {
+    ASSERT_EQ(olu::osm::OsmObjectHelper::createWayFromReferences(1, {1, 2, 3}),
+              "<way id=\"1\" version=\"1\" timestamp=\"2000-01-01T00:00:00Z\">"
+              "<nd ref=\"1\"/>"
+              "<nd ref=\"2\"/>"
+              "<nd ref=\"3\"/>"
+              "</way>"
+    );
+}
+TEST(OsmObjectHelper, createRelationFromReferences) {
+    ASSERT_EQ(olu::osm::OsmObjectHelper::createRelationFromReferences(
+            1,
+            {"https://www.openstreetmap.org/node/1",
+             "https://www.openstreetmap.org/way/2",
+             "https://www.openstreetmap.org/relation/3"}),
+              "<relation id=\"1\" version=\"1\" timestamp=\"2000-01-01T00:00:00Z\">"
+              "<member type=\"node\" ref=\"1\"/>"
+              "<member type=\"way\" ref=\"2\" role=\"outer\"/>"
+              "<member type=\"relation\" ref=\"3\" role=\"outer\"/>"
+              "</relation>"
+    );
 }

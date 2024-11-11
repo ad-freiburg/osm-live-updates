@@ -2,15 +2,15 @@
 // Created by Nicolas von Trott on 28.08.24.
 //
 
-#ifndef OSM_LIVE_UPDATES_WKTHELPER_H
-#define OSM_LIVE_UPDATES_WKTHELPER_H
+#ifndef OSM_LIVE_UPDATES_OSMOBJECTHELPER_H
+#define OSM_LIVE_UPDATES_OSMOBJECTHELPER_H
 
 #include <string>
 #include <set>
 #include <vector>
 
 namespace olu::osm {
-    class WktHelper {
+    class OsmObjectHelper {
     public:
         /**
          * Returns a node with an id and a location which is extracted from an WKT point.
@@ -68,4 +68,4 @@ namespace olu::osm {
         }
     };
 }
-#endif //OSM_LIVE_UPDATES_WKTHELPER_H
+#endif //OSM_LIVE_UPDATES_OSMOBJECTHELPER_H

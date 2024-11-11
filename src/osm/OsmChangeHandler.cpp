@@ -21,7 +21,7 @@
 #include "util/Decompressor.h"
 #include "config/Constants.h"
 #include "sparql/QueryWriter.h"
-#include "util/WktHelper.h"
+#include "util/OsmObjectHelper.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <string>
@@ -397,7 +397,7 @@ namespace olu::osm {
 
         for (auto it = nodeIds.begin(); it != nodeIds.end(); ++it) {
             long index = std::distance(nodeIds.begin(), it);
-            auto dummyNode = olu::osm::WktHelper::createNodeFromPoint(
+            auto dummyNode = olu::osm::OsmObjectHelper::createNodeFromPoint(
                     nodeIds.at(index),
                     pointsAsWkt.at(index));
             addToTmpFile(dummyNode, cnst::NODE_TAG);
@@ -407,7 +407,7 @@ namespace olu::osm {
     void OsmChangeHandler::createDummyWays() {
         for (const auto wayId: _referencedWays) {
             auto wayMembers = _odf.fetchWayMembers(wayId);
-            auto dummyWay = olu::osm::WktHelper::createWayFromReferences(wayId, wayMembers);
+            auto dummyWay = olu::osm::OsmObjectHelper::createWayFromReferences(wayId, wayMembers);
             addToTmpFile(dummyWay, cnst::WAY_TAG);
         }
     }
@@ -415,7 +415,7 @@ namespace olu::osm {
     void OsmChangeHandler::createDummyRelations() {
         for (const auto relId: _referencedRelations) {
             auto members = _odf.fetchRelationMembers(relId);
-            auto dummyRelation = olu::osm::WktHelper::createRelationFromReferences(relId, members);
+            auto dummyRelation = olu::osm::OsmObjectHelper::createRelationFromReferences(relId, members);
             addToTmpFile(dummyRelation, cnst::RELATION_TAG);
         }
     }

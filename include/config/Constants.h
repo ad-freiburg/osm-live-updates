@@ -23,6 +23,12 @@
 #include <vector>
 
 namespace olu::config::constants {
+    const static inline std::string QLEVER_LOCAL_HOST_URI =
+            "http://host.docker.internal:7007/osm-planet/";
+
+    const static inline std::string QLEVER_OSM_PLANET_URI =
+            "https://qlever.cs.uni-freiburg.de/api/osm-planet";
+
     const static inline std::string OSM_NODE_BASE_URL =
         "https://www.openstreetmap.org/api/0.6/node";
 
