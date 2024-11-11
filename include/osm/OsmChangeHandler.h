@@ -204,9 +204,9 @@ namespace olu::osm {
             return _modifiedRelations.contains(relationId) || _createdRelations.contains(relationId);
         }
 
-        void createOrClearTmpFiles() const;
-        void addToTmpFile(const boost::property_tree::ptree& element, const std::string& elementTag) const;
-        void addToTmpFile(const std::string& element, const std::string& elementTag) const;
+        static void createOrClearTmpFiles() ;
+        static void addToTmpFile(const boost::property_tree::ptree& element, const std::string& elementTag) ;
+        static void addToTmpFile(const std::string& element, const std::string& elementTag) ;
 
         /**
          * Gets the id of each node that is referenced in the passed `way` element
@@ -233,7 +233,7 @@ namespace olu::osm {
         void createDummyNodes();
         void createDummyWays();
         void createDummyRelations();
-        void sortFile(std::string elementTag);
+        static void sortFile(const std::string& elementTag);
         void deleteElementsFromDatabase();
         void insertElementsToDatabase();
         void filterRelevantTriples();

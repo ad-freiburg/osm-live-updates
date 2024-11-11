@@ -96,9 +96,8 @@ namespace olu::osm {
         sortFile(cnst::WAY_TAG);
         sortFile(cnst::RELATION_TAG);
 
-        std::string pathToOutputFile;
         try {
-            pathToOutputFile = _osm2ttl.convert();
+            _osm2ttl.convert();
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
             throw OsmChangeHandlerException("Exception while trying to convert osm element to ttl");
@@ -124,7 +123,7 @@ namespace olu::osm {
         std::cout << "Done" << std::endl;
     }
 
-    void OsmChangeHandler::createOrClearTmpFiles() const {
+    void OsmChangeHandler::createOrClearTmpFiles() {
         std::ofstream file1(cnst::PATH_TO_NODE_FILE, std::ios::trunc);
         file1.close();
 
@@ -139,7 +138,7 @@ namespace olu::osm {
     }
 
     void OsmChangeHandler::addToTmpFile(const boost::property_tree::ptree& element,
-                                        const std::string& elementTag) const {
+                                        const std::string& elementTag) {
         std::ofstream outputFile;
         if (elementTag == cnst::NODE_TAG) {
             outputFile.open (cnst::PATH_TO_NODE_FILE, std::ios::app);
@@ -155,7 +154,7 @@ namespace olu::osm {
     }
 
     void OsmChangeHandler::addToTmpFile(const std::string& element,
-                                        const std::string& elementTag) const {
+                                        const std::string& elementTag) {
         std::ofstream outputFile;
         if (elementTag == cnst::NODE_TAG) {
             outputFile.open (cnst::PATH_TO_NODE_FILE, std::ios::app);
@@ -421,7 +420,7 @@ namespace olu::osm {
         }
     }
 
-    void OsmChangeHandler::sortFile(std::string elementTag) {
+    void OsmChangeHandler::sortFile(const std::string& elementTag) {
         std::string filename;
         if (elementTag == cnst::NODE_TAG) {
             filename = cnst::PATH_TO_NODE_FILE;
@@ -482,7 +481,6 @@ namespace olu::osm {
             [this](const std::set<long long>& batch) {
                 auto query = sparql::QueryWriter::writeNodesDeleteQuery(batch);
                 _sparql.setQuery(query);
-                _sparql.setMethod(util::POST);
                 _sparql.setPrefixes(config::constants::PREFIXES_FOR_NODE_DELETE_QUERY);
 //                _sparql.runQuery();
             });
@@ -496,7 +494,6 @@ namespace olu::osm {
             [this](const std::set<long long>& batch) {
                 auto query = sparql::QueryWriter::writeWaysDeleteQuery(batch);
                 _sparql.setQuery(query);
-                _sparql.setMethod(util::POST);
                 _sparql.setPrefixes(config::constants::PREFIXES_FOR_WAY_DELETE_QUERY);
 //                _sparql.runQuery();
             });
@@ -510,7 +507,6 @@ namespace olu::osm {
             [this](const std::set<long long>& batch) {
                 auto query = sparql::QueryWriter::writeRelationsDeleteQuery(batch);
                 _sparql.setQuery(query);
-                _sparql.setMethod(util::POST);
                 _sparql.setPrefixes(config::constants::PREFIXES_FOR_RELATION_DELETE_QUERY);
 //                _sparql.runQuery();
             });
@@ -527,10 +523,10 @@ namespace olu::osm {
         std::smatch match;
         if (std::regex_search(triple, match, regex)) {
             return std::make_tuple(match[1], match[2], match[3]);
-        } else {
-            std::string msg = "Cant split triple: " + triple;
-            throw OsmChangeHandlerException(msg.c_str());
         }
+
+        std::string msg = "Cant split triple: " + triple;
+        throw OsmChangeHandlerException(msg.c_str());
     }
 
     long long getIdFromTriple(const std::string& triple, const std::string& elementTag) {
@@ -539,29 +535,36 @@ namespace olu::osm {
             std::smatch match;
             if (std::regex_search(triple, match, integerRegex)) {
                 return stoll(match[1]);
-            } else {
-                std::string msg = "Cant get id for element: " + elementTag + " from triple: " + triple;
-                throw OsmChangeHandlerException(msg.c_str());
             }
-        } else if (elementTag == cnst::WAY_TAG) {
+
+            std::string msg = "Cant get id for element: " + elementTag + " from triple: " + triple;
+            throw OsmChangeHandlerException(msg.c_str());
+        }
+
+        if (elementTag == cnst::WAY_TAG) {
             std::regex integerRegex(R"((?:osmway:|osm_wayarea_)(\d+))");
             std::smatch match;
             if (std::regex_search(triple, match, integerRegex)) {
                 return stoll(match[1]);
-            } else {
-                std::string msg = "Cant get id for element: " + elementTag + " from triple: " + triple;
-                throw OsmChangeHandlerException(msg.c_str());
             }
-        } else if (elementTag == cnst::RELATION_TAG) {
+
+            std::string msg = "Cant get id for element: " + elementTag + " from triple: " + triple;
+            throw OsmChangeHandlerException(msg.c_str());
+        }
+
+        if (elementTag == cnst::RELATION_TAG) {
             std::regex integerRegex(R"((?:osmrel:|osm_relarea_)(\d+))");
             std::smatch match;
             if (std::regex_search(triple, match, integerRegex)) {
                 return stoll(match[1]);
-            } else {
-                std::string msg = "Cant get id for element: " + elementTag + " from triple: " + triple;
-                throw OsmChangeHandlerException(msg.c_str());
             }
+
+            std::string msg = "Cant get id for element: " + elementTag + " from triple: " + triple;
+            throw OsmChangeHandlerException(msg.c_str());
         }
+
+        std::string msg = "Wrong element tag: " + elementTag;
+        throw OsmChangeHandlerException(msg.c_str());
     }
 
     void OsmChangeHandler::filterRelevantTriples() {
@@ -753,7 +756,6 @@ namespace olu::osm {
             auto query = sparql::QueryWriter::writeInsertQuery(batch);
             _sparql.setPrefixes(cnst::DEFAULT_PREFIXES);
             _sparql.setQuery(query);
-            _sparql.setMethod(util::POST);
 
             try {
 //                _sparql.runQuery();

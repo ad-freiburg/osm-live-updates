@@ -45,14 +45,6 @@ namespace olu::sparql {
         };
 
         /**
-         * Sets the HTTP Method for the request to the SPARQL endpoint.
-         * Choose `GET' for `SELECT' queries and `POST' for update queries (`DELETE', `INSERT').
-         *
-         * @param method The HTTP method for the request to the sparql endpoint
-         */
-        void setMethod(util::HttpMethod method);
-
-        /**
          * @param query The query to send to the SPARQL endpoint. The prefixes must be set
          * separately
          */
@@ -76,7 +68,6 @@ namespace olu::sparql {
         std::string runQuery();
     private:
         olu::config::Config _config;
-        util::HttpMethod _httpMethod = util::POST;
         std::string _query;
         std::string _prefixes;
 

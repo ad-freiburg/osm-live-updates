@@ -16,15 +16,11 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <boost/property_tree/ptree.hpp>
-#include "osm/Osm2ttl.h"
 #include "osm/OsmDataFetcher.h"
 
 #include "benchmark/benchmark.h"
 #include "config/Constants.h"
 #include "sparql/QueryWriter.h"
-#include "util/XmlReader.h"
-#include "osm/OsmChangeHandler.h"
 
 // ---------------------------------------------------------------------------
 static void Set_Prefixes(benchmark::State& state) {
@@ -39,18 +35,6 @@ static void Set_Prefixes(benchmark::State& state) {
 BENCHMARK(Set_Prefixes);
 
 // ---------------------------------------------------------------------------
-static void Set_Method(benchmark::State& state) {
-    auto config((olu::config::Config()));
-    config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
-    auto sparqlWrapper = olu::sparql::SparqlWrapper(config);
-
-    for (auto _ : state) {
-        sparqlWrapper.setMethod(olu::util::POST);
-    }
-}
-BENCHMARK(Set_Method);
-
-// ---------------------------------------------------------------------------
 static void Run_Query_For_Node_Location(benchmark::State& state) {
     auto config((olu::config::Config()));
     config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
@@ -59,7 +43,6 @@ static void Run_Query_For_Node_Location(benchmark::State& state) {
     auto query = olu::sparql::QueryWriter::writeQueryForNodeLocation(1);
 
     for (auto _ : state) {
-        sparqlWrapper.setMethod(olu::util::GET);
         sparqlWrapper.setQuery(query);
         sparqlWrapper.setPrefixes(olu::config::constants::PREFIXES_FOR_NODE_LOCATION);
 

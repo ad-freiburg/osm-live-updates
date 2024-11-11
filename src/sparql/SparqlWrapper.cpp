@@ -29,12 +29,6 @@
 #include <boost/property_tree/json_parser.hpp>
 
 namespace olu::sparql {
-
-    // _____________________________________________________________________________________________
-    void SparqlWrapper::setMethod(const util::HttpMethod httpMethod) {
-        _httpMethod = httpMethod;
-    }
-
     // _____________________________________________________________________________________________
     void SparqlWrapper::setQuery(const std::string &query) {
         _query = query;
@@ -56,35 +50,21 @@ namespace olu::sparql {
         std::string encodedQuery = util::URLHelper::encodeForUrlQuery(query);
 
         std::string response;
-        if (_httpMethod == util::POST) {
-            auto request = util::HttpRequest(_httpMethod, _config.sparqlEndpointUri);
-            request.addHeader(olu::config::constants::HTML_KEY_CONTENT_TYPE,
-                              olu::config::constants::HTML_VALUE_CONTENT_TYPE);
-            std::string body = "query=" + encodedQuery;
-            request.addBody(body);
-            try {
-                response = request.perform();
-            } catch(std::exception &e) {
-                std::cerr << e.what() << std::endl;
-                std::string msg =
-                        "Exception while sending `POST` request to the sparql endpoint with body: "
-                        + body;
-                throw SparqlWrapperException(msg.c_str());
-            }
-        } else if (_httpMethod == util::GET) {
-            std::string url = _config.sparqlEndpointUri + "?query=" + encodedQuery;
-            auto request = util::HttpRequest(_httpMethod, url);
-            request.addHeader(olu::config::constants::HTML_KEY_ACCEPT,
-                              olu::config::constants::HTML_VALUE_ACCEPT_SPARQL_RESULT_XML);
-            try {
-                response = request.perform();
-            } catch(std::exception &e) {
-                std::cerr << e.what() << std::endl;
-                std::string msg =
-                        "Exception while sending `GET` request to the sparql endpoint with url: "
-                        + url;
-                throw SparqlWrapperException(msg.c_str());
-            }
+        auto request = util::HttpRequest(util::POST, _config.sparqlEndpointUri);
+        request.addHeader(olu::config::constants::HTML_KEY_CONTENT_TYPE,
+                          olu::config::constants::HTML_VALUE_CONTENT_TYPE);
+        request.addHeader(olu::config::constants::HTML_KEY_ACCEPT,
+                          olu::config::constants::HTML_VALUE_ACCEPT_SPARQL_RESULT_XML);
+        std::string body = "query=" + encodedQuery;
+        request.addBody(body);
+        try {
+            response = request.perform();
+        } catch(std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            std::string msg =
+                    "Exception while sending `POST` request to the sparql endpoint with body: "
+                    + body;
+            throw SparqlWrapperException(msg.c_str());
         }
 
         // Clear query and prefixes for next request

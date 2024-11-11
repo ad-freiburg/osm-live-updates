@@ -96,7 +96,6 @@ namespace olu::osm {
     // _____________________________________________________________________________________________
     std::string OsmDataFetcher::fetchNodeLocationAsWkt(const long long &nodeId) {
         auto query = olu::sparql::QueryWriter::writeQueryForNodeLocation(nodeId);
-        _sparqlWrapper.setMethod(util::HttpMethod::GET);
         _sparqlWrapper.setQuery(query);
         _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_NODE_LOCATION);
         auto response = _sparqlWrapper.runQuery();
@@ -124,7 +123,6 @@ namespace olu::osm {
     std::vector<std::string>
     OsmDataFetcher::fetchNodeLocationsAsWkt(const std::set<long long int> &nodeIds) {
         auto query = olu::sparql::QueryWriter::writeQueryForNodeLocations(nodeIds);
-        _sparqlWrapper.setMethod(util::HttpMethod::GET);
         _sparqlWrapper.setQuery(query);
         _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_NODE_LOCATION);
         auto response = _sparqlWrapper.runQuery();
@@ -167,7 +165,6 @@ namespace olu::osm {
     // _____________________________________________________________________________________________
     std::string OsmDataFetcher::fetchLatestTimestampOfAnyNode() {
         auto query = olu::sparql::QueryWriter::writeQueryForLatestNodeTimestamp();
-        _sparqlWrapper.setMethod(util::HttpMethod::GET);
         _sparqlWrapper.setQuery(query);
         _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_LATEST_NODE_TIMESTAMP);
         auto response = _sparqlWrapper.runQuery();
@@ -238,7 +235,6 @@ namespace olu::osm {
     std::vector<std::string>
     OsmDataFetcher::fetchRelationMembers(const long long &relationId) {
         auto query = olu::sparql::QueryWriter::writeQueryForRelationMembers(relationId);
-        _sparqlWrapper.setMethod(util::HttpMethod::GET);
         _sparqlWrapper.setQuery(query);
         _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_RELATION_MEMBERS);
         auto response = _sparqlWrapper.runQuery();
@@ -257,7 +253,6 @@ namespace olu::osm {
 
     std::set<long long int> OsmDataFetcher::fetchWayMembers(const long long &wayId) {
         auto query = olu::sparql::QueryWriter::writeQueryForWayMembers(wayId);
-        _sparqlWrapper.setMethod(util::HttpMethod::GET);
         _sparqlWrapper.setQuery(query);
         _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_WAY_MEMBERS);
         auto response = _sparqlWrapper.runQuery();
@@ -292,7 +287,6 @@ namespace olu::osm {
 
     std::vector<long long> OsmDataFetcher::fetchWaysMembers(const std::set<long long> &wayIds) {
         auto query = olu::sparql::QueryWriter::writeQueryForWaysMembers(wayIds);
-        _sparqlWrapper.setMethod(util::HttpMethod::GET);
         _sparqlWrapper.setQuery(query);
         _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_WAY_MEMBERS);
         auto response = _sparqlWrapper.runQuery();
@@ -327,7 +321,6 @@ namespace olu::osm {
 
     std::vector<long long> OsmDataFetcher::fetchRelationMembersWay(const std::set<long long> &relIds) {
         auto query = olu::sparql::QueryWriter::writeQueryForRelationMembersWay(relIds);
-        _sparqlWrapper.setMethod(util::HttpMethod::GET);
         _sparqlWrapper.setQuery(query);
         _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_RELATION_MEMBERS);
         auto response = _sparqlWrapper.runQuery();
@@ -362,7 +355,6 @@ namespace olu::osm {
 
     std::vector<long long> OsmDataFetcher::fetchRelationMembersNode(const std::set<long long> &relIds) {
         auto query = olu::sparql::QueryWriter::writeQueryForRelationMembersNode(relIds);
-        _sparqlWrapper.setMethod(util::HttpMethod::GET);
         _sparqlWrapper.setQuery(query);
         _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_RELATION_MEMBERS);
         auto response = _sparqlWrapper.runQuery();
@@ -400,7 +392,6 @@ namespace olu::osm {
             const std::set<long long int> &nodeIds) {
         auto query = olu::sparql::QueryWriter::writeQueryForWaysReferencingNodes(nodeIds);
 
-        _sparqlWrapper.setMethod(util::HttpMethod::GET);
         _sparqlWrapper.setQuery(query);
         _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_WAYS_REFERENCING_NODE);
         auto response = _sparqlWrapper.runQuery();
@@ -439,7 +430,6 @@ namespace olu::osm {
             const std::set<long long int> &nodeIds) {
         auto query = olu::sparql::QueryWriter::writeQueryForRelationsReferencingNodes(nodeIds);
 
-        _sparqlWrapper.setMethod(util::HttpMethod::GET);
         _sparqlWrapper.setQuery(query);
         _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_RELATIONS_REFERENCING_NODE);
         auto response = _sparqlWrapper.runQuery();
@@ -478,7 +468,6 @@ namespace olu::osm {
             const std::set<long long int> &wayIds) {
         auto query = olu::sparql::QueryWriter::writeQueryForRelationsReferencingWays(wayIds);
 
-        _sparqlWrapper.setMethod(util::HttpMethod::GET);
         _sparqlWrapper.setQuery(query);
         _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_RELATIONS_REFERENCING_WAY);
         auto response = _sparqlWrapper.runQuery();
@@ -517,7 +506,6 @@ namespace olu::osm {
             const std::set<long long int> &relationIds) {
         auto query = olu::sparql::QueryWriter::writeQueryForRelationsReferencingRelations(relationIds);
 
-        _sparqlWrapper.setMethod(util::HttpMethod::GET);
         _sparqlWrapper.setQuery(query);
         _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_RELATIONS_REFERENCING_RELATIONS);
         auto response = _sparqlWrapper.runQuery();
