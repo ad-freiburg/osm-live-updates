@@ -35,6 +35,7 @@ struct Config {
 //    std::string osmDatabaseDirectoryPath = "https://planet.openstreetmap.org/replication/minute/";
 //
 //    apps/olu -u http://host.docker.internal:7007/osm-planet/ -d http://download.geofabrik.de/europe/andorra-updates
+//    apps/olu -u  https://qlever.cs.uni-freiburg.de/api/osm-planet -d http://download.geofabrik.de/europe/andorra-updates
 
     int sequenceNumber = -1;
     std::string timestamp;
