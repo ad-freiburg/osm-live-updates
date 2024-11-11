@@ -22,7 +22,7 @@
 #include "gtest/gtest.h"
 
 namespace olu::sparql {
-    TEST(QueryWriter, insertQueries) {
+    TEST(QueryWriter, writeInsertQuery) {
         {
             std::vector<std::string> triples;
             triples.emplace_back("osmrel:1960198 ogc:sfContains ?osm_id:10559440 .");
@@ -50,7 +50,7 @@ namespace olu::sparql {
             );
         }
     }
-    TEST(QueryWriter, deleteQueries) {
+    TEST(QueryWriter, writeDeleteQuery) {
         {
             std::vector<std::string> subjects;
             subjects.emplace_back("osmrel:1960198");
@@ -74,42 +74,147 @@ namespace olu::sparql {
             );
         }
     }
-    TEST(QueryWriter, deleteNodeQuery) {
+    TEST(QueryWriter, writeQueryForNodeLocations) {
         {
-            std::string query = olu::sparql::QueryWriter::writeNodeDeleteQuery(1);
+            std::set<long long> nodeIds {1, 2, 3} ;
+            std::string query = olu::sparql::QueryWriter::writeQueryForNodeLocations(nodeIds);
             ASSERT_EQ(
-                    "DELETE WHERE { osmnode:1 ?p0 ?o0 . osm2rdfgeom:osm_node_1 ?p1 ?o1 . }",
+                    "SELECT ?o WHERE { { osm2rdfgeom:osm_node_1 geo:asWKT ?o .  } "
+                    "UNION { osm2rdfgeom:osm_node_2 geo:asWKT ?o .  } "
+                    "UNION { osm2rdfgeom:osm_node_3 geo:asWKT ?o .  } }",
                     query
             );
         }
     }
-    TEST(QueryWriter, deleteWayQuery) {
+    TEST(QueryWriter, writeQueryForLatestNodeTimestamp) {
         {
-            std::string query = olu::sparql::QueryWriter::writeWayDeleteQuery(1);
+            std::string query = olu::sparql::QueryWriter::writeQueryForLatestNodeTimestamp();
             ASSERT_EQ(
-                    "DELETE WHERE { osmway:1 ?p0 ?o0 . osm2rdf:way_1 ?p1 ?o1 . }",
+                    "SELECT ?p WHERE { ?s rdf:type osm:node . ?s osmmeta:timestamp ?p . } "
+                    "ORDER BY DESC(?p) LIMIT 1",
                     query
             );
         }
     }
-    TEST(QueryWriter, deleteRelationQuery) {
+    TEST(QueryWriter, writeQueryForRelationMembers) {
         {
-            std::string query = olu::sparql::QueryWriter::writeRelationDeleteQuery(1);
+            std::string query = olu::sparql::QueryWriter::writeQueryForRelationMembers(1);
             ASSERT_EQ(
-                    "DELETE WHERE { osmrel:1 ?p0 ?o0 . }",
+                    "SELECT ?p WHERE { "
+                    "osmrel:1 osmrel:member ?o . ?o osm2rdfmember:id ?p"
+                    "}",
                     query
             );
         }
     }
-    TEST(QueryWriter, writeQueryForNodeLocation) {
+    TEST(QueryWriter, writeQueryForWayMembers) {
         {
-            int nodeId = 1;
+            std::string query = olu::sparql::QueryWriter::writeQueryForWayMembers(1);
+            ASSERT_EQ(
+                    "SELECT ?node WHERE { "
+                    "osmway:1 osmway:node ?member . "
+                    "?member osmway:node ?node ."
+                    "}",
+                    query
+            );
+        }
+    }
+    TEST(QueryWriter, writeQueryForWaysMembers) {
+        {
+            std::set<long long> ids {1, 2, 3} ;
+            std::string query = olu::sparql::QueryWriter::writeQueryForWaysMembers(ids);
+            ASSERT_EQ(
+                    "SELECT ?node WHERE { "
+                    "{ osmway:1 osmway:node ?member . ?member osmway:node ?node . } "
+                    "UNION { osmway:2 osmway:node ?member . ?member osmway:node ?node . } "
+                    "UNION { osmway:3 osmway:node ?member . ?member osmway:node ?node . } "
+                    "} GROUP BY ?node",
+                    query
+            );
+        }
+    }
+    TEST(QueryWriter, writeQueryForRelationMembersWay) {
+        {
+            std::set<long long> ids {1, 2, 3} ;
+            std::string query = olu::sparql::QueryWriter::writeQueryForRelationMembersWay(ids);
+            ASSERT_EQ(
+                    "SELECT ?p WHERE { "
+                    "{ osmrel:1 osmrel:member ?o . ?o osm2rdfmember:id ?p . ?p rdf:type osm:way } "
+                    "UNION { osmrel:2 osmrel:member ?o . ?o osm2rdfmember:id ?p . ?p rdf:type osm:way } "
+                    "UNION { osmrel:3 osmrel:member ?o . ?o osm2rdfmember:id ?p . ?p rdf:type osm:way } "
+                    "} GROUP BY ?p",
+                    query
+            );
+        }
+    }
+    TEST(QueryWriter, writeQueryForWaysReferencingNodes) {
+        {
+            std::set<long long> ids {1, 2, 3} ;
+            std::string query = olu::sparql::QueryWriter::writeQueryForWaysReferencingNodes(ids);
+            ASSERT_EQ(
+                    "SELECT ?s2 WHERE { "
+                    "{ ?s1 osmway:node osmnode:1 . ?s2 osmway:node ?s1 . } "
+                    "UNION { ?s1 osmway:node osmnode:2 . ?s2 osmway:node ?s1 . } "
+                    "UNION { ?s1 osmway:node osmnode:3 . ?s2 osmway:node ?s1 . } "
+                    "} GROUP BY ?s2",
+                    query
+            );
+        }
+    }
+    TEST(QueryWriter, writeQueryForRelationsReferencingNodes) {
+        {
+            std::set<long long> ids {1, 2, 3} ;
+            std::string query = olu::sparql::QueryWriter::writeQueryForRelationsReferencingNodes(ids);
+            ASSERT_EQ(
+                    "SELECT ?s WHERE { "
+                    "{ ?s osmrel:member ?o0 . ?o0 osm2rdfmember:id osmnode:1 . } "
+                    "UNION { ?s osmrel:member ?o1 . ?o1 osm2rdfmember:id osmnode:2 . } "
+                    "UNION { ?s osmrel:member ?o2 . ?o2 osm2rdfmember:id osmnode:3 . } "
+                    "} GROUP BY ?s",
+                    query
+            );
+        }
+    }
+    TEST(QueryWriter, writeQueryForRelationsReferencingWays) {
+        {
+            std::set<long long> ids {1, 2, 3} ;
+            std::string query = olu::sparql::QueryWriter::writeQueryForRelationsReferencingWays(ids);
+            ASSERT_EQ(
+                    "SELECT ?s WHERE { "
+                    "{ ?s osmrel:member ?o0 . ?o0 osm2rdfmember:id osmway:1 . } "
+                    "UNION { ?s osmrel:member ?o1 . ?o1 osm2rdfmember:id osmway:2 . } "
+                    "UNION { ?s osmrel:member ?o2 . ?o2 osm2rdfmember:id osmway:3 . } "
+                    "} GROUP BY ?s",
+                    query
+            );
+        }
+    }
+    TEST(QueryWriter, writeQueryForRelationsReferencingRelations) {
+        {
+            std::set<long long> ids {1, 2, 3} ;
+            std::string query = olu::sparql::QueryWriter::writeQueryForRelationsReferencingRelations(ids);
+            ASSERT_EQ(
+                    "SELECT ?s WHERE { "
+                    "{ ?s osmrel:member ?o0 . ?o0 osm2rdfmember:id osmrel:1 . } "
+                    "UNION { ?s osmrel:member ?o1 . ?o1 osm2rdfmember:id osmrel:2 . } "
+                    "UNION { ?s osmrel:member ?o2 . ?o2 osm2rdfmember:id osmrel:3 . } "
+                    "} GROUP BY ?s",
+                    query
+            );
+        }
+    }
+    TEST(QueryWriter, writeNodesDeleteQuery) {
+        {
+            std::set<long long> ids {1, 2, 3} ;
+            std::string query = olu::sparql::QueryWriter::writeNodesDeleteQuery(ids);
+            ASSERT_EQ(
+                    "DELETE WHERE { "
+                    "osmnode:1 ?p0 ?o0 . osm2rdfgeom:osm_node_1 ?p1 ?o1 . "
+                    "osmnode:2 ?p2 ?o2 . osm2rdfgeom:osm_node_2 ?p3 ?o3 . "
+                    "osmnode:3 ?p4 ?o4 . osm2rdfgeom:osm_node_3 ?p5 ?o5 . }",
+                    query
+            );
+        }
+    }
 
-            std::string query = olu::sparql::QueryWriter::writeQueryForNodeLocation(nodeId);
-            ASSERT_EQ(
-                    "SELECT ?o WHERE { osm2rdfgeom:osm_node_1 geo:asWKT ?o . }",
-                    query
-            );
-        }
-    }
 }
