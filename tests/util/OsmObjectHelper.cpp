@@ -26,7 +26,7 @@ TEST(OsmObjectHelper, createDummyNodeFromPoint) {
 
         auto dummyNode = olu::osm::OsmObjectHelper::createNodeFromPoint(nodeId, pointAsWkt);
         ASSERT_EQ(dummyNode,
-                  "<node id=\"1\" lat=\"42.7957187\" lon=\"13.5690032\" version=\"1\" timestamp=\"2000-01-01T00:00:00Z\"/>");
+                  "<node id=\"1\" lat=\"42.7957187\" lon=\"13.5690032\"/>");
     }
     {
         std::string pointAsWkt = "POINT(42.7957187)";
@@ -64,7 +64,7 @@ TEST(OsmObjectHelper, createDummyNodeFromPoint) {
 
 TEST(OsmObjectHelper, createWayFromReferences) {
     ASSERT_EQ(olu::osm::OsmObjectHelper::createWayFromReferences(1, {1, 2, 3}),
-              "<way id=\"1\" version=\"1\" timestamp=\"2000-01-01T00:00:00Z\">"
+              "<way id=\"1\">"
               "<nd ref=\"1\"/>"
               "<nd ref=\"2\"/>"
               "<nd ref=\"3\"/>"
@@ -74,13 +74,13 @@ TEST(OsmObjectHelper, createWayFromReferences) {
 TEST(OsmObjectHelper, createRelationFromReferences) {
     ASSERT_EQ(olu::osm::OsmObjectHelper::createRelationFromReferences(
             1,
-            {"https://www.openstreetmap.org/node/1",
-             "https://www.openstreetmap.org/way/2",
-             "https://www.openstreetmap.org/relation/3"}),
-              "<relation id=\"1\" version=\"1\" timestamp=\"2000-01-01T00:00:00Z\">"
-              "<member type=\"node\" ref=\"1\"/>"
+            { std::pair("https://www.openstreetmap.org/node/1", "member"),
+              std::pair("https://www.openstreetmap.org/way/2", "outer"),
+              std::pair("https://www.openstreetmap.org/relation/3", "inner") }),
+              "<relation id=\"1\">"
+              "<member type=\"node\" ref=\"1\" role=\"member\"/>"
               "<member type=\"way\" ref=\"2\" role=\"outer\"/>"
-              "<member type=\"relation\" ref=\"3\" role=\"outer\"/>"
+              "<member type=\"relation\" ref=\"3\" role=\"inner\"/>"
               "</relation>"
     );
 }

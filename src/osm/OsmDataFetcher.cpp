@@ -205,7 +205,7 @@ namespace olu::osm {
     }
 
     // _________________________________________________________________________________________________
-    std::vector<std::string>
+    std::vector<std::pair<std::string, std::string>>
     OsmDataFetcher::fetchRelationMembers(const long long &relationId) {
         auto query = olu::sparql::QueryWriter::writeQueryForRelationMembers(relationId);
         _sparqlWrapper.setQuery(query);
@@ -215,13 +215,25 @@ namespace olu::osm {
         boost::property_tree::ptree responseAsTree;
         olu::util::XmlReader::populatePTreeFromString(response, responseAsTree);
 
-        std::vector<std::string> memberSubjects;
+        std::vector<std::pair<std::string, std::string>> members;
         for (const auto &result : responseAsTree.get_child("sparql.results")) {
-            auto memberSubject = result.second.get<std::string>("binding.uri");
-            memberSubjects.emplace_back(memberSubject);
+            std::string uri;
+            std::string role;
+            for (const auto &binding : result.second.get_child("")) {
+                auto name = util::XmlReader::readAttribute("<xmlattr>.name",binding.second);
+                if (name == "id") {
+                    uri = binding.second.get<std::string>("uri");
+                }
+
+                if (name == "role") {
+                    role = binding.second.get<std::string>("literal");
+                }
+            }
+
+            members.emplace_back(uri, role);
         }
 
-        return memberSubjects;
+        return members;
     }
 
     std::set<long long int> OsmDataFetcher::fetchWayMembers(const long long &wayId) {

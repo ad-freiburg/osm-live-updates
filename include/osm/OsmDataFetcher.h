@@ -86,12 +86,11 @@ namespace olu::osm {
         std::vector<std::string> fetchNodeLocationsAsWkt(const std::set<long long int> &nodeIds);
 
         /**
-         * Sends a query to the sparql endpoint to get the subject of all members of the given
-         * relation
-         *
-         * @return The subjects of all members
+         * @return A vector containing a pair of the member's uri and role for all members of the
+         * given relation.
          */
-        std::vector<std::string> fetchRelationMembers(const long long &relationId);
+        std::vector<std::pair<std::string, std::string>>
+        fetchRelationMembers(const long long &relationId);
 
         /**
          * Sends a query to the sparql endpoint to get the the ids of all nodes that are referenced
@@ -155,7 +154,6 @@ namespace olu::osm {
          * @return The ids of all relations that reference the given relations.
          */
         std::vector<long long> fetchRelationsReferencingRelations(const std::set<long long int> &relationIds);
-
 
     private:
         olu::config::Config _config;

@@ -24,12 +24,12 @@ std::string olu::osm::OsmObjectHelper::createNodeFromPoint(const long long &node
         throw WktHelperException(message.c_str());
     }
 
-    return "<node id=\"" + std::to_string(nodeId) + "\" lat=\"" + lat + "\" lon=\"" + lon + "\" version=\"1\" timestamp=\"2000-01-01T00:00:00Z\"/>";
+    return "<node id=\"" + std::to_string(nodeId) + "\" lat=\"" + lat + "\" lon=\"" + lon + "\"/>";
 }
 
 std::string
 olu::osm::OsmObjectHelper::createWayFromReferences(long long wayId, const std::set<long long> &nodeRefs) {
-    std::string dummyWay = "<way id=\"" + std::to_string(wayId) + "\" version=\"1\" timestamp=\"2000-01-01T00:00:00Z\">";
+    std::string dummyWay = "<way id=\"" + std::to_string(wayId) + "\">";
     for (auto nodeId: nodeRefs) {
         dummyWay += "<nd ref=\"" + std::to_string(nodeId) + "\"/>";
     }
@@ -39,32 +39,35 @@ olu::osm::OsmObjectHelper::createWayFromReferences(long long wayId, const std::s
 
 std::string
 olu::osm::OsmObjectHelper::createRelationFromReferences(long long relationId,
-                                                        const std::vector<std::string> &members) {
+                                                        const std::vector<std::pair<std::string, std::string>> &members) {
     std::vector<std::string> nodeReferences;
     std::vector<std::string> wayReferences;
     std::vector<std::string> relationReferences;
 
     for (const auto& member: members) {
-        if (member.starts_with(cnst::OSM_NODE_URI)) {
-            std::string id = member.substr(cnst::OSM_NODE_URI.length());
-            std::string reference = R"(<member type="node" ref=")" + id + "\"/>";
+        auto uri = member.first;
+        auto role = member.second;
+
+        if (uri.starts_with(cnst::OSM_NODE_URI)) {
+            std::string id = uri.substr(cnst::OSM_NODE_URI.length());
+            std::string reference = R"(<member type="node" ref=")" + id + "\" role=\"" + role + "\"/>";
             nodeReferences.emplace_back(reference);
         }
 
-        if (member.starts_with(cnst::OSM_WAY_URI)) {
-            std::string id = member.substr(cnst::OSM_WAY_URI.length());
-            std::string reference = R"(<member type="way" ref=")" + id + "\" role=\"outer\"/>";
+        if (uri.starts_with(cnst::OSM_WAY_URI)) {
+            std::string id = uri.substr(cnst::OSM_WAY_URI.length());
+            std::string reference = R"(<member type="way" ref=")" + id + "\" role=\"" + role + "\"/>";
             wayReferences.emplace_back(reference);
         }
 
-        if (member.starts_with(cnst::OSM_REL_URI)) {
-            std::string id = member.substr(cnst::OSM_REL_URI.length());
-            std::string reference = R"(<member type="relation" ref=")" + id + "\" role=\"outer\"/>";
+        if (uri.starts_with(cnst::OSM_REL_URI)) {
+            std::string id = uri.substr(cnst::OSM_REL_URI.length());
+            std::string reference = R"(<member type="relation" ref=")" + id + "\" role=\"" + role + "\"/>";
             relationReferences.emplace_back(reference);
         }
     }
 
-    std::string dummyRelation = "<relation id=\"" + std::to_string(relationId) + "\" version=\"1\" timestamp=\"2000-01-01T00:00:00Z\">";
+    std::string dummyRelation = "<relation id=\"" + std::to_string(relationId) + "\">";
     for (const auto& nodeRef: nodeReferences) {
         dummyRelation += nodeRef;
     }

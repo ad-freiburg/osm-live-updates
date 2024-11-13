@@ -40,17 +40,22 @@ namespace olu::osm {
         /**
          * Returns a relation with an id and members.
          *
-         * @example For relationId: `1` and members: `{https://www.openstreetmap.org/node/1,
-         * https://www.openstreetmap.org/way/1,https://www.openstreetmap.org/relation/1}` the
-         * function would return: `<relation id="1"><member type="node" ref="1">
-         * <member type="way" ref="1"><member type="relation" ref="1"></relation>`
+         * @example For relationId: `1` and members: `{
+         * ("https://www.openstreetmap.org/node/1", "amin_centre"),
+         * ("https://www.openstreetmap.org/way/1", "outer"),
+         * ("https://www.openstreetmap.org/relation/1", "inner")}` the
+         * function would return: `<relation id="1">
+         * <member type="node" ref="1" role="amin_centre">
+         * <member type="way" ref="1"  role="outer">
+         * <member type="relation" ref="1"  role="inner">
+         * </relation>`
          *
          * @param relationId The relation id that should be used for the relation
-         * @param members The URI`s of the members of the relation
+         * @param members A pair containing the uri and role of each member of the relation
          */
         static std::string
         createRelationFromReferences(long long relationId,
-                                     const std::vector<std::string> &members);
+                                     const std::vector<std::pair<std::string, std::string>> &members);
     };
 
     /**

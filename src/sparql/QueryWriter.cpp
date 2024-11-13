@@ -80,8 +80,10 @@ std::string olu::sparql::QueryWriter::writeQueryForLatestNodeTimestamp() {
 // _________________________________________________________________________________________________
 std::string
 olu::sparql::QueryWriter::writeQueryForRelationMembers(const long long &relationId) {
-    std::string query = "SELECT ?p WHERE { "
-                        "osmrel:" + std::to_string(relationId) + " osmrel:member ?o . ?o osm2rdfmember:id ?p"
+    std::string query = "SELECT ?id ?role WHERE { "
+                        "osmrel:" + std::to_string(relationId) + " osmrel:member ?o . "
+                        "?o osm2rdfmember:id ?id . "
+                        "?o osm2rdfmember:role ?role . "
                         "}";
     return query;
 }

@@ -100,8 +100,8 @@ namespace olu::sparql {
         {
             std::string query = olu::sparql::QueryWriter::writeQueryForRelationMembers(1);
             ASSERT_EQ(
-                    "SELECT ?p WHERE { "
-                    "osmrel:1 osmrel:member ?o . ?o osm2rdfmember:id ?p"
+                    "SELECT ?id ?role WHERE { "
+                    "osmrel:1 osmrel:member ?o . ?o osm2rdfmember:id ?id . ?o osm2rdfmember:role ?role . "
                     "}",
                     query
             );
