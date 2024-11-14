@@ -59,7 +59,7 @@ namespace olu::config::constants {
     // Osm2rdf
     const static inline std::string PATH_TO_INPUT_FILE = "input.osm";
     const static inline std::string PATH_TO_OUTPUT_FILE = "output.ttl.bz2";
-    const static inline std::string PATH_TO_SCRATCH_DIRECTORY = "/scratch/";
+    const static inline std::string PATH_TO_SCRATCH_DIRECTORY = "osm2rdfScratch/";
 
     // OsmChangeHandler
     const static inline std::string XML_ATTRIBUTE_TAG = "<xmlattr>";
