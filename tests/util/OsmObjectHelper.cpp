@@ -68,19 +68,24 @@ TEST(OsmObjectHelper, createWayFromReferences) {
               "<nd ref=\"1\"/>"
               "<nd ref=\"2\"/>"
               "<nd ref=\"3\"/>"
+              "<tag k=\"type\" v=\"tmp\"/>"
               "</way>"
     );
 }
 TEST(OsmObjectHelper, createRelationFromReferences) {
+    std::vector<std::pair<std::string, std::string>> members = {
+            std::pair("https://www.openstreetmap.org/node/1", "member"),
+            std::pair("https://www.openstreetmap.org/way/2", "outer"),
+            std::pair("https://www.openstreetmap.org/relation/3", "inner")};
+
     ASSERT_EQ(olu::osm::OsmObjectHelper::createRelationFromReferences(
             1,
-            { std::pair("https://www.openstreetmap.org/node/1", "member"),
-              std::pair("https://www.openstreetmap.org/way/2", "outer"),
-              std::pair("https://www.openstreetmap.org/relation/3", "inner") }),
+            std::pair("multipolygon" , members)),
               "<relation id=\"1\">"
               "<member type=\"node\" ref=\"1\" role=\"member\"/>"
               "<member type=\"way\" ref=\"2\" role=\"outer\"/>"
               "<member type=\"relation\" ref=\"3\" role=\"inner\"/>"
+              "<tag k=\"type\" v=\"multipolygon\"/>"
               "</relation>"
     );
 }

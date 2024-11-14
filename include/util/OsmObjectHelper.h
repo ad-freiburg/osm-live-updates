@@ -35,7 +35,7 @@ namespace olu::osm {
          * @param nodeRefs The ids of the nodes that are referenced by the way
          */
         static std::string
-        createWayFromReferences(long long wayId, const std::set<long long> &nodeRefs);
+        createWayFromReferences(long long wayId, const std::vector<long long> &nodeRefs);
 
         /**
          * Returns a relation with an id and members.
@@ -55,7 +55,7 @@ namespace olu::osm {
          */
         static std::string
         createRelationFromReferences(long long relationId,
-                                     const std::vector<std::pair<std::string, std::string>> &members);
+                                     const std::pair<std::string, std::vector<std::pair<std::string, std::string>>> &members);
     };
 
     /**

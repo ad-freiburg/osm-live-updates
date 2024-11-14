@@ -28,23 +28,23 @@ std::string olu::osm::OsmObjectHelper::createNodeFromPoint(const long long &node
 }
 
 std::string
-olu::osm::OsmObjectHelper::createWayFromReferences(long long wayId, const std::set<long long> &nodeRefs) {
+olu::osm::OsmObjectHelper::createWayFromReferences(long long wayId, const std::vector<long long> &nodeRefs) {
     std::string dummyWay = "<way id=\"" + std::to_string(wayId) + "\">";
     for (auto nodeId: nodeRefs) {
         dummyWay += "<nd ref=\"" + std::to_string(nodeId) + "\"/>";
     }
-    dummyWay += "</way>";
+    dummyWay += "<tag k=\"type\" v=\"tmp\"/></way>";
     return dummyWay;
 }
 
 std::string
 olu::osm::OsmObjectHelper::createRelationFromReferences(long long relationId,
-                                                        const std::vector<std::pair<std::string, std::string>> &members) {
+                                                        const std::pair<std::string, std::vector<std::pair<std::string, std::string>>> &members) {
     std::vector<std::string> nodeReferences;
     std::vector<std::string> wayReferences;
     std::vector<std::string> relationReferences;
 
-    for (const auto& member: members) {
+    for (const auto& member: members.second) {
         auto uri = member.first;
         auto role = member.second;
 
@@ -79,8 +79,7 @@ olu::osm::OsmObjectHelper::createRelationFromReferences(long long relationId,
     for (const auto& relRef: relationReferences) {
         dummyRelation += relRef;
     }
-
-    dummyRelation += "</relation>";
+    dummyRelation += "<tag k=\"type\" v=\"" + members.first + "\"/></relation>";
 
     return dummyRelation;
 }

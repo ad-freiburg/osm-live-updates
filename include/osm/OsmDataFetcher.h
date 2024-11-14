@@ -89,7 +89,7 @@ namespace olu::osm {
          * @return A vector containing a pair of the member's uri and role for all members of the
          * given relation.
          */
-        std::vector<std::pair<std::string, std::string>>
+        std::pair<std::string, std::vector<std::pair<std::string, std::string>>>
         fetchRelationMembers(const long long &relationId);
 
         /**
@@ -98,7 +98,7 @@ namespace olu::osm {
          *
          * @return The subjects of all members
          */
-        std::set<long long int> fetchWayMembers(const long long &wayId);
+        std::vector<long long int> fetchWayMembers(const long long &wayId);
 
         /**
           * Sends a query to the sparql endpoint to get the the ids of all nodes that are referenced

@@ -205,7 +205,7 @@ namespace olu::osm {
     }
 
     // _________________________________________________________________________________________________
-    std::vector<std::pair<std::string, std::string>>
+    std::pair<std::string, std::vector<std::pair<std::string, std::string>>>
     OsmDataFetcher::fetchRelationMembers(const long long &relationId) {
         auto query = olu::sparql::QueryWriter::writeQueryForRelationMembers(relationId);
         _sparqlWrapper.setQuery(query);
@@ -215,6 +215,7 @@ namespace olu::osm {
         boost::property_tree::ptree responseAsTree;
         olu::util::XmlReader::populatePTreeFromString(response, responseAsTree);
 
+        std::string type;
         std::vector<std::pair<std::string, std::string>> members;
         for (const auto &result : responseAsTree.get_child("sparql.results")) {
             std::string uri;
@@ -228,15 +229,19 @@ namespace olu::osm {
                 if (name == "role") {
                     role = binding.second.get<std::string>("literal");
                 }
+
+                if (name == "key") {
+                    type = binding.second.get<std::string>("literal");
+                }
             }
 
             members.emplace_back(uri, role);
         }
 
-        return members;
+        return {type, members};
     }
 
-    std::set<long long int> OsmDataFetcher::fetchWayMembers(const long long &wayId) {
+    std::vector<long long int> OsmDataFetcher::fetchWayMembers(const long long &wayId) {
         auto query = olu::sparql::QueryWriter::writeQueryForWayMembers(wayId);
         _sparqlWrapper.setQuery(query);
         _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_WAY_MEMBERS);
@@ -245,7 +250,7 @@ namespace olu::osm {
         boost::property_tree::ptree responseAsTree;
         olu::util::XmlReader::populatePTreeFromString(response, responseAsTree);
 
-        std::set<long long> nodeIds;
+        std::vector<long long> nodeIds;
         for (const auto &result : responseAsTree.get_child("sparql.results")) {
             auto memberSubject = result.second.get<std::string>("binding.uri");
 
@@ -264,7 +269,7 @@ namespace olu::osm {
                 throw OsmDataFetcherException(msg.c_str());
             }
 
-            nodeIds.insert(nodeId);
+            nodeIds.emplace_back(nodeId);
         }
 
         return nodeIds;

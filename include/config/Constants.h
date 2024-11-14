@@ -115,7 +115,8 @@ namespace olu::config::constants {
             "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
             "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
             "PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>",
-            "PREFIX osm: <https://www.openstreetmap.org/>"
+            "PREFIX osm: <https://www.openstreetmap.org/>",
+            "PREFIX osmkey: <https://www.openstreetmap.org/wiki/Key:>"
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_WAY_MEMBERS{
