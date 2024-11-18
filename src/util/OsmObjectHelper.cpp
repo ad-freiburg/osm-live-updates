@@ -4,6 +4,7 @@
 
 #include "util/OsmObjectHelper.h"
 #include "config/Constants.h"
+#include "util/XmlReader.h"
 #include <boost/regex.hpp>
 #include <string>
 
@@ -82,4 +83,18 @@ olu::osm::OsmObjectHelper::createRelationFromReferences(long long relationId,
     dummyRelation += "<tag k=\"type\" v=\"" + members.first + "\"/></relation>";
 
     return dummyRelation;
+}
+
+bool olu::osm::OsmObjectHelper::isMultipolygon(const boost::property_tree::ptree &relation) {
+    for (const auto &result: relation.get_child("")) {
+        if (result.first == "tag") {
+            if (olu::util::XmlReader::readAttribute("<xmlattr>.k",
+                                                    result.second) == "type" &&
+                olu::util::XmlReader::readAttribute("<xmlattr>.v",
+                                                    result.second) == "multipolygon") {
+             return true;
+            }
+        }
+    }
+    return false;
 }

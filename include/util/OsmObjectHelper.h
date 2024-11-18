@@ -8,6 +8,7 @@
 #include <string>
 #include <set>
 #include <vector>
+#include <boost/property_tree/ptree.hpp>
 
 namespace olu::osm {
     class OsmObjectHelper {
@@ -56,6 +57,13 @@ namespace olu::osm {
         static std::string
         createRelationFromReferences(long long relationId,
                                      const std::pair<std::string, std::vector<std::pair<std::string, std::string>>> &members);
+
+        /**
+         *
+         * @param osmElement
+         * @return True if the given relation is of type "multipolygon"
+         */
+        static bool isMultipolygon(const boost::property_tree::ptree &relation);
     };
 
     /**
