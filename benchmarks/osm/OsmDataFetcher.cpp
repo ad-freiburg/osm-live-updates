@@ -32,16 +32,3 @@ static void Fetch_Latest_Timestamp_Of_Any_Node(benchmark::State& state) {
     }
 }
 BENCHMARK(Fetch_Latest_Timestamp_Of_Any_Node);
-
-// ---------------------------------------------------------------------------
-static void Fetch_Node_Location_As_Wkt(benchmark::State& state) {
-    auto config((olu::config::Config()));
-    config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
-
-    auto odf = olu::osm::OsmDataFetcher(config);
-
-    for (auto _ : state) {
-        odf.fetchNodeLocationAsWkt(2186958084);
-    }
-}
-BENCHMARK(Fetch_Node_Location_As_Wkt);

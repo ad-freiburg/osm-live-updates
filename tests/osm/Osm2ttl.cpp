@@ -19,74 +19,10 @@
 #include "osm/Osm2ttl.h"
 #include "config/Constants.h"
 #include "gtest/gtest.h"
+#include "util/Decompressor.h"
+
+namespace cnst = olu::config::constants;
 
 namespace olu::osm {
-    TEST(Osm2ttl, convertNode) {
-        std::string path = "/src/tests/data/";
 
-        std::ifstream ifs(path + "node.osm");
-        std::string nodeElement((std::istreambuf_iterator<char>(ifs)),
-                              (std::istreambuf_iterator<char>()));
-        std::vector<std::string> elements;
-        elements.push_back(nodeElement);
-
-        auto osm2rdf = olu::osm::Osm2ttl();
-        auto result = osm2rdf.convert(elements);
-        std::string resultAsString;
-        for (auto & element : result) {
-            resultAsString += element + "\n";
-        }
-
-        std::ifstream ifs2(path + "node.ttl");
-        std::string groundTruth((std::istreambuf_iterator<char>(ifs2)),
-                                (std::istreambuf_iterator<char>()));
-
-        ASSERT_EQ(groundTruth, resultAsString);
-    }
-
-    TEST(Osm2ttl, convertWay) {
-        std::string path = "/src/tests/data/";
-
-        std::ifstream ifs(path + "wayWithReferences.osm");
-        std::string nodeElement((std::istreambuf_iterator<char>(ifs)),
-                                (std::istreambuf_iterator<char>()));
-        std::vector<std::string> elements;
-        elements.push_back(nodeElement);
-
-        auto osm2rdf = olu::osm::Osm2ttl();
-        auto result = osm2rdf.convert(elements);
-        std::string resultAsString;
-        for (auto & element : result) {
-            resultAsString += element + "\n";
-        }
-
-        std::ifstream ifs2(path + "way.ttl");
-        std::string groundTruth((std::istreambuf_iterator<char>(ifs2)),
-                                (std::istreambuf_iterator<char>()));
-
-//        ASSERT_EQ(groundTruth, resultAsString);
-    }
-
-    TEST(Osm2ttl, convertRelation) {
-        std::string path = "/src/tests/data/";
-
-        std::ifstream ifs(path + "relation.osm");
-        std::string nodeElement((std::istreambuf_iterator<char>(ifs)),
-                                (std::istreambuf_iterator<char>()));
-        std::vector<std::string> elements;
-        elements.push_back(nodeElement);
-
-        auto osm2rdf = olu::osm::Osm2ttl();
-        auto result = osm2rdf.convert(elements);
-        std::string resultAsString;
-        for (auto & element : result) {
-            resultAsString += element + "\n";
-        }
-
-        std::ifstream ifs2(path + "relation.ttl");
-        std::string groundTruth((std::istreambuf_iterator<char>(ifs2)),
-                                (std::istreambuf_iterator<char>()));
-
-//        ASSERT_EQ(std::sort(groundTruth), std::sort(resultAsString));
-    }
 } // namespace olu::osm

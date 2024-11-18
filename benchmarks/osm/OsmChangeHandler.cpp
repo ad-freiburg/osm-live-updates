@@ -39,104 +39,133 @@ static void Count_Elements(benchmark::State& state) {
 }
 BENCHMARK(Count_Elements);
 
-// ---------------------------------------------------------------------------
-static void Create_And_Run_Insert_Query_Node(benchmark::State& state) {
-    auto config((olu::config::Config()));
-    config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
-
-    std::string path = "/src/tests/data/";
-    std::ifstream xmlFile (path + "node.osm");
-    std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
-                         (std::istreambuf_iterator<char>()) );
-
-    pt::ptree tree;
-    olu::util::XmlReader::populatePTreeFromString(content, tree);
-    auto nodeElement = tree.get_child("osm.node");
-
-    auto och = olu::osm::OsmChangeHandler(config);
-    auto osmElements = och.getOsmElementsForInsert("node", nodeElement);
-
-    auto osm2ttl = olu::osm::Osm2ttl();
-    auto ttl = osm2ttl.convert(osmElements);
-
-    for (auto _ : state) {
-        och.createAndRunInsertQuery(ttl, "node", nodeElement);
-    }
-}
-BENCHMARK(Create_And_Run_Insert_Query_Node);
-
-// ---------------------------------------------------------------------------
-static void Get_Triples_From_Converted_Data(benchmark::State& state) {
-    auto config((olu::config::Config()));
-    config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
-
-    std::string path = "/src/tests/data/";
-    std::ifstream xmlFile (path + "node.osm");
-    std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
-                         (std::istreambuf_iterator<char>()) );
-
-    pt::ptree tree;
-    olu::util::XmlReader::populatePTreeFromString(content, tree);
-    auto nodeElement = tree.get_child("osm.node");
-
-    auto och = olu::osm::OsmChangeHandler(config);
-    auto osmElements = och.getOsmElementsForInsert("node", nodeElement);
-
-    auto osm2ttl = olu::osm::Osm2ttl();
-    auto ttl = osm2ttl.convert(osmElements);
-
-    for (auto _ : state) {
-        olu::osm::OsmChangeHandler::getTriplesFromConvertedData(ttl, "node", nodeElement);
-    }
-}
-BENCHMARK(Get_Triples_From_Converted_Data);
+//// ---------------------------------------------------------------------------
+//static void Create_And_Run_Insert_Query_Node(benchmark::State& state) {
+//    auto config((olu::config::Config()));
+//    config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
+//
+//    std::string path = "/src/tests/data/";
+//    std::ifstream xmlFile (path + "node.osm");
+//    std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
+//                         (std::istreambuf_iterator<char>()) );
+//
+//    pt::ptree tree;
+//    olu::util::XmlReader::populatePTreeFromString(content, tree);
+//    auto nodeElement = tree.get_child("osm.node");
+//
+//    auto och = olu::osm::OsmChangeHandler(config, std::string());
+//    auto osmElements = och.getOsmElementsForInsert("node", nodeElement);
+//
+//    auto osm2ttl = olu::osm::Osm2ttl();
+//    auto output = osm2ttl.convert();
+//
+//    std::ifstream ifs(output);
+//    std::string data((std::istreambuf_iterator<char>(ifs)),
+//                     (std::istreambuf_iterator<char>()));
+//
+//    std::vector<std::string> triplets;
+//    for (std::string line; std::getline(ifs, line); )
+//    {
+//        triplets.push_back(line);
+//    }
+//
+//    for (auto _ : state) {
+//        och.createAndRunInsertQuery(triplets, "node");
+//    }
+//}
+//BENCHMARK(Create_And_Run_Insert_Query_Node);
 
 // ---------------------------------------------------------------------------
-static void Get_Prefixes_From_Converted_Data(benchmark::State& state) {
-    auto config((olu::config::Config()));
-    config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
-
-    std::string path = "/src/tests/data/";
-    std::ifstream xmlFile (path + "node.osm");
-    std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
-                         (std::istreambuf_iterator<char>()) );
-
-    pt::ptree tree;
-    olu::util::XmlReader::populatePTreeFromString(content, tree);
-    auto nodeElement = tree.get_child("osm.node");
-
-    auto och = olu::osm::OsmChangeHandler(config);
-    auto osmElements = och.getOsmElementsForInsert("node", nodeElement);
-
-    auto osm2ttl = olu::osm::Osm2ttl();
-    auto ttl = osm2ttl.convert(osmElements);
-
-    for (auto _ : state) {
-        olu::osm::OsmChangeHandler::getPrefixesFromConvertedData(ttl);
-    }
-}
-BENCHMARK(Get_Prefixes_From_Converted_Data);
+//static void Get_Triples_From_Converted_Data(benchmark::State& state) {
+//    auto config((olu::config::Config()));
+//    config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
+//
+//    std::string path = "/src/tests/data/";
+//    std::ifstream xmlFile (path + "node.osm");
+//    std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
+//                         (std::istreambuf_iterator<char>()) );
+//
+//    pt::ptree tree;
+//    olu::util::XmlReader::populatePTreeFromString(content, tree);
+//    auto nodeElement = tree.get_child("osm.node");
+//
+//    auto och = olu::osm::OsmChangeHandler(config, std::string());
+//    auto osmElements = och.getOsmElementsForInsert("node", nodeElement);
+//
+//    auto osm2ttl = olu::osm::Osm2ttl();
+//    auto output = osm2ttl.convert();
+//
+//    std::ifstream ifs(output);
+//    std::string data((std::istreambuf_iterator<char>(ifs)),
+//                     (std::istreambuf_iterator<char>()));
+//
+//    std::vector<std::string> triplets;
+//    for (std::string line; std::getline(ifs, line); )
+//    {
+//        triplets.push_back(line);
+//    }
+//    for (auto _ : state) {
+//        olu::osm::OsmChangeHandler::getTriplesFromConvertedData(triplets, "node");
+//    }
+//}
+//BENCHMARK(Get_Triples_From_Converted_Data);
 
 // ---------------------------------------------------------------------------
-static void Get_Osm_Elements_For_Insert_Node(benchmark::State& state) {
-    auto config((olu::config::Config()));
-    config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
+//static void Get_Prefixes_From_Converted_Data(benchmark::State& state) {
+//    auto config((olu::config::Config()));
+//    config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
+//
+//    std::string path = "/src/tests/data/";
+//    std::ifstream xmlFile (path + "node.osm");
+//    std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
+//                         (std::istreambuf_iterator<char>()) );
+//
+//    pt::ptree tree;
+//    olu::util::XmlReader::populatePTreeFromString(content, tree);
+//    auto nodeElement = tree.get_child("osm.node");
+//
+//    auto och = olu::osm::OsmChangeHandler(config, std::string());
+//    auto osmElements = och.getOsmElementsForInsert("node", nodeElement);
+//
+//    auto osm2ttl = olu::osm::Osm2ttl();
+//    auto output = osm2ttl.convert();
+//
+//    std::ifstream ifs(output);
+//    std::string data((std::istreambuf_iterator<char>(ifs)),
+//                     (std::istreambuf_iterator<char>()));
+//
+//    std::vector<std::string> triplets;
+//    for (std::string line; std::getline(ifs, line); )
+//    {
+//        triplets.push_back(line);
+//    }
+//
+//    for (auto _ : state) {
+//        olu::osm::OsmChangeHandler::getPrefixesFromConvertedData(triplets);
+//    }
+//}
+//BENCHMARK(Get_Prefixes_From_Converted_Data);
 
-    std::string path = "/src/tests/data/";
-    std::ifstream xmlFile (path + "node.osm");
-    std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
-                         (std::istreambuf_iterator<char>()) );
-
-    pt::ptree tree;
-    olu::util::XmlReader::populatePTreeFromString(content, tree);
-    auto nodeElement = tree.get_child("osm.node");
-
-    auto och = olu::osm::OsmChangeHandler(config);
-    for (auto _ : state) {
-        och.getOsmElementsForInsert("node", nodeElement);
-    }
-}
-BENCHMARK(Get_Osm_Elements_For_Insert_Node);
+// ---------------------------------------------------------------------------
+//static void Get_Osm_Elements_For_Insert_Node(benchmark::State& state) {
+//    auto config((olu::config::Config()));
+//    config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
+//
+//    std::string path = "/src/tests/data/";
+//    std::ifstream xmlFile (path + "node.osm");
+//    std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
+//                         (std::istreambuf_iterator<char>()) );
+//
+//    pt::ptree tree;
+//    olu::util::XmlReader::populatePTreeFromString(content, tree);
+//    auto nodeElement = tree.get_child("osm.node");
+//
+//    auto och = olu::osm::OsmChangeHandler(config, std::string());
+//    for (auto _ : state) {
+//        och.getOsmElementsForInsert("node", nodeElement);
+//    }
+//}
+//BENCHMARK(Get_Osm_Elements_For_Insert_Node);
 
 // ---------------------------------------------------------------------------
 static void Handle_Change_Delete_Node(benchmark::State& state) {
@@ -145,10 +174,10 @@ static void Handle_Change_Delete_Node(benchmark::State& state) {
     auto config((olu::config::Config()));
     config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
 
-    auto och = olu::osm::OsmChangeHandler(config);
+    auto och = olu::osm::OsmChangeHandler(config, std::string());
 
     for (auto _ : state) {
-        och.handleChange(path, false, false);
+        och.run();
     }
 }
 BENCHMARK(Handle_Change_Delete_Node);
@@ -160,10 +189,10 @@ static void Handle_Change_Insert_Node(benchmark::State& state) {
     auto config((olu::config::Config()));
     config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
 
-    auto och = olu::osm::OsmChangeHandler(config);
+    auto och = olu::osm::OsmChangeHandler(config, std::string());
 
     for (auto _ : state) {
-        och.handleChange(path, false, false);
+        och.run();
     }
 }
 BENCHMARK(Handle_Change_Insert_Node);
@@ -175,10 +204,10 @@ static void Handle_Change_Modify_Node(benchmark::State& state) {
     auto config((olu::config::Config()));
     config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
 
-    auto och = olu::osm::OsmChangeHandler(config);
+    auto och = olu::osm::OsmChangeHandler(config, std::string());
 
     for (auto _ : state) {
-        och.handleChange(path, false, false);
+        och.run();
     }
 }
 BENCHMARK(Handle_Change_Modify_Node);

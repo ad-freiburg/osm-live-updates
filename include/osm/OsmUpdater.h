@@ -29,7 +29,6 @@ namespace olu::osm {
     private:
         config::Config& _config;
         OsmDataFetcher _odf;
-        OsmChangeHandler _och;
         OsmDatabaseState _latestState;
 
         /**

@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 #include <boost/property_tree/ptree.hpp>
+#include <set>
 
 namespace olu::sparql {
 
@@ -41,30 +42,24 @@ namespace olu::sparql {
         static std::string writeDeleteQuery(const std::vector<std::string>& subjects);
 
         /**
-         * @returns A SPARQL query that deletes all triples for a given node element in the database
+         * @returns A SPARQL query that deletes all triples for the given node ids.
          */
-        static std::string writeNodeDeleteQuery(const long long &nodeId);
+        static std::string writeNodesDeleteQuery(const std::set<long long> &nodeIds);
 
         /**
-         * @returns A SPARQL query that deletes all triples for a given way element in the database
-         */
-        static std::string writeWayDeleteQuery(const long long &wayId);
-
-        /**
-         * @returns A SPARQL query that deletes all triples for a given relation element in the
-         * database
-         */
-        static std::string writeRelationDeleteQuery(const long long &relationId);
-
-        /**
-        * @returns A SPARQL query for the location of the node with the given ID in WKT format
+        * @returns A SPARQL query that deletes all triples for the given way ids.
         */
-        static std::string writeQueryForNodeLocation(const long long &nodeId);
+        static std::string writeWaysDeleteQuery(const std::set<long long int> &wayIds);
+
+        /**
+        * @returns A SPARQL query that deletes all triples for the given relation ids.
+        */
+        static std::string writeRelationsDeleteQuery(const std::set<long long int> &relationIds);
 
         /**
         * @returns A SPARQL query for the locations of the nodes with the given ID in WKT format
         */
-        static std::string writeQueryForNodeLocations(const std::vector<long long> &nodeIds);
+        static std::string writeQueryForNodeLocations(const std::set<long long int> &nodeIds);
 
         /**
          * @returns A SPARQL query for the latest timestamp of any node in the database
@@ -75,23 +70,47 @@ namespace olu::sparql {
         * @returns A SPARQL query for the subject of all members of the given relation
         */
         static std::string writeQueryForRelationMembers(const long long &relationId);
+
+        /**
+        * @returns A SPARQL query for the subject of all members of the given relation
+        */
+        static std::string writeQueryForWayMembers(const long long &wayId);
+
+        /**
+         * @returns A SPARQL query for all nodes that are referenced by the given way
+         */
+        static std::string writeQueryForWaysMembers(const std::set<long long> &wayIds);
+
+        /**
+         * @returns A SPARQL query for all ways that are referenced by the given relation
+         */
+        static std::string writeQueryForRelationMembersWay(const std::set<long long> &relIds);
+
+        /**
+         * @returns A SPARQL query for all nodes that are referenced by the given relation
+         */
+        static std::string writeQueryForRelationMembersNode(const std::set<long long> &relIds);
+
+        /**
+        * @returns A SPARQL query for all ways that reference the given nodes
+        */
+        static std::string writeQueryForWaysReferencingNodes(const std::set<long long> &nodeIds);
+
+        /**
+        * @returns A SPARQL query for relations that reference the given nodes
+        */
+        static std::string writeQueryForRelationsReferencingNodes(const std::set<long long> &nodeIds);
+
+        /**
+        * @returns A SPARQL query for relations that reference the given ways
+        */
+        static std::string writeQueryForRelationsReferencingWays(const std::set<long long> &wayIds);
+
+        /**
+        * @returns A SPARQL query for relations that reference the given relations
+        */
+        static std::string writeQueryForRelationsReferencingRelations(const std::set<long long> &relationIds);
     };
-
-    /**
-     * Exception that can appear inside the `QueryWriter` class.
-     */
-    class QueryWriterException : public std::exception {
-    private:
-        std::string message;
-
-    public:
-        explicit QueryWriterException(const char* msg) : message(msg) { }
-
-        [[nodiscard]] const char* what() const noexcept override {
-            return message.c_str();
-        }
-    };
-
 } // namespace olu::sparql
 
 #endif //OSM_LIVE_UPDATES_QUERYWRITER_H

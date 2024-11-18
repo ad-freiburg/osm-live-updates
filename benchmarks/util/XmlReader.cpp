@@ -35,7 +35,7 @@ static void Read_Attribute(benchmark::State& state) {
 
     for (auto _ : state) {
         std::string attribute = olu::util::XmlReader::readAttribute(
-                olu::config::constants::ATTRIBUTE_PATH_FOR_NODE_ID,
+                "osm.node.id",
                 tree);
     }
 }
