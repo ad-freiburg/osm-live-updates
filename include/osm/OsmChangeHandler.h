@@ -46,20 +46,6 @@ namespace olu::osm {
     public:
         explicit OsmChangeHandler(config::Config &config,const std::string& pathToOsmChangeFile);
 
-        /**
-         * Process the content of the changeFile. We loop two times over the changeFile.
-         * The first time we store the ids of all occuring elements in the corresponding array (
-         * _createdNodes, _modifiedNodes, _deletedNodes, etc.). The second time we
-         */
-        void processChangeFile();
-        void storeIdsOfElementsInChangeFile();
-        void processElementsInChangeFile();
-
-        void getIdsForGeometryUpdate();
-        void getReferencedRelations();
-        void getReferencedWays();
-        void getReferencedNodes();
-
         void run();
 
         /**
@@ -117,6 +103,8 @@ namespace olu::osm {
         std::set<long long> _createdRelations;
         // Relations that are in a modify-changeset in the change file.
         std::set<long long> _modifiedRelations;
+        // Relations that are of type multipolygon that are in a modify-changeset in the change file.
+        std::set<long long> _modifiedAreas;
         // Relations that reference a node, way or relation which was modified in the changeset.
         std::set<long long> _relationsToUpdateGeometry;
         // Relations that are referenced by a relation that are NOT present in the change file,
@@ -159,26 +147,105 @@ namespace olu::osm {
             return _modifiedRelations.contains(relationId) || _createdRelations.contains(relationId);
         }
 
-        static void createOrClearTmpFiles() ;
-        static void addToTmpFile(const boost::property_tree::ptree& element, const std::string& elementTag) ;
-        static void addToTmpFile(const std::string& element, const std::string& elementTag) ;
+        /**
+         * Loops over the change file and stores the ids of all occurring elements in the
+         * corresponding set (_createdNodes, _modifiedNodes, _deletedNodes, etc.).
+         */
+        void storeIdsOfElementsInChangeFile();
 
+        /**
+         * Stores the ids of the nodes that are referenced in the given way in the _referencedNodes
+         * set
+         */
         void storeIdsOfReferencedNodes(const boost::property_tree::ptree& wayElement);
+
+        /**
+         * Stores the ids of the nodes and ways that are referenced in the given relation in the
+         * _referencedNodes or _referencedWays set
+         */
         void storeIdsOfReferencedElements(const boost::property_tree::ptree& relElement);
 
         /**
-         * Creates an vector containing dummy nodes for the given node ids. The dummy nodes contain
-         * the node id and the location which is used for the nodes that are referenced in ways.
+         * Loops over the change file and stores the relevant ones in an temporary file, and the
+         * referenced elements in the corresponding set
+         */
+        void processElementsInChangeFile();
+
+        /**
+         * Fetches the ids of ways and relations of which the geometry needs to be updated and
+         * stores them in the corresponding set
+         */
+        void getIdsForGeometryUpdate();
+
+        /**
+         * Fetches the ids of relations that are referenced in relations which geometry will be
+         * changed in this update process and stores them in the corresponding set
          *
-         * @param nodeIds The node ids to create dummy nodes for
-         * @return A vector containing a dummy node for each given node id
+         * @Warning This is currently skipped because osm2rdf does not calculate the geometries for
+         * relations that reference other relations
+         */
+        void getReferencedRelations();
+
+        /**
+         * Fetches the ids of all ways that are referenced in relations which geometry will be
+         * changed in this update process and stores them in the corresponding set
+         */
+        void getReferencedWays();
+
+        /**
+         * Fetches the ids of all nodes that are referenced in either ways or relations which
+         * geometries will be needed and stores them in the corresponding set
+         */
+        void getReferencedNodes();
+
+        static void createOrClearTmpFiles() ;
+
+        /**
+         * Writes the given osm element to its corresponding temporary file
+         */
+        static void addToTmpFile(const boost::property_tree::ptree& element, const std::string& elementTag) ;
+        static void addToTmpFile(const std::string& element, const std::string& elementTag) ;
+
+        /**
+        * Sorts the temporary files for nodes, ways and relations after their id
+        */
+        static void sortFile(const std::string& elementTag);
+
+        /**
+         * Creates dummy nodes for the referenced nodes that are not in the change file. The dummy
+         * nodes contain the node id and the location which is used for the nodes that are
+         * referenced in ways and writes them to an temporary file
          */
         void createDummyNodes();
+
+        /**
+         * Creates dummy ways for the referenced ways that are not in the change file and writes
+         * them to an temporary file The dummy ways only contain the referenced nodes
+         */
         void createDummyWays();
+
+        /**
+         * Creates dummy relations for the referenced relations that are not in the change file and
+         * writes them to an temporary file The dummy relation only contain the members of that
+         * relation
+         */
         void createDummyRelations();
-        static void sortFile(const std::string& elementTag);
+
+        /**
+         * Send SPARQL queries to delete all elements in the "delete" sets
+         */
         void deleteElementsFromDatabase();
+
+        /**
+         * Send SPARQL queries to insert all relevant triples
+         */
         void insertElementsToDatabase();
+
+        /**
+         * Filters the triples that where generated by osm2rdf. Relevant triples are triples for osm
+         * elements that occurred in the change file or osm elements which geometry needs to be
+         * updated. Irrelevant triples are triples that where generated for referenced elements.
+         */
         void filterRelevantTriples();
     };
 

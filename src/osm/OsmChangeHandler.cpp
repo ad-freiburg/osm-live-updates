@@ -79,48 +79,49 @@ namespace olu::osm {
     }
 
     void OsmChangeHandler::run() {
-        processChangeFile();
+        // Store the ids of all elements that where deleted, modified or created and the ids of
+        // objects where the geometry needs to be updated
+        storeIdsOfElementsInChangeFile();
+        processElementsInChangeFile();
         getIdsForGeometryUpdate();
 
-        getReferencedRelations();
+        // Get the ids of all referenced objects
+//        getReferencedRelations(); Skipped atm because osm2rdf does not calculate the geometry for
+//                                  relations that reference other relations
         getReferencedWays();
         getReferencedNodes();
 
-        // Create dummy objects of the referenced osm objects. This is needed for the conversion of
-        // the osm elements to rdf format, for the calculation of geometries.
+        // Create dummy objects of the referenced osm objects
         createDummyNodes();
         createDummyWays();
         createDummyRelations();
 
+        // sort files with osm objects after their id
         sortFile(cnst::NODE_TAG);
         sortFile(cnst::WAY_TAG);
         sortFile(cnst::RELATION_TAG);
 
+        // Convert osm objects to triples
         try {
             _osm2ttl.convert();
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
-            throw OsmChangeHandlerException("Exception while trying to convert osm element to ttl");
+            std::string msg = "Exception while trying to convert osm element to ttl";
+            throw OsmChangeHandlerException(msg.c_str());
         }
 
+        // Delete and insert elements from database
         deleteElementsFromDatabase();
         insertElementsToDatabase();
 
-//        std::cout << "Nodes to insert: " << _createdNodes.size() << std::endl;
-//        std::cout << "Nodes to delete: " << _deletedNodes.size() << std::endl;
-//        std::cout << "Nodes to modify: " << _modifiedNodes.size() << std::endl;
-//
-//        std::cout << "Ways to insert: " << _createdWays.size() << std::endl;
-//        std::cout << "Ways to delete: " << _deletedWays.size() << std::endl;
-//        std::cout << "Ways to modify: " << _modifiedWays.size() << std::endl;
-//        std::cout << "Ways to update geo: " << _waysToUpdateGeometry.size() << std::endl;
-//
-//        std::cout << "Relations to insert: " << _createdRelations.size() << std::endl;
-//        std::cout << "Relations to delete: " << _deletedRelations.size() << std::endl;
-//        std::cout << "Relations to modify: " << _modifiedRelations.size() << std::endl;
-//        std::cout << "Relations to update geo: " << _relationsToUpdateGeometry.size() << std::endl;
-
-        std::cout << "Done" << std::endl;
+        std::cout << "nodes created: " << _createdNodes.size() << " modified: "
+                    << _modifiedNodes.size() << " deleted: " << _deletedNodes.size() << std::endl;
+        std::cout << "ways created: " << _createdWays.size() << " modified: "
+                    << _modifiedWays.size() << " deleted: " << _deletedWays.size() << std::endl;
+        std::cout << "relations created: " << _createdRelations.size() << " modified: "
+                    << _modifiedRelations.size() << " deleted: " << _deletedRelations.size() << std::endl;
+        std::cout << "updated geometries for " << _waysToUpdateGeometry.size() << " ways " << std::endl;
+//                    << _relationsToUpdateGeometry.size() << " relations"
     }
 
     void OsmChangeHandler::createOrClearTmpFiles() {
@@ -169,11 +170,6 @@ namespace olu::osm {
         outputFile.close();
     }
 
-    void OsmChangeHandler::processChangeFile() {
-        storeIdsOfElementsInChangeFile();
-        processElementsInChangeFile();
-    }
-
     void OsmChangeHandler::storeIdsOfElementsInChangeFile() {
         for (const auto &changeset : _osmChangeElement) {
             if (changeset.first == config::constants::MODIFY_TAG) {
@@ -185,6 +181,10 @@ namespace olu::osm {
                         _modifiedWays.insert(id);
                     } else if (osmElement.first == config::constants::RELATION_TAG) {
                         _modifiedRelations.insert(id);
+
+                        if (osm::OsmObjectHelper::isMultipolygon(osmElement.second)) {
+                         _modifiedAreas.insert(id);
+                        }
                     }
                 }
             } else if (changeset.first == config::constants::CREATE_TAG) {
@@ -262,7 +262,7 @@ namespace olu::osm {
 
         if (!_modifiedNodes.empty()) {
             doInBatches(
-                _modifiedNodes,
+                    _modifiedNodes,
                 MAX_TRIPLE_COUNT_PER_QUERY,
                 [this](const std::set<long long>& batch) {
                     auto relationIds = _odf.fetchRelationsReferencingNodes(batch);
@@ -291,19 +291,21 @@ namespace olu::osm {
             });
         }
 
-        if (!_modifiedRelations.empty()) {
-            doInBatches(
-                _modifiedRelations,
-            MAX_TRIPLE_COUNT_PER_QUERY,
-            [this](const std::set<long long>& batch) {
-                auto relationIds = _odf.fetchRelationsReferencingRelations(batch);
-                for (const auto &relId: relationIds) {
-                    if (!_modifiedRelations.contains(relId)) {
-                        _relationsToUpdateGeometry.insert(relId);
-                    }
-                }
-            });
-        }
+        // Fetch relations that reference relations which geometrie has changed. Skip this because
+        // osm2rdf does not calculate geometries for relations that reference other relations
+//        if (!_modifiedAreas.empty()) {
+//            doInBatches(
+//                    _modifiedAreas,
+//            MAX_TRIPLE_COUNT_PER_QUERY,
+//            [this](const std::set<long long>& batch) {
+//                auto relationIds = _odf.fetchRelationsReferencingRelations(batch);
+//                for (const auto &relId: relationIds) {
+//                    if (!_modifiedAreas.contains(relId)) {
+//                        _relationsToUpdateGeometry.insert(relId);
+//                    }
+//                }
+//            });
+//        }
     }
 
     void OsmChangeHandler::getReferencedRelations() {
@@ -316,7 +318,7 @@ namespace olu::osm {
                     for (const auto &relId: relationIds) {
                         if (!_relationsToUpdateGeometry.contains(relId) &&
                             !_createdRelations.contains(relId) &&
-                            !_modifiedRelations.contains(relId)) {
+                            !_modifiedAreas.contains(relId)) {
                             _referencedRelations.insert(relId);
                         }
                     }
@@ -514,7 +516,40 @@ namespace olu::osm {
 
     void OsmChangeHandler::insertElementsToDatabase() {
         filterRelevantTriples();
-        createAndRunInsertQuery();
+
+        std::ifstream file(cnst::PATH_TO_TRIPLES_FILE);
+        std::vector<std::string> triples;
+        std::string line;
+        // Read each line from the file and add it to the vector
+        while (std::getline(file, line)) {
+            triples.push_back(line);
+        }
+
+        // Close the file
+        file.close();
+
+        // QLever has a maximum number of triples it can handle in one query, so we have to
+        // divide the triples in batches
+        std::vector<std::vector<std::string>> triplesBatches;
+        for (auto it = triples.cbegin(), e = triples.cend(); it != triples.cend(); it = e) {
+            e = it + std::min<std::size_t>(triples.cend() - it, MAX_TRIPLE_COUNT_PER_QUERY);
+            triplesBatches.emplace_back(it, e);
+        }
+
+        // Create a sparql query for each batch and send it to the sparql endpoint.
+        for (auto & batch : triplesBatches) {
+            auto query = sparql::QueryWriter::writeInsertQuery(batch);
+            _sparql.setPrefixes(cnst::DEFAULT_PREFIXES);
+            _sparql.setQuery(query);
+
+            try {
+//                _sparql.runQuery();
+            } catch (std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                throw OsmChangeHandlerException(
+                        "Exception while trying to run sparql query for insertion");
+            }
+        }
     }
 
     std::tuple<std::string, std::string, std::string>
@@ -568,9 +603,6 @@ namespace olu::osm {
     }
 
     void OsmChangeHandler::filterRelevantTriples() {
-        std::string dataDecompressed = olu::util::Decompressor::readBzip2(cnst::PATH_TO_OUTPUT_FILE);
-        std::istringstream iss(dataDecompressed);
-
         std::set<long long> nodesToInsert;
         nodesToInsert.insert(_createdNodes.begin(), _createdNodes.end());
         nodesToInsert.insert(_modifiedNodes.begin(), _modifiedNodes.end());
@@ -585,12 +617,16 @@ namespace olu::osm {
         relationsToInsert.insert(_modifiedRelations.begin(), _modifiedRelations.end());
         relationsToInsert.insert(_relationsToUpdateGeometry.begin(), _relationsToUpdateGeometry.end());
 
-        std::ofstream triplesFile;
-        triplesFile.open (cnst::PATH_TO_TRIPLES_FILE, std::ios::app);
+        std::ifstream triples;
+        triples.open(olu::config::constants::PATH_TO_OUTPUT_FILE);
 
-        std::set<std::string> relevantMemberIds;
+        std::ofstream relevantTriples;
+        relevantTriples.open (cnst::PATH_TO_TRIPLES_FILE, std::ios::app);
+
+        // Relevant subjects that arise during conversion such as member ids and osm_area_centroid
+        std::set<std::string> relevantSubjects;
         std::string line;
-        while (std::getline(iss, line)) {
+        while (std::getline(triples, line)) {
             if (line.starts_with("@")) {
                 continue;
             }
@@ -599,45 +635,48 @@ namespace olu::osm {
             if (subject.starts_with("osmnode:") || subject.starts_with("osm2rdfgeom:osm_node_")) {
                 auto nodeId = getIdFromTriple(line, cnst::NODE_TAG);
                 if (nodesToInsert.contains(nodeId)) {
-                    triplesFile << line << std::endl;
+                    relevantTriples << line << std::endl;
                 }
 
                 continue;
             }
 
-            if (subject.starts_with("osmway:") || subject.starts_with("osm2rdfgeom:osm_wayarea_")) {
+            if (subject.starts_with("osmway:")
+            || subject.starts_with("osm2rdfgeom:osm_wayarea_")) {
                 auto wayId = getIdFromTriple(line, cnst::WAY_TAG);
                 if (waysToInsert.contains(wayId)) {
-                    triplesFile << line << std::endl;
+                    relevantTriples << line << std::endl;
 
-                    if (predicate == "osmway:node") {
-                        relevantMemberIds.insert(object);
+                    if (predicate == "osmway:node" || subject.starts_with("osm2rdfgeom:osm_area_centroid_")) {
+                        relevantSubjects.insert(object);
                     }
                 }
 
                 continue;
             }
 
-            if (subject.starts_with("osmrel:") || subject.starts_with("osm2rdfgeom:osm_relarea_")) {
+            if (subject.starts_with("osmrel:")
+                || subject.starts_with("osm2rdfgeom:osm_relarea_")) {
                 auto relId = getIdFromTriple(line, cnst::RELATION_TAG);
                 if (relationsToInsert.contains(relId)) {
-                    triplesFile << line << std::endl;
+                    relevantTriples << line << std::endl;
 
-                    if (predicate == "osmrel:member") {
-                        relevantMemberIds.insert(object);
+                    if (predicate == "osmrel:member" || subject.starts_with("osm2rdfgeom:osm_area_centroid_")) {
+                        relevantSubjects.insert(object);
                     }
                 }
 
                 continue;
             }
 
-            if (relevantMemberIds.contains(subject)) {
-                triplesFile << line << std::endl;
+            if (relevantSubjects.contains(subject)) {
+                relevantTriples << line << std::endl;
                 continue;
             }
         }
 
-        triplesFile.close();
+        triples.close();
+        relevantTriples.close();
     }
 
     size_t OsmChangeHandler::countElements(const boost::property_tree::ptree &osmChangeElement) {
@@ -729,41 +768,5 @@ namespace olu::osm {
             }
         }
 
-    }
-
-    void OsmChangeHandler::createAndRunInsertQuery() {
-        std::ifstream file(cnst::PATH_TO_TRIPLES_FILE);
-        std::vector<std::string> triples;
-        std::string line;
-        // Read each line from the file and add it to the vector
-        while (std::getline(file, line)) {
-            triples.push_back(line);
-        }
-
-        // Close the file
-        file.close();
-
-        // QLever has a maximum number of triples it can handle in one query, so we have to
-        // divide the triples in batches
-        std::vector<std::vector<std::string>> triplesBatches;
-        for (auto it = triples.cbegin(), e = triples.cend(); it != triples.cend(); it = e) {
-            e = it + std::min<std::size_t>(triples.cend() - it, MAX_TRIPLE_COUNT_PER_QUERY);
-            triplesBatches.emplace_back(it, e);
-        }
-
-        // Create a sparql query for each batch and send it to the sparql endpoint.
-        for (auto & batch : triplesBatches) {
-            auto query = sparql::QueryWriter::writeInsertQuery(batch);
-            _sparql.setPrefixes(cnst::DEFAULT_PREFIXES);
-            _sparql.setQuery(query);
-
-            try {
-//                _sparql.runQuery();
-            } catch (std::exception &e) {
-                std::cerr << e.what() << std::endl;
-                throw OsmChangeHandlerException(
-                        "Exception while trying to run sparql query for insertion");
-            }
-        }
     }
 } // namespace olu::osm
