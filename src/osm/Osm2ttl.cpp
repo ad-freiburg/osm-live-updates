@@ -51,7 +51,6 @@ namespace olu::osm {
                        cnst::PATH_TO_OUTPUT_FILE,
                        "-t",
                        cnst::PATH_TO_SCRATCH_DIRECTORY,
-                       "--" + osm2rdf::config::constants::ADD_WAY_NODE_GEOMETRY_OPTION_LONG,
                        "--" + osm2rdf::config::constants::ADD_WAY_NODE_ORDER_OPTION_LONG,
                        "--" + osm2rdf::config::constants::OUTPUT_COMPRESS_OPTION_LONG,
                        "none"
@@ -91,10 +90,6 @@ namespace olu::osm {
 
     // _____________________________________________________________________________________________
     void Osm2ttl::writeToInputFile() {
-        std::ifstream nodes(cnst::PATH_TO_NODE_FILE);
-        std::ifstream ways(cnst::PATH_TO_WAY_FILE);
-        std::ifstream relations(cnst::PATH_TO_RELATION_FILE);
-
         std::ofstream input;
         input.open(olu::config::constants::PATH_TO_INPUT_FILE);
         if (!input) {
@@ -102,16 +97,35 @@ namespace olu::osm {
             exit(1);
         }
 
-        input << "<osm version=\"0.6\">"
-            << nodes.rdbuf()
-            << ways.rdbuf()
-            << relations.rdbuf()
-            << "</osm>";
+        input << "<osm version=\"0.6\">" << std::endl;
 
-        input.close();
+        std::ifstream nodes(cnst::PATH_TO_NODE_FILE);
+        std::string line;
+        if (input && nodes) {
+            while (getline(nodes, line)) {
+                input << line << "\n";
+            }
+        }
         nodes.close();
+
+        std::ifstream ways(cnst::PATH_TO_WAY_FILE);
+        if (input && ways) {
+            while (getline(ways, line)) {
+                input << line << "\n";
+            }
+        }
         ways.close();
+
+        std::ifstream relations(cnst::PATH_TO_RELATION_FILE);
+        if (input && relations) {
+            while (getline(relations, line)) {
+                input << line << "\n";
+            }
+        }
         relations.close();
+
+        input << "</osm>" << std::endl;;
+        input.close();
     }
 
     template <typename T>
