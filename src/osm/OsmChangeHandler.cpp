@@ -81,10 +81,13 @@ namespace olu::osm {
     void OsmChangeHandler::run() {
         // Store the ids of all elements that where deleted, modified or created and the ids of
         // objects where the geometry needs to be updated
+
+        std::cout << "Process change file..." << std::endl;
         storeIdsOfElementsInChangeFile();
         processElementsInChangeFile();
         getIdsForGeometryUpdate();
 
+        std::cout << "Fetch references..." << std::endl;
         // Get the ids of all referenced objects
 //        getReferencedRelations(); Skipped atm because osm2rdf does not calculate the geometry for
 //                                  relations that reference other relations
@@ -101,6 +104,7 @@ namespace olu::osm {
         sortFile(cnst::WAY_TAG);
         sortFile(cnst::RELATION_TAG);
 
+        std::cout << "Convert data..." << std::endl;
         // Convert osm objects to triples
         try {
             _osm2ttl.convert();
@@ -110,6 +114,7 @@ namespace olu::osm {
             throw OsmChangeHandlerException(msg.c_str());
         }
 
+        std::cout << "Update database..." << std::endl;
         // Delete and insert elements from database
         deleteElementsFromDatabase();
         insertElementsToDatabase();
@@ -484,7 +489,7 @@ namespace olu::osm {
                 auto query = sparql::QueryWriter::writeNodesDeleteQuery(batch);
                 _sparql.setQuery(query);
                 _sparql.setPrefixes(config::constants::PREFIXES_FOR_NODE_DELETE_QUERY);
-//                _sparql.runQuery();
+                _sparql.runQuery();
             });
 
         std::set<long long> waysToDelete;
@@ -497,7 +502,7 @@ namespace olu::osm {
                 auto query = sparql::QueryWriter::writeWaysDeleteQuery(batch);
                 _sparql.setQuery(query);
                 _sparql.setPrefixes(config::constants::PREFIXES_FOR_WAY_DELETE_QUERY);
-//                _sparql.runQuery();
+                _sparql.runQuery();
             });
 
         std::set<long long> relationsToDelete;
@@ -510,7 +515,7 @@ namespace olu::osm {
                 auto query = sparql::QueryWriter::writeRelationsDeleteQuery(batch);
                 _sparql.setQuery(query);
                 _sparql.setPrefixes(config::constants::PREFIXES_FOR_RELATION_DELETE_QUERY);
-//                _sparql.runQuery();
+                _sparql.runQuery();
             });
     }
 
@@ -543,7 +548,7 @@ namespace olu::osm {
             _sparql.setQuery(query);
 
             try {
-//                _sparql.runQuery();
+                _sparql.runQuery();
             } catch (std::exception &e) {
                 std::cerr << e.what() << std::endl;
                 throw OsmChangeHandlerException(
@@ -566,7 +571,7 @@ namespace olu::osm {
 
     long long getIdFromTriple(const std::string& triple, const std::string& elementTag) {
         if (elementTag == cnst::NODE_TAG) {
-            std::regex integerRegex(R"((?:osmnode:|osm_node_)(\d+))");
+            std::regex integerRegex(R"((?:osmnode:|osm_node_|osm_node_centroid_)(\d+))");
             std::smatch match;
             if (std::regex_search(triple, match, integerRegex)) {
                 return stoll(match[1]);
