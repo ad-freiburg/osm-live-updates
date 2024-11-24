@@ -11,7 +11,7 @@ namespace olu::osm {
     {
         Node node(1, "POINT(13.5690032 42.7957187)");
 
-        ASSERT_EQ(node.get_xml(),
+        ASSERT_EQ(node.getXml(),
         "<node id=\"1\" lat=\"42.7957187\" lon=\"13.5690032\"/>");
     }
     {

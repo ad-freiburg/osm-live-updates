@@ -53,10 +53,10 @@ namespace olu::osm {
         this->loc = osmium::Location( i_lon, i_lat );
     }
 
-    std::string Node::get_xml() {
+    std::string Node::getXml() const {
         std::ostringstream oss;
         oss.precision(7);
-        oss << std::fixed << "<node id=\"" << this->get_id() << "\" lat=\"" << this->loc.lat()
+        oss << std::fixed << "<node id=\"" << this->getId() << "\" lat=\"" << this->loc.lat()
             << "\" lon=\"" << this->loc.lon() << "\"/>";
 
         return oss.str();

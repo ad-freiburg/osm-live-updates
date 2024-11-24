@@ -30,7 +30,7 @@
 #include <regex>
 
 /// The maximum number of triples that can be in a query to the QLever endpoint.
-const static inline int MAX_TRIPLE_COUNT_PER_QUERY = 1024;
+const static inline int MAX_VALUES_PER_QUERY = 1024;
 const static inline int DELETE_TRIPLES_PER_WAY = 3;
 const static inline int DELETE_TRIPLES_PER_NODE = 2;
 const static inline int DELETE_TRIPLES_PER_RELATION = 2;
@@ -114,6 +114,8 @@ namespace olu::osm {
             throw OsmChangeHandlerException(msg.c_str());
         }
 
+
+        return;
         std::cout << "Update database..." << std::endl;
         // Delete and insert elements from database
         deleteElementsFromDatabase();
@@ -257,7 +259,7 @@ namespace olu::osm {
         if (!_modifiedNodes.empty()) {
             doInBatches(
                 _modifiedNodes,
-            MAX_TRIPLE_COUNT_PER_QUERY,
+            MAX_VALUES_PER_QUERY,
             [this](const std::set<long long>& batch) {
                 auto wayIds = _odf.fetchWaysReferencingNodes(batch);
                 for (const auto &wayId: wayIds) {
@@ -271,7 +273,7 @@ namespace olu::osm {
         if (!_modifiedNodes.empty()) {
             doInBatches(
                     _modifiedNodes,
-                MAX_TRIPLE_COUNT_PER_QUERY,
+                MAX_VALUES_PER_QUERY,
                 [this](const std::set<long long>& batch) {
                     auto relationIds = _odf.fetchRelationsReferencingNodes(batch);
                     for (const auto &relId: relationIds) {
@@ -288,7 +290,7 @@ namespace olu::osm {
         if (!updatedWays.empty()) {
             doInBatches(
             _modifiedWays,
-            MAX_TRIPLE_COUNT_PER_QUERY,
+            MAX_VALUES_PER_QUERY,
             [this](const std::set<long long>& batch) {
                 auto relationIds = _odf.fetchRelationsReferencingWays(batch);
                 for (const auto &relId: relationIds) {
@@ -320,7 +322,7 @@ namespace olu::osm {
         if (!_relationsToUpdateGeometry.empty()) {
             doInBatches(
                     _relationsToUpdateGeometry,
-                MAX_TRIPLE_COUNT_PER_QUERY,
+                MAX_VALUES_PER_QUERY,
                 [this](const std::set<long long>& batch) {
                     auto relationIds = _odf.fetchRelationsReferencingRelations(batch);
                     for (const auto &relId: relationIds) {
@@ -341,7 +343,7 @@ namespace olu::osm {
         if (!relations.empty()) {
             doInBatches(
                     relations,
-                    MAX_TRIPLE_COUNT_PER_QUERY,
+                    MAX_VALUES_PER_QUERY,
                     [this](const std::set<long long>& batch) {
                     auto [nodeIds, wayIds] = _odf.fetchRelationMembers(batch);
                     for (const auto &wayId: wayIds) {
@@ -367,10 +369,9 @@ namespace olu::osm {
         if (!waysToFetchNodesFor.empty()) {
             doInBatches(
             waysToFetchNodesFor,
-            MAX_TRIPLE_COUNT_PER_QUERY,
+            MAX_VALUES_PER_QUERY,
             [this](const std::set<long long>& batch) {
-                auto nodeIds = _odf.fetchWaysMembers(batch);
-                for (const auto &nodeId: nodeIds) {
+                for (const auto &nodeId: _odf.fetchWaysMembers(batch)) {
                     if (!nodeInChangeFile(nodeId)) {
                         _referencedNodes.insert(nodeId);
                     }
@@ -380,35 +381,36 @@ namespace olu::osm {
     }
 
     void OsmChangeHandler::createDummyNodes() {
-        std::vector<osm::Node> nodes;
-        std::vector<long long> nodeIds(_referencedNodes.begin(), _referencedNodes.end());
         doInBatches(
             _referencedNodes,
-            MAX_TRIPLE_COUNT_PER_QUERY,
-            [this, &nodes](const std::set<long long>& batch) {
-                auto pointsBatchResult = _odf.fetchNodeLocationsAsWkt(batch);
-                nodes.insert( nodes.end(), pointsBatchResult.begin(), pointsBatchResult.end() );
+            MAX_VALUES_PER_QUERY,
+            [this](std::set<long long> const& batch) {
+                for (auto const& node: _odf.fetchNodes(batch)) {
+                    addToTmpFile(node.getXml(), cnst::NODE_TAG);
+                }
             });
-
-        for (auto & node: nodes) {
-            addToTmpFile(node.get_xml(), cnst::NODE_TAG);
-        }
     }
 
     void OsmChangeHandler::createDummyWays() {
-        for (const auto wayId: _referencedWays) {
-            auto wayMembers = _odf.fetchWayMembers(wayId);
-            auto dummyWay = olu::osm::OsmObjectHelper::createWayFromReferences(wayId, wayMembers);
-            addToTmpFile(dummyWay, cnst::WAY_TAG);
-        }
+        doInBatches(
+            _referencedWays,
+            MAX_VALUES_PER_QUERY,
+            [this](std::set<long long> const& batch) {
+                for (auto const& way: _odf.fetchWays(batch)) {
+                    addToTmpFile(way.getXml(), cnst::WAY_TAG);
+                }
+            });
     }
 
     void OsmChangeHandler::createDummyRelations() {
-        for (const auto relId: _referencedRelations) {
-            auto members = _odf.fetchRelationMembers(relId);
-            auto dummyRelation = olu::osm::OsmObjectHelper::createRelationFromReferences(relId, members);
-            addToTmpFile(dummyRelation, cnst::RELATION_TAG);
-        }
+        doInBatches(
+            _referencedRelations,
+            MAX_VALUES_PER_QUERY,
+            [this](std::set<long long> const& batch) {
+                for (auto const& rel: _odf.fetchRelations(batch)) {
+                    addToTmpFile(rel.getXml(), cnst::RELATION_TAG);
+                }
+            });
     }
 
     void OsmChangeHandler::sortFile(const std::string& elementTag) {
@@ -468,7 +470,7 @@ namespace olu::osm {
         nodesToDelete.insert(_deletedNodes.begin(), _deletedNodes.end());
         nodesToDelete.insert(_modifiedNodes.begin(), _modifiedNodes.end());
         doInBatches(nodesToDelete,
-            MAX_TRIPLE_COUNT_PER_QUERY/DELETE_TRIPLES_PER_NODE,
+            MAX_VALUES_PER_QUERY/DELETE_TRIPLES_PER_NODE,
             [this](const std::set<long long>& batch) {
                 auto query = sparql::QueryWriter::writeNodesDeleteQuery(batch);
                 _sparql.setQuery(query);
@@ -481,7 +483,7 @@ namespace olu::osm {
         waysToDelete.insert(_modifiedWays.begin(), _modifiedWays.end());
         doInBatches(
                 waysToDelete,
-            MAX_TRIPLE_COUNT_PER_QUERY/DELETE_TRIPLES_PER_WAY,
+            MAX_VALUES_PER_QUERY/DELETE_TRIPLES_PER_WAY,
             [this](const std::set<long long>& batch) {
                 auto query = sparql::QueryWriter::writeWaysDeleteQuery(batch);
                 _sparql.setQuery(query);
@@ -494,7 +496,7 @@ namespace olu::osm {
         relationsToDelete.insert(_modifiedRelations.begin(), _modifiedRelations.end());
         doInBatches(
                 relationsToDelete,
-            MAX_TRIPLE_COUNT_PER_QUERY/DELETE_TRIPLES_PER_RELATION,
+            MAX_VALUES_PER_QUERY/DELETE_TRIPLES_PER_RELATION,
             [this](const std::set<long long>& batch) {
                 auto query = sparql::QueryWriter::writeRelationsDeleteQuery(batch);
                 _sparql.setQuery(query);
@@ -521,7 +523,7 @@ namespace olu::osm {
         // divide the triples in batches
         std::vector<std::vector<std::string>> triplesBatches;
         for (auto it = triples.cbegin(), e = triples.cend(); it != triples.cend(); it = e) {
-            e = it + std::min<std::size_t>(triples.cend() - it, MAX_TRIPLE_COUNT_PER_QUERY);
+            e = it + std::min<std::size_t>(triples.cend() - it, MAX_VALUES_PER_QUERY);
             triplesBatches.emplace_back(it, e);
         }
 

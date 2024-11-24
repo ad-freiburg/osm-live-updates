@@ -19,11 +19,16 @@
 #include "osm/Way.h"
 namespace olu::osm {
 
-    std::string Way::get_xml() {
-        std::string xml = "<way id=\"" + std::to_string(this->get_id()) + "\">";
-        for (auto nodeId: this->members) {
+    void Way::addMember(u_id nodeId) {
+        members.emplace_back(nodeId);
+    }
+
+    std::string Way::getXml() const {
+        std::string xml = "<way id=\"" + std::to_string(this->getId()) + "\">";
+        for (const auto nodeId: this->members) {
             xml += "<nd ref=\"" + std::to_string(nodeId) + "\"/>";
         }
+        xml += "</way>";
         return xml;
     }
 

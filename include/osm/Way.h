@@ -18,8 +18,8 @@
 
 #ifndef OSM_LIVE_UPDATES_WAY_H
 #define OSM_LIVE_UPDATES_WAY_H
-#include <utility>
-#include "string"
+
+#include <string>
 
 #include "util/Types.h"
 #include "osmium/osm/location.hpp"
@@ -28,12 +28,20 @@ namespace olu::osm {
 
     class Way {
     public:
-        explicit Way(u_id id, WayMembers members): id(id), members(members) {};
+        explicit Way(const u_id id): id(id) {};
 
-        std::string get_xml();
+        void addMember(u_id nodeId);
 
-        WayMembers get_members() { return members; };
-        [[nodiscard]] u_id get_id() const { return id; };
+        /**
+        * Returns an osm xml element for a way with an id and node references.
+        *
+        * @example For wayId: `1` and nodeRefs: `{1,2,3}` the function
+        * would return: `<way id="1"><nd ref="1"/><nd ref="2"/><nd ref="3"/></way>`
+        */
+        [[nodiscard]] std::string getXml() const;
+
+        WayMembers getMembers() { return members; };
+        [[nodiscard]] u_id getId() const { return id; };
     protected:
         u_id id;
         WayMembers members;
@@ -42,8 +50,7 @@ namespace olu::osm {
     /**
      * Exception that can appear inside the `Node` class.
      */
-    class WayException : public std::exception {
-    private:
+    class WayException final : public std::exception {
         std::string message;
     public:
         explicit WayException(const char* msg) : message(msg) { }

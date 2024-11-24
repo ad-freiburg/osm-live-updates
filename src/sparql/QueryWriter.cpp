@@ -73,29 +73,38 @@ std::string olu::sparql::QueryWriter::writeQueryForLatestNodeTimestamp() {
 
 // _________________________________________________________________________________________________
 std::string
-olu::sparql::QueryWriter::writeQueryForRelationMembers(const long long &relationId) {
-    std::string query = "SELECT ?id ?role ?key WHERE { "
-                        "osmrel:" + std::to_string(relationId) + " osmkey:type ?key . "
-                        "osmrel:" + std::to_string(relationId) + " osmrel:member ?o . "
-                        "?o osm2rdfmember:id ?id . "
-                        "?o osm2rdfmember:role ?role . "
-                        "}";
+olu::sparql::QueryWriter::writeQueryForRelations(const std::set<long long> & relationIds) {
+    std::string query = "SELECT ?rel ?id ?role ?key WHERE { VALUES (?rel) { ";
+
+    for (const auto & relId : relationIds) {
+        query += "(osmrel:" + std::to_string(relId)+ ") ";
+    }
+
+    query += "?rel osmkey:type ?key . "
+             "?rel osmrel:member ?o . "
+             "?o osm2rdfmember:id ?id . "
+             "?o osm2rdfmember:role ?role . "
+             "}  ORDER BY ?rel";
     return query;
 }
 
 // _________________________________________________________________________________________________
 std::string
-olu::sparql::QueryWriter::writeQueryForWayMembers(const long long &wayId) {
-    std::string query = "SELECT ?node WHERE { "
-                        "osmway:" + std::to_string(wayId) + " osmway:node ?member . "
-                        "?member osmway:node ?node ."
-                        "}";
+olu::sparql::QueryWriter::writeQueryForWaysMembers(const std::set<long long int> &wayIds) {
+    std::string query;
+    query += "SELECT ?way ?node WHERE { VALUES (?way) { ";
+
+    for (const auto & wayId : wayIds) {
+        query += "(osmway:" + std::to_string(wayId)+ ") ";
+    }
+
+    query += "} ?way osmway:node ?member . ?member osmway:node ?node . }  ORDER BY ?way";
     return query;
 }
 
 // _________________________________________________________________________________________________
 std::string
-olu::sparql::QueryWriter::writeQueryForWaysMembers(const std::set<long long> &wayIds) {
+olu::sparql::QueryWriter::writeQueryForReferencedNodes(const std::set<long long> &wayIds) {
     std::string query;
     query += "SELECT ?node WHERE { VALUES (?way) { ";
 

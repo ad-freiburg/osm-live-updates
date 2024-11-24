@@ -19,7 +19,6 @@
 #ifndef OSM_LIVE_UPDATES_NODE_H
 #define OSM_LIVE_UPDATES_NODE_H
 
-#include <utility>
 #include "string"
 
 #include "util/Types.h"
@@ -32,15 +31,15 @@ namespace olu::osm {
         explicit Node(u_id id, const WKTPoint& locationAsWkt);
 
         /**
-         * Returns the node as an xml osm object.
+         * Returns the node as a xml osm object.
          *
          * @example For a node with id: `1` and location: `POINT(13.5690032 42.7957187)` the function
          * would return: `<node id="1" lat="42.7957187" lon="13.5690032"/>`
          */
-        std::string get_xml();
+        [[nodiscard]] std::string getXml() const;
 
-        osmium::Location get_location() { return loc; };
-        [[nodiscard]] u_id get_id() const { return id; };
+        [[nodiscard]] osmium::Location getLocation() const { return loc; };
+        [[nodiscard]] u_id getId() const { return id; };
     protected:
         u_id id;
         osmium::Location loc;
@@ -49,8 +48,7 @@ namespace olu::osm {
     /**
      * Exception that can appear inside the `Node` class.
      */
-    class NodeException : public std::exception {
-    private:
+    class NodeException final : public std::exception {
         std::string message;
     public:
         explicit NodeException(const char* msg) : message(msg) { }

@@ -19,13 +19,16 @@
 #ifndef OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 #define OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 
-#include "osm/OsmDatabaseState.h"
-#include "sparql/SparqlWrapper.h"
-#include "Node.h"
-
+#include <set>
 #include <string>
 #include <boost/property_tree/ptree.hpp>
 #include <set>
+
+#include "osm/OsmDatabaseState.h"
+#include "sparql/SparqlWrapper.h"
+#include "Node.h"
+#include "Relation.h"
+#include "Way.h"
 
 namespace olu::osm {
 
@@ -86,14 +89,14 @@ namespace olu::osm {
          * @param nodeIds The ids of the nodes to fetch location for
          * @return A vector containing node objects with the location and id
          */
-        std::vector<osm::Node> fetchNodeLocationsAsWkt(const std::set<long long int> &nodeIds);
+        std::vector<osm::Node> fetchNodes(const std::set<long long int> &nodeIds);
 
         /**
          * @return A vector containing a pair of the member's uri and role for all members of the
          * given relation.
          */
-        std::pair<std::string, std::vector<std::pair<std::string, std::string>>>
-        fetchRelationMembers(const long long &relationId);
+        std::vector<Relation>
+        fetchRelations(const std::set<long long int> &relationIds);
 
         /**
          * Sends a query to the sparql endpoint to get the the ids of all nodes that are referenced
@@ -101,7 +104,7 @@ namespace olu::osm {
          *
          * @return The subjects of all members
          */
-        std::vector<long long int> fetchWayMembers(const long long &wayId);
+        std::vector<Way> fetchWays(const std::set<long long int> &wayIds);
 
         /**
           * Sends a query to the sparql endpoint to get the the ids of all nodes that are referenced

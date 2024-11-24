@@ -69,17 +69,17 @@ namespace olu::sparql {
         /**
         * @returns A SPARQL query for the subject of all members of the given relation
         */
-        static std::string writeQueryForRelationMembers(const long long &relationId);
+        static std::string writeQueryForRelations(const std::set<long long> & relationIds);
 
         /**
         * @returns A SPARQL query for the subject of all members of the given relation
         */
-        static std::string writeQueryForWayMembers(const long long &wayId);
+        static std::string writeQueryForWaysMembers(const std::set<long long int> &wayIds);
 
         /**
          * @returns A SPARQL query for all nodes that are referenced by the given way
          */
-        static std::string writeQueryForWaysMembers(const std::set<long long> &wayIds);
+        static std::string writeQueryForReferencedNodes(const std::set<long long> &wayIds);
 
         /**
          * @returns A SPARQL query for all members of the given relations
