@@ -62,3 +62,5 @@ package_add_test(Decompressor util/Decompressor.cpp)
 package_add_test(OsmDataFetcher osm/OsmDataFetcher.cpp)
 package_add_test(Osm2ttl osm/Osm2ttl.cpp)
 package_add_test(OsmObjectHelper util/OsmObjectHelper.cpp)
+package_add_test(Node osm/Node.cpp)
+

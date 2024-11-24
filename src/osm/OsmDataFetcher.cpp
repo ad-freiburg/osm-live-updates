@@ -93,7 +93,7 @@ namespace olu::osm {
         return filePath;
     }
 
-    std::vector<std::string>
+    std::vector<osm::Node>
     OsmDataFetcher::fetchNodeLocationsAsWkt(const std::set<long long int> &nodeIds) {
         auto query = olu::sparql::QueryWriter::writeQueryForNodeLocations(nodeIds);
         _sparqlWrapper.setQuery(query);
@@ -103,36 +103,38 @@ namespace olu::osm {
         boost::property_tree::ptree responseAsTree;
         olu::util::XmlReader::populatePTreeFromString(response, responseAsTree);
 
-        std::vector<std::string> pointsAsWkt;
+        std::vector<osm::Node> nodes;
         for (const auto &result : responseAsTree.get_child("sparql.results")) {
-            auto pointAsWkt = result.second.get<std::string>("binding.literal");
-            pointsAsWkt.emplace_back(pointAsWkt);
+            u_id id;
+            std::string locationAsWkt;
+            for (const auto &binding : result.second.get_child("")) {
+                auto name = util::XmlReader::readAttribute("<xmlattr>.name",
+                                                             binding.second);
+                if (name == "s") {
+                    auto uri = binding.second.get<std::string>("uri");
+                    id = std::stoll( uri.substr(constants::OSM_GEOM_NODE_URI.length()) );
+                }
+
+                if (name == "o") {
+                    locationAsWkt = binding.second.get<std::string>("literal");
+                }
+            }
+
+            nodes.emplace_back( id, locationAsWkt );
         }
 
-        if (pointsAsWkt.size() > nodeIds.size()) {
+        if (nodes.size() > nodeIds.size()) {
             std::cout
                 << "The SPARQL endpoint returned "
-                << std::to_string(pointsAsWkt.size())
+                << std::to_string(nodes.size())
                 << " locations, but we only requested the location for "
                 << std::to_string(nodeIds.size())
-                << " nodeIds. It is possible that there are nodes with multiple locations in the database."
+                << " nodes. It is possible that there are nodes with multiple locations in the database."
                 << std::endl;
             throw OsmDataFetcherException("Exception while trying to fetch nodes locations");
         }
 
-        if (pointsAsWkt.size() < nodeIds.size()) {
-            std::cout << response << std::endl;
-            std::cout
-                << "The SPARQL endpoint returned "
-                << std::to_string(pointsAsWkt.size())
-                << " locations, but we have "
-                << std::to_string(nodeIds.size())
-                << " nodeIds. It is possible that there are nodes without a location in the database."
-                << std::endl;
-            throw OsmDataFetcherException("Exception while trying to fetch nodes locations");
-        }
-
-        return pointsAsWkt;
+        return nodes;
     }
 
     // _____________________________________________________________________________________________

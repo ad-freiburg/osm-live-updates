@@ -54,7 +54,7 @@ std::string olu::sparql::QueryWriter::writeDeleteQuery(const std::vector<std::st
 std::string
 olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::set<long long int> &nodeIds) {
     std::string query;
-    query += "SELECT ?o WHERE { ";
+    query += "SELECT ?s ?o WHERE { ";
 
     bool isFirst = true;
     for (const auto & nodeId : nodeIds) {
@@ -62,7 +62,8 @@ olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::set<long long in
             query += "UNION ";
         }
 
-        query +=  + "{ osm2rdfgeom:osm_node_" + std::to_string(nodeId) + " geo:asWKT ?o .  } ";
+        query +=  + "{ BIND (osm2rdfgeom:osm_node_" + std::to_string(nodeId) + " AS ?s ) . "
+                       "?s geo:asWKT ?o . } ";
         isFirst = false;
     }
 

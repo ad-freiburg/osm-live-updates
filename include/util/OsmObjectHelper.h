@@ -9,22 +9,11 @@
 #include <set>
 #include <vector>
 #include <boost/property_tree/ptree.hpp>
+#include "osm/Node.h"
 
 namespace olu::osm {
     class OsmObjectHelper {
     public:
-        /**
-         * Returns a node with an id and a location which is extracted from an WKT point.
-         *
-         * @example For nodeId: `1` and pointAsWkt: `POINT(13.5690032 42.7957187)` the function
-         * would return: `<node id="1" lat="42.7957187" lon="13.5690032"/>`
-         *
-         * @param nodeId The node id that should be used for the node
-         * @param pointAsWkt The point in WKT format from which the location of the dummy node
-         * should be extracted
-         */
-        static std::string
-        createNodeFromPoint(const long long &nodeId, const std::string& pointAsWkt);
 
         /**
          * Returns a way with an id and node references.

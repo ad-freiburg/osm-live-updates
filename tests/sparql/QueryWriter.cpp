@@ -79,9 +79,9 @@ namespace olu::sparql {
             std::set<long long> nodeIds {1, 2, 3} ;
             std::string query = olu::sparql::QueryWriter::writeQueryForNodeLocations(nodeIds);
             ASSERT_EQ(
-                    "SELECT ?o WHERE { { osm2rdfgeom:osm_node_1 geo:asWKT ?o .  } "
-                    "UNION { osm2rdfgeom:osm_node_2 geo:asWKT ?o .  } "
-                    "UNION { osm2rdfgeom:osm_node_3 geo:asWKT ?o .  } }",
+                    "SELECT ?s ?o WHERE { { BIND (osm2rdfgeom:osm_node_1 AS ?s ) . ?s geo:asWKT ?o . } "
+                    "UNION { BIND (osm2rdfgeom:osm_node_2 AS ?s ) . ?s geo:asWKT ?o . } "
+                    "UNION { BIND (osm2rdfgeom:osm_node_3 AS ?s ) . ?s geo:asWKT ?o . } }",
                     query
             );
         }

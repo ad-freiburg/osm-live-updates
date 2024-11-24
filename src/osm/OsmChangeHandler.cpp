@@ -119,6 +119,9 @@ namespace olu::osm {
         deleteElementsFromDatabase();
         insertElementsToDatabase();
 
+        // Cache of sparql endpoint has to be cleared after the completion`
+        _sparql.clearCache();
+
         std::cout << "nodes created: " << _createdNodes.size() << " modified: "
                     << _modifiedNodes.size() << " deleted: " << _deletedNodes.size() << std::endl;
         std::cout << "ways created: " << _createdWays.size() << " modified: "
@@ -391,24 +394,22 @@ namespace olu::osm {
     }
 
     void OsmChangeHandler::createDummyNodes() {
-        std::vector<std::string> pointsAsWkt;
+        std::vector<osm::Node> nodes;
         std::vector<long long> nodeIds(_referencedNodes.begin(), _referencedNodes.end());
 
         doInBatches(
             _referencedNodes,
             MAX_TRIPLE_COUNT_PER_QUERY,
-            [this, &pointsAsWkt](const std::set<long long>& batch) {
+            [this, &nodes](const std::set<long long>& batch) {
                 auto pointsBatchResult = _odf.fetchNodeLocationsAsWkt(batch);
-                pointsAsWkt.insert( pointsAsWkt.end(), pointsBatchResult.begin(), pointsBatchResult.end() );
+                nodes.insert( nodes.end(), pointsBatchResult.begin(), pointsBatchResult.end() );
             });
 
-        for (auto it = nodeIds.begin(); it != nodeIds.end(); ++it) {
-            long index = std::distance(nodeIds.begin(), it);
-            auto dummyNode = olu::osm::OsmObjectHelper::createNodeFromPoint(
-                    nodeIds.at(index),
-                    pointsAsWkt.at(index));
-            addToTmpFile(dummyNode, cnst::NODE_TAG);
+        for (auto & node: nodes) {
+            addToTmpFile(node.get_xml(), cnst::NODE_TAG);
         }
+
+        nodeIds.clear();
     }
 
     void OsmChangeHandler::createDummyWays() {

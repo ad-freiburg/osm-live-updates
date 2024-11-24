@@ -19,49 +19,6 @@
 #include "util/OsmObjectHelper.h"
 #include "gtest/gtest.h"
 
-TEST(OsmObjectHelper, createDummyNodeFromPoint) {
-    {
-        std::string pointAsWkt = "POINT(13.5690032 42.7957187)";
-        int nodeId = 1;
-
-        auto dummyNode = olu::osm::OsmObjectHelper::createNodeFromPoint(nodeId, pointAsWkt);
-        ASSERT_EQ(dummyNode,
-                  "<node id=\"1\" lat=\"42.7957187\" lon=\"13.5690032\"/>");
-    }
-    {
-        std::string pointAsWkt = "POINT(42.7957187)";
-        int nodeId = 1;
-
-        ASSERT_THROW(
-                olu::osm::OsmObjectHelper::createNodeFromPoint(nodeId, pointAsWkt),
-                olu::osm::WktHelperException);
-    }
-    {
-        std::string pointAsWkt = "POINT(13.5690032,42.7957187)";
-        int nodeId = 1;
-
-        ASSERT_THROW(
-                olu::osm::OsmObjectHelper::createNodeFromPoint(nodeId, pointAsWkt),
-                olu::osm::WktHelperException);
-    }
-    {
-        std::string pointAsWkt = "(13.5690032 42.7957187)";
-        int nodeId = 1;
-
-        ASSERT_THROW(
-                olu::osm::OsmObjectHelper::createNodeFromPoint(nodeId, pointAsWkt),
-                olu::osm::WktHelperException);
-    }
-    {
-        std::string pointAsWkt = "13.5690032 42.7957187";
-        int nodeId = 1;
-
-        ASSERT_THROW(
-                olu::osm::OsmObjectHelper::createNodeFromPoint(nodeId, pointAsWkt),
-                olu::osm::WktHelperException);
-    }
-}
-
 TEST(OsmObjectHelper, createWayFromReferences) {
     ASSERT_EQ(olu::osm::OsmObjectHelper::createWayFromReferences(1, {1, 2, 3}),
               "<way id=\"1\">"

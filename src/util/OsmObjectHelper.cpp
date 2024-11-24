@@ -5,28 +5,9 @@
 #include "util/OsmObjectHelper.h"
 #include "config/Constants.h"
 #include "util/XmlReader.h"
-#include <boost/regex.hpp>
 #include <string>
 
 namespace cnst = olu::config::constants;
-
-std::string olu::osm::OsmObjectHelper::createNodeFromPoint(const long long &nodeId,
-                                                           const std::string& pointAsWkt) {
-    const boost::regex pattern(R"(POINT\(([-+]?[0-9]*\.?[0-9]+)\s+([-+]?[0-9]*\.?[0-9]+)\))");
-    boost::smatch match;
-
-    std::string lat;
-    std::string lon;
-    if (boost::regex_search(pointAsWkt, match, pattern)) {
-        lon = match[1];
-        lat = match[2];
-    } else {
-        std::string message = "No WKT Point found in " + pointAsWkt;
-        throw WktHelperException(message.c_str());
-    }
-
-    return "<node id=\"" + std::to_string(nodeId) + "\" lat=\"" + lat + "\" lon=\"" + lon + "\"/>";
-}
 
 std::string
 olu::osm::OsmObjectHelper::createWayFromReferences(long long wayId, const std::vector<long long> &nodeRefs) {

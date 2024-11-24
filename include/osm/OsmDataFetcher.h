@@ -21,6 +21,7 @@
 
 #include "osm/OsmDatabaseState.h"
 #include "sparql/SparqlWrapper.h"
+#include "Node.h"
 
 #include <string>
 #include <boost/property_tree/ptree.hpp>
@@ -78,12 +79,14 @@ namespace olu::osm {
 
         /**
          * Sends a query to the sparql endpoint to get the location of the nodes with the given ids
-         * and returns the locations as points in WKT format
+         *
+         * @warning It is not guaranteed that the SPARQL endpoint returns a location for each node
+         * ID, therefore the returned vector can have less elements than the given set of node ids
          *
          * @param nodeIds The ids of the nodes to fetch location for
-         * @return The locations of the nodes as WKT point
+         * @return A vector containing node objects with the location and id
          */
-        std::vector<std::string> fetchNodeLocationsAsWkt(const std::set<long long int> &nodeIds);
+        std::vector<osm::Node> fetchNodeLocationsAsWkt(const std::set<long long int> &nodeIds);
 
         /**
          * @return A vector containing a pair of the member's uri and role for all members of the
