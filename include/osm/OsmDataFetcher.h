@@ -112,14 +112,10 @@ namespace olu::osm {
         std::vector<long long> fetchWaysMembers(const std::set<long long> &wayIds);
 
         /**
-         * @return The ids of all ways that are referenced by the given relations
+         * @return The ids of all nodes and ways that are referenced by the given relations
          */
-        std::vector<long long> fetchRelationMembersWay(const std::set<long long> &relIds);
-
-        /**
-         * @return The ids of all nodes that are referenced by the given relations
-         */
-        std::vector<long long> fetchRelationMembersNode(const std::set<long long> &relIds);
+        std::pair<std::vector<long long int>, std::vector<long long int>>
+        fetchRelationMembers(const std::set<long long> &relIds);
 
         /**
          * Sends a query to the sparql endpoint to the latest timestamp of any node in the database

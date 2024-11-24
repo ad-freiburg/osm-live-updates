@@ -30,7 +30,7 @@
 #include <regex>
 
 /// The maximum number of triples that can be in a query to the QLever endpoint.
-const static inline int MAX_TRIPLE_COUNT_PER_QUERY = 64;
+const static inline int MAX_TRIPLE_COUNT_PER_QUERY = 1024;
 const static inline int DELETE_TRIPLES_PER_WAY = 3;
 const static inline int DELETE_TRIPLES_PER_NODE = 2;
 const static inline int DELETE_TRIPLES_PER_RELATION = 2;
@@ -91,8 +91,8 @@ namespace olu::osm {
         // Get the ids of all referenced objects
 //        getReferencedRelations(); Skipped atm because osm2rdf does not calculate the geometry for
 //                                  relations that reference other relations
-        getReferencedWays();
-        getReferencedNodes();
+        getReferencesForRelations();
+        getReferencesForWays();
 
         // Create dummy objects of the referenced osm objects
         createDummyNodes();
@@ -334,16 +334,16 @@ namespace olu::osm {
         }
     }
 
-    void OsmChangeHandler::getReferencedWays() {
-        std::set<long long> relationsToFetchWaysFor;
-        relationsToFetchWaysFor.insert(_referencedRelations.begin(), _referencedRelations.end());
-        relationsToFetchWaysFor.insert(_relationsToUpdateGeometry.begin(), _relationsToUpdateGeometry.end());
-        if (!relationsToFetchWaysFor.empty()) {
+    void OsmChangeHandler::getReferencesForRelations() {
+        std::set<long long> relations;
+        relations.insert(_referencedRelations.begin(), _referencedRelations.end());
+        relations.insert(_relationsToUpdateGeometry.begin(), _relationsToUpdateGeometry.end());
+        if (!relations.empty()) {
             doInBatches(
-                    relationsToFetchWaysFor,
+                    relations,
                     MAX_TRIPLE_COUNT_PER_QUERY,
                     [this](const std::set<long long>& batch) {
-                    auto wayIds = _odf.fetchRelationMembersWay(batch);
+                    auto [nodeIds, wayIds] = _odf.fetchRelationMembers(batch);
                     for (const auto &wayId: wayIds) {
                         if (!_waysToUpdateGeometry.contains(wayId) &&
                             !_createdWays.contains(wayId) &&
@@ -351,22 +351,6 @@ namespace olu::osm {
                             _referencedWays.insert(wayId);
                         }
                     }
-                });
-        }
-    }
-
-    void OsmChangeHandler::getReferencedNodes() {
-        std::set<long long> relationsToFetchNodesFor;
-        relationsToFetchNodesFor.insert(_referencedRelations.begin(),
-                                        _referencedRelations.end());
-        relationsToFetchNodesFor.insert(_relationsToUpdateGeometry.begin(),
-                                        _relationsToUpdateGeometry.end());
-        if (!relationsToFetchNodesFor.empty()) {
-            doInBatches(
-                relationsToFetchNodesFor,
-                MAX_TRIPLE_COUNT_PER_QUERY,
-                [this](const std::set<long long>& batch) {
-                    auto nodeIds = _odf.fetchRelationMembersNode(batch);
                     for (const auto &nodeId: nodeIds) {
                         if (!nodeInChangeFile(nodeId)) {
                             _referencedNodes.insert(nodeId);
@@ -374,7 +358,9 @@ namespace olu::osm {
                     }
                 });
         }
+    }
 
+    void OsmChangeHandler::getReferencesForWays() {
         std::set<long long> waysToFetchNodesFor;
         waysToFetchNodesFor.insert(_referencedWays.begin(), _referencedWays.end());
         waysToFetchNodesFor.insert(_waysToUpdateGeometry.begin(), _waysToUpdateGeometry.end());
@@ -396,7 +382,6 @@ namespace olu::osm {
     void OsmChangeHandler::createDummyNodes() {
         std::vector<osm::Node> nodes;
         std::vector<long long> nodeIds(_referencedNodes.begin(), _referencedNodes.end());
-
         doInBatches(
             _referencedNodes,
             MAX_TRIPLE_COUNT_PER_QUERY,
@@ -408,8 +393,6 @@ namespace olu::osm {
         for (auto & node: nodes) {
             addToTmpFile(node.get_xml(), cnst::NODE_TAG);
         }
-
-        nodeIds.clear();
     }
 
     void OsmChangeHandler::createDummyWays() {

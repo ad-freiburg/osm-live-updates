@@ -190,13 +190,13 @@ namespace olu::osm {
          * Fetches the ids of all ways that are referenced in relations which geometry will be
          * changed in this update process and stores them in the corresponding set
          */
-        void getReferencedWays();
+        void getReferencesForRelations();
 
         /**
          * Fetches the ids of all nodes that are referenced in either ways or relations which
          * geometries will be needed and stores them in the corresponding set
          */
-        void getReferencedNodes();
+        void getReferencesForWays();
 
         static void createOrClearTmpFiles() ;
 

@@ -139,7 +139,7 @@ namespace olu::sparql {
     TEST(QueryWriter, writeQueryForRelationMembersWay) {
         {
             std::set<long long> ids {1, 2, 3} ;
-            std::string query = olu::sparql::QueryWriter::writeQueryForRelationMembersWay(ids);
+            std::string query = olu::sparql::QueryWriter::writeQueryForRelationMembers(ids);
             ASSERT_EQ(
                     "SELECT ?p WHERE { "
                     "{ osmrel:1 osmrel:member ?o . ?o osm2rdfmember:id ?p . ?p rdf:type osm:way } "
