@@ -28,7 +28,7 @@ namespace olu::osm {
     Node::Node(u_id id, const WKTPoint& locationAsWkt) {
         this->id = id;
 
-        const boost::regex pattern(R"(POINT\((\d+)\.(\d+)\s(\d+)\.(\d+)\))");
+        const boost::regex pattern(R"(POINT\((-?\d+)\.(\d+)\s(-?\d+)\.(\d+)\))");
         boost::smatch match;
 
         std::string lat; std::string lon;
