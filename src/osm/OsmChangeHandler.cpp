@@ -114,8 +114,6 @@ namespace olu::osm {
             throw OsmChangeHandlerException(msg.c_str());
         }
 
-
-        return;
         std::cout << "Update database..." << std::endl;
         // Delete and insert elements from database
         deleteElementsFromDatabase();
@@ -469,40 +467,32 @@ namespace olu::osm {
         std::set<long long> nodesToDelete;
         nodesToDelete.insert(_deletedNodes.begin(), _deletedNodes.end());
         nodesToDelete.insert(_modifiedNodes.begin(), _modifiedNodes.end());
-        doInBatches(nodesToDelete,
-            MAX_VALUES_PER_QUERY/DELETE_TRIPLES_PER_NODE,
-            [this](const std::set<long long>& batch) {
-                auto query = sparql::QueryWriter::writeNodesDeleteQuery(batch);
-                _sparql.setQuery(query);
-                _sparql.setPrefixes(config::constants::PREFIXES_FOR_NODE_DELETE_QUERY);
-                _sparql.runQuery();
-            });
+        for (const auto& id: nodesToDelete) {
+            auto query = sparql::QueryWriter::writeNodesDeleteQuery({id});
+            _sparql.setQuery(query);
+            _sparql.setPrefixes(config::constants::PREFIXES_FOR_NODE_DELETE_QUERY);
+            _sparql.runQuery();
+        }
 
         std::set<long long> waysToDelete;
         waysToDelete.insert(_deletedWays.begin(), _deletedWays.end());
         waysToDelete.insert(_modifiedWays.begin(), _modifiedWays.end());
-        doInBatches(
-                waysToDelete,
-            MAX_VALUES_PER_QUERY/DELETE_TRIPLES_PER_WAY,
-            [this](const std::set<long long>& batch) {
-                auto query = sparql::QueryWriter::writeWaysDeleteQuery(batch);
-                _sparql.setQuery(query);
-                _sparql.setPrefixes(config::constants::PREFIXES_FOR_WAY_DELETE_QUERY);
-                _sparql.runQuery();
-            });
+        for (const auto& id: waysToDelete) {
+            auto query = sparql::QueryWriter::writeWaysDeleteQuery({id});
+            _sparql.setQuery(query);
+            _sparql.setPrefixes(config::constants::PREFIXES_FOR_WAY_DELETE_QUERY);
+            _sparql.runQuery();
+        }
 
         std::set<long long> relationsToDelete;
         relationsToDelete.insert(_deletedRelations.begin(), _deletedRelations.end());
         relationsToDelete.insert(_modifiedRelations.begin(), _modifiedRelations.end());
-        doInBatches(
-                relationsToDelete,
-            MAX_VALUES_PER_QUERY/DELETE_TRIPLES_PER_RELATION,
-            [this](const std::set<long long>& batch) {
-                auto query = sparql::QueryWriter::writeRelationsDeleteQuery(batch);
-                _sparql.setQuery(query);
-                _sparql.setPrefixes(config::constants::PREFIXES_FOR_RELATION_DELETE_QUERY);
-                _sparql.runQuery();
-            });
+        for (const auto& id: relationsToDelete) {
+            auto query = sparql::QueryWriter::writeRelationsDeleteQuery({id});
+            _sparql.setQuery(query);
+            _sparql.setPrefixes(config::constants::PREFIXES_FOR_RELATION_DELETE_QUERY);
+            _sparql.runQuery();
+        }
     }
 
     void OsmChangeHandler::insertElementsToDatabase() {
@@ -623,6 +613,10 @@ namespace olu::osm {
             }
 
             auto [subject, predicate, object] = getElementsFromTriple(line);
+            if (subject.starts_with("osmway:") || predicate == "osmrel:member") {
+                continue;
+            }
+
             if (subject.starts_with("osmnode:") || subject.starts_with("osm2rdfgeom:osm_node_")) {
                 auto nodeId = getIdFromTriple(line, cnst::NODE_TAG);
                 if (nodesToInsert.contains(nodeId)) {
