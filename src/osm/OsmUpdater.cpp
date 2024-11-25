@@ -48,6 +48,8 @@ namespace olu::osm {
                 auto och(OsmChangeHandler(_config, pathToOsmChangeFile));
                 och.run();
                 sequenceNumber++;
+
+                std::filesystem::remove(pathToOsmChangeFile);
             }
         }
 
