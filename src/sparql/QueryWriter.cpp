@@ -134,13 +134,13 @@ olu::sparql::QueryWriter::writeQueryForRelationMembers(const std::set<long long>
 std::string
 olu::sparql::QueryWriter::writeQueryForWaysReferencingNodes(const std::set<long long> &nodeIds) {
     std::string query;
-    query += "SELECT ?s2 WHERE { VALUES (?node) { ";
+    query += "SELECT ?way WHERE { VALUES (?node) { ";
 
     for (const auto & nodeId : nodeIds) {
         query += "(osmnode:" + std::to_string(nodeId) + ") ";
     }
 
-    query += "} ?s1 osmway:node ?node . ?s2 osmway:node ?s1 . } GROUP BY ?s2";
+    query += "} ?identifier osmway:node ?node . ?way osmway:node ?identifier . } GROUP BY ?way";
     return query;
 }
 
