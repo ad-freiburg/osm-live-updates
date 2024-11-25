@@ -55,6 +55,9 @@ namespace olu::sparql {
                           olu::config::constants::HTML_VALUE_CONTENT_TYPE);
         request.addHeader(olu::config::constants::HTML_KEY_ACCEPT,
                           olu::config::constants::HTML_VALUE_ACCEPT_SPARQL_RESULT_XML);
+        // We need to set this otherwise libcurl will wait 1 sec before sending the request
+        request.addHeader("Expect", "");
+
         std::string body = "query=" + encodedQuery;
         request.addBody(body);
         try {
