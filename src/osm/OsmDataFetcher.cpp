@@ -96,29 +96,35 @@ namespace olu::osm {
         return filePath;
     }
 
-    std::vector<osm::Node>
+    std::vector<Node>
     OsmDataFetcher::fetchNodes(const std::set<long long int> &nodeIds) {
-        auto query = olu::sparql::QueryWriter::writeQueryForNodeLocations(nodeIds);
+        auto query = sparql::QueryWriter::writeQueryForNodeLocations(nodeIds);
         _sparqlWrapper.setQuery(query);
         _sparqlWrapper.setPrefixes(constants::PREFIXES_FOR_NODE_LOCATION);
         auto response = _sparqlWrapper.runQuery();
 
         boost::property_tree::ptree responseAsTree;
-        olu::util::XmlReader::populatePTreeFromString(response, responseAsTree);
+        util::XmlReader::populatePTreeFromString(response, responseAsTree);
 
-        std::vector<osm::Node> nodes;
+        std::vector<Node> nodes;
         for (const auto &result : responseAsTree.get_child("sparql.results")) {
             u_id id;
             std::string locationAsWkt;
             for (const auto &binding : result.second.get_child("")) {
-                auto name = util::XmlReader::readAttribute("<xmlattr>.name",
-                                                             binding.second);
-                if (name == "s") {
+                auto name = util::XmlReader::readAttribute("<xmlattr>.name", binding.second);
+                if (name == "nodeGeo") {
                     auto uri = binding.second.get<std::string>("uri");
-                    id = std::stoll( uri.substr(constants::OSM_GEOM_NODE_URI.length()) );
+
+                    try {
+                        id = std::stoll(uri.substr(constants::OSM_GEOM_NODE_URI.length()));
+                    } catch (const std::exception &e) {
+                        std::cerr << e.what() << std::endl;
+                        std::string msg = "Exception while trying to get id from uri: " + uri;
+                        throw OsmDataFetcherException(msg.c_str());
+                    }
                 }
 
-                if (name == "o") {
+                if (name == "location") {
                     locationAsWkt = binding.second.get<std::string>("literal");
                 }
             }
@@ -128,12 +134,9 @@ namespace olu::osm {
 
         if (nodes.size() > nodeIds.size()) {
             std::cout
-                << "The SPARQL endpoint returned "
-                << std::to_string(nodes.size())
-                << " locations, but we only requested the location for "
-                << std::to_string(nodeIds.size())
-                << " nodes. It is possible that there are nodes with multiple locations in the database."
-                << std::endl;
+                << "The SPARQL endpoint returned " << std::to_string(nodes.size())
+                << " locations, for " << std::to_string(nodeIds.size())
+                << " nodes." << std::endl;
             throw OsmDataFetcherException("Exception while trying to fetch nodes locations");
         }
 

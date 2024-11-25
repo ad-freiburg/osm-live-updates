@@ -17,12 +17,9 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "sparql/QueryWriter.h"
-#include "config/Constants.h"
-#include "util/XmlReader.h"
 
 #include <string>
 #include <vector>
-#include <iostream>
 
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeInsertQuery(const std::vector<std::string>& triples) {
@@ -54,13 +51,13 @@ std::string olu::sparql::QueryWriter::writeDeleteQuery(const std::vector<std::st
 std::string
 olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::set<long long int> &nodeIds) {
     std::string query;
-    query += "SELECT ?nodeGeo ?o WHERE { VALUES (?nodeGeo) { ";
+    query += "SELECT ?nodeGeo ?location WHERE { VALUES (?nodeGeo) { ";
 
     for (const auto & nodeId : nodeIds) {
         query += "(osm2rdfgeom:osm_node_" + std::to_string(nodeId) + ") ";
     }
 
-    query += "} ?nodeGeo geo:asWKT ?o . }";
+    query += "} ?nodeGeo geo:asWKT ?location . }";
     return query;
 }
 
