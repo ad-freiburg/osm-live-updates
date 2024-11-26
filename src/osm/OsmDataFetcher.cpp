@@ -284,32 +284,37 @@ namespace olu::osm {
         boost::property_tree::ptree responseAsTree;
         util::XmlReader::populatePTreeFromString(response, responseAsTree);
 
-        Way currentWay(0);
-        std::vector<Way> ways;
+        std::map<u_id, std::vector<u_id>> wayMap;
         for (const auto &result : responseAsTree.get_child("sparql.results")) {
+            u_id wayId;
             for (const auto &binding : result.second.get_child("")) {
                 auto name = util::XmlReader::readAttribute("<xmlattr>.name", binding.second);
                 if (name == "way") {
                     auto uri = binding.second.get<std::string>("uri");
-                    u_id wayId = std::stoll( uri.substr(constants::OSM_WAY_URI.length()) );
-                    if (currentWay.getId() != wayId) {
-                        ways.emplace_back(currentWay);
-                        currentWay = Way(wayId);
+                    wayId = std::stoll( uri.substr(constants::OSM_WAY_URI.length()) );
+
+                    if (!wayMap.contains(wayId)) {
+                        wayMap[wayId] = std::vector<u_id>();
                     }
                 }
 
                 if (name == "node") {
                     auto uri = binding.second.get<std::string>("uri");
                     u_id nodeId = std::stoll( uri.substr(constants::OSM_NODE_URI.length()) );
-                    currentWay.addMember(nodeId);
+                    wayMap[wayId].push_back(nodeId);
                 }
             }
         }
 
-        // Delete first placeholder way from list
-        if (!ways.empty()) {
-            ways.erase(ways.begin());
+        std::vector<Way> ways;
+        for (const auto &[wayId, nodeIds] : wayMap) {
+            Way way(wayId);
+            for (const auto &nodeId : nodeIds) {
+                way.addMember(nodeId);
+            }
+            ways.push_back(way);
         }
+
         return ways;
     }
 

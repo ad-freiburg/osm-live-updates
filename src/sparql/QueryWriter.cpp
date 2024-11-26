@@ -95,7 +95,7 @@ olu::sparql::QueryWriter::writeQueryForWaysMembers(const std::set<long long int>
         query += "(osmway:" + std::to_string(wayId)+ ") ";
     }
 
-    query += "} ?way osmway:node ?member . ?member osmway:node ?node . }  ORDER BY ?way";
+    query += "} ?way osmway:node ?member . ?member osmway:node ?node . }";
     return query;
 }
 
