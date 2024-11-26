@@ -34,15 +34,15 @@ static inline constexpr int MAX_VALUES_PER_QUERY = 1024;
 
 namespace cnst = olu::config::constants;
 
-void doInBatches(const std::set<long long>& set, int elementsPerBatch, const std::function<void(std::set<long long>)>& func) {
+void doInBatches(std::set<olu::id_t>& set, const int elementsPerBatch, const std::function<void(std::set<olu::id_t>)>& func) {
     std::vector vector(set.begin(), set.end());
-    std::vector<std::set<long long>> vectorBatches;
+    std::vector<std::set<olu::id_t> > vectorBatches;
     for (auto it = vector.cbegin(), e = vector.cend(); it != vector.cend(); it = e) {
         e = it + std::min<std::size_t>(vector.end() - it, elementsPerBatch);
         vectorBatches.emplace_back(it, e);
     }
 
-    for (auto & vectorBatch : vectorBatches) {
+    for (const auto &vectorBatch: vectorBatches) {
         func(vectorBatch);
     }
 }
@@ -270,7 +270,7 @@ namespace olu::osm {
             doInBatches(
                 _modifiedNodes,
                 MAX_VALUES_PER_QUERY,
-                [this](const std::set<long long>& batch) {
+                [this](const std::set<id_t>& batch) {
                     for (const auto &wayId: _odf.fetchWaysReferencingNodes(batch)) {
                         if (!wayInChangeFile(wayId)) {
                             _waysToUpdateGeometry.insert(wayId);
@@ -283,7 +283,7 @@ namespace olu::osm {
             doInBatches(
                 _modifiedNodes,
                 MAX_VALUES_PER_QUERY,
-                [this](const std::set<long long>& batch) {
+                [this](const std::set<id_t>& batch) {
                     for (const auto &relId: _odf.fetchRelationsReferencingNodes(batch)) {
                         if (!relationInChangeFile(relId)) {
                             _relationsToUpdateGeometry.insert(relId);
@@ -292,14 +292,14 @@ namespace olu::osm {
                 });
         }
 
-        std::set<long long> updatedWays;
+        std::set<id_t> updatedWays;
         updatedWays.insert(_modifiedWays.begin(), _modifiedWays.end());
         updatedWays.insert(_waysToUpdateGeometry.begin(), _waysToUpdateGeometry.end());
         if (!updatedWays.empty()) {
             doInBatches(
                 updatedWays,
                 MAX_VALUES_PER_QUERY,
-                [this](const std::set<long long>& batch) {
+                [this](const std::set<id_t>& batch) {
                     for (const auto &relId: _odf.fetchRelationsReferencingWays(batch)) {
                         if (!relationInChangeFile(relId)) {
                             _relationsToUpdateGeometry.insert(relId);
@@ -314,7 +314,7 @@ namespace olu::osm {
 //            doInBatches(
 //                    _modifiedAreas,
 //            MAX_TRIPLE_COUNT_PER_QUERY,
-//            [this](const std::set<long long>& batch) {
+//            [this](const std::set<id_t>& batch) {
 //                auto relationIds = _odf.fetchRelationsReferencingRelations(batch);
 //                for (const auto &relId: relationIds) {
 //                    if (!_modifiedAreas.contains(relId)) {
@@ -330,7 +330,7 @@ namespace olu::osm {
             doInBatches(
                     _relationsToUpdateGeometry,
                 MAX_VALUES_PER_QUERY,
-                [this](const std::set<long long>& batch) {
+                [this](const std::set<id_t>& batch) {
                     auto relationIds = _odf.fetchRelationsReferencingRelations(batch);
                     for (const auto &relId: relationIds) {
                         if (!_relationsToUpdateGeometry.contains(relId) &&
@@ -344,14 +344,14 @@ namespace olu::osm {
     }
 
     void OsmChangeHandler::getReferencesForRelations() {
-        std::set<long long> relations;
+        std::set<id_t> relations;
         relations.insert(_referencedRelations.begin(), _referencedRelations.end());
         relations.insert(_relationsToUpdateGeometry.begin(), _relationsToUpdateGeometry.end());
         if (!relations.empty()) {
             doInBatches(
                     relations,
                     MAX_VALUES_PER_QUERY,
-                    [this](const std::set<long long>& batch) {
+                    [this](const std::set<id_t>& batch) {
                     auto [nodeIds, wayIds] = _odf.fetchRelationMembers(batch);
                     for (const auto &wayId: wayIds) {
                         if (!_waysToUpdateGeometry.contains(wayId) &&
@@ -370,14 +370,14 @@ namespace olu::osm {
     }
 
     void OsmChangeHandler::getReferencesForWays() {
-        std::set<long long> waysToFetchNodesFor;
+        std::set<id_t> waysToFetchNodesFor;
         waysToFetchNodesFor.insert(_referencedWays.begin(), _referencedWays.end());
         waysToFetchNodesFor.insert(_waysToUpdateGeometry.begin(), _waysToUpdateGeometry.end());
         if (!waysToFetchNodesFor.empty()) {
             doInBatches(
             waysToFetchNodesFor,
             MAX_VALUES_PER_QUERY,
-            [this](const std::set<long long>& batch) {
+            [this](const std::set<id_t>& batch) {
                 for (const auto &nodeId: _odf.fetchWaysMembers(batch)) {
                     if (!nodeInChangeFile(nodeId)) {
                         _referencedNodes.insert(nodeId);
@@ -391,7 +391,7 @@ namespace olu::osm {
         doInBatches(
             _referencedNodes,
             MAX_VALUES_PER_QUERY,
-            [this](std::set<long long> const& batch) {
+            [this](std::set<id_t> const& batch) {
                 for (auto const& node: _odf.fetchNodes(batch)) {
                     addToTmpFile(node.getXml(), cnst::NODE_TAG);
                 }
@@ -399,14 +399,14 @@ namespace olu::osm {
     }
 
     void OsmChangeHandler::createDummyWays() {
-        std::set<long long> wayIds;
+        std::set<id_t> wayIds;
         wayIds.insert(_referencedWays.begin(), _referencedWays.end());
         wayIds.insert(_waysToUpdateGeometry.begin(), _waysToUpdateGeometry.end());
 
         doInBatches(
             wayIds,
             MAX_VALUES_PER_QUERY,
-            [this](std::set<long long> const& batch) {
+            [this](std::set<id_t> const& batch) {
                 for (auto const& way: _odf.fetchWays(batch)) {
                     addToTmpFile(way.getXml(), cnst::WAY_TAG);
                 }
@@ -414,14 +414,14 @@ namespace olu::osm {
     }
 
     void OsmChangeHandler::createDummyRelations() {
-        std::set<long long> relations;
+        std::set<id_t> relations;
         relations.insert(_referencedRelations.begin(), _referencedRelations.end());
         relations.insert(_relationsToUpdateGeometry.begin(), _relationsToUpdateGeometry.end());
 
         doInBatches(
             relations,
             MAX_VALUES_PER_QUERY,
-            [this](std::set<long long> const& batch) {
+            [this](std::set<id_t> const& batch) {
                 for (auto const& rel: _odf.fetchRelations(batch)) {
                     addToTmpFile(rel.getXml(), cnst::RELATION_TAG);
                 }
@@ -429,7 +429,7 @@ namespace olu::osm {
     }
 
     void OsmChangeHandler::deleteElementsFromDatabase() {
-        std::set<long long> nodesToDelete;
+        std::set<id_t> nodesToDelete;
         nodesToDelete.insert(_deletedNodes.begin(), _deletedNodes.end());
         nodesToDelete.insert(_modifiedNodes.begin(), _modifiedNodes.end());
         for (const auto& id: nodesToDelete) {
@@ -439,7 +439,7 @@ namespace olu::osm {
             _sparql.runQuery();
         }
 
-        std::set<long long> waysToDelete;
+        std::set<id_t> waysToDelete;
         waysToDelete.insert(_deletedWays.begin(), _deletedWays.end());
         waysToDelete.insert(_modifiedWays.begin(), _modifiedWays.end());
         for (const auto& id: waysToDelete) {
@@ -449,7 +449,7 @@ namespace olu::osm {
             _sparql.runQuery();
         }
 
-        std::set<long long> relationsToDelete;
+        std::set<id_t> relationsToDelete;
         relationsToDelete.insert(_deletedRelations.begin(), _deletedRelations.end());
         relationsToDelete.insert(_modifiedRelations.begin(), _modifiedRelations.end());
         for (const auto& id: relationsToDelete) {
@@ -510,7 +510,7 @@ namespace olu::osm {
         throw OsmChangeHandlerException(msg.c_str());
     }
 
-    long long getIdFromTriple(const std::string& triple, const std::string& elementTag) {
+    id_t getIdFromTriple(const std::string& triple, const std::string& elementTag) {
         if (elementTag == cnst::NODE_TAG) {
             std::regex integerRegex(R"((?:osmnode:|osm_node_|osm_node_centroid_)(\d+))");
             std::smatch match;
@@ -549,16 +549,16 @@ namespace olu::osm {
     }
 
     void OsmChangeHandler::filterRelevantTriples() {
-        std::set<long long> nodesToInsert;
+        std::set<id_t> nodesToInsert;
         nodesToInsert.insert(_createdNodes.begin(), _createdNodes.end());
         nodesToInsert.insert(_modifiedNodes.begin(), _modifiedNodes.end());
 
-        std::set<long long> waysToInsert;
+        std::set<id_t> waysToInsert;
         waysToInsert.insert(_createdWays.begin(), _createdWays.end());
         waysToInsert.insert(_modifiedWays.begin(), _modifiedWays.end());
         waysToInsert.insert(_waysToUpdateGeometry.begin(), _waysToUpdateGeometry.end());
 
-        std::set<long long> relationsToInsert;
+        std::set<id_t> relationsToInsert;
         relationsToInsert.insert(_createdRelations.begin(), _createdRelations.end());
         relationsToInsert.insert(_modifiedRelations.begin(), _modifiedRelations.end());
         relationsToInsert.insert(_relationsToUpdateGeometry.begin(), _relationsToUpdateGeometry.end());
@@ -662,7 +662,7 @@ namespace olu::osm {
                 throw OsmChangeHandlerException(msg.c_str());
             }
 
-            long long id;
+            id_t id;
             try {
                 id = std::stol(idAsString);
             } catch(std::exception &e) {
@@ -689,7 +689,7 @@ namespace olu::osm {
                                                        member.second);
             auto refIdAsString = util::XmlReader::readAttribute("<xmlattr>.ref",
                                                                 member.second);
-            long long id;
+            id_t id;
             try {
                 id = std::stoll(refIdAsString);
             } catch(std::exception &e) {

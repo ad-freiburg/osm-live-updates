@@ -49,7 +49,7 @@ std::string olu::sparql::QueryWriter::writeDeleteQuery(const std::vector<std::st
 
 // _________________________________________________________________________________________________
 std::string
-olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::set<long long int> &nodeIds) {
+olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::set<id_t> &nodeIds) {
     std::string query;
     query += "SELECT ?nodeGeo ?location WHERE { VALUES (?nodeGeo) { ";
 
@@ -69,8 +69,7 @@ std::string olu::sparql::QueryWriter::writeQueryForLatestNodeTimestamp() {
 }
 
 // _________________________________________________________________________________________________
-std::string
-olu::sparql::QueryWriter::writeQueryForRelations(const std::set<long long> & relationIds) {
+std::string olu::sparql::QueryWriter::writeQueryForRelations(const std::set<id_t> & relationIds) {
     std::string query = "SELECT ?rel ?id ?role ?key WHERE { VALUES (?rel) { ";
 
     for (const auto & relId : relationIds) {
@@ -86,8 +85,7 @@ olu::sparql::QueryWriter::writeQueryForRelations(const std::set<long long> & rel
 }
 
 // _________________________________________________________________________________________________
-std::string
-olu::sparql::QueryWriter::writeQueryForWaysMembers(const std::set<long long int> &wayIds) {
+std::string olu::sparql::QueryWriter::writeQueryForWaysMembers(const std::set<id_t> &wayIds) {
     std::string query;
     query += "SELECT ?way ?node WHERE { VALUES (?way) { ";
 
@@ -100,8 +98,7 @@ olu::sparql::QueryWriter::writeQueryForWaysMembers(const std::set<long long int>
 }
 
 // _________________________________________________________________________________________________
-std::string
-olu::sparql::QueryWriter::writeQueryForReferencedNodes(const std::set<long long> &wayIds) {
+std::string olu::sparql::QueryWriter::writeQueryForReferencedNodes(const std::set<id_t> &wayIds) {
     std::string query;
     query += "SELECT ?node WHERE { VALUES (?way) { ";
 
@@ -114,8 +111,7 @@ olu::sparql::QueryWriter::writeQueryForReferencedNodes(const std::set<long long>
 }
 
 // _________________________________________________________________________________________________
-std::string
-olu::sparql::QueryWriter::writeQueryForRelationMembers(const std::set<long long> &relIds) {
+std::string olu::sparql::QueryWriter::writeQueryForRelationMembers(const std::set<id_t> &relIds) {
     std::string query;
     query += "SELECT ?p WHERE { VALUES (?rel) { ";
 
@@ -129,7 +125,7 @@ olu::sparql::QueryWriter::writeQueryForRelationMembers(const std::set<long long>
 
 // _________________________________________________________________________________________________
 std::string
-olu::sparql::QueryWriter::writeQueryForWaysReferencingNodes(const std::set<long long> &nodeIds) {
+olu::sparql::QueryWriter::writeQueryForWaysReferencingNodes(const std::set<id_t> &nodeIds) {
     std::string query;
     query += "SELECT ?way WHERE { VALUES (?node) { ";
 
@@ -143,7 +139,7 @@ olu::sparql::QueryWriter::writeQueryForWaysReferencingNodes(const std::set<long 
 
 // _________________________________________________________________________________________________
 std::string
-olu::sparql::QueryWriter::writeQueryForRelationsReferencingNodes(const std::set<long long> &nodeIds) {
+olu::sparql::QueryWriter::writeQueryForRelationsReferencingNodes(const std::set<id_t> &nodeIds) {
     std::string query;
     query += "SELECT ?s WHERE { VALUES (?node) { ";
 
@@ -157,7 +153,7 @@ olu::sparql::QueryWriter::writeQueryForRelationsReferencingNodes(const std::set<
 
 // _________________________________________________________________________________________________
 std::string
-olu::sparql::QueryWriter::writeQueryForRelationsReferencingWays(const std::set<long long> &wayIds) {
+olu::sparql::QueryWriter::writeQueryForRelationsReferencingWays(const std::set<id_t> &wayIds) {
     std::string query;
     query += "SELECT ?s WHERE { VALUES (?way) { ";
 
@@ -171,7 +167,7 @@ olu::sparql::QueryWriter::writeQueryForRelationsReferencingWays(const std::set<l
 
 // _________________________________________________________________________________________________
 std::string
-olu::sparql::QueryWriter::writeQueryForRelationsReferencingRelations(const std::set<long long> &relationIds) {
+olu::sparql::QueryWriter::writeQueryForRelationsReferencingRelations(const std::set<id_t> &relationIds) {
     std::string query;
     query += "SELECT ?s WHERE { ";
 
@@ -192,7 +188,7 @@ olu::sparql::QueryWriter::writeQueryForRelationsReferencingRelations(const std::
 }
 
 // _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeNodesDeleteQuery(const std::set<long long> &nodeIds) {
+std::string olu::sparql::QueryWriter::writeNodesDeleteQuery(const std::set<id_t> &nodeIds) {
     std::vector<std::string> subjects;
     for (const auto & nodeId : nodeIds) {
         subjects.push_back("osmnode:" + std::to_string(nodeId));
@@ -203,7 +199,7 @@ std::string olu::sparql::QueryWriter::writeNodesDeleteQuery(const std::set<long 
 }
 
 // _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeWaysDeleteQuery(const std::set<long long int> &wayIds) {
+std::string olu::sparql::QueryWriter::writeWaysDeleteQuery(const std::set<id_t> &wayIds) {
     std::vector<std::string> subjects;
     for (const auto & wayId : wayIds) {
         subjects.push_back("osmway:" + std::to_string(wayId));
@@ -215,7 +211,7 @@ std::string olu::sparql::QueryWriter::writeWaysDeleteQuery(const std::set<long l
 }
 
 // _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeRelationsDeleteQuery(const std::set<long long int> &relationIds) {
+std::string olu::sparql::QueryWriter::writeRelationsDeleteQuery(const std::set<id_t> &relationIds) {
     std::vector<std::string> subjects;
     for (const auto & relationId : relationIds) {
         subjects.push_back("osmrel:" + std::to_string(relationId));

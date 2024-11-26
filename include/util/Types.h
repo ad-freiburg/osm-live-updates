@@ -10,14 +10,13 @@
 
 namespace olu {
 
-    typedef int64_t id;
-    typedef uint64_t u_id;
+    typedef int64_t id_t;
 
     typedef std::string WKTPoint;
     typedef std::string Role;
 
-    typedef std::vector<u_id> WayMembers;
-    typedef std::pair<u_id, Role> RelationMember;
+    typedef std::vector<id_t> WayMembers;
+    typedef std::pair<id_t, Role> RelationMember;
 }
 
 #endif //OSM_LIVE_UPDATES_TYPES_H

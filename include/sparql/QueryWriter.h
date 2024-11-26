@@ -21,8 +21,9 @@
 
 #include <string>
 #include <vector>
-#include <boost/property_tree/ptree.hpp>
 #include <set>
+
+#include "util/Types.h"
 
 namespace olu::sparql {
 
@@ -44,22 +45,22 @@ namespace olu::sparql {
         /**
          * @returns A SPARQL query that deletes all triples for the given node ids.
          */
-        static std::string writeNodesDeleteQuery(const std::set<long long> &nodeIds);
+        static std::string writeNodesDeleteQuery(const std::set<id_t> &nodeIds);
 
         /**
         * @returns A SPARQL query that deletes all triples for the given way ids.
         */
-        static std::string writeWaysDeleteQuery(const std::set<long long int> &wayIds);
+        static std::string writeWaysDeleteQuery(const std::set<id_t> &wayIds);
 
         /**
         * @returns A SPARQL query that deletes all triples for the given relation ids.
         */
-        static std::string writeRelationsDeleteQuery(const std::set<long long int> &relationIds);
+        static std::string writeRelationsDeleteQuery(const std::set<id_t> &relationIds);
 
         /**
         * @returns A SPARQL query for the locations of the nodes with the given ID in WKT format
         */
-        static std::string writeQueryForNodeLocations(const std::set<long long int> &nodeIds);
+        static std::string writeQueryForNodeLocations(const std::set<id_t> &nodeIds);
 
         /**
          * @returns A SPARQL query for the latest timestamp of any node in the database
@@ -69,42 +70,42 @@ namespace olu::sparql {
         /**
         * @returns A SPARQL query for the subject of all members of the given relation
         */
-        static std::string writeQueryForRelations(const std::set<long long> & relationIds);
+        static std::string writeQueryForRelations(const std::set<id_t> & relationIds);
 
         /**
         * @returns A SPARQL query for the subject of all members of the given relation
         */
-        static std::string writeQueryForWaysMembers(const std::set<long long int> &wayIds);
+        static std::string writeQueryForWaysMembers(const std::set<id_t> &wayIds);
 
         /**
          * @returns A SPARQL query for all nodes that are referenced by the given way
          */
-        static std::string writeQueryForReferencedNodes(const std::set<long long> &wayIds);
+        static std::string writeQueryForReferencedNodes(const std::set<id_t> &wayIds);
 
         /**
          * @returns A SPARQL query for all members of the given relations
          */
-        static std::string writeQueryForRelationMembers(const std::set<long long> &relIds);
+        static std::string writeQueryForRelationMembers(const std::set<id_t> &relIds);
 
         /**
         * @returns A SPARQL query for all ways that reference the given nodes
         */
-        static std::string writeQueryForWaysReferencingNodes(const std::set<long long> &nodeIds);
+        static std::string writeQueryForWaysReferencingNodes(const std::set<id_t> &nodeIds);
 
         /**
         * @returns A SPARQL query for relations that reference the given nodes
         */
-        static std::string writeQueryForRelationsReferencingNodes(const std::set<long long> &nodeIds);
+        static std::string writeQueryForRelationsReferencingNodes(const std::set<id_t> &nodeIds);
 
         /**
         * @returns A SPARQL query for relations that reference the given ways
         */
-        static std::string writeQueryForRelationsReferencingWays(const std::set<long long> &wayIds);
+        static std::string writeQueryForRelationsReferencingWays(const std::set<id_t> &wayIds);
 
         /**
         * @returns A SPARQL query for relations that reference the given relations
         */
-        static std::string writeQueryForRelationsReferencingRelations(const std::set<long long> &relationIds);
+        static std::string writeQueryForRelationsReferencingRelations(const std::set<id_t> &relationIds);
     };
 } // namespace olu::sparql
 

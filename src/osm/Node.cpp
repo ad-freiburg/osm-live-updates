@@ -16,16 +16,16 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "osm/Node.h"
-
 #include <boost/regex.hpp>
 #include <iostream>
 #include <sstream>
 #include <string>
 
+#include "osm/Node.h"
+
 namespace olu::osm {
 
-    Node::Node(u_id id, const WKTPoint& locationAsWkt) {
+    Node::Node(id_t id, const WKTPoint& locationAsWkt) {
         this->id = id;
 
         const boost::regex pattern(R"(POINT\((-?\d+)\.(\d+)\s(-?\d+)\.(\d+)\))");

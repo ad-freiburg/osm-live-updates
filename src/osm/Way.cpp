@@ -19,7 +19,7 @@
 #include "osm/Way.h"
 namespace olu::osm {
 
-    void Way::addMember(u_id nodeId) {
+    void Way::addMember(id_t nodeId) {
         members.emplace_back(nodeId);
     }
 

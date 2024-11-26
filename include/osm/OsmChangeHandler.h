@@ -60,9 +60,6 @@ namespace olu::osm {
         /**
          * Creates a SPARQL query from the given ttl data to add the contained triples into the
          * database and sends it to the SPARQL endpoint.
-         *
-         * @param convertedData The ttl data containing the triples that should be inserted to the datatbase
-         * as well as the needed prefixes
          */
         void createAndRunInsertQuery();
 
@@ -76,40 +73,40 @@ namespace olu::osm {
         boost::property_tree::ptree _osmChangeElement;
 
         // Nodes that are in a delete-changeset in the change file.
-        std::set<long long> _deletedNodes;
+        std::set<id_t> _deletedNodes;
         // Nodes that are in a create-changeset in the change file.
-        std::set<long long> _createdNodes;
+        std::set<id_t> _createdNodes;
         // Nodes that are in a modify-changeset in the change file.
-        std::set<long long> _modifiedNodes;
+        std::set<id_t> _modifiedNodes;
         // Nodes that are referenced by a way or relation that are NOT present in the change file,
         // meaning they have to be fetched from the database
-        std::set<long long> _referencedNodes;
+        std::set<id_t> _referencedNodes;
 
         // Ways that are in a delete-changeset in the change file.
-        std::set<long long> _deletedWays;
+        std::set<id_t> _deletedWays;
         // Ways that are in a create-changeset in the change file.
-        std::set<long long> _createdWays;
+        std::set<id_t> _createdWays;
         // Ways that are in a modify-changeset in the change file.
-        std::set<long long> _modifiedWays;
+        std::set<id_t> _modifiedWays;
         // Ways that reference a node which was modified in the changeset.
-        std::set<long long> _waysToUpdateGeometry;
+        std::set<id_t> _waysToUpdateGeometry;
         // Ways that are referenced by a relation that are NOT present in the change file,
         // meaning they have to be fetched from the database
-        std::set<long long> _referencedWays;
+        std::set<id_t> _referencedWays;
 
         // Relations that are in a delete-changeset in the change file.
-        std::set<long long> _deletedRelations;
+        std::set<id_t> _deletedRelations;
         // Relations that are in a create-changeset in the change file.
-        std::set<long long> _createdRelations;
+        std::set<id_t> _createdRelations;
         // Relations that are in a modify-changeset in the change file.
-        std::set<long long> _modifiedRelations;
+        std::set<id_t> _modifiedRelations;
         // Relations that are of type multipolygon that are in a modify-changeset in the change file.
-        std::set<long long> _modifiedAreas;
+        std::set<id_t> _modifiedAreas;
         // Relations that reference a node, way or relation which was modified in the changeset.
-        std::set<long long> _relationsToUpdateGeometry;
+        std::set<id_t> _relationsToUpdateGeometry;
         // Relations that are referenced by a relation that are NOT present in the change file,
         // meaning they have to be fetched from the database
-        std::set<long long> _referencedRelations;
+        std::set<id_t> _referencedRelations;
 
         /**
          * @Returns TRUE if the node with the given ID is contained in a `create` or `modify`
@@ -119,7 +116,7 @@ namespace olu::osm {
          * Therefore, the earliest time this function can be called is inside the loop over the osm
          * elements inside `storeIdsOfElementsInChangeFile()` after the first way has occured.
          */
-        bool nodeInChangeFile(const long long &nodeId) {
+        bool nodeInChangeFile(const id_t &nodeId) const {
             return _modifiedNodes.contains(nodeId) || _createdNodes.contains(nodeId);
         }
 
@@ -131,7 +128,7 @@ namespace olu::osm {
          * Therefore, the earliest time this function can be called is inside the loop over the osm
          * elements inside `storeIdsOfElementsInChangeFile()` after the first way has occured.
          */
-        bool wayInChangeFile(const long long &wayId) {
+        bool wayInChangeFile(const id_t &wayId) const {
             return _modifiedWays.contains(wayId) || _createdWays.contains(wayId);
         }
 
@@ -143,7 +140,7 @@ namespace olu::osm {
          * Therefore, the earliest time this function can be called is after calling
          * `storeIdsOfElementsInChangeFile()`
          */
-        bool relationInChangeFile(const long long &relationId) {
+        bool relationInChangeFile(const id_t &relationId) const {
             return _modifiedRelations.contains(relationId) || _createdRelations.contains(relationId);
         }
 
@@ -248,8 +245,7 @@ namespace olu::osm {
     /**
      * Exception that can appear inside the `OsmChangeHandler` class.
      */
-    class OsmChangeHandlerException : public std::exception {
-    private:
+    class OsmChangeHandlerException final : public std::exception {
         std::string message;
     public:
         explicit OsmChangeHandlerException(const char* msg) : message(msg) { }

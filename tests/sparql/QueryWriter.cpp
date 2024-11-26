@@ -76,7 +76,7 @@ namespace olu::sparql {
     }
     TEST(QueryWriter, writeQueryForNodeLocations) {
         {
-            std::set<long long> nodeIds {1, 2, 3} ;
+            std::set<id_t> nodeIds {1, 2, 3} ;
             std::string query = olu::sparql::QueryWriter::writeQueryForNodeLocations(nodeIds);
             ASSERT_EQ(
                     "SELECT ?s ?o WHERE { { BIND (osm2rdfgeom:osm_node_1 AS ?s ) . ?s geo:asWKT ?o . } "
@@ -124,7 +124,7 @@ namespace olu::sparql {
     // }
     TEST(QueryWriter, writeQueryForWaysMembers) {
         {
-            std::set<long long> ids {1, 2, 3} ;
+            std::set<id_t> ids {1, 2, 3} ;
             std::string query = olu::sparql::QueryWriter::writeQueryForReferencedNodes(ids);
             ASSERT_EQ(
                     "SELECT ?node WHERE { "
@@ -138,7 +138,7 @@ namespace olu::sparql {
     }
     TEST(QueryWriter, writeQueryForRelationMembersWay) {
         {
-            std::set<long long> ids {1, 2, 3} ;
+            std::set<id_t> ids {1, 2, 3} ;
             std::string query = olu::sparql::QueryWriter::writeQueryForRelationMembers(ids);
             ASSERT_EQ(
                     "SELECT ?p WHERE { "
@@ -152,7 +152,7 @@ namespace olu::sparql {
     }
     TEST(QueryWriter, writeQueryForWaysReferencingNodes) {
         {
-            std::set<long long> ids {1, 2, 3} ;
+            std::set<id_t> ids {1, 2, 3} ;
             std::string query = olu::sparql::QueryWriter::writeQueryForWaysReferencingNodes(ids);
             ASSERT_EQ(
                     "SELECT ?s2 WHERE { "
@@ -166,7 +166,7 @@ namespace olu::sparql {
     }
     TEST(QueryWriter, writeQueryForRelationsReferencingNodes) {
         {
-            std::set<long long> ids {1, 2, 3} ;
+            std::set<id_t> ids {1, 2, 3} ;
             std::string query = olu::sparql::QueryWriter::writeQueryForRelationsReferencingNodes(ids);
             ASSERT_EQ(
                     "SELECT ?s WHERE { "
@@ -180,7 +180,7 @@ namespace olu::sparql {
     }
     TEST(QueryWriter, writeQueryForRelationsReferencingWays) {
         {
-            std::set<long long> ids {1, 2, 3} ;
+            std::set<id_t> ids {1, 2, 3} ;
             std::string query = olu::sparql::QueryWriter::writeQueryForRelationsReferencingWays(ids);
             ASSERT_EQ(
                     "SELECT ?s WHERE { "
@@ -194,7 +194,7 @@ namespace olu::sparql {
     }
     TEST(QueryWriter, writeQueryForRelationsReferencingRelations) {
         {
-            std::set<long long> ids {1, 2, 3} ;
+            std::set<id_t> ids {1, 2, 3} ;
             std::string query = olu::sparql::QueryWriter::writeQueryForRelationsReferencingRelations(ids);
             ASSERT_EQ(
                     "SELECT ?s WHERE { "
@@ -208,7 +208,7 @@ namespace olu::sparql {
     }
     TEST(QueryWriter, writeNodesDeleteQuery) {
         {
-            std::set<long long> ids {1, 2, 3} ;
+            std::set<id_t> ids {1, 2, 3} ;
             std::string query = olu::sparql::QueryWriter::writeNodesDeleteQuery(ids);
             ASSERT_EQ(
                     "DELETE WHERE { "

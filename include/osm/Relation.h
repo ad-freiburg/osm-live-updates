@@ -14,13 +14,13 @@ namespace olu::osm {
 
     class Relation {
     public:
-        explicit Relation(const u_id id): id(id) {};
+        explicit Relation(const id_t id): id(id) {};
 
         void setType(std::string const& type);
 
-        void addNodeAsMember(u_id const& id, Role const& role);
-        void addWayAsMember(u_id const& id, Role const& role);
-        void addRelationAsMember(u_id const& id, Role const& role);
+        void addNodeAsMember(id_t const& id, Role const& role);
+        void addWayAsMember(id_t const& id, Role const& role);
+        void addRelationAsMember(id_t const& id, Role const& role);
 
         /**
          * Returns an osm xml relation with an id and members.
@@ -40,9 +40,9 @@ namespace olu::osm {
         std::set<RelationMember> getNodeMembers() { return nodes; };
         std::set<RelationMember> getWayMembers() { return ways; };
         std::set<RelationMember> getRelationMembers() { return relations; };
-        [[nodiscard]] u_id getId() const { return id; };
+        [[nodiscard]] id_t getId() const { return id; };
     protected:
-        u_id id;
+        id_t id;
         std::string type;
         std::set<RelationMember> nodes;
         std::set<RelationMember> ways;

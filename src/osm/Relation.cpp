@@ -12,14 +12,14 @@ namespace olu::osm {
         this->type = type;
     }
 
-    void Relation::addNodeAsMember(u_id const& id, Role const& role) {
+    void Relation::addNodeAsMember(id_t const& id, Role const& role) {
         this->nodes.insert(RelationMember(id, role));
     }
-    void Relation::addWayAsMember(u_id const& id, Role const& role) {
+    void Relation::addWayAsMember(id_t const& id, Role const& role) {
         this->ways.insert(RelationMember(id, role));
     }
 
-    void Relation::addRelationAsMember(u_id const& id, Role const& role) {
+    void Relation::addRelationAsMember(id_t const& id, Role const& role) {
         this->relations.insert(RelationMember(id, role));
     }
 

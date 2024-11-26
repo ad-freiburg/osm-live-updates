@@ -28,7 +28,7 @@ namespace olu::osm {
 
     class Node {
     public:
-        explicit Node(u_id id, const WKTPoint& locationAsWkt);
+        explicit Node(id_t id, const WKTPoint& locationAsWkt);
 
         /**
          * Returns the node as a xml osm object.
@@ -39,9 +39,9 @@ namespace olu::osm {
         [[nodiscard]] std::string getXml() const;
 
         [[nodiscard]] osmium::Location getLocation() const { return loc; };
-        [[nodiscard]] u_id getId() const { return id; };
+        [[nodiscard]] id_t getId() const { return id; };
     protected:
-        u_id id;
+        id_t id;
         osmium::Location loc;
     };
 

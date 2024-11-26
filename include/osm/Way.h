@@ -28,9 +28,9 @@ namespace olu::osm {
 
     class Way {
     public:
-        explicit Way(const u_id id): id(id) {};
+        explicit Way(const id_t id): id(id) {};
 
-        void addMember(u_id nodeId);
+        void addMember(id_t nodeId);
 
         /**
         * Returns an osm xml element for a way with an id and node references.
@@ -41,9 +41,9 @@ namespace olu::osm {
         [[nodiscard]] std::string getXml() const;
 
         WayMembers getMembers() { return members; };
-        [[nodiscard]] u_id getId() const { return id; };
+        [[nodiscard]] id_t getId() const { return id; };
     protected:
-        u_id id;
+        id_t id;
         WayMembers members;
     };
 
