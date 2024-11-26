@@ -30,10 +30,7 @@
 #include <regex>
 
 /// The maximum number of triples that can be in a query to the QLever endpoint.
-const static inline int MAX_VALUES_PER_QUERY = 1024;
-const static inline int DELETE_TRIPLES_PER_WAY = 3;
-const static inline int DELETE_TRIPLES_PER_NODE = 2;
-const static inline int DELETE_TRIPLES_PER_RELATION = 2;
+static inline constexpr int MAX_VALUES_PER_QUERY = 1024;
 
 namespace cnst = olu::config::constants;
 
@@ -99,11 +96,7 @@ namespace olu::osm {
         createDummyNodes();
         createDummyWays();
         createDummyRelations();
-
-        // sort files with osm objects after their id
-        sortFile(cnst::NODE_TAG);
-        sortFile(cnst::WAY_TAG);
-        sortFile(cnst::RELATION_TAG);
+        finalizeTmpFiles();
 
         std::cout << "Convert data..." << std::endl;
         // Convert osm objects to triples
@@ -135,19 +128,33 @@ namespace olu::osm {
 
     void OsmChangeHandler::createOrClearTmpFiles() {
         std::ofstream file1(cnst::PATH_TO_NODE_FILE, std::ios::trunc);
-        file1 << "<root>" << std::endl;
+        file1 << "<osm version=\"0.6\">" << std::endl;
         file1.close();
 
         std::ofstream file2(cnst::PATH_TO_WAY_FILE, std::ios::trunc);
-        file2 << "<root>" << std::endl;
+        file2 << "<osm version=\"0.6\">" << std::endl;
         file2.close();
 
         std::ofstream file3(cnst::PATH_TO_RELATION_FILE, std::ios::trunc);
-        file3 << "<root>" << std::endl;
+        file3 << "<osm version=\"0.6\">" << std::endl;
         file3.close();
 
         std::ofstream file4(cnst::PATH_TO_TRIPLES_FILE, std::ios::trunc);
         file4.close();
+    }
+
+    void OsmChangeHandler::finalizeTmpFiles() {
+        std::ofstream file1(cnst::PATH_TO_NODE_FILE, std::ios::app);
+        file1 << "</osm>" << std::endl;
+        file1.close();
+
+        std::ofstream file2(cnst::PATH_TO_WAY_FILE, std::ios::app);
+        file2 << "</osm>" << std::endl;
+        file2.close();
+
+        std::ofstream file3(cnst::PATH_TO_RELATION_FILE, std::ios::app);
+        file3  << "</osm>" << std::endl;
+        file3.close();
     }
 
     void OsmChangeHandler::addToTmpFile(const boost::property_tree::ptree& element,
@@ -419,78 +426,6 @@ namespace olu::osm {
                     addToTmpFile(rel.getXml(), cnst::RELATION_TAG);
                 }
             });
-    }
-
-    void OsmChangeHandler::sortFile(const std::string& elementTag) {
-        std::string filename;
-        if (elementTag == cnst::NODE_TAG) {
-            filename = cnst::PATH_TO_NODE_FILE;
-        } else if (elementTag == cnst::WAY_TAG) {
-            filename = cnst::PATH_TO_WAY_FILE;
-        } else if (elementTag == cnst::RELATION_TAG) {
-            filename = cnst::PATH_TO_RELATION_FILE;
-        }
-
-        std::ofstream inputFile(filename, std::ios::app);
-        if (!inputFile.is_open()) {
-            std::cerr << "Error opening file!" << std::endl;
-            return;
-        }
-
-        inputFile << "</root>" << std::endl;
-        inputFile.close();
-
-        boost::property_tree::ptree pt;
-        util::XmlReader::populatePTreeFromFile(filename, pt);
-
-        std::ofstream outputFile(filename);
-        if (!outputFile.is_open()) {
-            std::cerr << "Error opening file!" << std::endl;
-            return;
-        }
-
-        if (elementTag == cnst::NODE_TAG) {
-            std::set<long long> nodeIDs;
-            nodeIDs.insert(_createdNodes.begin(), _createdNodes.end());
-            nodeIDs.insert(_modifiedNodes.begin(), _modifiedNodes.end());
-            nodeIDs.insert(_referencedNodes.begin(), _referencedNodes.end());
-            for (const auto &id: nodeIDs) {
-                for (const auto& child : pt.get_child("root")) {
-                    auto attr = child.second.get<std::string>("<xmlattr>.id");
-                    if (id == std::stoll(attr)) {
-                        outputFile << util::XmlReader::readTree(child.second, "node") << std::endl;
-                    }
-                }
-            }
-        } else if (elementTag == cnst::WAY_TAG) {
-            std::set<long long> wayIDs;
-            wayIDs.insert(_createdWays.begin(), _createdWays.end());
-            wayIDs.insert(_modifiedWays.begin(), _modifiedWays.end());
-            wayIDs.insert(_referencedWays.begin(), _referencedWays.end());
-            for (const auto &id: wayIDs) {
-                for (const auto& child : pt.get_child("root")) {
-                    auto attr = child.second.get<std::string>("<xmlattr>.id");
-                    if (id == std::stoll(attr)) {
-                        outputFile << util::XmlReader::readTree(child.second, "way") << std::endl;
-                    }
-                }
-            }
-        } else if (elementTag == cnst::RELATION_TAG) {
-            std::set<long long> relIDs;
-            relIDs.insert(_createdRelations.begin(), _createdRelations.end());
-            relIDs.insert(_modifiedRelations.begin(), _modifiedRelations.end());
-            relIDs.insert(_referencedRelations.begin(), _referencedRelations.end());
-            for (const auto &id: relIDs) {
-                for (const auto& child : pt.get_child("root")) {
-                    auto attr = child.second.get<std::string>("<xmlattr>.id");
-                    if (id == std::stoll(attr)) {
-                        outputFile << util::XmlReader::readTree(child.second, "relation") << std::endl;
-                    }
-                }
-            }
-        }
-
-        outputFile.close();
     }
 
     void OsmChangeHandler::deleteElementsFromDatabase() {

@@ -199,17 +199,13 @@ namespace olu::osm {
         void getReferencesForWays();
 
         static void createOrClearTmpFiles() ;
+        static void finalizeTmpFiles() ;
 
         /**
          * Writes the given osm element to its corresponding temporary file
          */
         static void addToTmpFile(const boost::property_tree::ptree& element, const std::string& elementTag) ;
         static void addToTmpFile(const std::string& element, const std::string& elementTag) ;
-
-        /**
-        * Sorts the temporary files for nodes, ways and relations after their id
-        */
-        void sortFile(const std::string& elementTag);
 
         /**
          * Creates dummy nodes for the referenced nodes that are not in the change file. The dummy

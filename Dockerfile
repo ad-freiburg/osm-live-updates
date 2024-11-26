@@ -46,7 +46,8 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     libbz2-dev \
     zlib1g-dev \
     libomp-dev \
-    libosmium2-dev
+    libosmium2-dev \
+    osmium-tool
 
 # Install certificates for git
 RUN cd ${HOME} && \

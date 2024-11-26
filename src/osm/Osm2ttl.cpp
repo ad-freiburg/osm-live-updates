@@ -69,7 +69,7 @@ namespace olu::osm {
 
         try {
             // Redicret std::cout to avoid output from osm2rdf
-            std::ofstream out("out.txt");
+            const std::ofstream out("osm2rdf_info.txt");
             std::streambuf *coutbuf = std::cerr.rdbuf();
             std::cerr.rdbuf(out.rdbuf());
 
@@ -90,42 +90,19 @@ namespace olu::osm {
 
     // _____________________________________________________________________________________________
     void Osm2ttl::writeToInputFile() {
-        std::ofstream input;
-        input.open(olu::config::constants::PATH_TO_INPUT_FILE);
-        if (!input) {
-            std::cerr << "Error opening file: " << olu::config::constants::PATH_TO_INPUT_FILE << std::endl;
-            exit(1);
+        const std::string command = "osmium sort " + cnst::PATH_TO_NODE_FILE + " " +
+                                    cnst::PATH_TO_WAY_FILE + " " + cnst::PATH_TO_RELATION_FILE +
+                                    " -o " + cnst::PATH_TO_INPUT_FILE + " --overwrite > /dev/null";
+
+        const int res = system(command.c_str());
+
+        if (res == -1) {
+            throw std::runtime_error("Error while sorting osm files.");
         }
 
-        input << "<osm version=\"0.6\">" << std::endl;
-
-        std::ifstream nodes(cnst::PATH_TO_NODE_FILE);
-        std::string line;
-        if (input && nodes) {
-            while (getline(nodes, line)) {
-                input << line << "\n";
-            }
+        if (res != 0) {
+            throw std::runtime_error("Error while sorting osm files with error code: " + std::to_string(res));
         }
-        nodes.close();
-
-        std::ifstream ways(cnst::PATH_TO_WAY_FILE);
-        if (input && ways) {
-            while (getline(ways, line)) {
-                input << line << "\n";
-            }
-        }
-        ways.close();
-
-        std::ifstream relations(cnst::PATH_TO_RELATION_FILE);
-        if (input && relations) {
-            while (getline(relations, line)) {
-                input << line << "\n";
-            }
-        }
-        relations.close();
-
-        input << "</osm>" << std::endl;;
-        input.close();
     }
 
     template <typename T>
