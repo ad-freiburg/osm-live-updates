@@ -128,8 +128,8 @@ namespace olu::osm {
                     << _modifiedWays.size() << " deleted: " << _deletedWays.size() << std::endl;
         std::cout << "relations created: " << _createdRelations.size() << " modified: "
                     << _modifiedRelations.size() << " deleted: " << _deletedRelations.size() << std::endl;
-        std::cout << "updated geometries for " << _waysToUpdateGeometry.size() << " ways " << std::endl;
-//                    << _relationsToUpdateGeometry.size() << " relations"
+        std::cout << "updated geometries for " << _waysToUpdateGeometry.size() << " ways "
+                    << _relationsToUpdateGeometry.size() << " relations" << std::endl;
     }
 
     void OsmChangeHandler::createOrClearTmpFiles() {
@@ -390,8 +390,12 @@ namespace olu::osm {
     }
 
     void OsmChangeHandler::createDummyWays() {
+        std::set<long long> wayIds;
+        wayIds.insert(_referencedWays.begin(), _referencedWays.end());
+        wayIds.insert(_waysToUpdateGeometry.begin(), _waysToUpdateGeometry.end());
+
         doInBatches(
-            _referencedWays,
+            wayIds,
             MAX_VALUES_PER_QUERY,
             [this](std::set<long long> const& batch) {
                 for (auto const& way: _odf.fetchWays(batch)) {
@@ -401,8 +405,12 @@ namespace olu::osm {
     }
 
     void OsmChangeHandler::createDummyRelations() {
+        std::set<long long> relations;
+        relations.insert(_referencedRelations.begin(), _referencedRelations.end());
+        relations.insert(_relationsToUpdateGeometry.begin(), _relationsToUpdateGeometry.end());
+
         doInBatches(
-            _referencedRelations,
+            relations,
             MAX_VALUES_PER_QUERY,
             [this](std::set<long long> const& batch) {
                 for (auto const& rel: _odf.fetchRelations(batch)) {
