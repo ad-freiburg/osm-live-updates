@@ -94,6 +94,7 @@ namespace olu::osm {
         getReferencesForRelations();
         getReferencesForWays();
 
+        std::cout << "Create dummy objects..." << std::endl;
         // Create dummy objects of the referenced osm objects
         createDummyNodes();
         createDummyWays();
@@ -134,12 +135,15 @@ namespace olu::osm {
 
     void OsmChangeHandler::createOrClearTmpFiles() {
         std::ofstream file1(cnst::PATH_TO_NODE_FILE, std::ios::trunc);
+        file1 << "<root>" << std::endl;
         file1.close();
 
         std::ofstream file2(cnst::PATH_TO_WAY_FILE, std::ios::trunc);
+        file2 << "<root>" << std::endl;
         file2.close();
 
         std::ofstream file3(cnst::PATH_TO_RELATION_FILE, std::ios::trunc);
+        file3 << "<root>" << std::endl;
         file3.close();
 
         std::ofstream file4(cnst::PATH_TO_TRIPLES_FILE, std::ios::trunc);
@@ -247,35 +251,34 @@ namespace olu::osm {
                         addToTmpFile(osmElement.second, cnst::RELATION_TAG);
                     }
                 }
-            } else if (changeset.first == config::constants::DELETE_TAG) {
-                continue;
             }
         }
+
+        // We do not need to keep the tree in memory after we are done here
+        _osmChangeElement.clear();
     }
 
     void OsmChangeHandler::getIdsForGeometryUpdate() {
         if (!_modifiedNodes.empty()) {
             doInBatches(
                 _modifiedNodes,
-            MAX_VALUES_PER_QUERY,
-            [this](const std::set<long long>& batch) {
-                auto wayIds = _odf.fetchWaysReferencingNodes(batch);
-                for (const auto &wayId: wayIds) {
-                    if (!_modifiedWays.contains(wayId)) {
-                        _waysToUpdateGeometry.insert(wayId);
+                MAX_VALUES_PER_QUERY,
+                [this](const std::set<long long>& batch) {
+                    for (const auto &wayId: _odf.fetchWaysReferencingNodes(batch)) {
+                        if (!wayInChangeFile(wayId)) {
+                            _waysToUpdateGeometry.insert(wayId);
+                        }
                     }
-                }
-            });
+                });
         }
 
         if (!_modifiedNodes.empty()) {
             doInBatches(
-                    _modifiedNodes,
+                _modifiedNodes,
                 MAX_VALUES_PER_QUERY,
                 [this](const std::set<long long>& batch) {
-                    auto relationIds = _odf.fetchRelationsReferencingNodes(batch);
-                    for (const auto &relId: relationIds) {
-                        if (!_modifiedRelations.contains(relId)) {
+                    for (const auto &relId: _odf.fetchRelationsReferencingNodes(batch)) {
+                        if (!relationInChangeFile(relId)) {
                             _relationsToUpdateGeometry.insert(relId);
                         }
                     }
@@ -287,19 +290,18 @@ namespace olu::osm {
         updatedWays.insert(_waysToUpdateGeometry.begin(), _waysToUpdateGeometry.end());
         if (!updatedWays.empty()) {
             doInBatches(
-            _modifiedWays,
-            MAX_VALUES_PER_QUERY,
-            [this](const std::set<long long>& batch) {
-                auto relationIds = _odf.fetchRelationsReferencingWays(batch);
-                for (const auto &relId: relationIds) {
-                    if (!_modifiedRelations.contains(relId)) {
-                        _relationsToUpdateGeometry.insert(relId);
+                updatedWays,
+                MAX_VALUES_PER_QUERY,
+                [this](const std::set<long long>& batch) {
+                    for (const auto &relId: _odf.fetchRelationsReferencingWays(batch)) {
+                        if (!relationInChangeFile(relId)) {
+                            _relationsToUpdateGeometry.insert(relId);
+                        }
                     }
-                }
-            });
+                });
         }
 
-        // Fetch relations that reference relations which geometrie has changed. Skip this because
+        // Fetch relations that reference relations which geometry has changed. Skip this because
         // osm2rdf does not calculate geometries for relations that reference other relations
 //        if (!_modifiedAreas.empty()) {
 //            doInBatches(
@@ -429,45 +431,65 @@ namespace olu::osm {
             filename = cnst::PATH_TO_RELATION_FILE;
         }
 
-        std::ifstream inputFile(filename);
+        std::ofstream inputFile(filename, std::ios::app);
         if (!inputFile.is_open()) {
             std::cerr << "Error opening file!" << std::endl;
             return;
         }
 
-        std::vector<std::pair<std::string, int>> linesWithNumbers;
-        std::string line;
-        while (std::getline(inputFile, line)) {
-            std::regex idRegex("id=\"(\\d+)");
-            std::smatch match;
-            long long id = -1;
-            if (std::regex_search(line, match, idRegex)) {
-                id = std::stoll(match[1]);
-            } else {
-                std::cout << "ID not found." << std::endl;
-            }
-
-            // Add the line and its extracted number to the vector
-            linesWithNumbers.emplace_back(line, id);
-        }
+        inputFile << "</root>" << std::endl;
         inputFile.close();
 
-        // Step 2: Sort the vector by the extracted numbers
-        std::sort(linesWithNumbers.begin(), linesWithNumbers.end(),
-                  [](const std::pair<std::string, int>& a, const std::pair<std::string, int>& b) {
-                      return a.second < b.second; // Sort in ascending order
-                  });
+        boost::property_tree::ptree pt;
+        util::XmlReader::populatePTreeFromFile(filename, pt);
 
-        // Step 3: Write the sorted lines back to the file
         std::ofstream outputFile(filename);
         if (!outputFile.is_open()) {
             std::cerr << "Error opening file!" << std::endl;
             return;
         }
 
-        for (const auto& [line, number] : linesWithNumbers) {
-            outputFile << line << '\n';
+        if (elementTag == cnst::NODE_TAG) {
+            std::set<long long> nodeIDs;
+            nodeIDs.insert(_createdNodes.begin(), _createdNodes.end());
+            nodeIDs.insert(_modifiedNodes.begin(), _modifiedNodes.end());
+            nodeIDs.insert(_referencedNodes.begin(), _referencedNodes.end());
+            for (const auto &id: nodeIDs) {
+                for (const auto& child : pt.get_child("root")) {
+                    auto attr = child.second.get<std::string>("<xmlattr>.id");
+                    if (id == std::stoll(attr)) {
+                        outputFile << util::XmlReader::readTree(child.second, "node") << std::endl;
+                    }
+                }
+            }
+        } else if (elementTag == cnst::WAY_TAG) {
+            std::set<long long> wayIDs;
+            wayIDs.insert(_createdWays.begin(), _createdWays.end());
+            wayIDs.insert(_modifiedWays.begin(), _modifiedWays.end());
+            wayIDs.insert(_referencedWays.begin(), _referencedWays.end());
+            for (const auto &id: wayIDs) {
+                for (const auto& child : pt.get_child("root")) {
+                    auto attr = child.second.get<std::string>("<xmlattr>.id");
+                    if (id == std::stoll(attr)) {
+                        outputFile << util::XmlReader::readTree(child.second, "way") << std::endl;
+                    }
+                }
+            }
+        } else if (elementTag == cnst::RELATION_TAG) {
+            std::set<long long> relIDs;
+            relIDs.insert(_createdRelations.begin(), _createdRelations.end());
+            relIDs.insert(_modifiedRelations.begin(), _modifiedRelations.end());
+            relIDs.insert(_referencedRelations.begin(), _referencedRelations.end());
+            for (const auto &id: relIDs) {
+                for (const auto& child : pt.get_child("root")) {
+                    auto attr = child.second.get<std::string>("<xmlattr>.id");
+                    if (id == std::stoll(attr)) {
+                        outputFile << util::XmlReader::readTree(child.second, "relation") << std::endl;
+                    }
+                }
+            }
         }
+
         outputFile.close();
     }
 

@@ -209,7 +209,7 @@ namespace olu::osm {
         /**
         * Sorts the temporary files for nodes, ways and relations after their id
         */
-        static void sortFile(const std::string& elementTag);
+        void sortFile(const std::string& elementTag);
 
         /**
          * Creates dummy nodes for the referenced nodes that are not in the change file. The dummy
