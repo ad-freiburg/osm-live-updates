@@ -7,17 +7,13 @@
 
 #include <string>
 #include <set>
-#include <vector>
 #include <boost/property_tree/ptree.hpp>
-#include "osm/Node.h"
 
 namespace olu::osm {
     class OsmObjectHelper {
     public:
 
         /**
-         *
-         * @param osmElement
          * @return True if the given relation is of type "multipolygon"
          */
         static bool isMultipolygon(const boost::property_tree::ptree &relation);
@@ -26,8 +22,7 @@ namespace olu::osm {
     /**
      * Exception that can appear inside the `WktHelper` class.
      */
-    class WktHelperException : public std::exception {
-    private:
+    class WktHelperException final : public std::exception {
         std::string message;
 
     public:

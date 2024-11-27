@@ -1,14 +1,28 @@
+// Copyright 2024, University of Freiburg
+// Authors: Nicolas von Trott <nicolasvontrott@gmail.com>.
+
+// This file is part of osm-live-updates.
 //
-// Created by Nicolas von Trott on 24.11.24.
+// osm-live-updates is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
+// osm-live-updates is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #ifndef RELATION_H
 #define RELATION_H
 
+#include "util/Types.h"
+
 #include <string>
 #include <set>
-
-#include "util/Types.h"
 
 namespace olu::osm {
 
@@ -43,10 +57,10 @@ namespace olu::osm {
         [[nodiscard]] id_t getId() const { return id; };
     protected:
         id_t id;
-        std::string type;
         std::set<RelationMember> nodes;
         std::set<RelationMember> ways;
         std::set<RelationMember> relations;
+        std::string type;
     };
 
     /**

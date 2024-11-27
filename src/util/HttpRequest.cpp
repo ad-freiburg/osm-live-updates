@@ -21,7 +21,6 @@
 #include <curl/curl.h>
 #include <iostream>
 #include <fstream>
-#include <utility>
 #include <vector>
 #include <cstring>
 
@@ -85,7 +84,7 @@ std::string HttpRequest::perform() {
         curl_easy_setopt(_curl, CURLOPT_POSTFIELDSIZE, _body.length());
     }
 
-    if(_curl) {
+    if(_curl != nullptr) {
         _res = curl_easy_perform(_curl);
         response = _data;
     } else {

@@ -19,10 +19,10 @@
 #ifndef OSM_LIVE_UPDATES_WAY_H
 #define OSM_LIVE_UPDATES_WAY_H
 
-#include <string>
-
 #include "util/Types.h"
-#include "osmium/osm/location.hpp"
+
+#include <string>
+#include <vector>
 
 namespace olu::osm {
 
@@ -40,11 +40,11 @@ namespace olu::osm {
         */
         [[nodiscard]] std::string getXml() const;
 
-        WayMembers getMembers() { return members; };
+        std::vector<id_t> getMembers() { return members; };
         [[nodiscard]] id_t getId() const { return id; };
     protected:
         id_t id;
-        WayMembers members;
+        std::vector<id_t> members;
     };
 
     /**

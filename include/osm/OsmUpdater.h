@@ -5,11 +5,9 @@
 #ifndef OSM_LIVE_UPDATES_OSMUPDATER_H
 #define OSM_LIVE_UPDATES_OSMUPDATER_H
 
-#include <string>
 #include "config/Config.h"
-#include "OsmDatabaseState.h"
-#include "OsmDataFetcher.h"
-#include "OsmChangeHandler.h"
+#include "osm/OsmDatabaseState.h"
+#include "osm/OsmDataFetcher.h"
 
 namespace olu::osm {
 
@@ -22,12 +20,13 @@ namespace olu::osm {
      */
     class OsmUpdater {
     public:
-        explicit OsmUpdater(config::Config& config);
+        explicit OsmUpdater(const config::Config &config) : _config(config), _odf(config),
+                                                      _latestState({}) { }
 
         /// Starts the update process.
         void run();
     private:
-        config::Config& _config;
+        config::Config _config;
         OsmDataFetcher _odf;
         OsmDatabaseState _latestState;
 

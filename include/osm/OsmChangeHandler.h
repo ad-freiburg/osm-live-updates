@@ -19,19 +19,15 @@
 #ifndef OSM_LIVE_UPDATES_OSMCHANGEHANDLER_H
 #define OSM_LIVE_UPDATES_OSMCHANGEHANDLER_H
 
-#include "sparql/SparqlWrapper.h"
-#include "config/Config.h"
 #include "osm/Osm2ttl.h"
 #include "osm/OsmDataFetcher.h"
-#include "config/Stats.h"
-#include "gtest/gtest.h"
+#include "sparql/SparqlWrapper.h"
+#include "config/Config.h"
 
 #include <set>
 #include <boost/property_tree/ptree.hpp>
 
-namespace pt = boost::property_tree;
 namespace olu::osm {
-
     /**
      * Processes a file in osm change format ('https://wiki.openstreetmap.org/wiki/OsmChange').
      *
@@ -44,31 +40,12 @@ namespace olu::osm {
      */
     class OsmChangeHandler {
     public:
-        explicit OsmChangeHandler(config::Config &config,const std::string& pathToOsmChangeFile);
-
+        explicit OsmChangeHandler(const config::Config &config, const std::string &pathToOsmChangeFile);
         void run();
-
-        /**
-         * Counts the osm elements (`node`, `way` or `relation`) in the osm change file that are in
-         * contained in the changesets.
-         *
-         * @param osmChangeElement the osm change element
-         * @return The number of elements to be processed
-         */
-        static size_t countElements(const boost::property_tree::ptree &osmChangeElement);
-
-        /**
-         * Creates a SPARQL query from the given ttl data to add the contained triples into the
-         * database and sends it to the SPARQL endpoint.
-         */
-        void createAndRunInsertQuery();
-
     private:
         config::Config _config;
         sparql::SparqlWrapper _sparql;
-        Osm2ttl _osm2ttl;
         OsmDataFetcher _odf;
-        Stats _stats;
 
         boost::property_tree::ptree _osmChangeElement;
 
@@ -116,7 +93,7 @@ namespace olu::osm {
          * Therefore, the earliest time this function can be called is inside the loop over the osm
          * elements inside `storeIdsOfElementsInChangeFile()` after the first way has occured.
          */
-        bool nodeInChangeFile(const id_t &nodeId) const {
+        [[nodiscard]] bool nodeInChangeFile(const id_t &nodeId) const {
             return _modifiedNodes.contains(nodeId) || _createdNodes.contains(nodeId);
         }
 
@@ -128,7 +105,7 @@ namespace olu::osm {
          * Therefore, the earliest time this function can be called is inside the loop over the osm
          * elements inside `storeIdsOfElementsInChangeFile()` after the first way has occured.
          */
-        bool wayInChangeFile(const id_t &wayId) const {
+        [[nodiscard]] bool wayInChangeFile(const id_t &wayId) const {
             return _modifiedWays.contains(wayId) || _createdWays.contains(wayId);
         }
 
@@ -140,7 +117,7 @@ namespace olu::osm {
          * Therefore, the earliest time this function can be called is after calling
          * `storeIdsOfElementsInChangeFile()`
          */
-        bool relationInChangeFile(const id_t &relationId) const {
+        [[nodiscard]] bool relationInChangeFile(const id_t &relationId) const {
             return _modifiedRelations.contains(relationId) || _createdRelations.contains(relationId);
         }
 
@@ -151,19 +128,13 @@ namespace olu::osm {
         void storeIdsOfElementsInChangeFile();
 
         /**
-         * Stores the ids of the nodes that are referenced in the given way in the _referencedNodes
-         * set
-         */
-        void storeIdsOfReferencedNodes(const boost::property_tree::ptree& wayElement);
-
-        /**
-         * Stores the ids of the nodes and ways that are referenced in the given relation in the
-         * _referencedNodes or _referencedWays set
+         * Stores the ids of the nodes and ways that are referenced in the given relation or way in
+         * the _referencedNodes or _referencedWays set
          */
         void storeIdsOfReferencedElements(const boost::property_tree::ptree& relElement);
 
         /**
-         * Loops over the change file and stores the relevant ones in an temporary file, and the
+         * Loops over the change file and stores the relevant ones in a temporary file, and the
          * referenced elements in the corresponding set
          */
         void processElementsInChangeFile();
@@ -172,7 +143,8 @@ namespace olu::osm {
          * Fetches the ids of ways and relations of which the geometry needs to be updated and
          * stores them in the corresponding set
          */
-        void getIdsForGeometryUpdate();
+        void getIdsOfRelationsToUpdateGeo();
+        void getIdsOfWaysToUpdateGeo();
 
         /**
          * Fetches the ids of relations that are referenced in relations which geometry will be
@@ -196,30 +168,30 @@ namespace olu::osm {
         void getReferencesForWays();
 
         static void createOrClearTmpFiles() ;
-        static void finalizeTmpFiles() ;
+        static void initTmpFile(const std::string& filepath) ;
+        static void finalizeTmpFile(const std::string& filepath) ;
 
         /**
          * Writes the given osm element to its corresponding temporary file
          */
-        static void addToTmpFile(const boost::property_tree::ptree& element, const std::string& elementTag) ;
         static void addToTmpFile(const std::string& element, const std::string& elementTag) ;
 
         /**
          * Creates dummy nodes for the referenced nodes that are not in the change file. The dummy
          * nodes contain the node id and the location which is used for the nodes that are
-         * referenced in ways and writes them to an temporary file
+         * referenced in ways and writes them to a temporary file
          */
         void createDummyNodes();
 
         /**
          * Creates dummy ways for the referenced ways that are not in the change file and writes
-         * them to an temporary file The dummy ways only contain the referenced nodes
+         * them to a temporary file The dummy ways only contain the referenced nodes
          */
         void createDummyWays();
 
         /**
          * Creates dummy relations for the referenced relations that are not in the change file and
-         * writes them to an temporary file The dummy relation only contain the members of that
+         * writes them to a temporary file The dummy relation only contain the members of that
          * relation
          */
         void createDummyRelations();
@@ -240,6 +212,16 @@ namespace olu::osm {
          * updated. Irrelevant triples are triples that where generated for referenced elements.
          */
         void filterRelevantTriples();
+
+        /**
+         * Returns the elements id.
+         *
+         * Example: For a node element with id 1787 the function would return '1787'
+         *
+         * @param element The osm element
+         * @return The id of the element
+         */
+        static id_t getIdFor(const boost::property_tree::ptree &element);
     };
 
     /**

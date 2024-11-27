@@ -29,12 +29,13 @@
 #include <set>
 #include <regex>
 
-/// The maximum number of triples that can be in a query to the QLever endpoint.
+/// The maximum number of values that should be in a query to the QLever endpoint.
 static inline constexpr int MAX_VALUES_PER_QUERY = 1024;
 
 namespace cnst = olu::config::constants;
 
-void doInBatches(std::set<olu::id_t>& set, const int elementsPerBatch, const std::function<void(std::set<olu::id_t>)>& func) {
+void doInBatches(std::set<olu::id_t>& set, const long elementsPerBatch,
+                 const std::function<void(std::set<olu::id_t>)>& func) {
     std::vector vector(set.begin(), set.end());
     std::vector<std::set<olu::id_t> > vectorBatches;
     for (auto it = vector.cbegin(), e = vector.cend(); it != vector.cend(); it = e) {
@@ -48,41 +49,36 @@ void doInBatches(std::set<olu::id_t>& set, const int elementsPerBatch, const std
 }
 
 namespace olu::osm {
-    OsmChangeHandler::OsmChangeHandler(config::Config &config,
+    OsmChangeHandler::OsmChangeHandler(const config::Config &config,
                                        const std::string &pathToOsmChangeFile) : _config(config),
                                                                                  _sparql(config),
-                                                                                 _osm2ttl(),
-                                                                                 _odf(OsmDataFetcher(
-                                                                                         config)) {
+                                                                                 _odf(config) {
         try {
-            if (pathToOsmChangeFile.ends_with(config::constants::GZIP_EXTENSION)) {
-                auto decompressed = olu::util::Decompressor::readGzip(pathToOsmChangeFile);
-                olu::util::XmlReader::populatePTreeFromString(
-                        decompressed,
-                        _osmChangeElement);
+            if (pathToOsmChangeFile.ends_with(cnst::GZIP_EXTENSION)) {
+                const auto decompressed = util::Decompressor::readGzip(pathToOsmChangeFile);
+                util::XmlReader::populatePTreeFromString(decompressed, _osmChangeElement);
             } else {
-                olu::util::XmlReader::populatePTreeFromFile(pathToOsmChangeFile,
-                                                            _osmChangeElement);
+                util::XmlReader::populatePTreeFromFile(pathToOsmChangeFile, _osmChangeElement);
             }
 
-            _osmChangeElement = _osmChangeElement.get_child(config::constants::OSM_CHANGE_TAG);
+            _osmChangeElement = _osmChangeElement.get_child(cnst::OSM_CHANGE_TAG);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
             throw OsmChangeHandlerException(
-                    "Exception while trying to read the change file in a property tree");
+                "Exception while trying to read the change file in a property tree");
         }
 
         createOrClearTmpFiles();
     }
 
     void OsmChangeHandler::run() {
+        std::cout << "Process change file..." << std::endl;
         // Store the ids of all elements that where deleted, modified or created and the ids of
         // objects where the geometry needs to be updated
-
-        std::cout << "Process change file..." << std::endl;
         storeIdsOfElementsInChangeFile();
         processElementsInChangeFile();
-        getIdsForGeometryUpdate();
+        getIdsOfWaysToUpdateGeo();
+        getIdsOfRelationsToUpdateGeo();
 
         std::cout << "Fetch references..." << std::endl;
         // Get the ids of all referenced objects
@@ -92,20 +88,19 @@ namespace olu::osm {
         getReferencesForWays();
 
         std::cout << "Create dummy objects..." << std::endl;
-        // Create dummy objects of the referenced osm objects
+        // Create dummy objects for the referenced osm objects
         createDummyNodes();
         createDummyWays();
         createDummyRelations();
-        finalizeTmpFiles();
 
         std::cout << "Convert data..." << std::endl;
         // Convert osm objects to triples
         try {
-            _osm2ttl.convert();
+            Osm2ttl::convert();
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
-            std::string msg = "Exception while trying to convert osm element to ttl";
-            throw OsmChangeHandlerException(msg.c_str());
+            throw OsmChangeHandlerException(
+                "Exception while trying to convert osm element to ttl");
         }
 
         std::cout << "Update database..." << std::endl;
@@ -117,60 +112,35 @@ namespace olu::osm {
         _sparql.clearCache();
 
         std::cout << "nodes created: " << _createdNodes.size() << " modified: "
-                    << _modifiedNodes.size() << " deleted: " << _deletedNodes.size() << std::endl;
+                << _modifiedNodes.size() << " deleted: " << _deletedNodes.size() << std::endl;
         std::cout << "ways created: " << _createdWays.size() << " modified: "
-                    << _modifiedWays.size() << " deleted: " << _deletedWays.size() << std::endl;
+                << _modifiedWays.size() << " deleted: " << _deletedWays.size() << std::endl;
         std::cout << "relations created: " << _createdRelations.size() << " modified: "
-                    << _modifiedRelations.size() << " deleted: " << _deletedRelations.size() << std::endl;
+                << _modifiedRelations.size() << " deleted: " << _deletedRelations.size() <<
+                std::endl;
         std::cout << "updated geometries for " << _waysToUpdateGeometry.size() << " ways "
-                    << _relationsToUpdateGeometry.size() << " relations" << std::endl;
+                << _relationsToUpdateGeometry.size() << " relations" << std::endl;
     }
 
     void OsmChangeHandler::createOrClearTmpFiles() {
-        std::ofstream file1(cnst::PATH_TO_NODE_FILE, std::ios::trunc);
-        file1 << "<osm version=\"0.6\">" << std::endl;
-        file1.close();
-
-        std::ofstream file2(cnst::PATH_TO_WAY_FILE, std::ios::trunc);
-        file2 << "<osm version=\"0.6\">" << std::endl;
-        file2.close();
-
-        std::ofstream file3(cnst::PATH_TO_RELATION_FILE, std::ios::trunc);
-        file3 << "<osm version=\"0.6\">" << std::endl;
-        file3.close();
+        initTmpFile(cnst::PATH_TO_NODE_FILE);
+        initTmpFile(cnst::PATH_TO_WAY_FILE);
+        initTmpFile(cnst::PATH_TO_RELATION_FILE);
 
         std::ofstream file4(cnst::PATH_TO_TRIPLES_FILE, std::ios::trunc);
         file4.close();
     }
 
-    void OsmChangeHandler::finalizeTmpFiles() {
-        std::ofstream file1(cnst::PATH_TO_NODE_FILE, std::ios::app);
-        file1 << "</osm>" << std::endl;
-        file1.close();
-
-        std::ofstream file2(cnst::PATH_TO_WAY_FILE, std::ios::app);
-        file2 << "</osm>" << std::endl;
-        file2.close();
-
-        std::ofstream file3(cnst::PATH_TO_RELATION_FILE, std::ios::app);
-        file3  << "</osm>" << std::endl;
-        file3.close();
+    void OsmChangeHandler::initTmpFile(const std::string& filepath) {
+        std::ofstream file(filepath, std::ios::trunc);
+        file << "<osm version=\"0.6\">" << std::endl;
+        file.close();
     }
 
-    void OsmChangeHandler::addToTmpFile(const boost::property_tree::ptree& element,
-                                        const std::string& elementTag) {
-        std::ofstream outputFile;
-        if (elementTag == cnst::NODE_TAG) {
-            outputFile.open (cnst::PATH_TO_NODE_FILE, std::ios::app);
-        } else if (elementTag == cnst::WAY_TAG) {
-            outputFile.open (cnst::PATH_TO_WAY_FILE, std::ios::app);
-        } else if (elementTag == cnst::RELATION_TAG) {
-            outputFile.open (cnst::PATH_TO_RELATION_FILE, std::ios::app);
-        }
-
-        outputFile << util::XmlReader::readTree(element, elementTag) << std::endl;
-
-        outputFile.close();
+    void OsmChangeHandler::finalizeTmpFile(const std::string& filepath) {
+        std::ofstream file(filepath, std::ios::app);
+        file << "</osm>" << std::endl;
+        file.close();
     }
 
     void OsmChangeHandler::addToTmpFile(const std::string& element,
@@ -190,41 +160,38 @@ namespace olu::osm {
     }
 
     void OsmChangeHandler::storeIdsOfElementsInChangeFile() {
-        for (const auto &changeset : _osmChangeElement) {
-            if (changeset.first == config::constants::MODIFY_TAG) {
-                for (const auto &osmElement: changeset.second) {
-                    auto id = olu::osm::OsmDataFetcher::getIdFor(osmElement.second);
-                    if (osmElement.first == config::constants::NODE_TAG) {
+        for (const auto &[changesetTag, changesetElement] : _osmChangeElement) {
+            if (changesetTag == "<xmlattr>") { continue; }
+
+            for (const auto &[elementTag, element]: changesetElement) {
+                auto id = getIdFor(element);
+
+                if (changesetTag == cnst::MODIFY_TAG) {
+                    if (elementTag == cnst::NODE_TAG) {
                         _modifiedNodes.insert(id);
-                    } else if (osmElement.first == config::constants::WAY_TAG) {
+                    } else if (elementTag == cnst::WAY_TAG) {
                         _modifiedWays.insert(id);
-                    } else if (osmElement.first == config::constants::RELATION_TAG) {
+                    } else if (elementTag == cnst::RELATION_TAG) {
                         _modifiedRelations.insert(id);
 
-                        if (osm::OsmObjectHelper::isMultipolygon(osmElement.second)) {
-                         _modifiedAreas.insert(id);
+                        if (OsmObjectHelper::isMultipolygon(element)) {
+                            _modifiedAreas.insert(id);
                         }
                     }
-                }
-            } else if (changeset.first == config::constants::CREATE_TAG) {
-                for (const auto &osmElement: changeset.second) {
-                    auto id = olu::osm::OsmDataFetcher::getIdFor(osmElement.second);
-                    if (osmElement.first == config::constants::NODE_TAG) {
+                } else if (changesetTag == cnst::CREATE_TAG) {
+                    if (elementTag == cnst::NODE_TAG) {
                         _createdNodes.insert(id);
-                    } else if (osmElement.first == config::constants::WAY_TAG) {
+                    } else if (elementTag == cnst::WAY_TAG) {
                         _createdWays.insert(id);
-                    } else if (osmElement.first == config::constants::RELATION_TAG) {
+                    } else if (elementTag == cnst::RELATION_TAG) {
                         _createdRelations.insert(id);
                     }
-                }
-            } else if (changeset.first == config::constants::DELETE_TAG) {
-                for (const auto &osmElement: changeset.second) {
-                    auto id = olu::osm::OsmDataFetcher::getIdFor(osmElement.second);
-                    if (osmElement.first == config::constants::NODE_TAG) {
+                } else if (changesetTag == cnst::DELETE_TAG) {
+                    if (elementTag == cnst::NODE_TAG) {
                         _deletedNodes.insert(id);
-                    } else if (osmElement.first == config::constants::WAY_TAG) {
+                    } else if (elementTag == cnst::WAY_TAG) {
                         _deletedWays.insert(id);
-                    } else if (osmElement.first == config::constants::RELATION_TAG) {
+                    } else if (elementTag == cnst::RELATION_TAG) {
                         _deletedRelations.insert(id);
                     }
                 }
@@ -233,30 +200,14 @@ namespace olu::osm {
     }
 
     void OsmChangeHandler::processElementsInChangeFile() {
-        for (const auto &changeset : _osmChangeElement) {
-            if (changeset.first == config::constants::MODIFY_TAG) {
-                for (const auto &osmElement: changeset.second) {
-                    if (osmElement.first == config::constants::NODE_TAG) {
-                        addToTmpFile(osmElement.second, cnst::NODE_TAG);
-                    } else if (osmElement.first == config::constants::WAY_TAG) {
-                        storeIdsOfReferencedNodes(osmElement.second);
-                        addToTmpFile(osmElement.second, cnst::WAY_TAG);
-                    } else if (osmElement.first == config::constants::RELATION_TAG) {
-                        storeIdsOfReferencedElements(osmElement.second);
-                        addToTmpFile(osmElement.second, cnst::RELATION_TAG);
+        for (const auto &[changesetTag, changesetElement]: _osmChangeElement) {
+            if (changesetTag == cnst::MODIFY_TAG || changesetTag == cnst::CREATE_TAG) {
+                for (const auto &[elementTag, element]: changesetElement) {
+                    if (elementTag == cnst::WAY_TAG || elementTag == cnst::RELATION_TAG) {
+                        storeIdsOfReferencedElements(element);
                     }
-                }
-            } else if (changeset.first == config::constants::CREATE_TAG) {
-                for (const auto &osmElement: changeset.second) {
-                    if (osmElement.first == config::constants::NODE_TAG) {
-                        addToTmpFile(osmElement.second, cnst::NODE_TAG);
-                    } else if (osmElement.first == config::constants::WAY_TAG) {
-                        storeIdsOfReferencedNodes(osmElement.second);
-                        addToTmpFile(osmElement.second, cnst::WAY_TAG);
-                    } else if (osmElement.first == config::constants::RELATION_TAG) {
-                        storeIdsOfReferencedElements(osmElement.second);
-                        addToTmpFile(osmElement.second, cnst::RELATION_TAG);
-                    }
+
+                    addToTmpFile(util::XmlReader::readTree(element, elementTag), elementTag);
                 }
             }
         }
@@ -265,12 +216,12 @@ namespace olu::osm {
         _osmChangeElement.clear();
     }
 
-    void OsmChangeHandler::getIdsForGeometryUpdate() {
+    void OsmChangeHandler::getIdsOfWaysToUpdateGeo() {
         if (!_modifiedNodes.empty()) {
             doInBatches(
                 _modifiedNodes,
                 MAX_VALUES_PER_QUERY,
-                [this](const std::set<id_t>& batch) {
+                [this](const std::set<id_t> &batch) {
                     for (const auto &wayId: _odf.fetchWaysReferencingNodes(batch)) {
                         if (!wayInChangeFile(wayId)) {
                             _waysToUpdateGeometry.insert(wayId);
@@ -278,7 +229,10 @@ namespace olu::osm {
                     }
                 });
         }
+    }
 
+    void OsmChangeHandler::getIdsOfRelationsToUpdateGeo() {
+        // Get ids of relations that reference a modified node
         if (!_modifiedNodes.empty()) {
             doInBatches(
                 _modifiedNodes,
@@ -292,6 +246,7 @@ namespace olu::osm {
                 });
         }
 
+        // Get ids of relations that reference a modified way
         std::set<id_t> updatedWays;
         updatedWays.insert(_modifiedWays.begin(), _modifiedWays.end());
         updatedWays.insert(_waysToUpdateGeometry.begin(), _waysToUpdateGeometry.end());
@@ -308,7 +263,7 @@ namespace olu::osm {
                 });
         }
 
-        // Fetch relations that reference relations which geometry has changed. Skip this because
+        // Get ids of relations that reference a modified relation. Skip this because
         // osm2rdf does not calculate geometries for relations that reference other relations
 //        if (!_modifiedAreas.empty()) {
 //            doInBatches(
@@ -396,6 +351,8 @@ namespace olu::osm {
                     addToTmpFile(node.getXml(), cnst::NODE_TAG);
                 }
             });
+
+        finalizeTmpFile(cnst::PATH_TO_NODE_FILE);
     }
 
     void OsmChangeHandler::createDummyWays() {
@@ -411,6 +368,8 @@ namespace olu::osm {
                     addToTmpFile(way.getXml(), cnst::WAY_TAG);
                 }
             });
+
+        finalizeTmpFile(cnst::PATH_TO_WAY_FILE);
     }
 
     void OsmChangeHandler::createDummyRelations() {
@@ -426,6 +385,8 @@ namespace olu::osm {
                     addToTmpFile(rel.getXml(), cnst::RELATION_TAG);
                 }
             });
+
+        finalizeTmpFile(cnst::PATH_TO_RELATION_FILE);
     }
 
     void OsmChangeHandler::deleteElementsFromDatabase() {
@@ -435,8 +396,14 @@ namespace olu::osm {
         for (const auto& id: nodesToDelete) {
             auto query = sparql::QueryWriter::writeNodesDeleteQuery({id});
             _sparql.setQuery(query);
-            _sparql.setPrefixes(config::constants::PREFIXES_FOR_NODE_DELETE_QUERY);
-            _sparql.runQuery();
+            _sparql.setPrefixes(cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
+            try {
+                _sparql.runUpdate();
+            } catch (std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                throw OsmChangeHandlerException(
+                        "Exception while trying to run sparql query for deletion");
+            }
         }
 
         std::set<id_t> waysToDelete;
@@ -445,8 +412,14 @@ namespace olu::osm {
         for (const auto& id: waysToDelete) {
             auto query = sparql::QueryWriter::writeWaysDeleteQuery({id});
             _sparql.setQuery(query);
-            _sparql.setPrefixes(config::constants::PREFIXES_FOR_WAY_DELETE_QUERY);
-            _sparql.runQuery();
+            _sparql.setPrefixes(cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
+            try {
+                _sparql.runUpdate();
+            } catch (std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                throw OsmChangeHandlerException(
+                        "Exception while trying to run sparql query for deletion");
+            }
         }
 
         std::set<id_t> relationsToDelete;
@@ -455,8 +428,14 @@ namespace olu::osm {
         for (const auto& id: relationsToDelete) {
             auto query = sparql::QueryWriter::writeRelationsDeleteQuery({id});
             _sparql.setQuery(query);
-            _sparql.setPrefixes(config::constants::PREFIXES_FOR_RELATION_DELETE_QUERY);
-            _sparql.runQuery();
+            _sparql.setPrefixes(cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
+            try {
+                _sparql.runUpdate();
+            } catch (std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                throw OsmChangeHandlerException(
+                        "Exception while trying to run sparql query for deletion");
+            }
         }
     }
 
@@ -478,7 +457,7 @@ namespace olu::osm {
         // divide the triples in batches
         std::vector<std::vector<std::string>> triplesBatches;
         for (auto it = triples.cbegin(), e = triples.cend(); it != triples.cend(); it = e) {
-            e = it + std::min<std::size_t>(triples.cend() - it, MAX_VALUES_PER_QUERY);
+            e = it + std::min<long>(triples.cend() - it, MAX_VALUES_PER_QUERY);
             triplesBatches.emplace_back(it, e);
         }
 
@@ -489,7 +468,7 @@ namespace olu::osm {
             _sparql.setQuery(query);
 
             try {
-                _sparql.runQuery();
+                _sparql.runUpdate();
             } catch (std::exception &e) {
                 std::cerr << e.what() << std::endl;
                 throw OsmChangeHandlerException(
@@ -500,51 +479,34 @@ namespace olu::osm {
 
     std::tuple<std::string, std::string, std::string>
     getElementsFromTriple(const std::string& triple) {
-        std::regex regex(R"((\S+)\s+(\S+)\s+(\S+))");
-        std::smatch match;
-        if (std::regex_search(triple, match, regex)) {
+        const std::regex regex(R"((\S+)\s+(\S+)\s+(\S+))");
+        if (std::smatch match; std::regex_search(triple, match, regex)) {
             return std::make_tuple(match[1], match[2], match[3]);
         }
 
-        std::string msg = "Cant split triple: " + triple;
+        const std::string msg = "Cant split triple: " + triple;
         throw OsmChangeHandlerException(msg.c_str());
     }
 
     id_t getIdFromTriple(const std::string& triple, const std::string& elementTag) {
+        std::string regexString;
         if (elementTag == cnst::NODE_TAG) {
-            std::regex integerRegex(R"((?:osmnode:|osm_node_|osm_node_centroid_)(\d+))");
-            std::smatch match;
-            if (std::regex_search(triple, match, integerRegex)) {
-                return stoll(match[1]);
-            }
-
-            std::string msg = "Cant get id for element: " + elementTag + " from triple: " + triple;
+            regexString = R"((?:osmnode:|osm_node_|osm_node_centroid_)(\d+))";
+        } else if (elementTag == cnst::WAY_TAG) {
+           regexString = R"((?:osmway:|osm_wayarea_)(\d+))";
+        } else if (elementTag == cnst::RELATION_TAG) {
+            regexString = R"((?:osmrel:|osm_relarea_)(\d+))";
+        } else {
+            const std::string msg = "Unknown element tag: " + elementTag;
             throw OsmChangeHandlerException(msg.c_str());
         }
 
-        if (elementTag == cnst::WAY_TAG) {
-            std::regex integerRegex(R"((?:osmway:|osm_wayarea_)(\d+))");
-            std::smatch match;
-            if (std::regex_search(triple, match, integerRegex)) {
-                return stoll(match[1]);
-            }
-
-            std::string msg = "Cant get id for element: " + elementTag + " from triple: " + triple;
-            throw OsmChangeHandlerException(msg.c_str());
+        const std::regex integerRegex(regexString);
+        if (std::smatch match; std::regex_search(triple, match, integerRegex)) {
+            return stoll(match[1]);
         }
 
-        if (elementTag == cnst::RELATION_TAG) {
-            std::regex integerRegex(R"((?:osmrel:|osm_relarea_)(\d+))");
-            std::smatch match;
-            if (std::regex_search(triple, match, integerRegex)) {
-                return stoll(match[1]);
-            }
-
-            std::string msg = "Cant get id for element: " + elementTag + " from triple: " + triple;
-            throw OsmChangeHandlerException(msg.c_str());
-        }
-
-        std::string msg = "Wrong element tag: " + elementTag;
+        const std::string msg = "Cant get id for " + elementTag + " from triple: " + triple;
         throw OsmChangeHandlerException(msg.c_str());
     }
 
@@ -564,7 +526,7 @@ namespace olu::osm {
         relationsToInsert.insert(_relationsToUpdateGeometry.begin(), _relationsToUpdateGeometry.end());
 
         std::ifstream triples;
-        triples.open(olu::config::constants::PATH_TO_OUTPUT_FILE);
+        triples.open(cnst::PATH_TO_OUTPUT_FILE);
 
         std::ofstream relevantTriples;
         relevantTriples.open (cnst::PATH_TO_TRIPLES_FILE, std::ios::app);
@@ -579,18 +541,16 @@ namespace olu::osm {
 
             auto [subject, predicate, object] = getElementsFromTriple(line);
             if (subject.starts_with("osmnode:") || subject.starts_with("osm2rdfgeom:osm_node_")) {
-                auto nodeId = getIdFromTriple(line, cnst::NODE_TAG);
-                if (nodesToInsert.contains(nodeId)) {
+                if (nodesToInsert.contains(getIdFromTriple(line, cnst::NODE_TAG))) {
                     relevantTriples << line << std::endl;
                 }
 
                 continue;
             }
 
-            if (subject.starts_with("osmway:")
-            || subject.starts_with("osm2rdfgeom:osm_wayarea_")) {
-                auto wayId = getIdFromTriple(line, cnst::WAY_TAG);
-                if (waysToInsert.contains(wayId)) {
+            if (subject.starts_with("osmway:") ||
+                subject.starts_with("osm2rdfgeom:osm_wayarea_")) {
+                if (waysToInsert.contains(getIdFromTriple(line, cnst::WAY_TAG))) {
                     relevantTriples << line << std::endl;
 
                     if (predicate == "osmway:node" || subject.starts_with("osm2rdfgeom:osm_area_centroid_")) {
@@ -601,13 +561,13 @@ namespace olu::osm {
                 continue;
             }
 
-            if (subject.starts_with("osmrel:")
-                || subject.starts_with("osm2rdfgeom:osm_relarea_")) {
-                auto relId = getIdFromTriple(line, cnst::RELATION_TAG);
-                if (relationsToInsert.contains(relId)) {
+            if (subject.starts_with("osmrel:") ||
+                subject.starts_with("osm2rdfgeom:osm_relarea_")) {
+                if (relationsToInsert.contains(getIdFromTriple(line, cnst::RELATION_TAG))) {
                     relevantTriples << line << std::endl;
 
-                    if (predicate == "osmrel:member" || subject.starts_with("osm2rdfgeom:osm_area_centroid_")) {
+                    if (predicate == "osmrel:member" ||
+                        subject.starts_with("osm2rdfgeom:osm_area_centroid_")) {
                         relevantSubjects.insert(object);
                     }
                 }
@@ -617,7 +577,6 @@ namespace olu::osm {
 
             if (relevantSubjects.contains(subject)) {
                 relevantTriples << line << std::endl;
-                continue;
             }
         }
 
@@ -625,73 +584,29 @@ namespace olu::osm {
         relevantTriples.close();
     }
 
-    size_t OsmChangeHandler::countElements(const boost::property_tree::ptree &osmChangeElement) {
-        size_t count = 0;
-        // Loop over all change elements in the change file ('modify', 'delete' or 'create')
-        for (const auto &child : osmChangeElement.get_child(
-                config::constants::OSM_CHANGE_TAG)) {
-            if (child.first == config::constants::MODIFY_TAG ||
-                child.first == config::constants::CREATE_TAG ||
-                child.first == config::constants::DELETE_TAG) {
-                count += child.second.size();
-            }
-        }
-        return count;
-    }
-
-    void
-    OsmChangeHandler::storeIdsOfReferencedNodes(const boost::property_tree::ptree& wayElement) {
-        for (const auto &child : wayElement.get_child("")) {
-            if (child.first != config::constants::NODE_REFERENCE_TAG) {
-                continue;
-            }
-
-            std::string idAsString;
-            try {
-                idAsString = util::XmlReader::readAttribute(
-                        config::constants::NODE_REFERENCE_ATTRIBUTE,
-                        child.second);
-            } catch (std::exception &e) {
-                std::cerr << e.what() << std::endl;
-                std::string msg = "Exception while trying to read id of node reference: "
-                                  + util::XmlReader::readTree(child.second);
-                throw OsmChangeHandlerException(msg.c_str());
-            }
-
-            id_t id;
-            try {
-                id = std::stol(idAsString);
-            } catch(std::exception &e) {
-                std::cerr << e.what() << std::endl;
-                std::string msg = "Exception while trying to convert id string: "
-                                  + idAsString + " to long";
-                throw OsmChangeHandlerException(msg.c_str());
-            }
-
-            if (!nodeInChangeFile(id)) {
-                _referencedNodes.insert(id);
-            }
-        }
-    }
-
     void
     OsmChangeHandler::storeIdsOfReferencedElements(const boost::property_tree::ptree& relElement) {
-        for (const auto &member : relElement.get_child("")) {
-            if (member.first != "member") {
+        for (const auto &[memberTag, element] : relElement.get_child("")) {
+            if (memberTag != "member" && memberTag != "nd") {
                 continue;
             }
 
-            auto type = util::XmlReader::readAttribute("<xmlattr>.type",
-                                                       member.second);
-            auto refIdAsString = util::XmlReader::readAttribute("<xmlattr>.ref",
-                                                                member.second);
+            std::string type;
+            if (memberTag == "nd") {
+                type = "node";
+            } else {
+                type = util::XmlReader::readAttribute("<xmlattr>.type", element);
+            }
+
+            auto refIdAsString = util::XmlReader::readAttribute("<xmlattr>.ref", element);
+
             id_t id;
             try {
                 id = std::stoll(refIdAsString);
             } catch(std::exception &e) {
                 std::cerr << e.what() << std::endl;
-                std::string msg = "Exception while trying to convert id string: "
-                                  + refIdAsString + " to long";
+                const std::string msg = "Exception while trying to convert id string: "
+                                        + refIdAsString + " to long";
                 throw OsmChangeHandlerException(msg.c_str());
             }
 
@@ -708,11 +623,31 @@ namespace olu::osm {
                     _referencedRelations.insert(id);
                 }
             } else {
-                std::string msg = "Cant handle member type: " + type + " for relation: "
-                        + util::XmlReader::readTree(relElement);
+                const std::string msg = "Cant handle member type: " + type + " for element: "
+                                        + util::XmlReader::readTree(relElement);
                 throw OsmChangeHandlerException(msg.c_str());
             }
         }
-
     }
+
+    id_t OsmChangeHandler::getIdFor(const boost::property_tree::ptree &element) {
+        std::string identifier;
+        try {
+            identifier = util::XmlReader::readAttribute(config::constants::ID_ATTRIBUTE, element);
+        } catch (std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            const std::string msg = "Could not extract identifier from element: "
+                                    + util::XmlReader::readTree(element);
+            throw OsmDataFetcherException(msg.c_str());
+        }
+
+        try {
+            return std::stoll(identifier);
+        } catch (std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            const std::string msg = "Could not cast identifier: " + identifier + " to id_t";
+            throw OsmDataFetcherException(msg.c_str());
+        }
+    }
+
 } // namespace olu::osm

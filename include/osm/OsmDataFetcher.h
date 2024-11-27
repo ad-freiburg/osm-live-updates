@@ -19,16 +19,15 @@
 #ifndef OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 #define OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 
+#include "osm/OsmDatabaseState.h"
+#include "osm/Node.h"
+#include "osm/Relation.h"
+#include "osm/Way.h"
+#include "sparql/SparqlWrapper.h"
+#include "util/Types.h"
+
 #include <set>
 #include <string>
-#include <boost/property_tree/ptree.hpp>
-
-#include "osm/OsmDatabaseState.h"
-#include "sparql/SparqlWrapper.h"
-#include "Node.h"
-#include "Relation.h"
-#include "Way.h"
-#include "util/Types.h"
 
 namespace olu::osm {
 
@@ -41,7 +40,7 @@ namespace olu::osm {
     class OsmDataFetcher {
     public:
         explicit OsmDataFetcher(const config::Config &config)
-            : _config(config), _sparqlWrapper(sparql::SparqlWrapper(config)) { }
+            : _config(config), _sparqlWrapper(config) { }
 
         // Fetch from SERVER -----------------------------------------------------------------------
         /**
@@ -84,7 +83,7 @@ namespace olu::osm {
          * Sends a query to the sparql endpoint to get the location of the nodes with the given ids
          *
          * @warning It is not guaranteed that the SPARQL endpoint returns a location for each node
-         * ID, therefore the returned vector can have less elements than the given set of node ids
+         * ID, therefore the returned vector can have fewer elements than the given set of node ids
          *
          * @param nodeIds The ids of the nodes to fetch location for
          * @return A vector containing node objects with the location and id
@@ -128,16 +127,6 @@ namespace olu::osm {
         std::string fetchLatestTimestampOfAnyNode();
 
         /**
-         * Returns the elements id.
-         *
-         * Example: For a node element with id 1787 the function would return '1787'
-         *
-         * @param element The osm element
-         * @return The id of the element
-         */
-        static id_t getIdFor(const boost::property_tree::ptree &element);
-
-        /**
          * @return The ids of all ways that reference the given nodes.
          */
         std::vector<id_t> fetchWaysReferencingNodes(const std::set<id_t> &nodeIds);
@@ -169,6 +158,9 @@ namespace olu::osm {
          * @return The database state described by the state file
          */
         static OsmDatabaseState extractStateFromStateFile(const std::string& stateFile);
+
+        boost::property_tree::ptree runQuery(const std::string &query,
+                                             const std::vector<std::string> &prefixes);
     };
 
     /**

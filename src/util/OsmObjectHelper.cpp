@@ -3,22 +3,19 @@
 //
 
 #include "util/OsmObjectHelper.h"
-#include "config/Constants.h"
 #include "util/XmlReader.h"
+
 #include <string>
 
-namespace cnst = olu::config::constants;
-
 bool olu::osm::OsmObjectHelper::isMultipolygon(const boost::property_tree::ptree &relation) {
-    for (const auto &result: relation.get_child("")) {
-        if (result.first == "tag") {
-            if (olu::util::XmlReader::readAttribute("<xmlattr>.k",
-                                                    result.second) == "type" &&
-                olu::util::XmlReader::readAttribute("<xmlattr>.v",
-                                                    result.second) == "multipolygon") {
-             return true;
+    for (const auto &[tag, attr]: relation.get_child("")) {
+        if (tag == "tag") {
+            if (util::XmlReader::readAttribute("<xmlattr>.k", attr) == "type" &&
+                util::XmlReader::readAttribute("<xmlattr>.v", attr) == "multipolygon") {
+                return true;
             }
         }
     }
+
     return false;
 }

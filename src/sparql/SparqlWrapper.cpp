@@ -41,8 +41,7 @@ namespace olu::sparql {
         }
     }
 
-    // _____________________________________________________________________________________________
-    std::string SparqlWrapper::runQuery() {
+    std::string SparqlWrapper::send(const std::string& acceptValue) {
         handleFileOutput();
 
         // Format and encode query
@@ -51,10 +50,9 @@ namespace olu::sparql {
 
         std::string response;
         auto request = util::HttpRequest(util::POST, _config.sparqlEndpointUri);
-        request.addHeader(olu::config::constants::HTML_KEY_CONTENT_TYPE,
-                          olu::config::constants::HTML_VALUE_CONTENT_TYPE);
-        request.addHeader(olu::config::constants::HTML_KEY_ACCEPT,
-                          olu::config::constants::HTML_VALUE_ACCEPT_SPARQL_RESULT_XML);
+        request.addHeader(config::constants::HTML_KEY_CONTENT_TYPE,
+                          config::constants::HTML_VALUE_CONTENT_TYPE);
+        request.addHeader(config::constants::HTML_KEY_ACCEPT, acceptValue);
         // We need to set this otherwise libcurl will wait 1 sec before sending the request
         request.addHeader("Expect", "");
 
@@ -77,20 +75,46 @@ namespace olu::sparql {
             throw SparqlWrapperException("Empty response from SPARQL endpoint");
         }
 
+        return response;
+    }
+
+
+    // _____________________________________________________________________________________________
+    void SparqlWrapper::runUpdate() {
+        auto response = send(config::constants::HTML_VALUE_ACCEPT_SPARQL_RESULT_JSON);
+
+        boost::property_tree::ptree pt;
+        std::istringstream json_stream(response);
+        try {
+            read_json(json_stream, pt);
+        } catch(std::exception &e) {
+            std::string msg = "Could not interpret response from SPARQL endpoint: " + response;
+            throw SparqlWrapperException(msg.c_str());
+        }
+
+        if (pt.get<std::string>("status") == "ERROR") {
+            auto exception = pt.get<std::string>("exception");
+            std::string msg = "SPARQL endpoint returned status ERROR with exception: " + exception;
+            throw SparqlWrapperException(msg.c_str());
+        }
+    }
+
+    // _____________________________________________________________________________________________
+    boost::property_tree::ptree SparqlWrapper::runQuery() {
+        auto response = send(config::constants::HTML_VALUE_ACCEPT_SPARQL_RESULT_XML);
+
         boost::property_tree::ptree pt;
         std::istringstream json_stream(response);
         // The QLever endpoint will return the content in json if an exception occurred, so we check
         // If we can parse the response as json. If that fails the response is in xml format and we
         // can carry on
         try {
-            boost::property_tree::read_json(json_stream, pt);
+            read_json(json_stream, pt);
         } catch(std::exception &e) {
             // If the json parsing failed that means we got a valid response from the endpoint
-            return response;
-        }
-
-        if (pt.get<std::string>("status") != "ERROR") {
-            return response;
+            boost::property_tree::ptree responseAsTree;
+            util::XmlReader::populatePTreeFromString(response, responseAsTree);
+            return responseAsTree;
         }
 
         if (pt.get<std::string>("status") == "ERROR") {
