@@ -2,13 +2,13 @@
 // Created by Nicolas von Trott on 11.09.24.
 //
 
-#include <iostream>
 #include "osm/OsmUpdater.h"
+#include "osm/OsmChangeHandler.h"
 #include "osm2rdf/util/Time.h"
 
+#include <iostream>
+
 namespace olu::osm {
-    OsmUpdater::OsmUpdater(config::Config &config)
-    : _config(config), _odf(OsmDataFetcher(config)) { }
 
     void OsmUpdater::run() {
         // If the user has provided the path to an osm change file, only this change file will be
@@ -71,7 +71,7 @@ namespace olu::osm {
             timestamp = _config.timestamp;
         }
 
-        auto databaseState = _odf.fetchDatabaseStateForTimestamp(timestamp);
-        return databaseState.sequenceNumber;
+        auto [_, sequenceNumber] = _odf.fetchDatabaseStateForTimestamp(timestamp);
+        return sequenceNumber;
     }
 }

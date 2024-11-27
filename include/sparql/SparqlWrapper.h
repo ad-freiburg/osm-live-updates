@@ -19,11 +19,12 @@
 #ifndef OSM_LIVE_UPDATES_SPARQLWRAPPER_H
 #define OSM_LIVE_UPDATES_SPARQLWRAPPER_H
 
-#include "util/HttpMethod.h"
 #include "config/Config.h"
 
 #include <string>
+#include <utility>
 #include <vector>
+#include <boost/property_tree/ptree.hpp>
 
 namespace olu::sparql {
 
@@ -40,9 +41,9 @@ namespace olu::sparql {
      */
     class SparqlWrapper {
     public:
-        explicit SparqlWrapper(const olu::config::Config& config) {
-            _config = config; clearOutputFile();
-        };
+        explicit SparqlWrapper(config::Config  config): _config(std::move(config)) {
+            clearOutputFile();
+        }
 
         /**
          * Sets the query to send to the SPARQL endpoint. The prefixes must be set
@@ -65,9 +66,17 @@ namespace olu::sparql {
          *
          * @return The response from the SPARQL endpoint.
          */
-        std::string runQuery();
+        boost::property_tree::ptree runQuery();
+
+        /**
+         * Sends a POST request with the encoded prefixes and the update query as body to the SPARQL
+         * endpoint.
+         *
+         * @return The response from the SPARQL endpoint.
+         */
+        void runUpdate();
     private:
-        olu::config::Config _config;
+        config::Config _config;
         std::string _query;
         std::string _prefixes;
 
@@ -78,13 +87,14 @@ namespace olu::sparql {
          * is set
          */
         void handleFileOutput();
+
+        std::string send(const std::string& acceptValue);
     };
 
     /**
      * Exception that can appear inside the `SparqlWrapper` class.
      */
-    class SparqlWrapperException : public std::exception {
-    private:
+    class SparqlWrapperException final : public std::exception {
         std::string message;
 
     public:

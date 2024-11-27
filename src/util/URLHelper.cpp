@@ -76,9 +76,9 @@ std::string URLHelper::encodeForUrlQuery(const std::string &value) {
     escaped.fill('0');
     escaped << std::hex;
 
-    for (char c : value) {
+    for (const char c : value) {
         // Keep alphanumeric characters and other allowed characters
-        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') {
+        if (isalnum(c) != 0 || c == '-' || c == '_' || c == '.' || c == '~') {
             escaped << c;
             continue;
         }

@@ -40,6 +40,8 @@ namespace olu::config::constants {
     const static inline std::string HTML_KEY_ACCEPT = "Accept";
     const static inline std::string HTML_VALUE_ACCEPT_SPARQL_RESULT_XML =
             "application/sparql-results+xml";
+    const static inline std::string HTML_VALUE_ACCEPT_SPARQL_RESULT_JSON =
+            "application/sparql-results+json";
 
     // File extensions
     const static inline std::string OSM_CHANGE_FILE_EXTENSION = ".osc";
@@ -170,10 +172,6 @@ namespace olu::config::constants {
     };
 
     // Qlever
-    const static inline std::string PATH_TO_SPARQL_RESULT =
-            "sparql.results.result.binding.literal";
-
-
     const static inline std::string HEADER = "Configuration for OLU";
 
     const static inline std::string HELP_OPTION_SHORT = "h";

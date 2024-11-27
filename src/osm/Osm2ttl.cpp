@@ -101,14 +101,14 @@ namespace olu::osm {
         }
 
         if (res != 0) {
-            throw std::runtime_error("Error while sorting osm files with error code: " + std::to_string(res));
+            throw std::runtime_error(
+                "Error while sorting osm files with error code: " + std::to_string(res));
         }
     }
 
+    // _____________________________________________________________________________________________
     template <typename T>
-    void Osm2ttl::run(const osm2rdf::config::Config &config) const {
-        // Setup
-        // Input file reference
+    void Osm2ttl::run(const osm2rdf::config::Config &config) {
         osm2rdf::util::Output output{config, config.output};
         if (!output.open()) {
             std::cerr << "Error opening outputfile: " << config.output << std::endl;
@@ -125,15 +125,6 @@ namespace olu::osm {
                                                       &geomHandler};
             osmiumHandler.handle();
         }
-
-//        if (!config.noGeometricRelations) {
-//            std::cerr << std::endl;
-//            std::cerr << osm2rdf::util::currentTimeFormatted()
-//                      << "Calculating geometric relations ..." << std::endl;
-//            geomHandler.calculateRelations();
-//            std::cerr << osm2rdf::util::currentTimeFormatted() << "... done"
-//                      << std::endl;
-//        }
 
         // All work done, close output
         output.close();

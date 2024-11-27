@@ -16,23 +16,24 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
+#include "osm/Node.h"
+
 #include <boost/regex.hpp>
 #include <iostream>
 #include <sstream>
 #include <string>
 
-#include "osm/Node.h"
+/// The maximum number of decimals for the location in a node
+static inline constexpr int MAX_NODE_LOC_PRECISION = 7;
 
 namespace olu::osm {
 
     Node::Node(id_t id, const WKTPoint& locationAsWkt) {
         this->id = id;
 
-        const boost::regex pattern(R"(POINT\((-?\d+)\.(\d+)\s(-?\d+)\.(\d+)\))");
-        boost::smatch match;
-
         std::string lat; std::string lon;
-        if (boost::regex_search(locationAsWkt, match, pattern)) {
+        const boost::regex pattern(R"(POINT\((-?\d+)\.(\d+)\s(-?\d+)\.(\d+)\))");
+        if (boost::smatch match; regex_search(locationAsWkt, match, pattern)) {
             lon = match[1] + match[2];
             lat = match[3] + match[4];
         } else {
@@ -55,10 +56,11 @@ namespace olu::osm {
 
     std::string Node::getXml() const {
         std::ostringstream oss;
-        oss.precision(7);
+        oss.precision(MAX_NODE_LOC_PRECISION);
         oss << std::fixed << "<node id=\"" << this->getId() << "\" lat=\"" << this->loc.lat()
             << "\" lon=\"" << this->loc.lon() << "\"/>";
 
         return oss.str();
     }
+
 }

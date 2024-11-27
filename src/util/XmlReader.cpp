@@ -32,7 +32,7 @@ void olu::util::XmlReader::populatePTreeFromString(const std::string &xml, pt::p
     ss << xml;
 
     try {
-        pt::xml_parser::read_xml(ss, tree, pt::xml_parser::trim_whitespace);
+        read_xml(ss, tree, pt::xml_parser::trim_whitespace);
     } catch(std::exception &e) {
         std::cout << e.what() << std::endl;
         std::string msg = "Exception while trying to read the xml: " + xml;
@@ -44,8 +44,8 @@ void olu::util::XmlReader::populatePTreeFromString(const std::string &xml, pt::p
 void olu::util::XmlReader::populatePTreeFromFile(const std::string &pathToFile,
                                                  boost::property_tree::ptree &tree) {
     std::ifstream ifs (pathToFile);
-    std::string fileContent( (std::istreambuf_iterator<char>(ifs) ),
-                             (std::istreambuf_iterator<char>()) );
+    const std::string fileContent( (std::istreambuf_iterator<char>(ifs) ),
+                                (std::istreambuf_iterator<char>()) );
 
     populatePTreeFromString(fileContent, tree);
 }

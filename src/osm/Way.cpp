@@ -17,6 +17,7 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "osm/Way.h"
+
 namespace olu::osm {
 
     void Way::addMember(id_t nodeId) {

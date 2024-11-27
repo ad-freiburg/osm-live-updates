@@ -19,10 +19,11 @@
 #ifndef OSM_LIVE_UPDATES_HTTPREQUEST_H
 #define OSM_LIVE_UPDATES_HTTPREQUEST_H
 
+#include "util/HttpMethod.h"
+
 #include <string>
 #include <vector>
 #include <curl/curl.h>
-#include "HttpMethod.h"
 
 namespace olu::util {
 
@@ -43,11 +44,10 @@ namespace olu::util {
         std::string _data;
         std::string _body;
 
-        struct curl_slist *_chunk = nullptr;
+        curl_slist *_chunk = nullptr;
     };
 
-    class HttpRequestException : public std::exception {
-    private:
+    class HttpRequestException final : public std::exception {
         std::string message;
 
     public:

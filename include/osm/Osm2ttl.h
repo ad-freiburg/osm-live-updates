@@ -27,10 +27,10 @@ namespace olu::osm {
     class Osm2ttl {
     public:
         // Converts osm data to ttl triplets
-        std::filesystem::path convert();
+        static std::filesystem::path convert() ;
     private:
         template <typename T>
-        void run(const osm2rdf::config::Config& config) const;
+        static void run(const osm2rdf::config::Config& config);
         static void writeToInputFile();
         static void clearInputFile();
     };

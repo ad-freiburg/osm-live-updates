@@ -19,11 +19,11 @@
 #ifndef OSM_LIVE_UPDATES_QUERYWRITER_H
 #define OSM_LIVE_UPDATES_QUERYWRITER_H
 
+#include "util/Types.h"
+
 #include <string>
 #include <vector>
 #include <set>
-
-#include "util/Types.h"
 
 namespace olu::sparql {
 
