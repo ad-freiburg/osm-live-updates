@@ -51,7 +51,6 @@ namespace olu::osm {
                        cnst::PATH_TO_OUTPUT_FILE,
                        "-t",
                        cnst::PATH_TO_SCRATCH_DIRECTORY,
-                       "--" + osm2rdf::config::constants::ADD_WAY_NODE_GEOMETRY_OPTION_LONG,
                        "--" + osm2rdf::config::constants::ADD_WAY_NODE_ORDER_OPTION_LONG,
                        "--" + osm2rdf::config::constants::OUTPUT_COMPRESS_OPTION_LONG,
                        "none"
@@ -70,7 +69,7 @@ namespace olu::osm {
 
         try {
             // Redicret std::cout to avoid output from osm2rdf
-            std::ofstream out("out.txt");
+            const std::ofstream out("osm2rdf_info.txt");
             std::streambuf *coutbuf = std::cerr.rdbuf();
             std::cerr.rdbuf(out.rdbuf());
 
@@ -91,27 +90,19 @@ namespace olu::osm {
 
     // _____________________________________________________________________________________________
     void Osm2ttl::writeToInputFile() {
-        std::ifstream nodes(cnst::PATH_TO_NODE_FILE);
-        std::ifstream ways(cnst::PATH_TO_WAY_FILE);
-        std::ifstream relations(cnst::PATH_TO_RELATION_FILE);
+        const std::string command = "osmium sort " + cnst::PATH_TO_NODE_FILE + " " +
+                                    cnst::PATH_TO_WAY_FILE + " " + cnst::PATH_TO_RELATION_FILE +
+                                    " -o " + cnst::PATH_TO_INPUT_FILE + " --overwrite > /dev/null";
 
-        std::ofstream input;
-        input.open(olu::config::constants::PATH_TO_INPUT_FILE);
-        if (!input) {
-            std::cerr << "Error opening file: " << olu::config::constants::PATH_TO_INPUT_FILE << std::endl;
-            exit(1);
+        const int res = system(command.c_str());
+
+        if (res == -1) {
+            throw std::runtime_error("Error while sorting osm files.");
         }
 
-        input << "<osm version=\"0.6\">"
-            << nodes.rdbuf()
-            << ways.rdbuf()
-            << relations.rdbuf()
-            << "</osm>";
-
-        input.close();
-        nodes.close();
-        ways.close();
-        relations.close();
+        if (res != 0) {
+            throw std::runtime_error("Error while sorting osm files with error code: " + std::to_string(res));
+        }
     }
 
     template <typename T>

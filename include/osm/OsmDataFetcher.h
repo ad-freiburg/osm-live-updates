@@ -19,12 +19,16 @@
 #ifndef OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 #define OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 
-#include "osm/OsmDatabaseState.h"
-#include "sparql/SparqlWrapper.h"
-
+#include <set>
 #include <string>
 #include <boost/property_tree/ptree.hpp>
-#include <set>
+
+#include "osm/OsmDatabaseState.h"
+#include "sparql/SparqlWrapper.h"
+#include "Node.h"
+#include "Relation.h"
+#include "Way.h"
+#include "util/Types.h"
 
 namespace olu::osm {
 
@@ -36,8 +40,8 @@ namespace olu::osm {
      */
     class OsmDataFetcher {
     public:
-        explicit OsmDataFetcher(olu::config::Config& config)
-        : _config(config), _sparqlWrapper(olu::sparql::SparqlWrapper(config)) { }
+        explicit OsmDataFetcher(const config::Config &config)
+            : _config(config), _sparqlWrapper(sparql::SparqlWrapper(config)) { }
 
         // Fetch from SERVER -----------------------------------------------------------------------
         /**
@@ -78,45 +82,43 @@ namespace olu::osm {
 
         /**
          * Sends a query to the sparql endpoint to get the location of the nodes with the given ids
-         * and returns the locations as points in WKT format
+         *
+         * @warning It is not guaranteed that the SPARQL endpoint returns a location for each node
+         * ID, therefore the returned vector can have less elements than the given set of node ids
          *
          * @param nodeIds The ids of the nodes to fetch location for
-         * @return The locations of the nodes as WKT point
+         * @return A vector containing node objects with the location and id
          */
-        std::vector<std::string> fetchNodeLocationsAsWkt(const std::set<long long int> &nodeIds);
+        std::vector<Node> fetchNodes(const std::set<id_t> &nodeIds);
 
         /**
          * @return A vector containing a pair of the member's uri and role for all members of the
          * given relation.
          */
-        std::pair<std::string, std::vector<std::pair<std::string, std::string>>>
-        fetchRelationMembers(const long long &relationId);
+        std::vector<Relation>
+        fetchRelations(const std::set<id_t> &relationIds);
 
         /**
-         * Sends a query to the sparql endpoint to get the the ids of all nodes that are referenced
+         * Sends a query to the sparql endpoint to get the ids of all nodes that are referenced
          * in the given way
          *
          * @return The subjects of all members
          */
-        std::vector<long long int> fetchWayMembers(const long long &wayId);
+        std::vector<Way> fetchWays(const std::set<id_t> &wayIds);
 
         /**
-          * Sends a query to the sparql endpoint to get the the ids of all nodes that are referenced
+          * Sends a query to the sparql endpoint to get the ids of all nodes that are referenced
           * in the given way
           *
           * @return The subjects of all members
           */
-        std::vector<long long> fetchWaysMembers(const std::set<long long> &wayIds);
+        std::vector<id_t> fetchWaysMembers(const std::set<id_t> &wayIds);
 
         /**
-         * @return The ids of all ways that are referenced by the given relations
+         * @return The ids of all nodes and ways that are referenced by the given relations
          */
-        std::vector<long long> fetchRelationMembersWay(const std::set<long long> &relIds);
-
-        /**
-         * @return The ids of all nodes that are referenced by the given relations
-         */
-        std::vector<long long> fetchRelationMembersNode(const std::set<long long> &relIds);
+        std::pair<std::vector<id_t>, std::vector<id_t>>
+        fetchRelationMembers(const std::set<id_t> &relIds);
 
         /**
          * Sends a query to the sparql endpoint to the latest timestamp of any node in the database
@@ -133,31 +135,31 @@ namespace olu::osm {
          * @param element The osm element
          * @return The id of the element
          */
-        static long long int getIdFor(const boost::property_tree::ptree &element);
+        static id_t getIdFor(const boost::property_tree::ptree &element);
 
         /**
          * @return The ids of all ways that reference the given nodes.
          */
-        std::vector<long long> fetchWaysReferencingNodes(const std::set<long long int> &nodeIds);
+        std::vector<id_t> fetchWaysReferencingNodes(const std::set<id_t> &nodeIds);
 
         /**
          * @return The ids of all relations that reference the given nodes.
          */
-        std::vector<long long> fetchRelationsReferencingNodes(const std::set<long long int> &nodeIds);
+        std::vector<id_t> fetchRelationsReferencingNodes(const std::set<id_t> &nodeIds);
 
         /**
          * @return The ids of all relations that reference the given ways.
          */
-        std::vector<long long> fetchRelationsReferencingWays(const std::set<long long int> &wayIds);
+        std::vector<id_t> fetchRelationsReferencingWays(const std::set<id_t> &wayIds);
 
         /**
          * @return The ids of all relations that reference the given relations.
          */
-        std::vector<long long> fetchRelationsReferencingRelations(const std::set<long long int> &relationIds);
+        std::vector<id_t> fetchRelationsReferencingRelations(const std::set<id_t> &relationIds);
 
     private:
-        olu::config::Config _config;
-        olu::sparql::SparqlWrapper _sparqlWrapper;
+        config::Config _config;
+        sparql::SparqlWrapper _sparqlWrapper;
 
         /**
          * Extracts the database state from a state file. A state file contains a sequence number
@@ -172,10 +174,8 @@ namespace olu::osm {
     /**
      * Exception that can appear inside the `OsmDataFetcher` class.
      */
-    class OsmDataFetcherException : public std::exception {
-    private:
+    class OsmDataFetcherException final : public std::exception {
         std::string message;
-
     public:
         explicit OsmDataFetcherException(const char* msg) : message(msg) { }
 

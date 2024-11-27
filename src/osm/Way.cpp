@@ -16,5 +16,20 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "util/OsmObjectHelper.h"
-#include "gtest/gtest.h"
+#include "osm/Way.h"
+namespace olu::osm {
+
+    void Way::addMember(id_t nodeId) {
+        members.emplace_back(nodeId);
+    }
+
+    std::string Way::getXml() const {
+        std::string xml = "<way id=\"" + std::to_string(this->getId()) + "\">";
+        for (const auto nodeId: this->members) {
+            xml += "<nd ref=\"" + std::to_string(nodeId) + "\"/>";
+        }
+        xml += "</way>";
+        return xml;
+    }
+
+}

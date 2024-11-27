@@ -58,7 +58,7 @@ namespace olu::config::constants {
 
     // Osm2rdf
     const static inline std::string PATH_TO_INPUT_FILE = "input.osm";
-    const static inline std::string PATH_TO_OUTPUT_FILE = "output.ttl.bz2";
+    const static inline std::string PATH_TO_OUTPUT_FILE = "output.ttl";
     const static inline std::string PATH_TO_SCRATCH_DIRECTORY = "osm2rdfScratch/";
 
     // OsmChangeHandler
@@ -81,6 +81,8 @@ namespace olu::config::constants {
     const static inline std::string OSM_WAY_URI = "https://www.openstreetmap.org/way/";
     const static inline std::string OSM_NODE_URI = "https://www.openstreetmap.org/node/";
     const static inline std::string OSM_REL_URI = "https://www.openstreetmap.org/relation/";
+    const static inline std::string OSM_GEOM_NODE_URI = "https://osm2rdf.cs.uni-freiburg.de/rdf/geom#osm_node_";
+
 
     const static inline std::vector<std::string> DEFAULT_PREFIXES{
         "PREFIX ohmnode: <https://www.openhistoricalmap.org/node/>"
