@@ -578,10 +578,6 @@ namespace olu::osm {
             }
 
             auto [subject, predicate, object] = getElementsFromTriple(line);
-            if (subject.starts_with("osmway:") || predicate == "osmrel:member") {
-                continue;
-            }
-
             if (subject.starts_with("osmnode:") || subject.starts_with("osm2rdfgeom:osm_node_")) {
                 auto nodeId = getIdFromTriple(line, cnst::NODE_TAG);
                 if (nodesToInsert.contains(nodeId)) {
