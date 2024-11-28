@@ -440,46 +440,63 @@ namespace olu::osm {
     }
 
     void OsmChangeHandler::insertElementsToDatabase() {
-        filterRelevantTriples();
+        auto triples = filterRelevantTriples();
 
-        std::ifstream file(cnst::PATH_TO_TRIPLES_FILE);
-        std::vector<std::string> triples;
-        std::string line;
-        // Read each line from the file and add it to the vector
-        while (std::getline(file, line)) {
-            triples.push_back(line);
-        }
+        std::vector<std::string> tripleBatch;
+        for (size_t i = 0; i < triples.size(); ++i) {
+            auto [s, p, o] = triples[i];
+            std::string triple;
+            if (o.starts_with("_")) {
+                triple += s;
+                triple += " ";
+                triple += p;
+                triple += "[ ";
 
-        // Close the file
-        file.close();
+                while (true) {
+                    i++;
+                    if (auto [next_s, next_p, next_o] = triples[i]; next_s.starts_with("_")) {
+                        triple += next_p;
+                        triple += " ";
+                        triple += next_o;
+                        triple += "; ";
+                    } else {
+                        i--;
+                        break;
+                    }
+                }
 
-        // QLever has a maximum number of triples it can handle in one query, so we have to
-        // divide the triples in batches
-        std::vector<std::vector<std::string>> triplesBatches;
-        for (auto it = triples.cbegin(), e = triples.cend(); it != triples.cend(); it = e) {
-            e = it + std::min<long>(triples.cend() - it, MAX_VALUES_PER_QUERY);
-            triplesBatches.emplace_back(it, e);
-        }
+                triple += " ]";
+            } else {
+                triple += s;
+                triple += " ";
+                triple += p;
+                triple += " ";
+                triple += o;
+            }
 
-        // Create a sparql query for each batch and send it to the sparql endpoint.
-        for (auto & batch : triplesBatches) {
-            auto query = sparql::QueryWriter::writeInsertQuery(batch);
-            _sparql.setPrefixes(cnst::DEFAULT_PREFIXES);
-            _sparql.setQuery(query);
+            tripleBatch.emplace_back(triple);
 
-            try {
-                _sparql.runUpdate();
-            } catch (std::exception &e) {
-                std::cerr << e.what() << std::endl;
-                throw OsmChangeHandlerException(
-                        "Exception while trying to run sparql query for insertion");
+            if (tripleBatch.size() == MAX_VALUES_PER_QUERY) {
+                auto query = sparql::QueryWriter::writeInsertQuery(tripleBatch);
+                _sparql.setPrefixes(cnst::DEFAULT_PREFIXES);
+                _sparql.setQuery(query);
+
+                try {
+                    _sparql.runUpdate();
+                } catch (std::exception &e) {
+                    std::cerr << e.what() << std::endl;
+                    throw OsmChangeHandlerException(
+                            "Exception while trying to run sparql query for insertion");
+                }
+
+                tripleBatch.clear();
             }
         }
     }
 
     std::tuple<std::string, std::string, std::string>
     getElementsFromTriple(const std::string& triple) {
-        const std::regex regex(R"((\S+)\s+(\S+)\s+(\S+))");
+        const std::regex regex(R"((\S+)\s(\S+)\s(.*)\s\.)");
         if (std::smatch match; std::regex_search(triple, match, regex)) {
             return std::make_tuple(match[1], match[2], match[3]);
         }
@@ -510,7 +527,7 @@ namespace olu::osm {
         throw OsmChangeHandlerException(msg.c_str());
     }
 
-    void OsmChangeHandler::filterRelevantTriples() {
+    std::vector<Triple> OsmChangeHandler::filterRelevantTriples() {
         std::set<id_t> nodesToInsert;
         nodesToInsert.insert(_createdNodes.begin(), _createdNodes.end());
         nodesToInsert.insert(_modifiedNodes.begin(), _modifiedNodes.end());
@@ -528,9 +545,8 @@ namespace olu::osm {
         std::ifstream triples;
         triples.open(cnst::PATH_TO_OUTPUT_FILE);
 
-        std::ofstream relevantTriples;
-        relevantTriples.open (cnst::PATH_TO_TRIPLES_FILE, std::ios::app);
-
+        // Triples that should be inserted into the database
+        std::vector<Triple> relevantTriples;
         // Relevant subjects that arise during conversion such as member ids and osm_area_centroid
         std::set<std::string> relevantSubjects;
         std::string line;
@@ -540,9 +556,11 @@ namespace olu::osm {
             }
 
             auto [subject, predicate, object] = getElementsFromTriple(line);
-            if (subject.starts_with("osmnode:") || subject.starts_with("osm2rdfgeom:osm_node_")) {
-                if (nodesToInsert.contains(getIdFromTriple(line, cnst::NODE_TAG))) {
-                    relevantTriples << line << std::endl;
+            if (subject.starts_with("osmnode:") ||
+                subject.starts_with("osm2rdfgeom:osm_node_")) {
+
+                if (nodesToInsert.contains(getIdFromTriple(subject, cnst::NODE_TAG))) {
+                    relevantTriples.emplace_back(subject, predicate, object);
                 }
 
                 continue;
@@ -550,10 +568,11 @@ namespace olu::osm {
 
             if (subject.starts_with("osmway:") ||
                 subject.starts_with("osm2rdfgeom:osm_wayarea_")) {
-                if (waysToInsert.contains(getIdFromTriple(line, cnst::WAY_TAG))) {
-                    relevantTriples << line << std::endl;
+                if (waysToInsert.contains(getIdFromTriple(subject, cnst::WAY_TAG))) {
+                    relevantTriples.emplace_back(subject, predicate, object);
 
-                    if (predicate == "osmway:node" || subject.starts_with("osm2rdfgeom:osm_area_centroid_")) {
+                    if (predicate == "osmway:node" ||
+                        subject.starts_with("osm2rdfgeom:osm_area_centroid_")) {
                         relevantSubjects.insert(object);
                     }
                 }
@@ -563,8 +582,8 @@ namespace olu::osm {
 
             if (subject.starts_with("osmrel:") ||
                 subject.starts_with("osm2rdfgeom:osm_relarea_")) {
-                if (relationsToInsert.contains(getIdFromTriple(line, cnst::RELATION_TAG))) {
-                    relevantTriples << line << std::endl;
+                if (relationsToInsert.contains(getIdFromTriple(subject, cnst::RELATION_TAG))) {
+                    relevantTriples.emplace_back(subject, predicate, object);
 
                     if (predicate == "osmrel:member" ||
                         subject.starts_with("osm2rdfgeom:osm_area_centroid_")) {
@@ -576,12 +595,12 @@ namespace olu::osm {
             }
 
             if (relevantSubjects.contains(subject)) {
-                relevantTriples << line << std::endl;
+                    relevantTriples.emplace_back(subject, predicate, object);
             }
         }
 
         triples.close();
-        relevantTriples.close();
+        return relevantTriples;
     }
 
     void
