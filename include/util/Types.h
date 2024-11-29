@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <string>
+#include <tuple>
 
 namespace olu {
 
@@ -31,6 +32,7 @@ namespace olu {
 
     typedef std::pair<id_t, Role> RelationMember;
 
+    typedef std::tuple<std::string, std::string, std::string> Triple;
 }
 
 #endif //OSM_LIVE_UPDATES_TYPES_H

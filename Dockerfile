@@ -47,6 +47,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     zlib1g-dev \
     libomp-dev \
     libosmium2-dev \
+    ninja-build \
     osmium-tool
 
 # Install certificates for git
@@ -56,3 +57,14 @@ RUN cd ${HOME} && \
   wget -P /usr/local/share/ca-certificates/cacert.org http://www.cacert.org/certs/root.crt http://www.cacert.org/certs/class3.crt && \
   update-ca-certificates && \
   git config --global http.sslCAinfo /etc/ssl/certs/ca-certificates.crt
+
+COPY . /app/
+
+WORKDIR /app/
+ENV DEBIAN_FRONTEND=noninteractive
+
+WORKDIR /app/build/
+RUN cmake -DCMAKE_BUILD_TYPE=Release -DLOGLEVEL=INFO -DUSE_PARALLEL=true -D_NO_TIMING_TESTS=ON -GNinja .. && ninja
+#RUN ctest --rerun-failed --output-on-failure
+
+

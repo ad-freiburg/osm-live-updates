@@ -27,7 +27,7 @@ std::string olu::sparql::QueryWriter::writeInsertQuery(const std::vector<std::st
     query += "INSERT DATA { ";
 
     for (const auto & element : triples) {
-        query += element + " ";
+        query += element + " . ";
     }
 
     query += "}";
