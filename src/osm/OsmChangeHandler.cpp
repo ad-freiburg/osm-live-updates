@@ -105,8 +105,10 @@ namespace olu::osm {
 
         std::cout << "Update database..." << std::endl;
         // Delete and insert elements from database
-        deleteElementsFromDatabase();
-        insertElementsToDatabase();
+        deleteNodesFromDatabase();
+        deleteWaysFromDatabase();
+        deleteRelationsFromDatabase();
+        insertTriplesToDatabase();
 
         // Cache of sparql endpoint has to be cleared after the completion`
         _sparql.clearCache();
@@ -389,57 +391,63 @@ namespace olu::osm {
         finalizeTmpFile(cnst::PATH_TO_RELATION_FILE);
     }
 
-    void OsmChangeHandler::deleteElementsFromDatabase() {
-        std::set<id_t> nodesToDelete;
-        nodesToDelete.insert(_deletedNodes.begin(), _deletedNodes.end());
-        nodesToDelete.insert(_modifiedNodes.begin(), _modifiedNodes.end());
-        for (const auto& id: nodesToDelete) {
-            auto query = sparql::QueryWriter::writeNodesDeleteQuery({id});
-            _sparql.setQuery(query);
-            _sparql.setPrefixes(cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
-            try {
-                _sparql.runUpdate();
-            } catch (std::exception &e) {
-                std::cerr << e.what() << std::endl;
-                throw OsmChangeHandlerException(
-                        "Exception while trying to run sparql query for deletion");
-            }
-        }
-
-        std::set<id_t> waysToDelete;
-        waysToDelete.insert(_deletedWays.begin(), _deletedWays.end());
-        waysToDelete.insert(_modifiedWays.begin(), _modifiedWays.end());
-        for (const auto& id: waysToDelete) {
-            auto query = sparql::QueryWriter::writeWaysDeleteQuery({id});
-            _sparql.setQuery(query);
-            _sparql.setPrefixes(cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
-            try {
-                _sparql.runUpdate();
-            } catch (std::exception &e) {
-                std::cerr << e.what() << std::endl;
-                throw OsmChangeHandlerException(
-                        "Exception while trying to run sparql query for deletion");
-            }
-        }
-
-        std::set<id_t> relationsToDelete;
-        relationsToDelete.insert(_deletedRelations.begin(), _deletedRelations.end());
-        relationsToDelete.insert(_modifiedRelations.begin(), _modifiedRelations.end());
-        for (const auto& id: relationsToDelete) {
-            auto query = sparql::QueryWriter::writeRelationsDeleteQuery({id});
-            _sparql.setQuery(query);
-            _sparql.setPrefixes(cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
-            try {
-                _sparql.runUpdate();
-            } catch (std::exception &e) {
-                std::cerr << e.what() << std::endl;
-                throw OsmChangeHandlerException(
-                        "Exception while trying to run sparql query for deletion");
-            }
+    void
+    OsmChangeHandler::runUpdateQuery(const std::string &query,
+                                     const std::vector<std::string> &prefixes) {
+        _sparql.setQuery(query);
+        _sparql.setPrefixes(prefixes);
+        try {
+            _sparql.runUpdate();
+        } catch (std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            const std::string msg = "Exception while trying to run sparql update query: " + query;
+            throw OsmChangeHandlerException(msg.c_str());
         }
     }
 
-    void OsmChangeHandler::insertElementsToDatabase() {
+    void OsmChangeHandler::deleteNodesFromDatabase() {
+        std::set<id_t> nodesToDelete;
+        nodesToDelete.insert(_deletedNodes.begin(), _deletedNodes.end());
+        nodesToDelete.insert(_modifiedNodes.begin(), _modifiedNodes.end());
+
+        doInBatches(
+            nodesToDelete,
+            MAX_VALUES_PER_QUERY,
+            [this](std::set<id_t> const& batch) {
+                runUpdateQuery(sparql::QueryWriter::writeNodesDeleteQuery(batch),
+                    cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
+            });
+    }
+
+    void OsmChangeHandler::deleteWaysFromDatabase() {
+        std::set<id_t> waysToDelete;
+        waysToDelete.insert(_deletedWays.begin(), _deletedWays.end());
+        waysToDelete.insert(_modifiedWays.begin(), _modifiedWays.end());
+
+        doInBatches(
+            waysToDelete,
+            MAX_VALUES_PER_QUERY,
+            [this](std::set<id_t> const& batch) {
+                runUpdateQuery(sparql::QueryWriter::writeWaysDeleteQuery(batch),
+                    cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
+            });
+    }
+
+    void OsmChangeHandler::deleteRelationsFromDatabase() {
+        std::set<id_t> relationsToDelete;
+        relationsToDelete.insert(_deletedRelations.begin(), _deletedRelations.end());
+        relationsToDelete.insert(_modifiedRelations.begin(), _modifiedRelations.end());
+
+        doInBatches(
+            relationsToDelete,
+            MAX_VALUES_PER_QUERY,
+            [this](std::set<id_t> const& batch) {
+                runUpdateQuery(sparql::QueryWriter::writeRelationsDeleteQuery(batch),
+                    cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
+            });
+    }
+
+    void OsmChangeHandler::insertTriplesToDatabase() {
         auto triples = filterRelevantTriples();
 
         std::vector<std::string> tripleBatch;
@@ -477,18 +485,8 @@ namespace olu::osm {
             tripleBatch.emplace_back(triple);
 
             if (tripleBatch.size() == MAX_VALUES_PER_QUERY) {
-                auto query = sparql::QueryWriter::writeInsertQuery(tripleBatch);
-                _sparql.setPrefixes(cnst::DEFAULT_PREFIXES);
-                _sparql.setQuery(query);
-
-                try {
-                    _sparql.runUpdate();
-                } catch (std::exception &e) {
-                    std::cerr << e.what() << std::endl;
-                    throw OsmChangeHandlerException(
-                            "Exception while trying to run sparql query for insertion");
-                }
-
+                runUpdateQuery(sparql::QueryWriter::writeInsertQuery(tripleBatch),
+                    cnst::DEFAULT_PREFIXES);
                 tripleBatch.clear();
             }
         }
