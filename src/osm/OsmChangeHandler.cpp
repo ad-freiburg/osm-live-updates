@@ -29,8 +29,13 @@
 #include <set>
 #include <regex>
 
-/// The maximum number of values that should be in a query to the QLever endpoint.
+// The maximum number of values that should be in a query to the QLever endpoint.
 static inline constexpr int MAX_VALUES_PER_QUERY = 1024;
+// Calculate number of ids for delete queries, because there are for example two subjects
+// for each node id
+static inline constexpr int MAX_IDS_PER_NODE_DELETE_QUERY_BATCH = MAX_VALUES_PER_QUERY / 2;
+static inline constexpr int MAX_IDS_PER_WAY_DELETE_QUERY_BATCH = MAX_VALUES_PER_QUERY / 3;
+static inline constexpr int MAX_IDS_PER_REL_DELETE_QUERY_BATCH = MAX_VALUES_PER_QUERY / 2;
 
 namespace cnst = olu::config::constants;
 
@@ -400,7 +405,9 @@ namespace olu::osm {
             _sparql.runUpdate();
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
-            const std::string msg = "Exception while trying to run sparql update query: " + query;
+            const std::string msg = "Exception while trying to run sparql update query: "
+                                    + query.substr(0, std::min<int>(query.size(), 100))
+                                    + " ...";
             throw OsmChangeHandlerException(msg.c_str());
         }
     }
@@ -412,7 +419,7 @@ namespace olu::osm {
 
         doInBatches(
             nodesToDelete,
-            MAX_VALUES_PER_QUERY,
+            MAX_IDS_PER_NODE_DELETE_QUERY_BATCH,
             [this](std::set<id_t> const& batch) {
                 runUpdateQuery(sparql::QueryWriter::writeNodesDeleteQuery(batch),
                     cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
@@ -426,7 +433,7 @@ namespace olu::osm {
 
         doInBatches(
             waysToDelete,
-            MAX_VALUES_PER_QUERY,
+            MAX_IDS_PER_WAY_DELETE_QUERY_BATCH,
             [this](std::set<id_t> const& batch) {
                 runUpdateQuery(sparql::QueryWriter::writeWaysDeleteQuery(batch),
                     cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
@@ -440,7 +447,7 @@ namespace olu::osm {
 
         doInBatches(
             relationsToDelete,
-            MAX_VALUES_PER_QUERY,
+            MAX_IDS_PER_REL_DELETE_QUERY_BATCH,
             [this](std::set<id_t> const& batch) {
                 runUpdateQuery(sparql::QueryWriter::writeRelationsDeleteQuery(batch),
                     cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
