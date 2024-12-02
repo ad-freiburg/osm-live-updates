@@ -179,6 +179,12 @@ namespace olu::config::constants {
     const static inline std::string SPARQL_ENDPOINT_URI_OPTION_HELP =
             "The URI of the SPARQL endpoint that you want to update.";
 
+    const static inline std::string SPARQL_UPDATE_PATH_INFO = "SPARQL update path:";
+    const static inline std::string SPARQL_UPDATE_PATH_OPTION_SHORT = "p";
+    const static inline std::string SPARQL_UPDATE_PATH_OPTION_LONG = "sparql-update-path";
+    const static inline std::string SPARQL_UPDATE_PATH_OPTION_HELP =
+            "The path for update request on the SPARQL endpoint. Empty by default.";
+
     const static inline std::string PATH_TO_OSM_CHANGE_FILE_INFO = "Path to osm change file:";
     const static inline std::string PATH_TO_OSM_CHANGE_FILE_OPTION_SHORT = "f";
     const static inline std::string PATH_TO_OSM_CHANGE_FILE_OPTION_LONG = "change-file-path";

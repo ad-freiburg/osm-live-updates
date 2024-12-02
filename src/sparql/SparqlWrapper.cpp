@@ -78,8 +78,8 @@ namespace olu::sparql {
 
     // _____________________________________________________________________________________________
     void SparqlWrapper::runUpdate() {
-        auto response = send(cnst::HTML_VALUE_ACCEPT_SPARQL_RESULT_JSON,
-                             _config.sparqlEndpointUri, true);
+        auto endpointUri = _config.sparqlEndpointUri + _config.pathForSparqlUpdates;
+        auto response = send(cnst::HTML_VALUE_ACCEPT_SPARQL_RESULT_JSON, endpointUri, true);
 
         if (response.empty()) {
             return;
