@@ -34,8 +34,7 @@ namespace olu::config::constants {
 
     // HTML
     const static inline std::string HTML_KEY_CONTENT_TYPE = "Content-Type";
-    const static inline std::string HTML_VALUE_CONTENT_TYPE =
-            "application/x-www-form-urlencoded;charset=UTF-8";
+    const static inline std::string HTML_VALUE_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
     const static inline std::string HTML_KEY_ACCEPT = "Accept";
     const static inline std::string HTML_VALUE_ACCEPT_SPARQL_RESULT_XML =
@@ -134,19 +133,15 @@ namespace olu::config::constants {
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_NODE_DELETE_QUERY {
-        "PREFIX osmnode: <https://www.openstreetmap.org/node/>",
-        "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
+        "PREFIX osmnode: <https://www.openstreetmap.org/node/>"
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_WAY_DELETE_QUERY {
-            "PREFIX osmway: <https://www.openstreetmap.org/way/>",
-            "PREFIX osm2rdf: <https://osm2rdf.cs.uni-freiburg.de/rdf#>",
-            "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
+            "PREFIX osmway: <https://www.openstreetmap.org/way/>"
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_RELATION_DELETE_QUERY {
-            "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
-            "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
+            "PREFIX osmrel: <https://www.openstreetmap.org/relation/>"
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_WAYS_REFERENCING_NODE {
