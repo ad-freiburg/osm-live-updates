@@ -421,7 +421,7 @@ namespace olu::osm {
             nodesToDelete,
             MAX_IDS_PER_NODE_DELETE_QUERY_BATCH,
             [this](std::set<id_t> const& batch) {
-                runUpdateQuery(sparql::QueryWriter::writeNodesDeleteQuery(batch),
+                runUpdateQuery(sparql::QueryWriter::writeDeleteQuery(batch, "osmnode"),
                     cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
             });
     }
@@ -435,7 +435,7 @@ namespace olu::osm {
             waysToDelete,
             MAX_IDS_PER_WAY_DELETE_QUERY_BATCH,
             [this](std::set<id_t> const& batch) {
-                runUpdateQuery(sparql::QueryWriter::writeWaysDeleteQuery(batch),
+                runUpdateQuery(sparql::QueryWriter::writeDeleteQuery(batch, "osmway"),
                     cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
             });
     }
@@ -449,7 +449,7 @@ namespace olu::osm {
             relationsToDelete,
             MAX_IDS_PER_REL_DELETE_QUERY_BATCH,
             [this](std::set<id_t> const& batch) {
-                runUpdateQuery(sparql::QueryWriter::writeRelationsDeleteQuery(batch),
+                runUpdateQuery(sparql::QueryWriter::writeDeleteQuery(batch, "osmrel"),
                     cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
             });
     }

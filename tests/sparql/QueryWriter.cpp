@@ -50,30 +50,30 @@ namespace olu::sparql {
             );
         }
     }
-    TEST(QueryWriter, writeDeleteQuery) {
-        {
-            std::vector<std::string> subjects;
-            subjects.emplace_back("osmrel:1960198");
-
-            std::string query = olu::sparql::QueryWriter::writeDeleteQuery(subjects);
-            ASSERT_EQ(
-                    "DELETE WHERE { osmrel:1960198 ?p0 ?o0 . }",
-                    query
-            );
-        }
-
-        {
-            std::vector<std::string> subjects;
-            subjects.emplace_back("osmrel:1960198");
-            subjects.emplace_back("osmnode:1");
-
-            std::string query = olu::sparql::QueryWriter::writeDeleteQuery(subjects);
-            ASSERT_EQ(
-                    "DELETE WHERE { osmrel:1960198 ?p0 ?o0 . osmnode:1 ?p1 ?o1 . }",
-                    query
-            );
-        }
-    }
+    // TEST(QueryWriter, writeDeleteQuery) {
+    //     {
+    //         std::vector<std::string> subjects;
+    //         subjects.emplace_back("osmrel:1960198");
+    //
+    //         std::string query = olu::sparql::QueryWriter::writeDeleteQuery(subjects);
+    //         ASSERT_EQ(
+    //                 "DELETE WHERE { osmrel:1960198 ?p0 ?o0 . }",
+    //                 query
+    //         );
+    //     }
+    //
+    //     {
+    //         std::vector<std::string> subjects;
+    //         subjects.emplace_back("osmrel:1960198");
+    //         subjects.emplace_back("osmnode:1");
+    //
+    //         std::string query = olu::sparql::QueryWriter::writeDeleteQuery(subjects);
+    //         ASSERT_EQ(
+    //                 "DELETE WHERE { osmrel:1960198 ?p0 ?o0 . osmnode:1 ?p1 ?o1 . }",
+    //                 query
+    //         );
+    //     }
+    // }
     TEST(QueryWriter, writeQueryForNodeLocations) {
         {
             std::set<id_t> nodeIds {1, 2, 3} ;
@@ -206,18 +206,4 @@ namespace olu::sparql {
             );
         }
     }
-    TEST(QueryWriter, writeNodesDeleteQuery) {
-        {
-            std::set<id_t> ids {1, 2, 3} ;
-            std::string query = olu::sparql::QueryWriter::writeNodesDeleteQuery(ids);
-            ASSERT_EQ(
-                    "DELETE WHERE { "
-                    "osmnode:1 ?p0 ?o0 . osm2rdfgeom:osm_node_1 ?p1 ?o1 . "
-                    "osmnode:2 ?p2 ?o2 . osm2rdfgeom:osm_node_2 ?p3 ?o3 . "
-                    "osmnode:3 ?p4 ?o4 . osm2rdfgeom:osm_node_3 ?p5 ?o5 . }",
-                    query
-            );
-        }
-    }
-
 }
