@@ -22,6 +22,7 @@
 #include "config/Constants.h"
 #include "sparql/QueryWriter.h"
 #include "util/OsmObjectHelper.h"
+#include "util/TtlHelper.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <string>
@@ -509,39 +510,6 @@ namespace olu::osm {
         }
     }
 
-    std::tuple<std::string, std::string, std::string>
-    getElementsFromTriple(const std::string& triple) {
-        const std::regex regex(R"((\S+)\s(\S+)\s(.*)\s\.)");
-        if (std::smatch match; std::regex_search(triple, match, regex)) {
-            return std::make_tuple(match[1], match[2], match[3]);
-        }
-
-        const std::string msg = "Cant split triple: " + triple;
-        throw OsmChangeHandlerException(msg.c_str());
-    }
-
-    id_t getIdFromTriple(const std::string& triple, const std::string& elementTag) {
-        std::string regexString;
-        if (elementTag == cnst::NODE_TAG) {
-            regexString = R"((?:osmnode:|osm_node_|osm_node_centroid_)(\d+))";
-        } else if (elementTag == cnst::WAY_TAG) {
-           regexString = R"((?:osmway:|osm_wayarea_)(\d+))";
-        } else if (elementTag == cnst::RELATION_TAG) {
-            regexString = R"((?:osmrel:|osm_relarea_)(\d+))";
-        } else {
-            const std::string msg = "Unknown element tag: " + elementTag;
-            throw OsmChangeHandlerException(msg.c_str());
-        }
-
-        const std::regex integerRegex(regexString);
-        if (std::smatch match; std::regex_search(triple, match, integerRegex)) {
-            return stoll(match[1]);
-        }
-
-        const std::string msg = "Cant get id for " + elementTag + " from triple: " + triple;
-        throw OsmChangeHandlerException(msg.c_str());
-    }
-
     std::vector<Triple> OsmChangeHandler::filterRelevantTriples() {
         std::set<id_t> nodesToInsert;
         nodesToInsert.insert(_createdNodes.begin(), _createdNodes.end());
@@ -557,65 +525,68 @@ namespace olu::osm {
         relationsToInsert.insert(_modifiedRelations.begin(), _modifiedRelations.end());
         relationsToInsert.insert(_relationsToUpdateGeometry.begin(), _relationsToUpdateGeometry.end());
 
-        std::ifstream triples;
-        triples.open(cnst::PATH_TO_OUTPUT_FILE);
-
         // Triples that should be inserted into the database
         std::vector<Triple> relevantTriples;
-        // Relevant subjects that arise during conversion such as member ids and osm_area_centroid
-        std::set<std::string> relevantSubjects;
+        // current link object, for example member nodes or geometries
+        std::string currentLink;
+
+        // Loop over each triple that osm2rdf outputs
         std::string line;
-        while (std::getline(triples, line)) {
+        std::ifstream osm2rdfOutput;
+        osm2rdfOutput.open(cnst::PATH_TO_OUTPUT_FILE);
+        while (std::getline(osm2rdfOutput, line)) {
             if (line.starts_with("@")) {
                 continue;
             }
 
-            auto [subject, predicate, object] = getElementsFromTriple(line);
+            auto [sub, pre, obj] = util::TtlHelper::getTriple(line);
 
-            if (subject.starts_with("osmnode:") ||
-                subject.starts_with("osm2rdfgeom:osm_node_")) {
-
-                if (nodesToInsert.contains(getIdFromTriple(subject, cnst::NODE_TAG))) {
-                    relevantTriples.emplace_back(subject, predicate, object);
-                }
-
+            // Check if there is currently a link set
+            if (!currentLink.empty() && currentLink == sub) {
+                relevantTriples.emplace_back(sub, pre, obj);
                 continue;
             }
 
-            if (subject.starts_with("osmway:") ||
-                subject.starts_with("osm2rdfgeom:osm_wayarea_")) {
-                if (waysToInsert.contains(getIdFromTriple(subject, cnst::WAY_TAG))) {
-                    relevantTriples.emplace_back(subject, predicate, object);
+            // Check for relevant nodes
+            if (util::TtlHelper::isRelevantNamespace(sub, cnst::NODE_TAG)) {
+                if (nodesToInsert.contains(util::TtlHelper::getIdFromSubject(sub, cnst::NODE_TAG))) {
 
-                    if (predicate == "osmway:node" ||
-                        subject.starts_with("osm2rdfgeom:osm_area_centroid_")) {
-                        relevantSubjects.insert(object);
+                    relevantTriples.emplace_back(sub, pre, obj);
+
+                    if (util::TtlHelper::hasRelevantObject(pre, cnst::NODE_TAG)) {
+                        currentLink = obj;
                     }
                 }
 
                 continue;
             }
 
-            if (subject.starts_with("osmrel:") ||
-                subject.starts_with("osm2rdfgeom:osm_relarea_")) {
-                if (relationsToInsert.contains(getIdFromTriple(subject, cnst::RELATION_TAG))) {
-                    relevantTriples.emplace_back(subject, predicate, object);
+            // Check for relevant ways
+            if (util::TtlHelper::isRelevantNamespace(sub, cnst::WAY_TAG)) {
+                if (waysToInsert.contains(util::TtlHelper::getIdFromSubject(sub, cnst::WAY_TAG))) {
+                    relevantTriples.emplace_back(sub, pre, obj);
 
-                    if (predicate == "osmrel:member" ||
-                        subject.starts_with("osm2rdfgeom:osm_area_centroid_")) {
-                        relevantSubjects.insert(object);
+                    if (util::TtlHelper::hasRelevantObject(pre, cnst::WAY_TAG)) {
+                        currentLink = obj;
                     }
                 }
 
                 continue;
             }
 
-            if (relevantSubjects.contains(subject)) {
-                    relevantTriples.emplace_back(subject, predicate, object);
+            // Check for relevant relations
+            if (util::TtlHelper::isRelevantNamespace(sub, cnst::RELATION_TAG)) {
+                if (relationsToInsert.contains(util::TtlHelper::getIdFromSubject(sub, cnst::RELATION_TAG))) {
+                    relevantTriples.emplace_back(sub, pre, obj);
+
+                    if (util::TtlHelper::hasRelevantObject(pre, cnst::RELATION_TAG)) {
+                        currentLink = obj;
+                    }
+                }
             }
         }
 
-        triples.close();
+        osm2rdfOutput.close();
         return relevantTriples;
     }
 
