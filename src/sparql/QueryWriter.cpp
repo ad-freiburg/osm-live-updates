@@ -82,7 +82,7 @@ std::string olu::sparql::QueryWriter::writeQueryForRelations(const std::set<id_t
         query += "osmrel:" + std::to_string(relId)+ " ";
     }
 
-    query += "?rel osmkey:type ?key . "
+    query += "} ?rel osmkey:type ?key . "
              "?rel osmrel:member ?o . "
              "?o osm2rdfmember:id ?id . "
              "?o osm2rdfmember:role ?role . "

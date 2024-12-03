@@ -29,27 +29,27 @@ namespace olu::osm {
     }
 
     std::string Relation::getXml() const {
-        const std::string timestamp = this->timestamp.empty() ? "" : " timestamp=\"" + this->timestamp + "\"";
-        std::string xml = "<relation id=\"" + std::to_string(this->id) + "\" " + timestamp + "><member type=\"";
+        const std::string timestamp = this->timestamp.empty() ? "" : " timestamp=\"" + this->timestamp + "Z\"";
+        std::string xml = "<relation id=\"" + std::to_string(this->id) + "\" " + timestamp + ">";
 
         for (const auto &[id, role] : this->nodes) {
-            xml += R"(node" ref=")" + std::to_string(id) + "\" role=\"" + role;
+            xml += R"(<member type="node" ref=")" + std::to_string(id) + "\" role=\"" + role + "\"/>";
         }
 
         for (const auto &[id, role] : this->ways) {
-            xml += R"(way" ref=")" + std::to_string(id) + "\" role=\"" + role;
+            xml += R"(<member type="way" ref=")" + std::to_string(id) + "\" role=\"" + role + "\"/>";
         }
 
         for (const auto &[id, role] : this->relations) {
-            xml += R"(relation" ref=")" + std::to_string(id) + "\" role=\"" + role;
+            xml += R"(<member type="relation" ref=")" + std::to_string(id) + "\" role=\"" + role + "\"/>";
         }
 
-        xml += R"("/><tag k="type" v=")" + this->type + "\"/>";
+        xml += R"(<tag k="type" v=")" + this->type + "\"/>";
 
         for (const auto& [key, value] : this->tags) {
-            xml += "<tag k=\" ";
+            xml += "<tag k=\"";
             xml += key;
-            xml += " \" v=\"";
+            xml += "\" v=\"";
             xml += value;
             xml += "\"/>";
         }

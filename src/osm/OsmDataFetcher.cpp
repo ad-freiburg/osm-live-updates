@@ -205,7 +205,7 @@ namespace olu::osm {
     // _________________________________________________________________________________________________
     std::vector<Relation>
     OsmDataFetcher::fetchRelations(const std::set<id_t> &relationIds) {
-        auto response = runQuery(sparql::QueryWriter::writeQueryForRelationMembers(relationIds),
+        auto response = runQuery(sparql::QueryWriter::writeQueryForRelations(relationIds),
                                     cnst::PREFIXES_FOR_RELATION_MEMBERS);
 
         Relation currentRelation(0);
@@ -241,15 +241,21 @@ namespace olu::osm {
                 currentRelation.setType(relationType);
             }
 
-            if (memberUri.starts_with(cnst::OSM_NODE_URI)) {
-                id_t nodeId = std::stoll( memberUri.substr(cnst::OSM_WAY_URI.length()));
-                currentRelation.addNodeAsMember(nodeId, role);
-            } else if (memberUri.starts_with(cnst::OSM_WAY_URI)) {
-                id_t wayId = std::stoll( memberUri.substr(cnst::OSM_WAY_URI.length()));
-                currentRelation.addNodeAsMember(wayId, role);
-            } else if (memberUri.starts_with(cnst::OSM_REL_URI)) {
-                id_t relId = std::stoll( memberUri.substr(cnst::OSM_WAY_URI.length()));
-                currentRelation.addNodeAsMember(relId, role);
+            try {
+                if (memberUri.starts_with(cnst::OSM_NODE_URI)) {
+                    id_t nodeId = std::stoll( memberUri.substr(cnst::OSM_NODE_URI.length()));
+                    currentRelation.addNodeAsMember(nodeId, role);
+                } else if (memberUri.starts_with(cnst::OSM_WAY_URI)) {
+                    id_t wayId = std::stoll( memberUri.substr(cnst::OSM_WAY_URI.length()));
+                    currentRelation.addNodeAsMember(wayId, role);
+                } else if (memberUri.starts_with(cnst::OSM_REL_URI)) {
+                    id_t relId = std::stoll( memberUri.substr(cnst::OSM_REL_URI.length()));
+                    currentRelation.addNodeAsMember(relId, role);
+                }
+            } catch (std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                std::string msg = "Could not extract id from member uri: " + memberUri;
+                throw OsmDataFetcherException(msg.c_str());
             }
         }
 
