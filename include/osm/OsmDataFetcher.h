@@ -98,12 +98,22 @@ namespace olu::osm {
         fetchRelations(const std::set<id_t> &relationIds);
 
         /**
+         * Fetches tags and timestamp for the given relation
+         */
+        void fetchRelationInfos(Relation &relation);
+
+        /**
          * Sends a query to the sparql endpoint to get the ids of all nodes that are referenced
          * in the given way
          *
          * @return The subjects of all members
          */
         std::vector<Way> fetchWays(const std::set<id_t> &wayIds);
+
+        /**
+         * Fetches tags and timestamp for the given way
+         */
+        void fetchWayInfos(Way &way);
 
         /**
           * Sends a query to the sparql endpoint to get the ids of all nodes that are referenced

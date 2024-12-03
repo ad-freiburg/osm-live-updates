@@ -33,6 +33,7 @@ namespace olu {
     typedef std::pair<id_t, Role> RelationMember;
 
     typedef std::tuple<std::string, std::string, std::string> Triple;
+    typedef std::pair<std::string, std::string> KeyValue;
 }
 
 #endif //OSM_LIVE_UPDATES_TYPES_H

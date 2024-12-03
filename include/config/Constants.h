@@ -83,7 +83,7 @@ namespace olu::config::constants {
     const static inline std::string OSM_NODE_URI = "https://www.openstreetmap.org/node/";
     const static inline std::string OSM_REL_URI = "https://www.openstreetmap.org/relation/";
     const static inline std::string OSM_GEOM_NODE_URI = "https://osm2rdf.cs.uni-freiburg.de/rdf/geom#osm_node_";
-
+    const static inline std::string OSM_TAG_KEY = "https://www.openstreetmap.org/wiki/Key:";
 
     const static inline std::vector<std::string> DEFAULT_PREFIXES{
         "PREFIX ohmnode: <https://www.openhistoricalmap.org/node/>"
@@ -124,6 +124,16 @@ namespace olu::config::constants {
 
     const static inline std::vector<std::string> PREFIXES_FOR_WAY_MEMBERS{
             "PREFIX osmway: <https://www.openstreetmap.org/way/>"
+    };
+
+    const static inline std::vector<std::string> PREFIXES_FOR_WAY_TAGS{
+            "PREFIX osmway: <https://www.openstreetmap.org/way/>",
+            "PREFIX osmmeta: <https://www.openstreetmap.org/meta/>"
+    };
+
+    const static inline std::vector<std::string> PREFIXES_FOR_RELATION_TAGS{
+            "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
+            "PREFIX osmmeta: <https://www.openstreetmap.org/meta/>"
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_LATEST_NODE_TIMESTAMP {

@@ -371,7 +371,11 @@ namespace olu::osm {
             wayIds,
             MAX_VALUES_PER_QUERY,
             [this](std::set<id_t> const& batch) {
-                for (auto const& way: _odf.fetchWays(batch)) {
+                for (auto& way: _odf.fetchWays(batch)) {
+                    if (_waysToUpdateGeometry.contains(way.getId())) {
+                        _odf.fetchWayInfos(way);
+                    }
+
                     addToTmpFile(way.getXml(), cnst::WAY_TAG);
                 }
             });
@@ -388,7 +392,11 @@ namespace olu::osm {
             relations,
             MAX_VALUES_PER_QUERY,
             [this](std::set<id_t> const& batch) {
-                for (auto const& rel: _odf.fetchRelations(batch)) {
+                for (auto& rel: _odf.fetchRelations(batch)) {
+                    if (_relationsToUpdateGeometry.contains(rel.getId())) {
+                        _odf.fetchRelationInfos(rel);
+                    }
+
                     addToTmpFile(rel.getXml(), cnst::RELATION_TAG);
                 }
             });
@@ -430,6 +438,7 @@ namespace olu::osm {
         std::set<id_t> waysToDelete;
         waysToDelete.insert(_deletedWays.begin(), _deletedWays.end());
         waysToDelete.insert(_modifiedWays.begin(), _modifiedWays.end());
+        waysToDelete.insert(_waysToUpdateGeometry.begin(), _waysToUpdateGeometry.end());
 
         doInBatches(
             waysToDelete,
@@ -444,6 +453,7 @@ namespace olu::osm {
         std::set<id_t> relationsToDelete;
         relationsToDelete.insert(_deletedRelations.begin(), _deletedRelations.end());
         relationsToDelete.insert(_modifiedRelations.begin(), _modifiedRelations.end());
+        relationsToDelete.insert(_relationsToUpdateGeometry.begin(), _relationsToUpdateGeometry.end());
 
         doInBatches(
             relationsToDelete,
@@ -561,6 +571,7 @@ namespace olu::osm {
             }
 
             auto [subject, predicate, object] = getElementsFromTriple(line);
+
             if (subject.starts_with("osmnode:") ||
                 subject.starts_with("osm2rdfgeom:osm_node_")) {
 

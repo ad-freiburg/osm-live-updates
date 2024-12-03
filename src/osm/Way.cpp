@@ -19,16 +19,33 @@
 #include "osm/Way.h"
 
 namespace olu::osm {
+    void Way::setTimestamp(std::string const &timestamp) {
+        this->timestamp = timestamp;
+    }
 
     void Way::addMember(id_t nodeId) {
         members.emplace_back(nodeId);
     }
 
+    void Way::addTag(const std::string& key, const std::string& value) {
+        tags.emplace_back(key, value);
+    }
+
     std::string Way::getXml() const {
-        std::string xml = "<way id=\"" + std::to_string(this->getId()) + "\">";
+        const std::string timestamp = this->timestamp.empty() ? "" : " timestamp=\"" + this->timestamp + "Z\"";
+        std::string xml = "<way id=\"" + std::to_string(this->getId()) + "\"" + timestamp + ">";
         for (const auto nodeId: this->members) {
             xml += "<nd ref=\"" + std::to_string(nodeId) + "\"/>";
         }
+
+        for (const auto& [key, value] : this->tags) {
+            xml += "<tag k=\"";
+            xml += key;
+            xml += "\" v=\"";
+            xml += value;
+            xml += "\"/>";
+        }
+
         xml += "</way>";
         return xml;
     }

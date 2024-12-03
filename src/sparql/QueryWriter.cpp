@@ -192,3 +192,14 @@ olu::sparql::QueryWriter::writeQueryForRelationsReferencingRelations(const std::
     query += "} GROUP BY ?s";
     return query;
 }
+
+std::string olu::sparql::QueryWriter::writeQueryForTagsAndTimestamp(const std::string &subject) {
+    std::string query;
+    query += "SELECT ?key ?value ?time WHERE { "
+             "{ " + subject + " ?key ?value . "
+             "FILTER regex(str(?key), \"https://www.openstreetmap.org/wiki/Key:\") } "
+             "UNION { " + subject + " osmmeta:timestamp ?time } }";
+
+    return query;
+}
+

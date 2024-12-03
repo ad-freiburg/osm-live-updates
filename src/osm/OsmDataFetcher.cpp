@@ -298,6 +298,66 @@ namespace olu::osm {
         return ways;
     }
 
+    void OsmDataFetcher::fetchWayInfos(Way &way) {
+        std::string subject = "osmway:" + std::to_string(way.getId());
+        auto response = runQuery(sparql::QueryWriter::writeQueryForTagsAndTimestamp(subject),
+                                cnst::PREFIXES_FOR_WAY_TAGS);
+
+        for (const auto &result : response.get_child("sparql.results")) {
+            std::string key; std::string value;
+            for (const auto &binding : result.second.get_child("")) {
+                auto name = util::XmlReader::readAttribute("<xmlattr>.name", binding.second);
+                if (name == "time") {
+                    way.setTimestamp(binding.second.get<std::string>("literal"));
+                    continue;
+                }
+
+                if (name == "key") {
+                    auto uri = binding.second.get<std::string>("uri");
+                    key = uri.substr(cnst::OSM_TAG_KEY.length());
+                }
+
+                if (name == "value") {
+                    value = binding.second.get<std::string>("literal");
+                }
+            }
+
+            if (!key.empty()) {
+                way.addTag(key, value);
+            }
+        }
+    }
+
+    void OsmDataFetcher::fetchRelationInfos(Relation &relation) {
+        std::string subject = "osmrel:" + std::to_string(relation.getId());
+        auto response = runQuery(sparql::QueryWriter::writeQueryForTagsAndTimestamp(subject),
+                                cnst::PREFIXES_FOR_RELATION_TAGS);
+
+        for (const auto &result : response.get_child("sparql.results")) {
+            std::string key; std::string value;
+            for (const auto &binding : result.second.get_child("")) {
+                auto name = util::XmlReader::readAttribute("<xmlattr>.name", binding.second);
+                if (name == "time") {
+                    relation.setTimestamp(binding.second.get<std::string>("literal"));
+                    continue;
+                }
+
+                if (name == "key") {
+                    auto uri = binding.second.get<std::string>("uri");
+                    key = uri.substr(cnst::OSM_TAG_KEY.length());
+                }
+
+                if (name == "value") {
+                    value = binding.second.get<std::string>("literal");
+                }
+            }
+
+            if (!key.empty()) {
+                relation.addTag(key, value);
+            }
+        }
+    }
+
     std::vector<id_t> OsmDataFetcher::fetchWaysMembers(const std::set<id_t> &wayIds) {
         auto response = runQuery(sparql::QueryWriter::writeQueryForReferencedNodes(wayIds),
                                     cnst::PREFIXES_FOR_WAY_MEMBERS);

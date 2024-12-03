@@ -22,6 +22,7 @@
 #include "util/Types.h"
 
 #include <string>
+#include <vector>
 #include <set>
 
 namespace olu::osm {
@@ -31,10 +32,12 @@ namespace olu::osm {
         explicit Relation(const id_t id): id(id) {};
 
         void setType(std::string const& type);
+        void setTimestamp(std::string const& timestamp);
 
         void addNodeAsMember(id_t const& id, Role const& role);
         void addWayAsMember(id_t const& id, Role const& role);
         void addRelationAsMember(id_t const& id, Role const& role);
+        void addTag(const std::string& key, const std::string& value);
 
         /**
          * Returns an osm xml relation with an id and members.
@@ -51,16 +54,20 @@ namespace olu::osm {
          */
         [[nodiscard]] std::string getXml() const;
 
-        std::set<RelationMember> getNodeMembers() { return nodes; };
-        std::set<RelationMember> getWayMembers() { return ways; };
-        std::set<RelationMember> getRelationMembers() { return relations; };
-        [[nodiscard]] id_t getId() const { return id; };
+        std::set<RelationMember> getNodeMembers() { return nodes; }
+        std::set<RelationMember> getWayMembers() { return ways; }
+        std::set<RelationMember> getRelationMembers() { return relations; }
+        [[nodiscard]] id_t getId() const { return id; }
+        std::vector<KeyValue> getTags() { return tags; }
+        std::string getTimestamp() { return timestamp; }
     protected:
         id_t id;
+        std::string timestamp;
+        std::string type;
         std::set<RelationMember> nodes;
         std::set<RelationMember> ways;
         std::set<RelationMember> relations;
-        std::string type;
+        std::vector<KeyValue> tags;
     };
 
     /**

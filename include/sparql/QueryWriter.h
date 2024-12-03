@@ -92,6 +92,11 @@ namespace olu::sparql {
         * @returns A SPARQL query for relations that reference the given relations
         */
         static std::string writeQueryForRelationsReferencingRelations(const std::set<id_t> &relationIds);
+
+        /**
+        * @returns A SPARQL query for tags and timestamp of the given subject
+        */
+        static std::string writeQueryForTagsAndTimestamp(const std::string &subject);
     };
 } // namespace olu::sparql
 
