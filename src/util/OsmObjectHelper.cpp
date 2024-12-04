@@ -3,11 +3,9 @@
 //
 
 #include "util/OsmObjectHelper.h"
-
-#include <iostream>
-
 #include "util/XmlReader.h"
 
+#include <iostream>
 #include <string>
 
 namespace olu::osm {

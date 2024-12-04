@@ -5,6 +5,8 @@
 #ifndef OSM_LIVE_UPDATES_OSMOBJECTHELPER_H
 #define OSM_LIVE_UPDATES_OSMOBJECTHELPER_H
 
+#include "util/Types.h"
+
 #include <string>
 #include <set>
 #include <boost/property_tree/ptree.hpp>
