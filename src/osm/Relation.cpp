@@ -28,7 +28,7 @@ namespace olu::osm {
 
         oss << "<relation id=\"";
         oss << std::to_string(this->id);
-        oss << "\" ";
+        oss << "\"";
 
         if (!this->timestamp.empty()) {
             oss << " timestamp=\"";
