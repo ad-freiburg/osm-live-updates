@@ -9,9 +9,9 @@ namespace olu::osm {
     TEST(Relation, createRelationFromReferences) {
         Relation relation(1);
         relation.setType("multipolygon");
-        relation.addNodeAsMember(1, "member");
-        relation.addWayAsMember(2, "outer");
-        relation.addRelationAsMember(3, "inner");
+        relation.addMember({1, "node", "member"});
+        relation.addMember({2, "way", "outer"});
+        relation.addMember({3, "relation", "inner"});
 
         ASSERT_EQ(relation.getXml(),
                   "<relation id=\"1\">"

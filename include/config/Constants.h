@@ -123,7 +123,8 @@ namespace olu::config::constants {
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_WAY_MEMBERS{
-            "PREFIX osmway: <https://www.openstreetmap.org/way/>"
+            "PREFIX osmway: <https://www.openstreetmap.org/way/>",
+            "PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>"
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_WAY_TAGS{

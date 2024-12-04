@@ -13,15 +13,8 @@ namespace olu::osm {
         this->timestamp = timestamp;
     }
 
-    void Relation::addNodeAsMember(id_t const& id, Role const& role) {
-        this->nodes.insert(RelationMember(id, role));
-    }
-    void Relation::addWayAsMember(id_t const& id, Role const& role) {
-        this->ways.insert(RelationMember(id, role));
-    }
-
-    void Relation::addRelationAsMember(id_t const& id, Role const& role) {
-        this->relations.insert(RelationMember(id, role));
+    void Relation::addMember(const RelationMember& member) {
+        this->members.push_back(member);
     }
 
     void Relation::addTag(const std::string& key, const std::string& value) {
@@ -32,16 +25,8 @@ namespace olu::osm {
         const std::string timestamp = this->timestamp.empty() ? "" : " timestamp=\"" + this->timestamp + "Z\"";
         std::string xml = "<relation id=\"" + std::to_string(this->id) + "\" " + timestamp + ">";
 
-        for (const auto &[id, role] : this->nodes) {
-            xml += R"(<member type="node" ref=")" + std::to_string(id) + "\" role=\"" + role + "\"/>";
-        }
-
-        for (const auto &[id, role] : this->ways) {
-            xml += R"(<member type="way" ref=")" + std::to_string(id) + "\" role=\"" + role + "\"/>";
-        }
-
-        for (const auto &[id, role] : this->relations) {
-            xml += R"(<member type="relation" ref=")" + std::to_string(id) + "\" role=\"" + role + "\"/>";
+        for (const auto &[id, osmTag, role] : this->members) {
+            xml += "<member type=\"" + osmTag + "\" ref=\"" + std::to_string(id) + "\" role=\"" + role + "\"/>";
         }
 
         xml += R"(<tag k="type" v=")" + this->type + "\"/>";

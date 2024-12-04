@@ -214,7 +214,7 @@ namespace olu::osm {
             std::string type;
             std::string memberUris;
             std::string memberRoles;
-
+            std::string memberPositions;
             for (const auto &binding : result.second.get_child("")) {
                 auto name = util::XmlReader::readAttribute("<xmlattr>.name",binding.second);
                 if (name == "rel") {
@@ -233,6 +233,10 @@ namespace olu::osm {
                 if (name == "memberRoles") {
                     memberRoles = binding.second.get<std::string>("literal");
                 }
+
+                if (name == "memberPositions") {
+                    memberPositions = binding.second.get<std::string>("literal");
+                }
             }
 
             Relation relation(relationId);
@@ -240,23 +244,33 @@ namespace olu::osm {
 
             std::stringstream uriStream(memberUris);
             std::stringstream rolesStream(memberRoles);
+            std::stringstream posStream(memberPositions);
 
             std::string uri;
             std::string role;
+            std::string position;
+            std::map<int, RelationMember> members;
             while (std::getline(uriStream, uri, ';')) {
                 if (uri.empty()) { continue; }
 
                 std::getline(rolesStream, role, ';');
+                std::getline(posStream, position, ';');
                 id_t id = OsmObjectHelper::getIdFromUri(uri);
+
+                std::string osmTag;
                 if (uri.starts_with(cnst::OSM_NODE_URI)) {
-                    relation.addNodeAsMember(id, role);
+                    osmTag = cnst::NODE_TAG;
                 } else if (uri.starts_with(cnst::OSM_WAY_URI)) {
-                    relation.addWayAsMember(id, role);
+                    osmTag = cnst::WAY_TAG;
                 } else if (uri.starts_with(cnst::OSM_REL_URI)) {
-                    relation.addRelationAsMember(id, role);
+                    osmTag = cnst::RELATION_TAG;
                 }
+                members.emplace(std::stoi(position), RelationMember(id, osmTag, role));
             }
 
+            for (auto [pos, member] : members) {
+                relation.addMember(member);
+            }
             relations.emplace_back(relation);
         }
 
@@ -269,35 +283,47 @@ namespace olu::osm {
             sparql::QueryWriter::writeQueryForWaysMembers(wayIds),
             cnst::PREFIXES_FOR_WAY_MEMBERS);
 
-        std::map<id_t, std::vector<id_t>> wayMap;
+        std::vector<Way> ways;
         for (const auto &result : response.get_child("sparql.results")) {
             id_t wayId;
+            std::string nodeUris;
+            std::string nodePositions;
             for (const auto &binding : result.second.get_child("")) {
-                auto name = util::XmlReader::readAttribute("<xmlattr>.name", binding.second);
+                auto name = util::XmlReader::readAttribute("<xmlattr>.name",binding.second);
                 if (name == "way") {
-                    auto uri = binding.second.get<std::string>("uri");
-                    wayId = OsmObjectHelper::getIdFromUri(uri);
-
-                    if (!wayMap.contains(wayId)) {
-                        wayMap[wayId] = std::vector<id_t>();
-                    }
+                    auto wayUri = binding.second.get<std::string>("uri");
+                    wayId = OsmObjectHelper::getIdFromUri(wayUri);
                 }
 
-                if (name == "node") {
-                    auto uri = binding.second.get<std::string>("uri");
-                    id_t nodeId = OsmObjectHelper::getIdFromUri(uri);
-                    wayMap[wayId].push_back(nodeId);
+                if (name == "nodeUris") {
+                    nodeUris = binding.second.get<std::string>("literal");
+                }
+
+                if (name == "nodePositions") {
+                    nodePositions = binding.second.get<std::string>("literal");
                 }
             }
-        }
 
-        std::vector<Way> ways;
-        for (const auto &[wayId, nodeIds] : wayMap) {
             Way way(wayId);
-            for (const auto &nodeId : nodeIds) {
+
+            std::stringstream uriStream(nodeUris);
+            std::stringstream posStream(nodePositions);
+
+            std::string uri;
+            std::string position;
+            std::map<int, id_t> nodes;
+            while (std::getline(uriStream, uri, ';')) {
+                if (uri.empty()) { continue; }
+
+                std::getline(posStream, position, ';');
+                id_t id = OsmObjectHelper::getIdFromUri(uri);
+                nodes.emplace(std::stoi(position), id);
+            }
+
+            for (auto [pos, nodeId] : nodes) {
                 way.addMember(nodeId);
             }
-            ways.push_back(way);
+            ways.emplace_back(way);
         }
 
         return ways;

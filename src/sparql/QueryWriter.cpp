@@ -20,6 +20,7 @@
 
 #include <string>
 #include <vector>
+#include <sstream>
 
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeInsertQuery(const std::vector<std::string>& triples) {
@@ -76,34 +77,47 @@ std::string olu::sparql::QueryWriter::writeQueryForLatestNodeTimestamp() {
 
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeQueryForRelations(const std::set<id_t> & relationIds) {
-    std::string query = "SELECT ?rel ?type"
-                        "(GROUP_CONCAT(?memberUri; separator=\";\") AS ?memberUris) "
-                        "(GROUP_CONCAT(?memberRole; separator=\";\") AS ?memberRoles) "
-                        "WHERE { VALUES ?rel { ";
+    std::stringstream ss;
+    ss << "SELECT ?rel ?type"
+          "(GROUP_CONCAT(?memberUri; separator=\";\") AS ?memberUris) "
+          "(GROUP_CONCAT(?memberRole; separator=\";\") AS ?memberRoles) "
+          "(GROUP_CONCAT(?memberPos; separator=\";\") AS ?memberPositions) "
+          "WHERE { VALUES ?rel { ";
 
     for (const auto & relId : relationIds) {
-        query += "osmrel:" + std::to_string(relId)+ " ";
+        ss << "osmrel:";
+        ss << std::to_string(relId);
+        ss << " ";
     }
 
-    query += "} ?rel osmkey:type ?type . "
-             "?rel osmrel:member ?o . "
-             "?o osm2rdfmember:id ?memberUri . "
-             "?o osm2rdfmember:role ?memberRole . "
-             "} GROUP BY ?rel ?type";
-    return query;
+    ss << "} ?rel osmkey:type ?type . "
+          "?rel osmrel:member ?o . "
+          "?o osm2rdfmember:id ?memberUri . "
+          "?o osm2rdfmember:role ?memberRole . "
+          "?o osm2rdfmember:pos ?memberPos . "
+          "} GROUP BY ?rel ?type";
+    return ss.str();
 }
 
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeQueryForWaysMembers(const std::set<id_t> &wayIds) {
-    std::string query;
-    query += "SELECT ?way ?node WHERE { VALUES ?way { ";
+    std::stringstream ss;
+    ss << "SELECT ?way "
+          "(GROUP_CONCAT(?nodeUri; separator=\";\") AS ?nodeUris) "
+          "(GROUP_CONCAT(?nodePos; separator=\";\") AS ?nodePositions) "
+          "WHERE { VALUES ?way { ";
 
     for (const auto & wayId : wayIds) {
-        query += "osmway:" + std::to_string(wayId)+ " ";
+        ss << "osmway:";
+        ss << std::to_string(wayId);
+        ss << " ";
     }
 
-    query += "} ?way osmway:node ?member . ?member osmway:node ?node . }";
-    return query;
+    ss << "} ?way osmway:node ?member . "
+          "?member osmway:node ?nodeUri . "
+          "?member osm2rdfmember:pos ?nodePos "
+          "} GROUP BY ?way";
+    return ss.str();
 }
 
 // _________________________________________________________________________________________________
