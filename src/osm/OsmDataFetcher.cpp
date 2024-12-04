@@ -361,7 +361,8 @@ namespace olu::osm {
                 }
             }
 
-            if (!key.empty()) {
+            // Type of relation is already fetched in an earlier step
+            if (!key.empty() && key != "type") {
                 relation.addTag(key, value);
             }
         }
