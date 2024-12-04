@@ -18,6 +18,8 @@
 
 #include "osm/Way.h"
 
+#include <sstream>
+
 namespace olu::osm {
     void Way::setTimestamp(std::string const &timestamp) {
         this->timestamp = timestamp;
@@ -32,22 +34,36 @@ namespace olu::osm {
     }
 
     std::string Way::getXml() const {
-        const std::string timestamp = this->timestamp.empty() ? "" : " timestamp=\"" + this->timestamp + "Z\"";
-        std::string xml = "<way id=\"" + std::to_string(this->getId()) + "\"" + timestamp + ">";
+        std::ostringstream oss;
+
+        oss << "<way id=\"";
+        oss << std::to_string(this->getId());
+        oss << "\"";
+
+        if (!this->timestamp.empty()) {
+            oss << " timestamp=\"";
+            oss << this->timestamp;
+            oss << "Z\"";
+        }
+
+        oss << ">";
+
         for (const auto nodeId: this->members) {
-            xml += "<nd ref=\"" + std::to_string(nodeId) + "\"/>";
+            oss << "<nd ref=\"";
+            oss << std::to_string(nodeId);
+            oss << "\"/>";
         }
 
         for (const auto& [key, value] : this->tags) {
-            xml += "<tag k=\"";
-            xml += key;
-            xml += "\" v=\"";
-            xml += value;
-            xml += "\"/>";
+            oss << "<tag k=\"";
+            oss << key;
+            oss << "\" v=\"";
+            oss << value;
+            oss << "\"/>";
         }
 
-        xml += "</way>";
-        return xml;
+        oss << "</way>";
+        return oss.str();
     }
 
 }

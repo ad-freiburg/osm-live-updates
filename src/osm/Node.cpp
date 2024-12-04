@@ -27,16 +27,16 @@
 static inline constexpr int MAX_NODE_LOC_PRECISION = 7;
 
 namespace olu::osm {
-
-    Node::Node(id_t id, const WKTPoint& locationAsWkt) {
+    Node::Node(const id_t id, const WKTPoint& locationAsWkt) {
         this->id = id;
 
         try {
-            auto point = util::geo::pointFromWKT<double>(locationAsWkt);
+            const auto point = util::geo::pointFromWKT<double>(locationAsWkt);
             this->loc = osmium::Location( point.getX(), point.getY() );
         } catch (const std::exception& e) {
             std::cerr << e.what() << std::endl;
-            std::string message = "Location can not be inferred from WKT point: " + locationAsWkt;
+            const std::string message = "Location can not be inferred from WKT point: "
+                                            + locationAsWkt;
             throw NodeException(message.c_str());
         }
     }
@@ -49,5 +49,4 @@ namespace olu::osm {
 
         return oss.str();
     }
-
 }

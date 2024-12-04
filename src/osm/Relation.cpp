@@ -4,6 +4,8 @@
 
 #include "osm/Relation.h"
 
+#include <sstream>
+
 namespace olu::osm {
     void Relation::setType(std::string const &type) {
         this->type = type;
@@ -22,26 +24,45 @@ namespace olu::osm {
     }
 
     std::string Relation::getXml() const {
-        const std::string timestamp = this->timestamp.empty() ? "" : " timestamp=\"" + this->timestamp + "Z\"";
-        std::string xml = "<relation id=\"" + std::to_string(this->id) + "\" " + timestamp + ">";
+        std::ostringstream oss;
+
+        oss << "<relation id=\"";
+        oss << std::to_string(this->id);
+        oss << "\" ";
+
+        if (!this->timestamp.empty()) {
+            oss << " timestamp=\"";
+            oss << this->timestamp;
+            oss << "Z\"";
+        }
+
+        oss << ">";
 
         for (const auto &[id, osmTag, role] : this->members) {
-            xml += "<member type=\"" + osmTag + "\" ref=\"" + std::to_string(id) + "\" role=\"" + role + "\"/>";
+            oss << "<member type=\"";
+            oss << osmTag;
+            oss << "\" ref=\"";
+            oss << std::to_string(id);
+            oss << "\" role=\"";
+            oss << role;
+            oss << "\"/>";
         }
 
-        xml += R"(<tag k="type" v=")" + this->type + "\"/>";
+        oss << R"(<tag k="type" v=")";
+        oss << this->type;
+        oss << "\"/>";
 
         for (const auto& [key, value] : this->tags) {
-            xml += "<tag k=\"";
-            xml += key;
-            xml += "\" v=\"";
-            xml += value;
-            xml += "\"/>";
+            oss << "<tag k=\"";
+            oss << key;
+            oss << "\" v=\"";
+            oss << value;
+            oss << "\"/>";
         }
 
-        xml += "</relation>";
+        oss << "</relation>";
 
-        return xml;
+        return oss.str();
     }
 
 }
