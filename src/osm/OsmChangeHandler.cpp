@@ -471,36 +471,36 @@ namespace olu::osm {
         std::vector<std::string> tripleBatch;
         for (size_t i = 0; i < triples.size(); ++i) {
             auto [s, p, o] = triples[i];
-            std::string triple;
+            std::ostringstream triple;
             if (o.starts_with("_")) {
-                triple += s;
-                triple += " ";
-                triple += p;
-                triple += "[ ";
+                triple << s;
+                triple << " ";
+                triple << p;
+                triple << "[ ";
 
                 while (true) {
                     i++;
                     if (auto [next_s, next_p, next_o] = triples[i]; next_s.starts_with("_")) {
-                        triple += next_p;
-                        triple += " ";
-                        triple += next_o;
-                        triple += "; ";
+                        triple << next_p;
+                        triple << " ";
+                        triple << next_o;
+                        triple << "; ";
                     } else {
                         i--;
                         break;
                     }
                 }
 
-                triple += " ]";
+                triple << " ]";
             } else {
-                triple += s;
-                triple += " ";
-                triple += p;
-                triple += " ";
-                triple += o;
+                triple << s;
+                triple << " ";
+                triple << p;
+                triple << " ";
+                triple << o;
             }
 
-            tripleBatch.emplace_back(triple);
+            tripleBatch.emplace_back(triple.str());
 
             if (tripleBatch.size() == MAX_VALUES_PER_QUERY || i == triples.size() - 1) {
                 runUpdateQuery(sparql::QueryWriter::writeInsertQuery(tripleBatch), cnst::DEFAULT_PREFIXES);
