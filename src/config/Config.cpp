@@ -48,6 +48,11 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
             olu::config::constants::SPARQL_ENDPOINT_URI_OPTION_LONG,
             olu::config::constants::SPARQL_ENDPOINT_URI_OPTION_HELP);
 
+    auto sparqlUpdatePathOp = parser.add<popl::Value<std::string>, popl::Attribute::optional>(
+            olu::config::constants::SPARQL_UPDATE_PATH_OPTION_SHORT,
+            olu::config::constants::SPARQL_UPDATE_PATH_OPTION_LONG,
+            olu::config::constants::SPARQL_UPDATE_PATH_OPTION_HELP);
+
     auto pathToOsmChangeFileOp = parser.add<popl::Value<std::string>, popl::Attribute::optional>(
             olu::config::constants::PATH_TO_OSM_CHANGE_FILE_OPTION_SHORT,
             olu::config::constants::PATH_TO_OSM_CHANGE_FILE_OPTION_LONG,
@@ -97,6 +102,10 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
         }
 
         sparqlEndpointUri = sparqlEndpointUriOp->value();
+
+        if (sparqlUpdatePathOp->is_set()) {
+            pathForSparqlUpdates = sparqlUpdatePathOp->value();
+        }
 
         if (pathToOsmChangeFileOp->is_set()) {
             pathToOsmChangeFile = pathToOsmChangeFileOp->value();

@@ -17,8 +17,8 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "osm/Node.h"
+#include "spatialjoin/WKTParse.h"
 
-#include <boost/regex.hpp>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -27,31 +27,18 @@
 static inline constexpr int MAX_NODE_LOC_PRECISION = 7;
 
 namespace olu::osm {
-
-    Node::Node(id_t id, const WKTPoint& locationAsWkt) {
+    Node::Node(const id_t id, const WKTPoint& locationAsWkt) {
         this->id = id;
 
-        std::string lat; std::string lon;
-        const boost::regex pattern(R"(POINT\((-?\d+)\.(\d+)\s(-?\d+)\.(\d+)\))");
-        if (boost::smatch match; regex_search(locationAsWkt, match, pattern)) {
-            lon = match[1] + match[2];
-            lat = match[3] + match[4];
-        } else {
-            std::string message = "Location can not be inferred from WKT point: " + locationAsWkt;
-            throw NodeException(message.c_str());
-        }
-
-        int32_t i_lat; int32_t i_lon;
         try {
-            i_lat = stoi(lat);
-            i_lon = stoi(lon);
+            const auto point = util::geo::pointFromWKT<double>(locationAsWkt);
+            this->loc = osmium::Location( point.getX(), point.getY() );
         } catch (const std::exception& e) {
             std::cerr << e.what() << std::endl;
-            std::string message = "Can not cast lon: " + lon + " or lat: " + lat + " to int";
+            const std::string message = "Location can not be inferred from WKT point: "
+                                            + locationAsWkt;
             throw NodeException(message.c_str());
         }
-
-        this->loc = osmium::Location( i_lon, i_lat );
     }
 
     std::string Node::getXml() const {
@@ -62,5 +49,4 @@ namespace olu::osm {
 
         return oss.str();
     }
-
 }

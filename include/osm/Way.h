@@ -30,7 +30,10 @@ namespace olu::osm {
     public:
         explicit Way(const id_t id): id(id) {};
 
+        void setTimestamp(std::string const& timestamp);
+
         void addMember(id_t nodeId);
+        void addTag(const std::string& key, const std::string& value);
 
         /**
         * Returns an osm xml element for a way with an id and node references.
@@ -40,11 +43,15 @@ namespace olu::osm {
         */
         [[nodiscard]] std::string getXml() const;
 
-        std::vector<id_t> getMembers() { return members; };
-        [[nodiscard]] id_t getId() const { return id; };
+        std::vector<id_t> getMembers() { return members; }
+        [[nodiscard]] id_t getId() const { return id; }
+        std::vector<KeyValue> getTags() { return tags; }
+        std::string getTimestamp() { return timestamp; }
     protected:
         id_t id;
+        std::string timestamp;
         std::vector<id_t> members;
+        std::vector<KeyValue> tags;
     };
 
     /**

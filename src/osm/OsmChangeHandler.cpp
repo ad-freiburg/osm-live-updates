@@ -22,6 +22,7 @@
 #include "config/Constants.h"
 #include "sparql/QueryWriter.h"
 #include "util/OsmObjectHelper.h"
+#include "util/TtlHelper.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <string>
@@ -29,8 +30,13 @@
 #include <set>
 #include <regex>
 
-/// The maximum number of values that should be in a query to the QLever endpoint.
+// The maximum number of values that should be in a query to the QLever endpoint.
 static inline constexpr int MAX_VALUES_PER_QUERY = 1024;
+// Calculate number of ids for delete queries, because there are for example two subjects
+// for each node id
+static inline constexpr int MAX_IDS_PER_NODE_DELETE_QUERY_BATCH = MAX_VALUES_PER_QUERY / 2;
+static inline constexpr int MAX_IDS_PER_WAY_DELETE_QUERY_BATCH = MAX_VALUES_PER_QUERY / 3;
+static inline constexpr int MAX_IDS_PER_REL_DELETE_QUERY_BATCH = MAX_VALUES_PER_QUERY / 2;
 
 namespace cnst = olu::config::constants;
 
@@ -105,8 +111,10 @@ namespace olu::osm {
 
         std::cout << "Update database..." << std::endl;
         // Delete and insert elements from database
-        deleteElementsFromDatabase();
-        insertElementsToDatabase();
+        deleteNodesFromDatabase();
+        deleteWaysFromDatabase();
+        deleteRelationsFromDatabase();
+        insertTriplesToDatabase();
 
         // Cache of sparql endpoint has to be cleared after the completion`
         _sparql.clearCache();
@@ -364,7 +372,11 @@ namespace olu::osm {
             wayIds,
             MAX_VALUES_PER_QUERY,
             [this](std::set<id_t> const& batch) {
-                for (auto const& way: _odf.fetchWays(batch)) {
+                for (auto& way: _odf.fetchWays(batch)) {
+                    if (_waysToUpdateGeometry.contains(way.getId())) {
+                        _odf.fetchWayInfos(way);
+                    }
+
                     addToTmpFile(way.getXml(), cnst::WAY_TAG);
                 }
             });
@@ -381,7 +393,11 @@ namespace olu::osm {
             relations,
             MAX_VALUES_PER_QUERY,
             [this](std::set<id_t> const& batch) {
-                for (auto const& rel: _odf.fetchRelations(batch)) {
+                for (auto& rel: _odf.fetchRelations(batch)) {
+                    if (_relationsToUpdateGeometry.contains(rel.getId())) {
+                        _odf.fetchRelationInfos(rel);
+                    }
+
                     addToTmpFile(rel.getXml(), cnst::RELATION_TAG);
                 }
             });
@@ -389,142 +405,108 @@ namespace olu::osm {
         finalizeTmpFile(cnst::PATH_TO_RELATION_FILE);
     }
 
-    void OsmChangeHandler::deleteElementsFromDatabase() {
-        std::set<id_t> nodesToDelete;
-        nodesToDelete.insert(_deletedNodes.begin(), _deletedNodes.end());
-        nodesToDelete.insert(_modifiedNodes.begin(), _modifiedNodes.end());
-        for (const auto& id: nodesToDelete) {
-            auto query = sparql::QueryWriter::writeNodesDeleteQuery({id});
-            _sparql.setQuery(query);
-            _sparql.setPrefixes(cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
-            try {
-                _sparql.runUpdate();
-            } catch (std::exception &e) {
-                std::cerr << e.what() << std::endl;
-                throw OsmChangeHandlerException(
-                        "Exception while trying to run sparql query for deletion");
-            }
-        }
-
-        std::set<id_t> waysToDelete;
-        waysToDelete.insert(_deletedWays.begin(), _deletedWays.end());
-        waysToDelete.insert(_modifiedWays.begin(), _modifiedWays.end());
-        for (const auto& id: waysToDelete) {
-            auto query = sparql::QueryWriter::writeWaysDeleteQuery({id});
-            _sparql.setQuery(query);
-            _sparql.setPrefixes(cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
-            try {
-                _sparql.runUpdate();
-            } catch (std::exception &e) {
-                std::cerr << e.what() << std::endl;
-                throw OsmChangeHandlerException(
-                        "Exception while trying to run sparql query for deletion");
-            }
-        }
-
-        std::set<id_t> relationsToDelete;
-        relationsToDelete.insert(_deletedRelations.begin(), _deletedRelations.end());
-        relationsToDelete.insert(_modifiedRelations.begin(), _modifiedRelations.end());
-        for (const auto& id: relationsToDelete) {
-            auto query = sparql::QueryWriter::writeRelationsDeleteQuery({id});
-            _sparql.setQuery(query);
-            _sparql.setPrefixes(cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
-            try {
-                _sparql.runUpdate();
-            } catch (std::exception &e) {
-                std::cerr << e.what() << std::endl;
-                throw OsmChangeHandlerException(
-                        "Exception while trying to run sparql query for deletion");
-            }
+    void
+    OsmChangeHandler::runUpdateQuery(const std::string &query,
+                                     const std::vector<std::string> &prefixes) {
+        _sparql.setQuery(query);
+        _sparql.setPrefixes(prefixes);
+        try {
+            _sparql.runUpdate();
+        } catch (std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            const std::string msg = "Exception while trying to run sparql update query: "
+                                    + query.substr(0, std::min<int>(query.size(), 100))
+                                    + " ...";
+            throw OsmChangeHandlerException(msg.c_str());
         }
     }
 
-    void OsmChangeHandler::insertElementsToDatabase() {
+    void OsmChangeHandler::deleteNodesFromDatabase() {
+        std::set<id_t> nodesToDelete;
+        nodesToDelete.insert(_deletedNodes.begin(), _deletedNodes.end());
+        nodesToDelete.insert(_modifiedNodes.begin(), _modifiedNodes.end());
+
+        doInBatches(
+            nodesToDelete,
+            MAX_IDS_PER_NODE_DELETE_QUERY_BATCH,
+            [this](std::set<id_t> const& batch) {
+                runUpdateQuery(sparql::QueryWriter::writeDeleteQuery(batch, "osmnode"),
+                    cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
+            });
+    }
+
+    void OsmChangeHandler::deleteWaysFromDatabase() {
+        std::set<id_t> waysToDelete;
+        waysToDelete.insert(_deletedWays.begin(), _deletedWays.end());
+        waysToDelete.insert(_modifiedWays.begin(), _modifiedWays.end());
+        waysToDelete.insert(_waysToUpdateGeometry.begin(), _waysToUpdateGeometry.end());
+
+        doInBatches(
+            waysToDelete,
+            MAX_IDS_PER_WAY_DELETE_QUERY_BATCH,
+            [this](std::set<id_t> const& batch) {
+                runUpdateQuery(sparql::QueryWriter::writeDeleteQuery(batch, "osmway"),
+                    cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
+            });
+    }
+
+    void OsmChangeHandler::deleteRelationsFromDatabase() {
+        std::set<id_t> relationsToDelete;
+        relationsToDelete.insert(_deletedRelations.begin(), _deletedRelations.end());
+        relationsToDelete.insert(_modifiedRelations.begin(), _modifiedRelations.end());
+        relationsToDelete.insert(_relationsToUpdateGeometry.begin(), _relationsToUpdateGeometry.end());
+
+        doInBatches(
+            relationsToDelete,
+            MAX_IDS_PER_REL_DELETE_QUERY_BATCH,
+            [this](std::set<id_t> const& batch) {
+                runUpdateQuery(sparql::QueryWriter::writeDeleteQuery(batch, "osmrel"),
+                    cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
+            });
+    }
+
+    void OsmChangeHandler::insertTriplesToDatabase() {
         auto triples = filterRelevantTriples();
 
         std::vector<std::string> tripleBatch;
         for (size_t i = 0; i < triples.size(); ++i) {
             auto [s, p, o] = triples[i];
-            std::string triple;
+            std::ostringstream triple;
             if (o.starts_with("_")) {
-                triple += s;
-                triple += " ";
-                triple += p;
-                triple += "[ ";
+                triple << s;
+                triple << " ";
+                triple << p;
+                triple << "[ ";
 
                 while (true) {
                     i++;
                     if (auto [next_s, next_p, next_o] = triples[i]; next_s.starts_with("_")) {
-                        triple += next_p;
-                        triple += " ";
-                        triple += next_o;
-                        triple += "; ";
+                        triple << next_p;
+                        triple << " ";
+                        triple << next_o;
+                        triple << "; ";
                     } else {
                         i--;
                         break;
                     }
                 }
 
-                triple += " ]";
+                triple << " ]";
             } else {
-                triple += s;
-                triple += " ";
-                triple += p;
-                triple += " ";
-                triple += o;
+                triple << s;
+                triple << " ";
+                triple << p;
+                triple << " ";
+                triple << o;
             }
 
-            tripleBatch.emplace_back(triple);
+            tripleBatch.emplace_back(triple.str());
 
-            if (tripleBatch.size() == MAX_VALUES_PER_QUERY) {
-                auto query = sparql::QueryWriter::writeInsertQuery(tripleBatch);
-                _sparql.setPrefixes(cnst::DEFAULT_PREFIXES);
-                _sparql.setQuery(query);
-
-                try {
-                    _sparql.runUpdate();
-                } catch (std::exception &e) {
-                    std::cerr << e.what() << std::endl;
-                    throw OsmChangeHandlerException(
-                            "Exception while trying to run sparql query for insertion");
-                }
-
+            if (tripleBatch.size() == MAX_VALUES_PER_QUERY || i == triples.size() - 1) {
+                runUpdateQuery(sparql::QueryWriter::writeInsertQuery(tripleBatch), cnst::DEFAULT_PREFIXES);
                 tripleBatch.clear();
             }
         }
-    }
-
-    std::tuple<std::string, std::string, std::string>
-    getElementsFromTriple(const std::string& triple) {
-        const std::regex regex(R"((\S+)\s(\S+)\s(.*)\s\.)");
-        if (std::smatch match; std::regex_search(triple, match, regex)) {
-            return std::make_tuple(match[1], match[2], match[3]);
-        }
-
-        const std::string msg = "Cant split triple: " + triple;
-        throw OsmChangeHandlerException(msg.c_str());
-    }
-
-    id_t getIdFromTriple(const std::string& triple, const std::string& elementTag) {
-        std::string regexString;
-        if (elementTag == cnst::NODE_TAG) {
-            regexString = R"((?:osmnode:|osm_node_|osm_node_centroid_)(\d+))";
-        } else if (elementTag == cnst::WAY_TAG) {
-           regexString = R"((?:osmway:|osm_wayarea_)(\d+))";
-        } else if (elementTag == cnst::RELATION_TAG) {
-            regexString = R"((?:osmrel:|osm_relarea_)(\d+))";
-        } else {
-            const std::string msg = "Unknown element tag: " + elementTag;
-            throw OsmChangeHandlerException(msg.c_str());
-        }
-
-        const std::regex integerRegex(regexString);
-        if (std::smatch match; std::regex_search(triple, match, integerRegex)) {
-            return stoll(match[1]);
-        }
-
-        const std::string msg = "Cant get id for " + elementTag + " from triple: " + triple;
-        throw OsmChangeHandlerException(msg.c_str());
     }
 
     std::vector<Triple> OsmChangeHandler::filterRelevantTriples() {
@@ -542,64 +524,68 @@ namespace olu::osm {
         relationsToInsert.insert(_modifiedRelations.begin(), _modifiedRelations.end());
         relationsToInsert.insert(_relationsToUpdateGeometry.begin(), _relationsToUpdateGeometry.end());
 
-        std::ifstream triples;
-        triples.open(cnst::PATH_TO_OUTPUT_FILE);
-
         // Triples that should be inserted into the database
         std::vector<Triple> relevantTriples;
-        // Relevant subjects that arise during conversion such as member ids and osm_area_centroid
-        std::set<std::string> relevantSubjects;
+        // current link object, for example member nodes or geometries
+        std::string currentLink;
+
+        // Loop over each triple that osm2rdf outputs
         std::string line;
-        while (std::getline(triples, line)) {
+        std::ifstream osm2rdfOutput;
+        osm2rdfOutput.open(cnst::PATH_TO_OUTPUT_FILE);
+        while (std::getline(osm2rdfOutput, line)) {
             if (line.starts_with("@")) {
                 continue;
             }
 
-            auto [subject, predicate, object] = getElementsFromTriple(line);
-            if (subject.starts_with("osmnode:") ||
-                subject.starts_with("osm2rdfgeom:osm_node_")) {
+            auto [sub, pre, obj] = util::TtlHelper::getTriple(line);
 
-                if (nodesToInsert.contains(getIdFromTriple(subject, cnst::NODE_TAG))) {
-                    relevantTriples.emplace_back(subject, predicate, object);
-                }
-
+            // Check if there is currently a link set
+            if (!currentLink.empty() && currentLink == sub) {
+                relevantTriples.emplace_back(sub, pre, obj);
                 continue;
             }
 
-            if (subject.starts_with("osmway:") ||
-                subject.starts_with("osm2rdfgeom:osm_wayarea_")) {
-                if (waysToInsert.contains(getIdFromTriple(subject, cnst::WAY_TAG))) {
-                    relevantTriples.emplace_back(subject, predicate, object);
+            // Check for relevant nodes
+            if (util::TtlHelper::isRelevantNamespace(sub, cnst::NODE_TAG)) {
+                if (nodesToInsert.contains(util::TtlHelper::getIdFromSubject(sub, cnst::NODE_TAG))) {
 
-                    if (predicate == "osmway:node" ||
-                        subject.starts_with("osm2rdfgeom:osm_area_centroid_")) {
-                        relevantSubjects.insert(object);
+                    relevantTriples.emplace_back(sub, pre, obj);
+
+                    if (util::TtlHelper::hasRelevantObject(pre, cnst::NODE_TAG)) {
+                        currentLink = obj;
                     }
                 }
 
                 continue;
             }
 
-            if (subject.starts_with("osmrel:") ||
-                subject.starts_with("osm2rdfgeom:osm_relarea_")) {
-                if (relationsToInsert.contains(getIdFromTriple(subject, cnst::RELATION_TAG))) {
-                    relevantTriples.emplace_back(subject, predicate, object);
+            // Check for relevant ways
+            if (util::TtlHelper::isRelevantNamespace(sub, cnst::WAY_TAG)) {
+                if (waysToInsert.contains(util::TtlHelper::getIdFromSubject(sub, cnst::WAY_TAG))) {
+                    relevantTriples.emplace_back(sub, pre, obj);
 
-                    if (predicate == "osmrel:member" ||
-                        subject.starts_with("osm2rdfgeom:osm_area_centroid_")) {
-                        relevantSubjects.insert(object);
+                    if (util::TtlHelper::hasRelevantObject(pre, cnst::WAY_TAG)) {
+                        currentLink = obj;
                     }
                 }
 
                 continue;
             }
 
-            if (relevantSubjects.contains(subject)) {
-                    relevantTriples.emplace_back(subject, predicate, object);
+            // Check for relevant relations
+            if (util::TtlHelper::isRelevantNamespace(sub, cnst::RELATION_TAG)) {
+                if (relationsToInsert.contains(util::TtlHelper::getIdFromSubject(sub, cnst::RELATION_TAG))) {
+                    relevantTriples.emplace_back(sub, pre, obj);
+
+                    if (util::TtlHelper::hasRelevantObject(pre, cnst::RELATION_TAG)) {
+                        currentLink = obj;
+                    }
+                }
             }
         }
 
-        triples.close();
+        osm2rdfOutput.close();
         return relevantTriples;
     }
 

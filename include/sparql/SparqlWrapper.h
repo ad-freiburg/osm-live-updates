@@ -22,7 +22,6 @@
 #include "config/Config.h"
 
 #include <string>
-#include <utility>
 #include <vector>
 #include <boost/property_tree/ptree.hpp>
 
@@ -86,9 +85,9 @@ namespace olu::sparql {
          * Writes the prefixes and query to the output file if the `writeSparqlQueriesToFile` flag
          * is set
          */
-        void handleFileOutput();
+        void handleFileOutput() const;
 
-        std::string send(const std::string& acceptValue);
+        std::string send(const std::string& acceptValue, const std::string &endpointUri, bool isUpdate);
     };
 
     /**

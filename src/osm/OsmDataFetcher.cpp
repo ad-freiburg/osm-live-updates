@@ -20,6 +20,7 @@
 #include "config/Constants.h"
 #include "util/URLHelper.h"
 #include "util/HttpRequest.h"
+#include "util/OsmObjectHelper.h"
 #include "util/XmlReader.h"
 #include "sparql/QueryWriter.h"
 
@@ -30,10 +31,12 @@
 #include <fstream>
 
 namespace cnst = olu::config::constants;
-
 namespace olu::osm {
-    boost::property_tree::ptree OsmDataFetcher::runQuery(const std::string &query,
-                                                         const std::vector<std::string> &prefixes) {
+    // _____________________________________________________________________________________________
+    boost::property_tree::ptree OsmDataFetcher::runQuery(
+        const std::string &query,
+        const std::vector<std::string> &prefixes) {
+
         _sparqlWrapper.setQuery(query);
         _sparqlWrapper.setPrefixes(prefixes);
         return _sparqlWrapper.runQuery();
@@ -101,10 +104,12 @@ namespace olu::osm {
         return filePath;
     }
 
+    // _____________________________________________________________________________________________
     std::vector<Node>
     OsmDataFetcher::fetchNodes(const std::set<id_t> &nodeIds) {
-        auto response = runQuery(sparql::QueryWriter::writeQueryForNodeLocations(nodeIds),
-                                       cnst::PREFIXES_FOR_NODE_LOCATION);
+        auto response = runQuery(
+            sparql::QueryWriter::writeQueryForNodeLocations(nodeIds),
+            cnst::PREFIXES_FOR_NODE_LOCATION);
 
         std::vector<Node> nodes;
         for (const auto &result : response.get_child("sparql.results")) {
@@ -114,14 +119,7 @@ namespace olu::osm {
                 auto name = util::XmlReader::readAttribute("<xmlattr>.name", binding.second);
                 if (name == "nodeGeo") {
                     auto uri = binding.second.get<std::string>("uri");
-
-                    try {
-                        id = std::stoll(uri.substr(cnst::OSM_GEOM_NODE_URI.length()));
-                    } catch (const std::exception &e) {
-                        std::cerr << e.what() << std::endl;
-                        std::string msg = "Exception while trying to get id from uri: " + uri;
-                        throw OsmDataFetcherException(msg.c_str());
-                    }
+                    id = OsmObjectHelper::getIdFromUri(uri);
                 }
 
                 if (name == "location") {
@@ -145,8 +143,9 @@ namespace olu::osm {
 
     // _____________________________________________________________________________________________
     std::string OsmDataFetcher::fetchLatestTimestampOfAnyNode() {
-        const auto response = runQuery(sparql::QueryWriter::writeQueryForLatestNodeTimestamp(),
-                                        cnst::PREFIXES_FOR_LATEST_NODE_TIMESTAMP);
+        const auto response = runQuery(
+            sparql::QueryWriter::writeQueryForLatestNodeTimestamp(),
+            cnst::PREFIXES_FOR_LATEST_NODE_TIMESTAMP);
 
         std::string timestamp;
         try {
@@ -202,205 +201,247 @@ namespace olu::osm {
         return ods;
     }
 
-    // _________________________________________________________________________________________________
+    // _____________________________________________________________________________________________
     std::vector<Relation>
     OsmDataFetcher::fetchRelations(const std::set<id_t> &relationIds) {
-        auto response = runQuery(sparql::QueryWriter::writeQueryForRelationMembers(relationIds),
-                                    cnst::PREFIXES_FOR_RELATION_MEMBERS);
+        auto response = runQuery(
+            sparql::QueryWriter::writeQueryForRelations(relationIds),
+            cnst::PREFIXES_FOR_RELATION_MEMBERS);
 
-        Relation currentRelation(0);
         std::vector<Relation> relations;
         for (const auto &result : response.get_child("sparql.results")) {
-            std::string memberUri;
-            std::string role;
             id_t relationId;
-            std::string relationType;
+            std::string type;
+            std::string memberUris;
+            std::string memberRoles;
+            std::string memberPositions;
             for (const auto &binding : result.second.get_child("")) {
                 auto name = util::XmlReader::readAttribute("<xmlattr>.name",binding.second);
                 if (name == "rel") {
                     auto relUri = binding.second.get<std::string>("uri");
-                    relationId = std::stoll(relUri.substr(cnst::OSM_REL_URI.length()));
+                    relationId = OsmObjectHelper::getIdFromUri(relUri);
                 }
 
-                if (name == "key") {
-                    relationType = binding.second.get<std::string>("literal");
+                if (name == "type") {
+                    type = binding.second.get<std::string>("literal");
                 }
 
-                if (name == "id") {
-                    memberUri = binding.second.get<std::string>("uri");
+                if (name == "memberUris") {
+                    memberUris = binding.second.get<std::string>("literal");
                 }
 
-                if (name == "role") {
-                    role = binding.second.get<std::string>("literal");
+                if (name == "memberRoles") {
+                    memberRoles = binding.second.get<std::string>("literal");
+                }
+
+                if (name == "memberPositions") {
+                    memberPositions = binding.second.get<std::string>("literal");
                 }
             }
 
-            if (currentRelation.getId() != relationId) {
-                relations.push_back(currentRelation);
-                currentRelation = Relation(relationId);
-                currentRelation.setType(relationType);
+            Relation relation(relationId);
+            relation.setType(type);
+
+            std::stringstream uriStream(memberUris);
+            std::stringstream rolesStream(memberRoles);
+            std::stringstream posStream(memberPositions);
+
+            std::string uri;
+            std::string role;
+            std::string position;
+            std::map<int, RelationMember> members;
+            while (std::getline(uriStream, uri, ';')) {
+                if (uri.empty()) { continue; }
+
+                std::getline(rolesStream, role, ';');
+                std::getline(posStream, position, ';');
+                id_t id = OsmObjectHelper::getIdFromUri(uri);
+
+                std::string osmTag;
+                if (uri.starts_with(cnst::OSM_NODE_URI)) {
+                    osmTag = cnst::NODE_TAG;
+                } else if (uri.starts_with(cnst::OSM_WAY_URI)) {
+                    osmTag = cnst::WAY_TAG;
+                } else if (uri.starts_with(cnst::OSM_REL_URI)) {
+                    osmTag = cnst::RELATION_TAG;
+                }
+                members.emplace(std::stoi(position), RelationMember(id, osmTag, role));
             }
 
-            if (memberUri.starts_with(cnst::OSM_NODE_URI)) {
-                id_t nodeId = std::stoll( memberUri.substr(cnst::OSM_WAY_URI.length()));
-                currentRelation.addNodeAsMember(nodeId, role);
-            } else if (memberUri.starts_with(cnst::OSM_WAY_URI)) {
-                id_t wayId = std::stoll( memberUri.substr(cnst::OSM_WAY_URI.length()));
-                currentRelation.addNodeAsMember(wayId, role);
-            } else if (memberUri.starts_with(cnst::OSM_REL_URI)) {
-                id_t relId = std::stoll( memberUri.substr(cnst::OSM_WAY_URI.length()));
-                currentRelation.addNodeAsMember(relId, role);
+            for (auto [pos, member] : members) {
+                relation.addMember(member);
             }
+            relations.emplace_back(relation);
         }
 
-        // Delete first placeholder way from list
-        if (!relations.empty()) {
-            relations.erase(relations.begin());
-        }
         return relations;
     }
 
+    // _____________________________________________________________________________________________
     std::vector<Way> OsmDataFetcher::fetchWays(const std::set<id_t> &wayIds) {
-        auto response = runQuery(sparql::QueryWriter::writeQueryForWaysMembers(wayIds),
-                                    cnst::PREFIXES_FOR_WAY_MEMBERS);
-
-        std::map<id_t, std::vector<id_t>> wayMap;
-        for (const auto &result : response.get_child("sparql.results")) {
-            id_t wayId;
-            for (const auto &binding : result.second.get_child("")) {
-                auto name = util::XmlReader::readAttribute("<xmlattr>.name", binding.second);
-                if (name == "way") {
-                    auto uri = binding.second.get<std::string>("uri");
-                    wayId = std::stoll( uri.substr(cnst::OSM_WAY_URI.length()) );
-
-                    if (!wayMap.contains(wayId)) {
-                        wayMap[wayId] = std::vector<id_t>();
-                    }
-                }
-
-                if (name == "node") {
-                    auto uri = binding.second.get<std::string>("uri");
-                    id_t nodeId = std::stoll( uri.substr(cnst::OSM_NODE_URI.length()) );
-                    wayMap[wayId].push_back(nodeId);
-                }
-            }
-        }
+        auto response = runQuery(
+            sparql::QueryWriter::writeQueryForWaysMembers(wayIds),
+            cnst::PREFIXES_FOR_WAY_MEMBERS);
 
         std::vector<Way> ways;
-        for (const auto &[wayId, nodeIds] : wayMap) {
+        for (const auto &result : response.get_child("sparql.results")) {
+            id_t wayId;
+            std::string nodeUris;
+            std::string nodePositions;
+            for (const auto &binding : result.second.get_child("")) {
+                auto name = util::XmlReader::readAttribute("<xmlattr>.name",binding.second);
+                if (name == "way") {
+                    auto wayUri = binding.second.get<std::string>("uri");
+                    wayId = OsmObjectHelper::getIdFromUri(wayUri);
+                }
+
+                if (name == "nodeUris") {
+                    nodeUris = binding.second.get<std::string>("literal");
+                }
+
+                if (name == "nodePositions") {
+                    nodePositions = binding.second.get<std::string>("literal");
+                }
+            }
+
             Way way(wayId);
-            for (const auto &nodeId : nodeIds) {
+
+            std::stringstream uriStream(nodeUris);
+            std::stringstream posStream(nodePositions);
+
+            std::string uri;
+            std::string position;
+            std::map<int, id_t> nodes;
+            while (std::getline(uriStream, uri, ';')) {
+                if (uri.empty()) { continue; }
+
+                std::getline(posStream, position, ';');
+                id_t id = OsmObjectHelper::getIdFromUri(uri);
+                nodes.emplace(std::stoi(position), id);
+            }
+
+            for (auto [pos, nodeId] : nodes) {
                 way.addMember(nodeId);
             }
-            ways.push_back(way);
+            ways.emplace_back(way);
         }
 
         return ways;
     }
 
+    // _____________________________________________________________________________________________
+    void OsmDataFetcher::fetchWayInfos(Way &way) {
+        std::string subject = "osmway:" + std::to_string(way.getId());
+        auto response = runQuery(
+            sparql::QueryWriter::writeQueryForTagsAndTimestamp(subject),
+            cnst::PREFIXES_FOR_WAY_TAGS);
+
+        for (const auto &result : response.get_child("sparql.results")) {
+            std::string key; std::string value;
+            for (const auto &binding : result.second.get_child("")) {
+                auto name = util::XmlReader::readAttribute("<xmlattr>.name", binding.second);
+                if (name == "time") {
+                    way.setTimestamp(binding.second.get<std::string>("literal"));
+                    continue;
+                }
+
+                if (name == "key") {
+                    auto uri = binding.second.get<std::string>("uri");
+                    key = uri.substr(cnst::OSM_TAG_KEY.length());
+                }
+
+                if (name == "value") {
+                    value = binding.second.get<std::string>("literal");
+                }
+            }
+
+            if (!key.empty()) {
+                way.addTag(key, value);
+            }
+        }
+    }
+
+    // _____________________________________________________________________________________________
+    void OsmDataFetcher::fetchRelationInfos(Relation &relation) {
+        std::string subject = "osmrel:" + std::to_string(relation.getId());
+        auto response = runQuery(
+            sparql::QueryWriter::writeQueryForTagsAndTimestamp(subject),
+            cnst::PREFIXES_FOR_RELATION_TAGS);
+
+        for (const auto &result : response.get_child("sparql.results")) {
+            std::string key; std::string value;
+            for (const auto &binding : result.second.get_child("")) {
+                auto name = util::XmlReader::readAttribute("<xmlattr>.name", binding.second);
+                if (name == "time") {
+                    relation.setTimestamp(binding.second.get<std::string>("literal"));
+                    continue;
+                }
+
+                if (name == "key") {
+                    auto uri = binding.second.get<std::string>("uri");
+                    key = uri.substr(cnst::OSM_TAG_KEY.length());
+                }
+
+                if (name == "value") {
+                    value = binding.second.get<std::string>("literal");
+                }
+            }
+
+            // Type of relation is already fetched in an earlier step
+            if (!key.empty() && key != "type") {
+                relation.addTag(key, value);
+            }
+        }
+    }
+
+    // _____________________________________________________________________________________________
     std::vector<id_t> OsmDataFetcher::fetchWaysMembers(const std::set<id_t> &wayIds) {
-        auto response = runQuery(sparql::QueryWriter::writeQueryForReferencedNodes(wayIds),
-                                    cnst::PREFIXES_FOR_WAY_MEMBERS);
+        auto response = runQuery(
+            sparql::QueryWriter::writeQueryForReferencedNodes(wayIds),
+            cnst::PREFIXES_FOR_WAY_MEMBERS);
 
         std::vector<id_t> nodeIds;
         for (const auto &result : response.get_child("sparql.results")) {
-            auto memberSubject = result.second.get<std::string>("binding.uri");
-
-            // The endpoint will return the uri of the way, so we have to extract the id from it
-            std::string nodeIdAsString = memberSubject.substr(cnst::OSM_NODE_URI.length());
-            id_t nodeId;
-            try {
-                nodeId = std::stoll(nodeIdAsString);
-
-                if (nodeId <= 0) {
-                    const std::string msg = "Invalid id: " + nodeIdAsString;
-                    throw OsmDataFetcherException(msg.c_str());
-                }
-            } catch (std::exception &e) {
-                std::cerr << e.what() << std::endl;
-                std::string msg = "Could extract way id from uri: " + memberSubject;
-                throw OsmDataFetcherException(msg.c_str());
-            }
-
-            nodeIds.emplace_back(nodeId);
+            auto memberUri = result.second.get<std::string>("binding.uri");
+            nodeIds.emplace_back(OsmObjectHelper::getIdFromUri(memberUri));
         }
 
         return nodeIds;
     }
 
+    // _____________________________________________________________________________________________
     std::pair<std::vector<id_t>, std::vector<id_t>>
     OsmDataFetcher::fetchRelationMembers(const std::set<id_t> &relIds) {
-        auto response = runQuery(sparql::QueryWriter::writeQueryForRelationMembers(relIds),
-                                    cnst::PREFIXES_FOR_RELATION_MEMBERS);
+        auto response = runQuery(
+            sparql::QueryWriter::writeQueryForRelationMembers(relIds),
+            cnst::PREFIXES_FOR_RELATION_MEMBERS);
 
         std::vector<id_t> nodeIds;
         std::vector<id_t> wayIds;
         for (const auto &result : response.get_child("sparql.results")) {
-            auto memberSubject = result.second.get<std::string>("binding.uri");
+            auto memberUri = result.second.get<std::string>("binding.uri");
 
-            id_t id;
-            if (memberSubject.starts_with(cnst::OSM_NODE_URI)) {
-                std::string nodeIdAsString = memberSubject.substr(cnst::OSM_NODE_URI.length());
-                try {
-                    id = std::stoll(nodeIdAsString);
-                    nodeIds.emplace_back(id);
-
-                    if (id <= 0) {
-                        std::string msg = "Invalid id: " + nodeIdAsString;
-                        throw OsmDataFetcherException(msg.c_str());
-                    }
-                } catch (std::exception &e) {
-                    std::cerr << e.what() << std::endl;
-                    std::string msg = "Could extract way id from uri: " + memberSubject;
-                    throw OsmDataFetcherException(msg.c_str());
-                }
-            } else if (memberSubject.starts_with(cnst::OSM_WAY_URI)) {
-                std::string wayIdAsString = memberSubject.substr(cnst::OSM_WAY_URI.length());
-                try {
-                    id = std::stoll(wayIdAsString);
-                    wayIds.emplace_back(id);
-
-                    if (id <= 0) {
-                        std::string msg = "Invalid id: " + wayIdAsString;
-                        throw OsmDataFetcherException(msg.c_str());
-                    }
-                } catch (std::exception &e) {
-                    std::cerr << e.what() << std::endl;
-                    std::string msg = "Could extract way id from uri: " + memberSubject;
-                    throw OsmDataFetcherException(msg.c_str());
-                }
+            id_t id = OsmObjectHelper::getIdFromUri(memberUri);
+            if (memberUri.starts_with(cnst::OSM_NODE_URI)) {
+                nodeIds.emplace_back(id);
+            } else if (memberUri.starts_with(cnst::OSM_WAY_URI)) {
+                wayIds.emplace_back(id);
             }
         }
 
         return { nodeIds, wayIds };
     }
 
-    // _________________________________________________________________________________________________
+    // _____________________________________________________________________________________________
     std::vector<id_t> OsmDataFetcher::fetchWaysReferencingNodes(const std::set<id_t> &nodeIds) {
-        auto response = runQuery(sparql::QueryWriter::writeQueryForWaysReferencingNodes(nodeIds),
-                                    cnst::PREFIXES_FOR_WAYS_REFERENCING_NODE);
+        auto response = runQuery(
+            sparql::QueryWriter::writeQueryForWaysReferencingNodes(nodeIds),
+            cnst::PREFIXES_FOR_WAYS_REFERENCING_NODE);
 
         std::vector<id_t> memberSubjects;
         for (const auto &result : response.get_child("sparql.results")) {
-            auto memberSubject = result.second.get<std::string>("binding.uri");
-
-            // The endpoint will return the uri of the way, so we have to extract the id from it
-            std::string wayIdAsString = memberSubject.substr(cnst::OSM_WAY_URI.length());
-            id_t wayId;
-            try {
-                wayId = std::stoll(wayIdAsString);
-
-                if (wayId <= 0) {
-                    const std::string msg = "Invalid id: " + wayIdAsString;
-                    throw OsmDataFetcherException(msg.c_str());
-                }
-            } catch (std::exception &e) {
-                std::cerr << e.what() << std::endl;
-                const std::string msg = "Could extract way id from uri: " + memberSubject;
-                throw OsmDataFetcherException(msg.c_str());
-            }
-
-            memberSubjects.emplace_back(wayId);
+            auto memberUri = result.second.get<std::string>("binding.uri");
+            memberSubjects.emplace_back(OsmObjectHelper::getIdFromUri(memberUri));
         }
 
         return memberSubjects;
@@ -409,66 +450,33 @@ namespace olu::osm {
     // _____________________________________________________________________________________________
     std::vector<id_t>
     OsmDataFetcher::fetchRelationsReferencingNodes(const std::set<id_t> &nodeIds) {
-        auto response = runQuery(sparql::QueryWriter::writeQueryForRelationsReferencingNodes(nodeIds),
-                                    cnst::PREFIXES_FOR_RELATIONS_REFERENCING_NODE);
+        auto response = runQuery(
+            sparql::QueryWriter::writeQueryForRelationsReferencingNodes(nodeIds),
+            cnst::PREFIXES_FOR_RELATIONS_REFERENCING_NODE);
 
-        std::vector<id_t> memberSubjects;
+        std::vector<id_t> relationIds;
         for (const auto &result : response.get_child(
                 "sparql.results")) {
-            auto memberSubject = result.second.get<std::string>("binding.uri");
-
-            // The endpoint will return the uri of the way, so we have to extract the id from it
-            std::string wayIdAsString = memberSubject.substr(cnst::OSM_REL_URI.length());
-            id_t wayId;
-            try {
-                wayId = std::stoll(wayIdAsString);
-
-                if (wayId <= 0) {
-                    const std::string msg = "Invalid id: " + wayIdAsString;
-                    throw OsmDataFetcherException(msg.c_str());
-                }
-            } catch (std::exception &e) {
-                std::cerr << e.what() << std::endl;
-                std::string msg = "Could extract way id from uri: " + memberSubject;
-                throw OsmDataFetcherException(msg.c_str());
-            }
-
-            memberSubjects.emplace_back(wayId);
+            auto memberUri = result.second.get<std::string>("binding.uri");
+            relationIds.emplace_back(OsmObjectHelper::getIdFromUri(memberUri));
         }
 
-        return memberSubjects;
+        return relationIds;
     }
 
-    // _________________________________________________________________________________________________
+    // _____________________________________________________________________________________________
     std::vector<id_t> OsmDataFetcher::fetchRelationsReferencingWays(const std::set<id_t> &wayIds) {
-        auto response = runQuery(sparql::QueryWriter::writeQueryForRelationsReferencingWays(wayIds),
-                                    cnst::PREFIXES_FOR_RELATIONS_REFERENCING_WAY);
+        auto response = runQuery(
+            sparql::QueryWriter::writeQueryForRelationsReferencingWays(wayIds),
+            cnst::PREFIXES_FOR_RELATIONS_REFERENCING_WAY);
 
-        std::vector<id_t> memberSubjects;
-        for (const auto &result : response.get_child(
-                "sparql.results")) {
-            auto memberSubject = result.second.get<std::string>("binding.uri");
-
-            // The endpoint will return the uri of the way, so we have to extract the id from it
-            std::string wayIdAsString = memberSubject.substr(cnst::OSM_REL_URI.length());
-            id_t wayId;
-            try {
-                wayId = std::stoll(wayIdAsString);
-
-                if (wayId <= 0) {
-                    const std::string msg = "Invalid id: " + wayIdAsString;
-                    throw OsmDataFetcherException(msg.c_str());
-                }
-            } catch (std::exception &e) {
-                std::cerr << e.what() << std::endl;
-                std::string msg = "Could extract way id from uri: " + memberSubject;
-                throw OsmDataFetcherException(msg.c_str());
-            }
-
-            memberSubjects.emplace_back(wayId);
+        std::vector<id_t> relationIds;
+        for (const auto &result : response.get_child("sparql.results")) {
+            auto uri = result.second.get<std::string>("binding.uri");
+            relationIds.emplace_back(OsmObjectHelper::getIdFromUri(uri));
         }
 
-        return memberSubjects;
+        return relationIds;
     }
 
     // _____________________________________________________________________________________________
@@ -478,30 +486,13 @@ namespace olu::osm {
             sparql::QueryWriter::writeQueryForRelationsReferencingRelations(relationIds),
             cnst::PREFIXES_FOR_RELATIONS_REFERENCING_RELATIONS);
 
-        std::vector<id_t> memberSubjects;
+        std::vector<id_t> refRelIds;
         for (const auto &result : response.get_child("sparql.results")) {
-            auto memberSubject = result.second.get<std::string>("binding.uri");
-
-            // The endpoint will return the uri of the way, so we have to extract the id from it
-            std::string wayIdAsString = memberSubject.substr(cnst::OSM_REL_URI.length());
-            id_t relId;
-            try {
-                relId = std::stoll(wayIdAsString);
-
-                if (relId <= 0) {
-                    const std::string msg = "Invalid id: " + wayIdAsString;
-                    throw OsmDataFetcherException(msg.c_str());
-                }
-            } catch (std::exception &e) {
-                std::cerr << e.what() << std::endl;
-                std::string msg = "Could extract relation id from uri: " + memberSubject;
-                throw OsmDataFetcherException(msg.c_str());
-            }
-
-            memberSubjects.emplace_back(relId);
+            auto uri = result.second.get<std::string>("binding.uri");
+            refRelIds.emplace_back(OsmObjectHelper::getIdFromUri(uri));
         }
 
-        return memberSubjects;
+        return refRelIds;
     }
 
-} // namespace olu
+}

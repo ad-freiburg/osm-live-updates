@@ -34,8 +34,7 @@ namespace olu::config::constants {
 
     // HTML
     const static inline std::string HTML_KEY_CONTENT_TYPE = "Content-Type";
-    const static inline std::string HTML_VALUE_CONTENT_TYPE =
-            "application/x-www-form-urlencoded;charset=UTF-8";
+    const static inline std::string HTML_VALUE_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
     const static inline std::string HTML_KEY_ACCEPT = "Accept";
     const static inline std::string HTML_VALUE_ACCEPT_SPARQL_RESULT_XML =
@@ -84,7 +83,7 @@ namespace olu::config::constants {
     const static inline std::string OSM_NODE_URI = "https://www.openstreetmap.org/node/";
     const static inline std::string OSM_REL_URI = "https://www.openstreetmap.org/relation/";
     const static inline std::string OSM_GEOM_NODE_URI = "https://osm2rdf.cs.uni-freiburg.de/rdf/geom#osm_node_";
-
+    const static inline std::string OSM_TAG_KEY = "https://www.openstreetmap.org/wiki/Key:";
 
     const static inline std::vector<std::string> DEFAULT_PREFIXES{
         "PREFIX ohmnode: <https://www.openhistoricalmap.org/node/>"
@@ -124,7 +123,18 @@ namespace olu::config::constants {
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_WAY_MEMBERS{
-            "PREFIX osmway: <https://www.openstreetmap.org/way/>"
+            "PREFIX osmway: <https://www.openstreetmap.org/way/>",
+            "PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>"
+    };
+
+    const static inline std::vector<std::string> PREFIXES_FOR_WAY_TAGS{
+            "PREFIX osmway: <https://www.openstreetmap.org/way/>",
+            "PREFIX osmmeta: <https://www.openstreetmap.org/meta/>"
+    };
+
+    const static inline std::vector<std::string> PREFIXES_FOR_RELATION_TAGS{
+            "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
+            "PREFIX osmmeta: <https://www.openstreetmap.org/meta/>"
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_LATEST_NODE_TIMESTAMP {
@@ -134,19 +144,15 @@ namespace olu::config::constants {
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_NODE_DELETE_QUERY {
-        "PREFIX osmnode: <https://www.openstreetmap.org/node/>",
-        "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
+        "PREFIX osmnode: <https://www.openstreetmap.org/node/>"
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_WAY_DELETE_QUERY {
-            "PREFIX osmway: <https://www.openstreetmap.org/way/>",
-            "PREFIX osm2rdf: <https://osm2rdf.cs.uni-freiburg.de/rdf#>",
-            "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
+            "PREFIX osmway: <https://www.openstreetmap.org/way/>"
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_RELATION_DELETE_QUERY {
-            "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
-            "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
+            "PREFIX osmrel: <https://www.openstreetmap.org/relation/>"
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_WAYS_REFERENCING_NODE {
@@ -183,6 +189,12 @@ namespace olu::config::constants {
     const static inline std::string SPARQL_ENDPOINT_URI_OPTION_LONG = "sparql-uri";
     const static inline std::string SPARQL_ENDPOINT_URI_OPTION_HELP =
             "The URI of the SPARQL endpoint that you want to update.";
+
+    const static inline std::string SPARQL_UPDATE_PATH_INFO = "SPARQL update path:";
+    const static inline std::string SPARQL_UPDATE_PATH_OPTION_SHORT = "p";
+    const static inline std::string SPARQL_UPDATE_PATH_OPTION_LONG = "sparql-update-path";
+    const static inline std::string SPARQL_UPDATE_PATH_OPTION_HELP =
+            "The path for update request on the SPARQL endpoint. Empty by default.";
 
     const static inline std::string PATH_TO_OSM_CHANGE_FILE_INFO = "Path to osm change file:";
     const static inline std::string PATH_TO_OSM_CHANGE_FILE_OPTION_SHORT = "f";

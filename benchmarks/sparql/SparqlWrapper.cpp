@@ -52,22 +52,22 @@ static void Run_Query_For_Node_Location(benchmark::State& state) {
 }
 BENCHMARK(Run_Query_For_Node_Location);
 
-// ---------------------------------------------------------------------------
-static void Run_Query_For_Node_Deletion(benchmark::State& state) {
-    auto config((olu::config::Config()));
-    config.sparqlEndpointUri = cnst::QLEVER_LOCAL_HOST_URI;
-
-    auto sparqlWrapper = olu::sparql::SparqlWrapper(config);
-    auto query = olu::sparql::QueryWriter::writeDeleteQuery({"osmnode:1"});
-
-    for (auto _ : state) {
-        sparqlWrapper.setPrefixes(cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
-        sparqlWrapper.setQuery(query);
-
-        auto response = sparqlWrapper.runQuery();
-    }
-}
-BENCHMARK(Run_Query_For_Node_Deletion);
+// // ---------------------------------------------------------------------------
+// static void Run_Query_For_Node_Deletion(benchmark::State& state) {
+//     auto config((olu::config::Config()));
+//     config.sparqlEndpointUri = cnst::QLEVER_LOCAL_HOST_URI;
+//
+//     auto sparqlWrapper = olu::sparql::SparqlWrapper(config);
+//     // auto query = olu::sparql::QueryWriter::writeDeleteQuery({"osmnode:1"}, TODO);
+//
+//     for (auto _ : state) {
+//         sparqlWrapper.setPrefixes(cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
+//         sparqlWrapper.setQuery(query);
+//
+//         auto response = sparqlWrapper.runQuery();
+//     }
+// }
+// BENCHMARK(Run_Query_For_Node_Deletion);
 
 // ---------------------------------------------------------------------------
 static void Clear_Cache(benchmark::State& state) {

@@ -4,41 +4,65 @@
 
 #include "osm/Relation.h"
 
-namespace olu::osm {
+#include <sstream>
 
+namespace olu::osm {
     void Relation::setType(std::string const &type) {
         this->type = type;
     }
 
-    void Relation::addNodeAsMember(id_t const& id, Role const& role) {
-        this->nodes.insert(RelationMember(id, role));
-    }
-    void Relation::addWayAsMember(id_t const& id, Role const& role) {
-        this->ways.insert(RelationMember(id, role));
+    void Relation::setTimestamp(std::string const &timestamp) {
+        this->timestamp = timestamp;
     }
 
-    void Relation::addRelationAsMember(id_t const& id, Role const& role) {
-        this->relations.insert(RelationMember(id, role));
+    void Relation::addMember(const RelationMember& member) {
+        this->members.push_back(member);
+    }
+
+    void Relation::addTag(const std::string& key, const std::string& value) {
+        tags.emplace_back(key, value);
     }
 
     std::string Relation::getXml() const {
-        std::string xml = "<relation id=\"" + std::to_string(this->id) + "\"><member type=\"";
+        std::ostringstream oss;
 
-        for (const auto &[id, role] : this->nodes) {
-            xml += R"(node" ref=")" + std::to_string(id) + "\" role=\"" + role;
+        oss << "<relation id=\"";
+        oss << std::to_string(this->id);
+        oss << "\"";
+
+        if (!this->timestamp.empty()) {
+            oss << " timestamp=\"";
+            oss << this->timestamp;
+            oss << "Z\"";
         }
 
-        for (const auto &[id, role] : this->ways) {
-            xml += R"(way" ref=")" + std::to_string(id) + "\" role=\"" + role;
+        oss << ">";
+
+        for (const auto &[id, osmTag, role] : this->members) {
+            oss << "<member type=\"";
+            oss << osmTag;
+            oss << "\" ref=\"";
+            oss << std::to_string(id);
+            oss << "\" role=\"";
+            oss << role;
+            oss << "\"/>";
         }
 
-        for (const auto &[id, role] : this->relations) {
-            xml += R"(relation" ref=")" + std::to_string(id) + "\" role=\"" + role;
+        oss << R"(<tag k="type" v=")";
+        oss << this->type;
+        oss << "\"/>";
+
+        for (const auto& [key, value] : this->tags) {
+            oss << "<tag k=\"";
+            oss << key;
+            oss << "\" v=\"";
+            oss << value;
+            oss << "\"/>";
         }
 
-        xml += R"("/><tag k="type" v=")" + this->type + "\"/></relation>";
+        oss << "</relation>";
 
-        return xml;
+        return oss.str();
     }
 
 }

@@ -26,6 +26,7 @@ namespace olu::config {
 
 struct Config {
     std::string sparqlEndpointUri;
+    std::string pathForSparqlUpdates;
     std::string pathToOsmChangeFile;
     std::string osmChangeFileDirectoryUri;
 

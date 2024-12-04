@@ -28,6 +28,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
+namespace cnst = olu::config::constants;
 namespace olu::sparql {
     // _____________________________________________________________________________________________
     void SparqlWrapper::setQuery(const std::string &query) {
@@ -41,7 +42,9 @@ namespace olu::sparql {
         }
     }
 
-    std::string SparqlWrapper::send(const std::string& acceptValue) {
+    std::string
+    SparqlWrapper::send(const std::string& acceptValue, const std::string &endpointUri,
+                        bool isUpdate) {
         handleFileOutput();
 
         // Format and encode query
@@ -49,14 +52,13 @@ namespace olu::sparql {
         std::string encodedQuery = util::URLHelper::encodeForUrlQuery(query);
 
         std::string response;
-        auto request = util::HttpRequest(util::POST, _config.sparqlEndpointUri);
-        request.addHeader(config::constants::HTML_KEY_CONTENT_TYPE,
-                          config::constants::HTML_VALUE_CONTENT_TYPE);
-        request.addHeader(config::constants::HTML_KEY_ACCEPT, acceptValue);
+        auto request = util::HttpRequest(util::POST, endpointUri);
+        request.addHeader(cnst::HTML_KEY_CONTENT_TYPE, cnst::HTML_VALUE_CONTENT_TYPE);
+        request.addHeader(cnst::HTML_KEY_ACCEPT, acceptValue);
         // We need to set this otherwise libcurl will wait 1 sec before sending the request
         request.addHeader("Expect", "");
 
-        std::string body = "query=" + encodedQuery;
+        std::string body = (isUpdate ? "update=" : "query=") + encodedQuery;
         request.addBody(body);
         try {
             response = request.perform();
@@ -64,24 +66,24 @@ namespace olu::sparql {
             std::cerr << e.what() << std::endl;
             std::string msg =
                     "Exception while sending `POST` request to the sparql endpoint with body: "
-                    + body;
+                    + query;
             throw SparqlWrapperException(msg.c_str());
         }
 
         // Clear query and prefixes for next request
         _query = ""; _prefixes = "";
-
-        if (response.empty()) {
-            throw SparqlWrapperException("Empty response from SPARQL endpoint");
-        }
-
         return response;
     }
 
 
     // _____________________________________________________________________________________________
     void SparqlWrapper::runUpdate() {
-        auto response = send(config::constants::HTML_VALUE_ACCEPT_SPARQL_RESULT_JSON);
+        auto endpointUri = _config.sparqlEndpointUri + _config.pathForSparqlUpdates;
+        auto response = send(cnst::HTML_VALUE_ACCEPT_SPARQL_RESULT_JSON, endpointUri, true);
+
+        if (response.empty()) {
+            return;
+        }
 
         boost::property_tree::ptree pt;
         std::istringstream json_stream(response);
@@ -101,7 +103,12 @@ namespace olu::sparql {
 
     // _____________________________________________________________________________________________
     boost::property_tree::ptree SparqlWrapper::runQuery() {
-        auto response = send(config::constants::HTML_VALUE_ACCEPT_SPARQL_RESULT_XML);
+        auto response = send(cnst::HTML_VALUE_ACCEPT_SPARQL_RESULT_XML,
+                            _config.sparqlEndpointUri, false);
+
+        if (response.empty()) {
+            throw SparqlWrapperException("Empty response from SPARQL endpoint");
+        }
 
         boost::property_tree::ptree pt;
         std::istringstream json_stream(response);
@@ -136,7 +143,7 @@ namespace olu::sparql {
         }
     }
 
-    void SparqlWrapper::handleFileOutput() {
+    void SparqlWrapper::handleFileOutput() const {
         if (_config.writeSparqlQueriesToFile) {
             std::ofstream outputFile;
             outputFile.open (_config.pathToSparqlQueryOutput, std::ios_base::app);
@@ -146,10 +153,8 @@ namespace olu::sparql {
     }
 
     void SparqlWrapper::clearCache() const {
-        std::string url = _config.sparqlEndpointUri;
-        auto request = util::HttpRequest(util::HttpMethod::POST, url);
-        request.addHeader(olu::config::constants::HTML_KEY_CONTENT_TYPE,
-                          olu::config::constants::HTML_VALUE_CONTENT_TYPE);
+        auto request = util::HttpRequest(util::HttpMethod::POST, _config.sparqlEndpointUri);
+        request.addHeader(cnst::HTML_KEY_CONTENT_TYPE, cnst::HTML_VALUE_CONTENT_TYPE);
         request.addBody("cmd=clear-cache");
 
         try {

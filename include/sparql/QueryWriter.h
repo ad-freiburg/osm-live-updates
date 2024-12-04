@@ -38,24 +38,10 @@ namespace olu::sparql {
         static std::string writeInsertQuery(const std::vector<std::string>& triples);
 
         /**
-         * @returns A SPARQL query that deletes all given triples
+         * @returns A SPARQL query that delete all triples with subject `osmTag:id` and all triples
+         * that are linked via another node
          */
-        static std::string writeDeleteQuery(const std::vector<std::string>& subjects);
-
-        /**
-         * @returns A SPARQL query that deletes all triples for the given node ids.
-         */
-        static std::string writeNodesDeleteQuery(const std::set<id_t> &nodeIds);
-
-        /**
-        * @returns A SPARQL query that deletes all triples for the given way ids.
-        */
-        static std::string writeWaysDeleteQuery(const std::set<id_t> &wayIds);
-
-        /**
-        * @returns A SPARQL query that deletes all triples for the given relation ids.
-        */
-        static std::string writeRelationsDeleteQuery(const std::set<id_t> &relationIds);
+        static std::string writeDeleteQuery(const std::set<id_t> &ids, const std::string &osmTag);
 
         /**
         * @returns A SPARQL query for the locations of the nodes with the given ID in WKT format
@@ -106,6 +92,11 @@ namespace olu::sparql {
         * @returns A SPARQL query for relations that reference the given relations
         */
         static std::string writeQueryForRelationsReferencingRelations(const std::set<id_t> &relationIds);
+
+        /**
+        * @returns A SPARQL query for tags and timestamp of the given subject
+        */
+        static std::string writeQueryForTagsAndTimestamp(const std::string &subject);
     };
 } // namespace olu::sparql
 

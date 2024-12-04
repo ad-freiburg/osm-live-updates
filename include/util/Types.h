@@ -28,11 +28,9 @@ namespace olu {
     typedef int64_t id_t;
 
     typedef std::string WKTPoint;
-    typedef std::string Role;
-
-    typedef std::pair<id_t, Role> RelationMember;
 
     typedef std::tuple<std::string, std::string, std::string> Triple;
+    typedef std::pair<std::string, std::string> KeyValue;
 }
 
 #endif //OSM_LIVE_UPDATES_TYPES_H
