@@ -502,9 +502,8 @@ namespace olu::osm {
 
             tripleBatch.emplace_back(triple);
 
-            if (tripleBatch.size() == MAX_VALUES_PER_QUERY) {
-                runUpdateQuery(sparql::QueryWriter::writeInsertQuery(tripleBatch),
-                    cnst::DEFAULT_PREFIXES);
+            if (tripleBatch.size() == MAX_VALUES_PER_QUERY || i == triples.size() - 1) {
+                runUpdateQuery(sparql::QueryWriter::writeInsertQuery(tripleBatch), cnst::DEFAULT_PREFIXES);
                 tripleBatch.clear();
             }
         }
