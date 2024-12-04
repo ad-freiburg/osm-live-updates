@@ -17,16 +17,18 @@ namespace olu::osm {
          * @return True if the given relation is of type "multipolygon"
          */
         static bool isMultipolygon(const boost::property_tree::ptree &relation);
+
+        static id_t getIdFromUri(const std::string& uri);
     };
 
     /**
      * Exception that can appear inside the `WktHelper` class.
      */
-    class WktHelperException final : public std::exception {
+    class OsmObjectHelperException final : public std::exception {
         std::string message;
 
     public:
-        explicit WktHelperException(const char* msg) : message(msg) { }
+        explicit OsmObjectHelperException(const char* msg) : message(msg) { }
 
         [[nodiscard]] const char* what() const noexcept override {
             return message.c_str();

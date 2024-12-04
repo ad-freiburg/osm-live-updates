@@ -76,17 +76,20 @@ std::string olu::sparql::QueryWriter::writeQueryForLatestNodeTimestamp() {
 
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeQueryForRelations(const std::set<id_t> & relationIds) {
-    std::string query = "SELECT ?rel ?id ?role ?key WHERE { VALUES ?rel { ";
+    std::string query = "SELECT ?rel ?type"
+                        "(GROUP_CONCAT(?memberUri; separator=\";\") AS ?memberUris) "
+                        "(GROUP_CONCAT(?memberRole; separator=\";\") AS ?memberRoles) "
+                        "WHERE { VALUES ?rel { ";
 
     for (const auto & relId : relationIds) {
         query += "osmrel:" + std::to_string(relId)+ " ";
     }
 
-    query += "} ?rel osmkey:type ?key . "
+    query += "} ?rel osmkey:type ?type . "
              "?rel osmrel:member ?o . "
-             "?o osm2rdfmember:id ?id . "
-             "?o osm2rdfmember:role ?role . "
-             "}  ORDER BY ?rel";
+             "?o osm2rdfmember:id ?memberUri . "
+             "?o osm2rdfmember:role ?memberRole . "
+             "} GROUP BY ?rel ?type";
     return query;
 }
 
