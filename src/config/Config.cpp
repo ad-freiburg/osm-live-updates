@@ -48,6 +48,16 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
             olu::config::constants::SPARQL_ENDPOINT_URI_OPTION_LONG,
             olu::config::constants::SPARQL_ENDPOINT_URI_OPTION_HELP);
 
+    auto sparqlGraphUriOp = parser.add<popl::Value<std::string>, popl::Attribute::optional>(
+            olu::config::constants::SPARQL_GRAPH_URI_OPTION_SHORT,
+            olu::config::constants::SPARQL_GRAPH_URI_OPTION_LONG,
+            olu::config::constants::SPARQL_GRAPH_URI_OPTION_HELP);
+
+    auto sparqlAccessTokenOp = parser.add<popl::Value<std::string>, popl::Attribute::optional>(
+            olu::config::constants::SPARQL_ACCESS_TOKEN_OPTION_SHORT,
+            olu::config::constants::SPARQL_ACCESS_TOKEN_OPTION_LONG,
+            olu::config::constants::SPARQL_ACCESS_TOKEN_OPTION_HELP);
+
     auto sparqlUpdatePathOp = parser.add<popl::Value<std::string>, popl::Attribute::optional>(
             olu::config::constants::SPARQL_UPDATE_PATH_OPTION_SHORT,
             olu::config::constants::SPARQL_UPDATE_PATH_OPTION_LONG,
@@ -97,11 +107,20 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
         }
 
         if (!(pathToOsmChangeFileOp->is_set()) && !(osmChangeFileDirectoryUriOp->is_set())) {
-            std::cerr << "You have to provide the path to an osm change file or the URI to an directory where the osm change files are located" << std::endl;
+            std::cerr << "You have to provide the path to an osm change file or the URI to an "
+                         "directory where the osm change files are located" << std::endl;
             exit(olu::config::ExitCode::ARGUMENT_MISSING);
         }
 
         sparqlEndpointUri = sparqlEndpointUriOp->value();
+
+        if (sparqlGraphUriOp->is_set()) {
+            graphUri = sparqlGraphUriOp->value();
+        }
+
+        if (sparqlAccessTokenOp->is_set()) {
+            accessToken = sparqlAccessTokenOp->value();
+        }
 
         if (sparqlUpdatePathOp->is_set()) {
             pathForSparqlUpdates = sparqlUpdatePathOp->value();
@@ -167,6 +186,16 @@ std::string olu::config::Config::getInfo(std::string_view prefix) const {
     << " "
     << sparqlEndpointUri
     << std::endl;
+
+    if (!graphUri.empty()) {
+        oss
+        << prefix
+        << osm2rdf::util::currentTimeFormatted()
+        << olu::config::constants::SPARQL_GRAPH_URI_INFO
+        << " "
+        << graphUri
+        << std::endl;
+    }
 
     if (!pathToOsmChangeFile.empty()) {
         oss

@@ -58,6 +58,7 @@ namespace olu::osm {
     OsmChangeHandler::OsmChangeHandler(const config::Config &config,
                                        const std::string &pathToOsmChangeFile) : _config(config),
                                                                                  _sparql(config),
+                                                                                 _queryWriter(config),
                                                                                  _odf(config) {
         try {
             if (pathToOsmChangeFile.ends_with(cnst::GZIP_EXTENSION)) {
@@ -430,7 +431,7 @@ namespace olu::osm {
             nodesToDelete,
             MAX_IDS_PER_NODE_DELETE_QUERY_BATCH,
             [this](std::set<id_t> const& batch) {
-                runUpdateQuery(sparql::QueryWriter::writeDeleteQuery(batch, "osmnode"),
+                runUpdateQuery(_queryWriter.writeDeleteQuery(batch, "osmnode"),
                     cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
             });
     }
@@ -445,7 +446,7 @@ namespace olu::osm {
             waysToDelete,
             MAX_IDS_PER_WAY_DELETE_QUERY_BATCH,
             [this](std::set<id_t> const& batch) {
-                runUpdateQuery(sparql::QueryWriter::writeDeleteQuery(batch, "osmway"),
+                runUpdateQuery(_queryWriter.writeDeleteQuery(batch, "osmway"),
                     cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
             });
     }
@@ -460,7 +461,7 @@ namespace olu::osm {
             relationsToDelete,
             MAX_IDS_PER_REL_DELETE_QUERY_BATCH,
             [this](std::set<id_t> const& batch) {
-                runUpdateQuery(sparql::QueryWriter::writeDeleteQuery(batch, "osmrel"),
+                runUpdateQuery(_queryWriter.writeDeleteQuery(batch, "osmrel"),
                     cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
             });
     }
@@ -503,7 +504,7 @@ namespace olu::osm {
             tripleBatch.emplace_back(triple.str());
 
             if (tripleBatch.size() == MAX_VALUES_PER_QUERY || i == triples.size() - 1) {
-                runUpdateQuery(sparql::QueryWriter::writeInsertQuery(tripleBatch), cnst::DEFAULT_PREFIXES);
+                runUpdateQuery(_queryWriter.writeInsertQuery(tripleBatch), cnst::DEFAULT_PREFIXES);
                 tripleBatch.clear();
             }
         }

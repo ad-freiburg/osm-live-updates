@@ -45,6 +45,7 @@ namespace olu::osm {
     private:
         config::Config _config;
         sparql::SparqlWrapper _sparql;
+        sparql::QueryWriter _queryWriter;
         OsmDataFetcher _odf;
 
         boost::property_tree::ptree _osmChangeElement;

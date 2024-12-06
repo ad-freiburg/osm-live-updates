@@ -41,7 +41,8 @@ static void Run_Query_For_Node_Location(benchmark::State& state) {
     config.sparqlEndpointUri = cnst::QLEVER_LOCAL_HOST_URI;
 
     auto sparqlWrapper = olu::sparql::SparqlWrapper(config);
-    auto query = olu::sparql::QueryWriter::writeQueryForNodeLocations({1});
+    olu::sparql::QueryWriter qw{config};
+    std::string query = qw.writeQueryForNodeLocations({1});
 
     for (auto _ : state) {
         sparqlWrapper.setQuery(query);

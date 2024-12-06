@@ -190,6 +190,18 @@ namespace olu::config::constants {
     const static inline std::string SPARQL_ENDPOINT_URI_OPTION_HELP =
             "The URI of the SPARQL endpoint that you want to update.";
 
+    const static inline std::string SPARQL_GRAPH_URI_INFO = "SPARQL graph URI:";
+    const static inline std::string SPARQL_GRAPH_URI_OPTION_SHORT = "g";
+    const static inline std::string SPARQL_GRAPH_URI_OPTION_LONG = "graph";
+    const static inline std::string SPARQL_GRAPH_URI_OPTION_HELP =
+           "The URI of the graph that you want to update.";
+
+    const static inline std::string SPARQL_ACCESS_TOKEN_INFO = "Access token for SPARQL endpoint:";
+    const static inline std::string SPARQL_ACCESS_TOKEN_OPTION_SHORT = "a";
+    const static inline std::string SPARQL_ACCESS_TOKEN_OPTION_LONG = "access-token";
+    const static inline std::string SPARQL_ACCESS_TOKEN_OPTION_HELP =
+          "The access token for the SPARQL endpoint";
+
     const static inline std::string SPARQL_UPDATE_PATH_INFO = "SPARQL update path:";
     const static inline std::string SPARQL_UPDATE_PATH_OPTION_SHORT = "p";
     const static inline std::string SPARQL_UPDATE_PATH_OPTION_LONG = "sparql-update-path";

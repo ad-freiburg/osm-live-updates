@@ -108,7 +108,7 @@ namespace olu::osm {
     std::vector<Node>
     OsmDataFetcher::fetchNodes(const std::set<id_t> &nodeIds) {
         auto response = runQuery(
-            sparql::QueryWriter::writeQueryForNodeLocations(nodeIds),
+            _queryWriter.writeQueryForNodeLocations(nodeIds),
             cnst::PREFIXES_FOR_NODE_LOCATION);
 
         std::vector<Node> nodes;
@@ -144,7 +144,7 @@ namespace olu::osm {
     // _____________________________________________________________________________________________
     std::string OsmDataFetcher::fetchLatestTimestampOfAnyNode() {
         const auto response = runQuery(
-            sparql::QueryWriter::writeQueryForLatestNodeTimestamp(),
+            _queryWriter.writeQueryForLatestNodeTimestamp(),
             cnst::PREFIXES_FOR_LATEST_NODE_TIMESTAMP);
 
         std::string timestamp;
@@ -205,7 +205,7 @@ namespace olu::osm {
     std::vector<Relation>
     OsmDataFetcher::fetchRelations(const std::set<id_t> &relationIds) {
         auto response = runQuery(
-            sparql::QueryWriter::writeQueryForRelations(relationIds),
+            _queryWriter.writeQueryForRelations(relationIds),
             cnst::PREFIXES_FOR_RELATION_MEMBERS);
 
         std::vector<Relation> relations;
@@ -280,7 +280,7 @@ namespace olu::osm {
     // _____________________________________________________________________________________________
     std::vector<Way> OsmDataFetcher::fetchWays(const std::set<id_t> &wayIds) {
         auto response = runQuery(
-            sparql::QueryWriter::writeQueryForWaysMembers(wayIds),
+            _queryWriter.writeQueryForWaysMembers(wayIds),
             cnst::PREFIXES_FOR_WAY_MEMBERS);
 
         std::vector<Way> ways;
@@ -333,7 +333,7 @@ namespace olu::osm {
     void OsmDataFetcher::fetchWayInfos(Way &way) {
         std::string subject = "osmway:" + std::to_string(way.getId());
         auto response = runQuery(
-            sparql::QueryWriter::writeQueryForTagsAndTimestamp(subject),
+            _queryWriter.writeQueryForTagsAndTimestamp(subject),
             cnst::PREFIXES_FOR_WAY_TAGS);
 
         for (const auto &result : response.get_child("sparql.results")) {
@@ -365,7 +365,7 @@ namespace olu::osm {
     void OsmDataFetcher::fetchRelationInfos(Relation &relation) {
         std::string subject = "osmrel:" + std::to_string(relation.getId());
         auto response = runQuery(
-            sparql::QueryWriter::writeQueryForTagsAndTimestamp(subject),
+            _queryWriter.writeQueryForTagsAndTimestamp(subject),
             cnst::PREFIXES_FOR_RELATION_TAGS);
 
         for (const auto &result : response.get_child("sparql.results")) {
@@ -397,7 +397,7 @@ namespace olu::osm {
     // _____________________________________________________________________________________________
     std::vector<id_t> OsmDataFetcher::fetchWaysMembers(const std::set<id_t> &wayIds) {
         auto response = runQuery(
-            sparql::QueryWriter::writeQueryForReferencedNodes(wayIds),
+            _queryWriter.writeQueryForReferencedNodes(wayIds),
             cnst::PREFIXES_FOR_WAY_MEMBERS);
 
         std::vector<id_t> nodeIds;
@@ -413,7 +413,7 @@ namespace olu::osm {
     std::pair<std::vector<id_t>, std::vector<id_t>>
     OsmDataFetcher::fetchRelationMembers(const std::set<id_t> &relIds) {
         auto response = runQuery(
-            sparql::QueryWriter::writeQueryForRelationMembers(relIds),
+            _queryWriter.writeQueryForRelationMembers(relIds),
             cnst::PREFIXES_FOR_RELATION_MEMBERS);
 
         std::vector<id_t> nodeIds;
@@ -435,7 +435,7 @@ namespace olu::osm {
     // _____________________________________________________________________________________________
     std::vector<id_t> OsmDataFetcher::fetchWaysReferencingNodes(const std::set<id_t> &nodeIds) {
         auto response = runQuery(
-            sparql::QueryWriter::writeQueryForWaysReferencingNodes(nodeIds),
+            _queryWriter.writeQueryForWaysReferencingNodes(nodeIds),
             cnst::PREFIXES_FOR_WAYS_REFERENCING_NODE);
 
         std::vector<id_t> memberSubjects;
@@ -451,7 +451,7 @@ namespace olu::osm {
     std::vector<id_t>
     OsmDataFetcher::fetchRelationsReferencingNodes(const std::set<id_t> &nodeIds) {
         auto response = runQuery(
-            sparql::QueryWriter::writeQueryForRelationsReferencingNodes(nodeIds),
+            _queryWriter.writeQueryForRelationsReferencingNodes(nodeIds),
             cnst::PREFIXES_FOR_RELATIONS_REFERENCING_NODE);
 
         std::vector<id_t> relationIds;
@@ -467,7 +467,7 @@ namespace olu::osm {
     // _____________________________________________________________________________________________
     std::vector<id_t> OsmDataFetcher::fetchRelationsReferencingWays(const std::set<id_t> &wayIds) {
         auto response = runQuery(
-            sparql::QueryWriter::writeQueryForRelationsReferencingWays(wayIds),
+            _queryWriter.writeQueryForRelationsReferencingWays(wayIds),
             cnst::PREFIXES_FOR_RELATIONS_REFERENCING_WAY);
 
         std::vector<id_t> relationIds;
@@ -483,7 +483,7 @@ namespace olu::osm {
     std::vector<id_t>
     OsmDataFetcher::fetchRelationsReferencingRelations(const std::set<id_t> &relationIds) {
         auto response = runQuery(
-            sparql::QueryWriter::writeQueryForRelationsReferencingRelations(relationIds),
+            _queryWriter.writeQueryForRelationsReferencingRelations(relationIds),
             cnst::PREFIXES_FOR_RELATIONS_REFERENCING_RELATIONS);
 
         std::vector<id_t> refRelIds;

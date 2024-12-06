@@ -29,20 +29,13 @@ struct Config {
     std::string pathForSparqlUpdates;
     std::string pathToOsmChangeFile;
     std::string osmChangeFileDirectoryUri;
-
-//    std::string sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
-//    std::string osmDatabaseDirectoryPath = "http://download.geofabrik.de/europe/andorra-updates";
-//    std::string sparqlEndpointUri = "https://qlever.cs.uni-freiburg.de/api/osm-planet/";
-//    std::string osmDatabaseDirectoryPath = "https://planet.openstreetmap.org/replication/minute/";
-//
-//    apps/olu -u http://host.docker.internal:7007/osm-planet/ -d http://download.geofabrik.de/europe/andorra-updates
-//    apps/olu -u  https://qlever.cs.uni-freiburg.de/api/osm-planet -d http://download.geofabrik.de/europe/andorra-updates
+    // Uri of the SPARQL graph to update. Optional.
+    std::string graphUri;
+    // Access token for the SPARQL endpoint. Optional.
+    std::string accessToken;
 
     int sequenceNumber = -1;
     std::string timestamp;
-
-
-
 
     // Specifies whether the generated sparql queries that are sent to the sparql endpoint should
     // also be saved to a file

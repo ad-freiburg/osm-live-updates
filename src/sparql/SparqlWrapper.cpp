@@ -52,7 +52,13 @@ namespace olu::sparql {
         std::string encodedQuery = util::URLHelper::encodeForUrlQuery(query);
 
         std::string response;
-        auto request = util::HttpRequest(util::POST, endpointUri);
+
+        std::string url = endpointUri;
+        if (!_config.accessToken.empty()) {
+            url += "?access-token=" + _config.accessToken;
+        }
+
+        auto request = util::HttpRequest(util::POST, url);
         request.addHeader(cnst::HTML_KEY_CONTENT_TYPE, cnst::HTML_VALUE_CONTENT_TYPE);
         request.addHeader(cnst::HTML_KEY_ACCEPT, acceptValue);
         // We need to set this otherwise libcurl will wait 1 sec before sending the request
