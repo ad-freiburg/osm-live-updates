@@ -24,16 +24,16 @@
 
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeInsertQuery(const std::vector<std::string>& triples) const {
-    std::ostringstream ss;
-    ss << "INSERT DATA ";
-    ss << getFromClauseOptional();
-    ss << "{ ";
-
+    std::ostringstream tripleClause;
     for (const auto & element : triples) {
-        ss << element;
-        ss << " . ";
+        tripleClause << element;
+        tripleClause << " . ";
     }
 
+    std::ostringstream ss;
+    ss << "INSERT DATA ";
+    ss << "{ ";
+    ss << wrapWithGraphOptional(tripleClause.str());
     ss << "}";
     return ss.str();
 }
@@ -42,7 +42,9 @@ std::string olu::sparql::QueryWriter::writeInsertQuery(const std::vector<std::st
 std::string
 olu::sparql::QueryWriter::writeDeleteQuery(const std::set<id_t> &ids, const std::string &osmTag) const {
     std::ostringstream ss;
-    ss << "DELETE { ?s ?p1 ?o1 . ?o1 ?p2 ?o2 . } WHERE { VALUES ?s { ";
+    ss << "DELETE { ";
+    ss << wrapWithGraphOptional("?s ?p1 ?o1 . ?o1 ?p2 ?o2 . ");
+    ss << "} WHERE { VALUES ?s { ";
 
     for (const auto & id : ids) {
         ss << osmTag;
@@ -253,7 +255,7 @@ std::string olu::sparql::QueryWriter::writeQueryForTagsAndTimestamp(const std::s
 }
 
 std::string olu::sparql::QueryWriter::getFromClauseOptional() const {
-    return  _config.graphUri.empty() ? "" : "<" +_config.graphUri + "> ";
+    return  _config.graphUri.empty() ? "" : "FROM <" +_config.graphUri + "> ";
 }
 
 std::string olu::sparql::QueryWriter::wrapWithGraphOptional(const std::string& clause) const {
