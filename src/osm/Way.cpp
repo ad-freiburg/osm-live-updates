@@ -17,6 +17,7 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "osm/Way.h"
+#include "util/XmlReader.h"
 
 #include <sstream>
 
@@ -30,7 +31,7 @@ namespace olu::osm {
     }
 
     void Way::addTag(const std::string& key, const std::string& value) {
-        tags.emplace_back(key, value);
+        tags.emplace_back(key, util::XmlReader::xmlEncode(value));
     }
 
     std::string Way::getXml() const {

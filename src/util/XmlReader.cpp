@@ -116,3 +116,34 @@ std::vector<std::string> olu::util::XmlReader::readTagOfChildren(
 
     return childrenNames;
 }
+
+// _________________________________________________________________________________________________
+void olu::util::XmlReader::sanitizeXmlTags(pt::ptree &tree) {
+    for (auto &tag : tree.get_child("")) {
+        if (tag.first == "tag") {
+            auto value = tag.second.get<std::string>("<xmlattr>.v");
+            tag.second.put<std::string>("<xmlattr>.v", xmlEncode(value));
+        }
+    }
+}
+
+// _________________________________________________________________________________________________
+std::string olu::util::XmlReader::xmlEncode(const std::string &input) {
+    std::stringstream ss;
+
+    for (const auto c : input) {
+        switch (c) {
+            case '&':  ss << "&amp;";  break;
+            case '\"': ss << "&quot;"; break;
+            case '\'': ss << "&apos;"; break;
+            case '<':  ss << "&lt;";   break;
+            case '>':  ss << "&gt;";   break;
+            case '\n': ss << "&#xA;";  break;
+            case '\r': ss << "&#xD;";  break;
+            case '\t': ss << "&#x9;";  break;
+            default:   ss << c;    break;
+        }
+    }
+
+    return ss.str();
+}

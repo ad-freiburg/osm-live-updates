@@ -3,6 +3,7 @@
 //
 
 #include "osm/Relation.h"
+#include "util/XmlReader.h"
 
 #include <sstream>
 
@@ -20,7 +21,7 @@ namespace olu::osm {
     }
 
     void Relation::addTag(const std::string& key, const std::string& value) {
-        tags.emplace_back(key, value);
+        tags.emplace_back(key, util::XmlReader::xmlEncode(value));
     }
 
     std::string Relation::getXml() const {
