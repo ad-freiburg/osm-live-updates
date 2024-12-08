@@ -91,10 +91,14 @@ namespace olu::util {
         static void sanitizeXmlTags(pt::ptree &tree);
 
         /**
-         * Sanitizes string for xml format.
+         * Encodes string for xml format.
          */
         static std::string xmlEncode(const std::string &input);
 
+        /**
+         * Decodes string for xml format.
+         */
+        static std::string xmlDecode(const std::string &input);
     };
 
     /**

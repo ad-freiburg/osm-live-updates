@@ -542,6 +542,11 @@ namespace olu::osm {
 
             auto [sub, pre, obj] = util::TtlHelper::getTriple(line);
 
+            // Decode tag values
+            if (pre.starts_with("osmkey:")) {
+                obj = util::XmlReader::xmlDecode(obj);
+            }
+
             // Check if there is currently a link set
             if (!currentLink.empty() && currentLink == sub) {
                 relevantTriples.emplace_back(sub, pre, obj);

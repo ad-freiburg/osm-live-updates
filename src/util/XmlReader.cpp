@@ -147,3 +147,49 @@ std::string olu::util::XmlReader::xmlEncode(const std::string &input) {
 
     return ss.str();
 }
+
+// _________________________________________________________________________________________________
+std::string olu::util::XmlReader::xmlDecode(const std::string &input) {
+    std::string output;
+    std::string::size_type pos = 0, prev_pos = 0;
+
+    while ((pos = input.find('&', prev_pos)) != std::string::npos) {
+        output.append(input, prev_pos, pos - prev_pos);
+
+        if (input.compare(pos, 5, "&amp;") == 0) {
+            output.push_back('&');
+            pos += 5;
+        } else if (input.compare(pos, 4, "&lt;") == 0) {
+            output.push_back('<');
+            pos += 4;
+        } else if (input.compare(pos, 4, "&gt;") == 0) {
+            output.push_back('>');
+            pos += 4;
+        } else if (input.compare(pos, 6, "&quot;") == 0) {
+            output.push_back('\\');
+            output.push_back('\"');
+            pos += 6;
+        } else if (input.compare(pos, 6, "&apos;") == 0) {
+            output.push_back('\\');
+            output.push_back('\'');
+            pos += 6;
+        } else if (input.compare(pos, 5, "&#xA;") == 0) {
+            output.push_back('\n');
+            pos += 5;
+        } else if (input.compare(pos, 5, "&#xD;") == 0) {
+            output.push_back('\r');
+            pos += 5;
+        } else if (input.compare(pos, 5, "&#x9;") == 0) {
+            output.push_back('\t');
+            pos += 5;
+        } else {
+            output.push_back('&');
+            pos++;
+        }
+
+        prev_pos = pos;
+    }
+
+    output.append(input, prev_pos, std::string::npos);
+    return output;
+}
