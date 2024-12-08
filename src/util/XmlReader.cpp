@@ -21,6 +21,7 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/xml_parser.hpp>
+#include <boost/regex.hpp>
 #include <string>
 #include <iostream>
 
@@ -122,10 +123,19 @@ void olu::util::XmlReader::sanitizeXmlTags(pt::ptree &tree) {
     for (auto &tag : tree.get_child("")) {
         if (tag.first == "tag") {
             auto value = tag.second.get<std::string>("<xmlattr>.v");
-            tag.second.put<std::string>("<xmlattr>.v", xmlEncode(value));
+            if (isXmlEncoded(value)) {
+                value = xmlEncode(value);
+            }
+            tag.second.put<std::string>("<xmlattr>.v", value);
         }
     }
 }
+
+bool olu::util::XmlReader::isXmlEncoded(const std::string &input) {
+    const boost::regex xmlEntityRegex("&(amp|lt|gt|quot|apos|#xA|#xD|#x9);");
+    return regex_search(input, xmlEntityRegex);
+}
+
 
 // _________________________________________________________________________________________________
 std::string olu::util::XmlReader::xmlEncode(const std::string &input) {

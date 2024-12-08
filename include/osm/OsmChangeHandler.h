@@ -87,39 +87,39 @@ namespace olu::osm {
         std::set<id_t> _referencedRelations;
 
         /**
-         * @Returns TRUE if the node with the given ID is contained in a `create` or `modify`
-         * changeset in the changeFile.
+        * @Returns TRUE if the node with the given ID is contained in a `create`, `modify` or
+         * 'delete' changeset in the changeFile.
          *
          * @warning All nodes inside the ChangeFile have to be processed BEFORE using this function.
          * Therefore, the earliest time this function can be called is inside the loop over the osm
          * elements inside `storeIdsOfElementsInChangeFile()` after the first way has occured.
          */
         [[nodiscard]] bool nodeInChangeFile(const id_t &nodeId) const {
-            return _modifiedNodes.contains(nodeId) || _createdNodes.contains(nodeId);
+            return _modifiedNodes.contains(nodeId) || _createdNodes.contains(nodeId) || _deletedNodes.contains(nodeId);
         }
 
         /**
-         * @Returns TRUE if the way with the given ID is contained in a `create` or `modify`
-         * changeset in the changeFile.
+         * @Returns TRUE if the way with the given ID is contained in a `create`, `modify` or
+         * 'delete' changeset in the changeFile.
          *
          * @warning All ways inside the ChangeFile have to be processed BEFORE using this function.
          * Therefore, the earliest time this function can be called is inside the loop over the osm
          * elements inside `storeIdsOfElementsInChangeFile()` after the first way has occured.
          */
         [[nodiscard]] bool wayInChangeFile(const id_t &wayId) const {
-            return _modifiedWays.contains(wayId) || _createdWays.contains(wayId);
+            return _modifiedWays.contains(wayId) || _createdWays.contains(wayId) || _deletedWays.contains(wayId);
         }
 
         /**
-         * @Returns TRUE if the relation with the given ID is contained in a `create` or `modify`
-         * changeset in the changeFile.
+         * @Returns TRUE if the relation with the given ID is contained in a `create`, `modify` or
+         * 'delete' changeset in the changeFile.
          *
          * @warning All relations inside the ChangeFile have to be processed BEFORE using this function.
          * Therefore, the earliest time this function can be called is after calling
          * `storeIdsOfElementsInChangeFile()`
          */
         [[nodiscard]] bool relationInChangeFile(const id_t &relationId) const {
-            return _modifiedRelations.contains(relationId) || _createdRelations.contains(relationId);
+            return _modifiedRelations.contains(relationId) || _createdRelations.contains(relationId) || _deletedRelations.contains(relationId);
         }
 
         /**

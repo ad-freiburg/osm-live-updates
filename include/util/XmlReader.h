@@ -91,6 +91,11 @@ namespace olu::util {
         static void sanitizeXmlTags(pt::ptree &tree);
 
         /**
+         * @return True, if the given string has a xml encoded character in it
+         */
+        static bool isXmlEncoded(const std::string &input);
+
+        /**
          * Encodes string for xml format.
          */
         static std::string xmlEncode(const std::string &input);
