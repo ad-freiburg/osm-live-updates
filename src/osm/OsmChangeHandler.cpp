@@ -209,11 +209,12 @@ namespace olu::osm {
     }
 
     void OsmChangeHandler::processElementsInChangeFile() {
-        for (const auto &[changesetTag, changesetElement]: _osmChangeElement) {
+        for (auto &[changesetTag, changesetElement]: _osmChangeElement) {
             if (changesetTag == cnst::MODIFY_TAG || changesetTag == cnst::CREATE_TAG) {
-                for (const auto &[elementTag, element]: changesetElement) {
+                for (auto &[elementTag, element]: changesetElement) {
                     if (elementTag == cnst::WAY_TAG || elementTag == cnst::RELATION_TAG) {
                         storeIdsOfReferencedElements(element);
+                        util::XmlReader::sanitizeXmlTags(element);
                     }
 
                     addToTmpFile(util::XmlReader::readTree(element, elementTag), elementTag);
