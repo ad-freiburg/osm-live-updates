@@ -33,14 +33,18 @@ struct Config {
     std::string graphUri;
     // Access token for the SPARQL endpoint. Optional.
     std::string accessToken;
-
+    // User specified sequence number from command line.
     int sequenceNumber = -1;
+    // User specified timestamp from command line
     std::string timestamp;
+
+    // Specifies whether a progress bar should be shown
+    bool showProgress = true;
 
     // Specifies whether the generated sparql queries that are sent to the sparql endpoint should
     // also be saved to a file
     bool writeSparqlQueriesToFile = true;
-
+    // Path of sparql queries
     std::string pathToSparqlQueryOutput = "/src/build/sparqlOutput.txt";
 
     std::filesystem::path cache{std::filesystem::temp_directory_path()};

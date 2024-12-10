@@ -22,6 +22,10 @@ namespace olu::osm {
             auto och(OsmChangeHandler(_config, _config.pathToOsmChangeFile));
             och.run();
         } else {
+            std::cout
+            << "Determine sequence number to start with ..."
+            << std::endl;
+
             _latestState = _odf.fetchLatestDatabaseState();
             auto sequenceNumber = decideStartSequenceNumber();
 

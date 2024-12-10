@@ -232,13 +232,6 @@ std::string olu::config::Config::getInfo(std::string_view prefix) const {
             << " "
             << timestamp
             << std::endl;
-        } else {
-            oss
-            << prefix
-            << osm2rdf::util::currentTimeFormatted()
-            << olu::config::constants::NO_TIMESTAMP_OR_SEQUENCE_NUMBER_INFO
-            << timestamp
-            << std::endl;
         }
     }
 

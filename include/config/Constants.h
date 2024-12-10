@@ -233,9 +233,6 @@ namespace olu::config::constants {
     const static inline std::string TIME_STAMP_OPTION_HELP =
             "The time stamp to start the update process from.";
 
-    const static inline std::string NO_TIMESTAMP_OR_SEQUENCE_NUMBER_INFO =
-            "As you have not entered a sequence number or timestamp, the programme will determine the starting point for you.";
-
 } // namespace olu::config::constants
 
 #endif //OSM_LIVE_UPDATES_CONSTANTS_H
