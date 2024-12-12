@@ -23,14 +23,9 @@
 #include <vector>
 
 namespace olu::config::constants {
-    const static inline std::string QLEVER_LOCAL_HOST_URI =
-            "http://host.docker.internal:7007/osm-planet/";
-
-    const static inline std::string QLEVER_OSM_PLANET_URI =
-            "https://qlever.cs.uni-freiburg.de/api/osm-planet";
-
-    const static inline std::string OSM_NODE_BASE_URL =
-        "https://www.openstreetmap.org/api/0.6/node";
+    // Exception Messages
+    const static inline char *const EXCEPTION_MSG_SEQUENCE_NUMBER_IS_INVALID =
+        "Sequence number is invalid.";
 
     // HTML
     const static inline std::string HTML_KEY_CONTENT_TYPE = "Content-Type";
@@ -45,21 +40,19 @@ namespace olu::config::constants {
     // File extensions
     const static inline std::string OSM_CHANGE_FILE_EXTENSION = ".osc";
     const static inline std::string GZIP_EXTENSION = ".gz";
-
     const static inline std::string DIFF_CACHE_FILE = "cache_for_seq_";
 
-    // Exception Messages
-    const static inline char *const EXCEPTION_MSG_SEQUENCE_NUMBER_IS_INVALID =
-            "Sequence number is invalid.";
-
-    const static inline std::string PATH_TO_NODE_FILE = "nodes.osm";
-    const static inline std::string PATH_TO_WAY_FILE = "ways.osm";
-    const static inline std::string PATH_TO_RELATION_FILE = "relations.osm";
-    const static inline std::string PATH_TO_TRIPLES_FILE = "triples.ttl";
+    // File names
+    const static inline std::string PATH_TO_TEMP_DIR = "tmp/";
+    const static inline std::string PATH_TO_CHANGE_FILE_DIR = PATH_TO_TEMP_DIR + "changes/";
+    const static inline std::string PATH_TO_CHANGE_FILE = PATH_TO_TEMP_DIR + "changes.osc.gz";
+    const static inline std::string PATH_TO_NODE_FILE = PATH_TO_TEMP_DIR + "nodes.osm";
+    const static inline std::string PATH_TO_WAY_FILE = PATH_TO_TEMP_DIR + "ways.osm";
+    const static inline std::string PATH_TO_RELATION_FILE = PATH_TO_TEMP_DIR + "relations.osm";
 
     // Osm2rdf
-    const static inline std::string PATH_TO_INPUT_FILE = "input.osm";
-    const static inline std::string PATH_TO_OUTPUT_FILE = "output.ttl";
+    const static inline std::string PATH_TO_INPUT_FILE = PATH_TO_TEMP_DIR + "input.osm";
+    const static inline std::string PATH_TO_OUTPUT_FILE = PATH_TO_TEMP_DIR + "output.ttl";
     const static inline std::string PATH_TO_SCRATCH_DIRECTORY = "osm2rdfScratch/";
 
     // OsmChangeHandler
@@ -185,10 +178,6 @@ namespace olu::config::constants {
     const static inline std::string HELP_OPTION_HELP = "Display help information.";
 
     const static inline std::string SPARQL_ENDPOINT_URI_INFO = "SPARQL endpoint URI:";
-    const static inline std::string SPARQL_ENDPOINT_URI_OPTION_SHORT = "u";
-    const static inline std::string SPARQL_ENDPOINT_URI_OPTION_LONG = "sparql-uri";
-    const static inline std::string SPARQL_ENDPOINT_URI_OPTION_HELP =
-            "The URI of the SPARQL endpoint that you want to update.";
 
     const static inline std::string SPARQL_GRAPH_URI_INFO = "SPARQL graph URI:";
     const static inline std::string SPARQL_GRAPH_URI_OPTION_SHORT = "g";
@@ -202,24 +191,36 @@ namespace olu::config::constants {
     const static inline std::string SPARQL_ACCESS_TOKEN_OPTION_HELP =
           "The access token for the SPARQL endpoint";
 
-    const static inline std::string SPARQL_UPDATE_PATH_INFO = "SPARQL update path:";
-    const static inline std::string SPARQL_UPDATE_PATH_OPTION_SHORT = "p";
-    const static inline std::string SPARQL_UPDATE_PATH_OPTION_LONG = "sparql-update-path";
+    const static inline std::string SPARQL_UPDATE_PATH_INFO = "SPARQL endpoint URI for updates:";
+    const static inline std::string SPARQL_UPDATE_PATH_OPTION_SHORT = "u";
+    const static inline std::string SPARQL_UPDATE_PATH_OPTION_LONG = "endpoint-uri-updates";
     const static inline std::string SPARQL_UPDATE_PATH_OPTION_HELP =
-            "The path for update request on the SPARQL endpoint. Empty by default.";
+         "Specify a different URI for SPARQL updates.";
 
-    const static inline std::string PATH_TO_OSM_CHANGE_FILE_INFO = "Path to osm change file:";
-    const static inline std::string PATH_TO_OSM_CHANGE_FILE_OPTION_SHORT = "f";
-    const static inline std::string PATH_TO_OSM_CHANGE_FILE_OPTION_LONG = "change-file-path";
-    const static inline std::string PATH_TO_OSM_CHANGE_FILE_OPTION_HELP =
-            "The path to the osm change file that you want to be applied to the SPARQL endpoint.";
+    const static inline std::string SPARQL_OUTPUT_INFO = "Update Output:";
+    const static inline std::string SPARQL_OUTPUT_OPTION_SHORT = "o";
+    const static inline std::string SPARQL_OUTPUT_OPTION_LONG = "sparql-output";
+    const static inline std::string SPARQL_OUTPUT_OPTION_HELP =
+        "Specify if SPARQL updates should be written to a file instead of sending them to the endpoint.";
+
+    const static inline std::string SPARQL_OUTPUT_FORMAT_INFO = "Output format:";
+    const static inline std::string SPARQL_OUTPUT_FORMAT_OPTION_SHORT = "d";
+    const static inline std::string SPARQL_OUTPUT_FORMAT_OPTION_LONG = "debug";
+    const static inline std::string SPARQL_OUTPUT_FORMAT_OPTION_HELP =
+        "If set, all SPARQL queries are written to the output file.";
+
+    const static inline std::string PATH_TO_INPUT_INFO = "Input:";
+    const static inline std::string PATH_TO_INPUT_OPTION_SHORT = "i";
+        const static inline std::string PATH_TO_INPUT_OPTION_LONG = "input";
+    const static inline std::string PATH_TO_INPUT_OPTION_HELP =
+            "The path to the directory with the OsmChange files.";
 
     const static inline std::string OSM_CHANGE_FILE_DIRECTORY_URI_INFO =
-            "URI of osm change file directory:";
-    const static inline std::string OSM_CHANGE_FILE_DIRECTORY_URI_OPTION_SHORT = "d";
-    const static inline std::string OSM_CHANGE_FILE_DIRECTORY_URI_OPTION_LONG = "change-file-dir";
-    const static inline std::string OSM_CHANGE_FILE_DIRECTORY_URI_OPTION_HELP =
-            "The URI of the directory where the osm change files can be found.";
+            "URI of OsmChange file server:";
+    const static inline std::string OSM_CHANGE_FILE_SERVER_URI_OPTION_SHORT = "f";
+    const static inline std::string OSM_CHANGE_FILE_SERVER_URI_OPTION_LONG = "file-server";
+    const static inline std::string OSM_CHANGE_FILE_SERVER_URI_OPTION_HELP =
+            "The URI of the server with the OsmChange files.";
 
     const static inline std::string SEQUENCE_NUMBER_INFO = "Starting sequence number:";
     const static inline std::string SEQUENCE_NUMBER_OPTION_SHORT = "s";

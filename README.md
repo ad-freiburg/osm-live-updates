@@ -1,10 +1,16 @@
 # osm-live-updates
 
-osm-live-updates (`olu`)  is a tool that can be used to keep databases with 
-[OpenStreetMap](https://www.openstreetmap.org) (OSM) data that are managed by the [QLever](https://github.com/ad-freiburg/qlever) SPARQL engine up to date by 
-using [OsmChange](https://wiki.openstreetmap.org/wiki/OsmChange) files.
+The osm-live-updates (`olu`) tool is designed to keep SPARQL databases containing 
+[OpenStreetMap](https://www.openstreetmap.org) (OSM) data up to date by processing OsmChange files. It not only applies the 
+changes to osm objects described in these files but also updates the geometries of objects affected 
+by modifications to referenced elements, such as ways or relations.
 
-The [osm2rdf](https://github.com/ad-freiburg/osm2rdf) tool is used to convert the osm data to [RDF Turtle](https://www.w3.org/TR/turtle/) (TTL). 
+## Preconditions
+
+The OpenStreetMap (OSM) data must be converted to [RDF Turtle](https://www.w3.org/TR/turtle/) (TTL)
+format using the osm2rdf tool, with the `--add-way-node-order` option enabled. To maintain data 
+consistency and reduce the size of the resulting `.ttl` file, the `--write-ogc-geo-triples none` 
+option can optionally be used, as the update of GeoSPARQL (`ogc:`) triples is currently not supported.
 
 ## Accompanying services and materials
 
@@ -23,9 +29,10 @@ You can use the provided `Dockerfile` to compile `olu`:
 docker build -t olu .
 ```
 
-You can then run `olu` when you want to update a SPARQL endpoint with the daily osm-planet diffs, for example:
+If you want to updated a SPARQL endpoint that contains the complete OSM planet dataset, for example,
+you can run `olu` with:
 
 ```
-docker run --rm -it olu apps/olu -u http://host.docker.internal:7007/osm-planet/ -d https://planet.openstreetmap.org/replication/day/
+docker run --rm -it olu apps/olu -u `sparql-endpoint-url` -d `https://planet.openstreetmap.org/replication/day/`
 ```
 

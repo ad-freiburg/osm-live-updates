@@ -34,7 +34,10 @@ public:
     // @throw 'std::invalid_argument' if sequence number is empty or too long
     static std::string formatSequenceNumberForUrl(int &sequenceNumber);
 
+    // Url encodes the given string
     static std::string encodeForUrlQuery(const std::string& value);
+
+    static bool isValidUri(const std::string& uri);
 };
 
 } // namespace olu::util

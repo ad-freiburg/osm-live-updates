@@ -12,7 +12,12 @@ namespace olu::config {
         FAILURE = 1,
         EXCEPTION,
         UNKNOWN_ARGUMENT,
-        ARGUMENT_MISSING = 10
+        ARGUMENT_MISSING = 10,
+        INCORRECT_ARGUMENTS,
+        ENDPOINT_URI_MISSING,
+        ENDPOINT_URI_INVALID,
+        INPUT_NOT_EXISTS,
+        INPUT_IS_NOT_DIRECTORY
     };
 
 }

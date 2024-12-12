@@ -38,7 +38,7 @@ BENCHMARK(Set_Prefixes);
 // ---------------------------------------------------------------------------
 static void Run_Query_For_Node_Location(benchmark::State& state) {
     auto config((olu::config::Config()));
-    config.sparqlEndpointUri = cnst::QLEVER_LOCAL_HOST_URI;
+    config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
 
     auto sparqlWrapper = olu::sparql::SparqlWrapper(config);
     olu::sparql::QueryWriter qw{config};
@@ -73,7 +73,7 @@ BENCHMARK(Run_Query_For_Node_Location);
 // ---------------------------------------------------------------------------
 static void Clear_Cache(benchmark::State& state) {
     auto config((olu::config::Config()));
-    config.sparqlEndpointUri = cnst::QLEVER_LOCAL_HOST_URI;
+    config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
 
     for (auto _ : state) {
         auto sparqlWrapper = olu::sparql::SparqlWrapper(config);

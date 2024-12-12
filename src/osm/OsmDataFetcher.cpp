@@ -51,7 +51,7 @@ namespace olu::osm {
                 seqNumberFormatted + ".state.txt";
 
         std::vector<std::string> pathSegments { };
-        pathSegments.emplace_back(_config.osmChangeFileDirectoryUri);
+        pathSegments.emplace_back(_config.changeFileDirUri);
         pathSegments.emplace_back(stateFileName);
         std::string url = util::URLHelper::buildUrl(pathSegments);
 
@@ -68,7 +68,7 @@ namespace olu::osm {
     OsmDatabaseState OsmDataFetcher::fetchLatestDatabaseState() const {
         // Build url for state file
         std::vector<std::string> pathSegments { };
-        pathSegments.emplace_back(_config.osmChangeFileDirectoryUri);
+        pathSegments.emplace_back(_config.changeFileDirUri);
         pathSegments.emplace_back("state.txt");
         const std::string url = util::URLHelper::buildUrl(pathSegments);
 
@@ -86,13 +86,14 @@ namespace olu::osm {
         std::string diffFilename = sequenceNumberFormatted + cnst::OSM_CHANGE_FILE_EXTENSION +
                                    cnst::GZIP_EXTENSION;
         std::vector<std::string> pathSegments;
-        pathSegments.emplace_back(_config.osmChangeFileDirectoryUri);
+        pathSegments.emplace_back(_config.changeFileDirUri);
         pathSegments.emplace_back(diffFilename);
         std::string url = util::URLHelper::buildUrl(pathSegments);
 
         // Get change file from server and write to cache file.
-        std::string filePath = cnst::DIFF_CACHE_FILE + std::to_string(sequenceNumber) +
-                               cnst::OSM_CHANGE_FILE_EXTENSION + cnst::GZIP_EXTENSION;
+        std::string filePath = cnst::PATH_TO_CHANGE_FILE_DIR +
+                                cnst::DIFF_CACHE_FILE + std::to_string(sequenceNumber) +
+                                cnst::OSM_CHANGE_FILE_EXTENSION + cnst::GZIP_EXTENSION;
         auto request = util::HttpRequest(util::GET, url);
 
         auto response = request.perform();

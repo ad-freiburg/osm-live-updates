@@ -29,6 +29,7 @@
 #include <iostream>
 #include <set>
 #include <regex>
+#include <sys/stat.h>
 
 #include "osm2rdf/util/ProgressBar.h"
 
@@ -57,19 +58,14 @@ void doInBatches(std::set<olu::id_t>& set, const long elementsPerBatch,
 }
 
 namespace olu::osm {
-    OsmChangeHandler::OsmChangeHandler(const config::Config &config,
-                                       const std::string &pathToOsmChangeFile) : _config(config),
-                                                                                 _sparql(config),
-                                                                                 _queryWriter(config),
-                                                                                 _odf(config) {
+    OsmChangeHandler::OsmChangeHandler(const config::Config &config) : _config(config),
+                                                                       _sparql(config),
+                                                                       _queryWriter(config),
+                                                                       _odf(config) {
         try {
-            if (pathToOsmChangeFile.ends_with(cnst::GZIP_EXTENSION)) {
-                const auto decompressed = util::Decompressor::readGzip(pathToOsmChangeFile);
-                util::XmlReader::populatePTreeFromString(decompressed, _osmChangeElement);
-            } else {
-                util::XmlReader::populatePTreeFromFile(pathToOsmChangeFile, _osmChangeElement);
-            }
-
+            std::cout << "Process change file..." << std::endl;
+            const auto decompressed = util::Decompressor::readGzip(cnst::PATH_TO_CHANGE_FILE);
+            util::XmlReader::populatePTreeFromString(decompressed, _osmChangeElement);
             _osmChangeElement = _osmChangeElement.get_child(cnst::OSM_CHANGE_TAG);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
@@ -77,11 +73,10 @@ namespace olu::osm {
                 "Exception while trying to read the change file in a property tree");
         }
 
-        createOrClearTmpFiles();
+        createTmpFiles();
     }
 
     void OsmChangeHandler::run() {
-        std::cout << "Process change file..." << std::endl;
         // Store the ids of all elements that where deleted, modified or created and the ids of
         // objects where the geometry needs to be updated
         storeIdsOfElementsInChangeFile();
@@ -126,13 +121,10 @@ namespace olu::osm {
                 << _relationsToUpdateGeometry.size() << " relations" << std::endl;
     }
 
-    void OsmChangeHandler::createOrClearTmpFiles() {
+    void OsmChangeHandler::createTmpFiles() {
         initTmpFile(cnst::PATH_TO_NODE_FILE);
         initTmpFile(cnst::PATH_TO_WAY_FILE);
         initTmpFile(cnst::PATH_TO_RELATION_FILE);
-
-        std::ofstream file4(cnst::PATH_TO_TRIPLES_FILE, std::ios::trunc);
-        file4.close();
     }
 
     void OsmChangeHandler::initTmpFile(const std::string& filepath) {

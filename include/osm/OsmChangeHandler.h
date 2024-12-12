@@ -41,7 +41,7 @@ namespace olu::osm {
      */
     class OsmChangeHandler {
     public:
-        explicit OsmChangeHandler(const config::Config &config, const std::string &pathToOsmChangeFile);
+        explicit OsmChangeHandler(const config::Config &config);
         void run();
     private:
         config::Config _config;
@@ -176,7 +176,7 @@ namespace olu::osm {
          */
         void getReferencesForWays();
 
-        static void createOrClearTmpFiles() ;
+        static void createTmpFiles() ;
         static void initTmpFile(const std::string& filepath) ;
         static void finalizeTmpFile(const std::string& filepath) ;
 

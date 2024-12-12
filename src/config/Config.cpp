@@ -25,14 +25,8 @@
 #include <filesystem>
 #include <string>
 #include <popl.hpp>
-
-// ____________________________________________________________________________
-std::filesystem::path olu::config::Config::getTempPath(
-    const std::string& path, const std::string& suffix) const {
-  std::filesystem::path resultPath{cache};
-  resultPath /= path + "-" + suffix;
-  return std::filesystem::absolute(resultPath);
-}
+#include <util/HttpRequest.h>
+#include <util/URLHelper.h>
 
 // ____________________________________________________________________________
 void olu::config::Config::fromArgs(int argc, char **argv) {
@@ -42,11 +36,6 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
             olu::config::constants::HELP_OPTION_SHORT,
             olu::config::constants::HELP_OPTION_LONG,
             olu::config::constants::HELP_OPTION_HELP);
-
-    auto sparqlEndpointUriOp = parser.add<popl::Value<std::string>, popl::Attribute::required>(
-            olu::config::constants::SPARQL_ENDPOINT_URI_OPTION_SHORT,
-            olu::config::constants::SPARQL_ENDPOINT_URI_OPTION_LONG,
-            olu::config::constants::SPARQL_ENDPOINT_URI_OPTION_HELP);
 
     auto sparqlGraphUriOp = parser.add<popl::Value<std::string>, popl::Attribute::optional>(
             olu::config::constants::SPARQL_GRAPH_URI_OPTION_SHORT,
@@ -58,20 +47,30 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
             olu::config::constants::SPARQL_ACCESS_TOKEN_OPTION_LONG,
             olu::config::constants::SPARQL_ACCESS_TOKEN_OPTION_HELP);
 
-    auto sparqlUpdatePathOp = parser.add<popl::Value<std::string>, popl::Attribute::optional>(
+    auto sparqlUpdateUri = parser.add<popl::Value<std::string>, popl::Attribute::optional>(
             olu::config::constants::SPARQL_UPDATE_PATH_OPTION_SHORT,
             olu::config::constants::SPARQL_UPDATE_PATH_OPTION_LONG,
             olu::config::constants::SPARQL_UPDATE_PATH_OPTION_HELP);
 
-    auto pathToOsmChangeFileOp = parser.add<popl::Value<std::string>, popl::Attribute::optional>(
-            olu::config::constants::PATH_TO_OSM_CHANGE_FILE_OPTION_SHORT,
-            olu::config::constants::PATH_TO_OSM_CHANGE_FILE_OPTION_LONG,
-            olu::config::constants::PATH_TO_OSM_CHANGE_FILE_OPTION_HELP);
+    auto pathToOsmChangeFileInputDirOp = parser.add<popl::Value<std::string>, popl::Attribute::optional>(
+            olu::config::constants::PATH_TO_INPUT_OPTION_SHORT,
+            olu::config::constants::PATH_TO_INPUT_OPTION_LONG,
+            olu::config::constants::PATH_TO_INPUT_OPTION_HELP);
 
-    auto osmChangeFileDirectoryUriOp = parser.add<popl::Value<std::string>, popl::Attribute::optional>(
-            olu::config::constants::OSM_CHANGE_FILE_DIRECTORY_URI_OPTION_SHORT,
-            olu::config::constants::OSM_CHANGE_FILE_DIRECTORY_URI_OPTION_LONG,
-            olu::config::constants::OSM_CHANGE_FILE_DIRECTORY_URI_OPTION_HELP);
+    auto osmChangeFileServerUriOp = parser.add<popl::Value<std::string>, popl::Attribute::optional>(
+            olu::config::constants::OSM_CHANGE_FILE_SERVER_URI_OPTION_SHORT,
+            olu::config::constants::OSM_CHANGE_FILE_SERVER_URI_OPTION_LONG,
+            olu::config::constants::OSM_CHANGE_FILE_SERVER_URI_OPTION_HELP);
+
+    auto sparqlOutputOp = parser.add<popl::Value<std::string>, popl::Attribute::optional>(
+            olu::config::constants::SPARQL_OUTPUT_OPTION_SHORT,
+            olu::config::constants::SPARQL_OUTPUT_OPTION_LONG,
+            olu::config::constants::SPARQL_OUTPUT_OPTION_HELP);
+
+    auto sparqlOutputFormatOp = parser.add<popl::Switch, popl::Attribute::optional>(
+            olu::config::constants::SPARQL_OUTPUT_FORMAT_OPTION_SHORT,
+            olu::config::constants::SPARQL_OUTPUT_FORMAT_OPTION_LONG,
+            olu::config::constants::SPARQL_OUTPUT_FORMAT_OPTION_HELP);
 
     auto timestampOp = parser.add<popl::Value<std::string>, popl::Attribute::optional>(
             olu::config::constants::TIME_STAMP_OPTION_SHORT,
@@ -106,13 +105,47 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
             exit(olu::config::ExitCode::UNKNOWN_ARGUMENT);
         }
 
-        if (!(pathToOsmChangeFileOp->is_set()) && !(osmChangeFileDirectoryUriOp->is_set())) {
-            std::cerr << "You have to provide the path to an osm change file or the URI to an "
-                         "directory where the osm change files are located" << std::endl;
-            exit(olu::config::ExitCode::ARGUMENT_MISSING);
+        // Handle sparql endpoint uri
+        if (parser.non_option_args().size() != 1) {
+            std::cerr << "No SPARQL endpoint URI specified!\n" << parser.help() << "\n";
+            exit(config::ExitCode::ENDPOINT_URI_MISSING);
+        }
+        sparqlEndpointUri = parser.non_option_args()[0];
+        if (!olu::util::URLHelper::isValidUri(sparqlEndpointUri)) {
+            std::cerr << "SPARQL endpoint URI is not valid: " << sparqlEndpointUri << "\n"
+                      << parser.help() << "\n";
+            exit(config::ExitCode::ENDPOINT_URI_INVALID);
         }
 
-        sparqlEndpointUri = sparqlEndpointUriOp->value();
+        if (pathToOsmChangeFileInputDirOp->is_set() == osmChangeFileServerUriOp->is_set()) {
+            std::cerr << "You have to EITHER provide the path to an directory with the change files "
+                         "you want to process (--input) or the URI to an server where the osm change "
+                         "files are located (--file-server)" << std::endl;
+            exit(olu::config::ExitCode::INCORRECT_ARGUMENTS);
+        }
+
+        if (pathToOsmChangeFileInputDirOp->is_set()) {
+            changeFileDir = pathToOsmChangeFileInputDirOp->value();
+            if (!std::filesystem::exists(changeFileDir)) {
+                std::cerr << "Input does not exist: " << changeFileDir << "\n"
+                          << parser.help() << "\n";
+                exit(config::ExitCode::INPUT_NOT_EXISTS);
+            }
+            if (!std::filesystem::is_directory(changeFileDir)) {
+                std::cerr << "Input is not a directory: " << changeFileDir << "\n"
+                          << parser.help() << "\n";
+                exit(config::ExitCode::INPUT_IS_NOT_DIRECTORY);
+            }
+        }
+
+        if (osmChangeFileServerUriOp->is_set()) {
+            changeFileDirUri = osmChangeFileServerUriOp->value();
+            if (!olu::util::URLHelper::isValidUri(changeFileDirUri)) {
+                std::cerr << "URI for OsmChange file server is not valid: " << changeFileDirUri << "\n"
+                          << parser.help() << "\n";
+                exit(config::ExitCode::ENDPOINT_URI_INVALID);
+            }
+        }
 
         if (sparqlGraphUriOp->is_set()) {
             graphUri = sparqlGraphUriOp->value();
@@ -122,16 +155,10 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
             accessToken = sparqlAccessTokenOp->value();
         }
 
-        if (sparqlUpdatePathOp->is_set()) {
-            pathForSparqlUpdates = sparqlUpdatePathOp->value();
-        }
-
-        if (pathToOsmChangeFileOp->is_set()) {
-            pathToOsmChangeFile = pathToOsmChangeFileOp->value();
-        }
-
-        if (osmChangeFileDirectoryUriOp->is_set()) {
-            osmChangeFileDirectoryUri = osmChangeFileDirectoryUriOp->value();
+        if (sparqlUpdateUri->is_set()) {
+            sparqlEndpointUriForUpdates = sparqlUpdateUri->value();
+        } else {
+            sparqlEndpointUriForUpdates = sparqlEndpointUri;
         }
 
         if (timestampOp->is_set()) {
@@ -140,6 +167,13 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
 
         if (sequenceNumberOp->is_set()) {
             sequenceNumber = sequenceNumberOp->value();
+        }
+
+        if (sparqlOutputOp->is_set()) {
+            sparqlOutputFile = sparqlOutputOp->value();
+            sparqlOutput = sparqlOutputFormatOp->is_set() ? DEBUG_FILE : FILE;
+        } else {
+            sparqlOutput = ENDPOINT;
         }
     } catch (const popl::invalid_option& e) {
         std::cerr << "Invalid Option Exception: " << e.what() << "\n";
@@ -197,22 +231,22 @@ std::string olu::config::Config::getInfo(std::string_view prefix) const {
         << std::endl;
     }
 
-    if (!pathToOsmChangeFile.empty()) {
+    if (!changeFileDir.empty()) {
         oss
         << prefix
         << osm2rdf::util::currentTimeFormatted()
-        << olu::config::constants::PATH_TO_OSM_CHANGE_FILE_INFO
+        << olu::config::constants::PATH_TO_INPUT_INFO
         << " "
-        << pathToOsmChangeFile
+        << changeFileDir
         << std::endl;
     } else {
-        if (!osmChangeFileDirectoryUri.empty()) {
+        if (!changeFileDirUri.empty()) {
             oss
             << prefix
             << osm2rdf::util::currentTimeFormatted()
             << olu::config::constants::OSM_CHANGE_FILE_DIRECTORY_URI_INFO
             << " "
-            << osmChangeFileDirectoryUri
+            << changeFileDirUri
             << std::endl;
         }
 

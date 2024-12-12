@@ -23,6 +23,7 @@
 #include <boost/asio/connect.hpp>
 #include <iostream>
 #include <iomanip>
+#include <boost/regex.hpp>
 
 const static inline int MIN_SEQ_NUMBER = 0;
 const static inline int MAX_SEQ_NUMBER = 999999999;
@@ -87,6 +88,11 @@ std::string URLHelper::encodeForUrlQuery(const std::string &value) {
     }
 
     return escaped.str();
+}
+
+bool URLHelper::isValidUri(const std::string &uri) {
+    const boost::regex regex(R"(((\w+:\/\/)[-a-zA-Z0-9:@;?&=\/%\+\.\*!'\(\),\$_\{\}\^~\[\]`#|]+))");
+    return boost::regex_match (uri, regex);
 }
 
 } // namespace olu::util
