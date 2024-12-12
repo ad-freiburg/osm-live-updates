@@ -7,9 +7,20 @@
 #include "config/Constants.h"
 #include "osm2rdf/util/Time.h"
 
+#include <osmium/visitor.hpp>
+#include <osmium/object_pointer_collection.hpp>
+#include <osmium/io/file.hpp>
+#include <osmium/io/xml_output.hpp>
+#include <osmium/io/writer.hpp>
+#include <osmium/io/gzip_compression.hpp>
+#include <osmium/io/output_iterator.hpp>
+#include <osmium/io/reader.hpp>
+#include <osmium/memory/buffer.hpp>
+#include <osmium/osm/object_comparisons.hpp>
+
+#include <algorithm>
 #include <iostream>
 #include <filesystem>
-#include <osmium/io/header.hpp>
 
 namespace cnst = olu::config::constants;
 namespace olu::osm {
@@ -103,20 +114,53 @@ namespace olu::osm {
         return sequenceNumber;
     }
 
+    // We need to create a new ordering because we have to take the deleted status into account for
+    // the objects
+    struct object_order_type_id_reverse_version_delete {
+
+        bool operator()(const osmium::OSMObject& lhs, const osmium::OSMObject& rhs) const noexcept {
+            return const_tie(lhs.type(), lhs.id() > 0, lhs.positive_id(), rhs.version(), rhs.deleted(),
+                        ((lhs.timestamp().valid() && rhs.timestamp().valid()) ? rhs.timestamp() : osmium::Timestamp())) <
+                   const_tie(rhs.type(), rhs.id() > 0, rhs.positive_id(), lhs.version(), lhs.deleted(),
+                        ((lhs.timestamp().valid() && rhs.timestamp().valid()) ? lhs.timestamp() : osmium::Timestamp()));
+        }
+
+        /// @pre lhs and rhs must not be nullptr
+        bool operator()(const osmium::OSMObject* lhs, const osmium::OSMObject* rhs) const noexcept {
+            assert(lhs && rhs);
+            return operator()(*lhs, *rhs);
+        }
+
+    };
+
     void OsmUpdater::mergeChangeFiles(const std::string &pathToChangeFileDir) {
-        const std::string command = "osmium merge-changes -o "+ cnst::PATH_TO_CHANGE_FILE + " "
-            + pathToChangeFileDir + "*.gz " + " --overwrite --simplify > /dev/null";
-
-        const int res = system(command.c_str());
-
-        if (res == -1) {
-            throw std::runtime_error("Error while merging osm change files.");
+        // Get names for each change file and order them after their id
+        std::vector<osmium::io::File> inputs;
+        for (const auto& file : std::filesystem::directory_iterator(
+            pathToChangeFileDir)) {
+            if (file.is_regular_file()) {
+                inputs.emplace_back(file.path());
+            }
         }
 
-        if (res != 0) {
-            throw std::runtime_error(
-                "Error while merging osm change files: " + std::to_string(res));
+        osmium::io::Writer writer{cnst::PATH_TO_CHANGE_FILE, osmium::io::overwrite::allow};
+        auto out = osmium::io::make_output_iterator(writer);
+
+        std::vector<osmium::memory::Buffer> changes;
+        osmium::ObjectPointerCollection objects;
+        for (const osmium::io::File& change_file : inputs) {
+            osmium::io::Reader reader{change_file, osmium::osm_entity_bits::object};
+            while (osmium::memory::Buffer buffer = reader.read()) {
+                osmium::apply(buffer, objects);
+                changes.push_back(std::move(buffer));
+            }
+            reader.close();
         }
+
+        objects.sort(object_order_type_id_reverse_version_delete());
+
+        std::unique_copy(objects.cbegin(), objects.cend(), out, osmium::object_equal_type_id());
+        writer.close();
     }
 
     void OsmUpdater::fetchChangeFiles(int sequenceNumber) {

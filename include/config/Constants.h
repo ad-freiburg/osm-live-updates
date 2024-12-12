@@ -40,12 +40,12 @@ namespace olu::config::constants {
     // File extensions
     const static inline std::string OSM_CHANGE_FILE_EXTENSION = ".osc";
     const static inline std::string GZIP_EXTENSION = ".gz";
-    const static inline std::string DIFF_CACHE_FILE = "cache_for_seq_";
 
     // File names
     const static inline std::string PATH_TO_TEMP_DIR = "tmp/";
     const static inline std::string PATH_TO_CHANGE_FILE_DIR = PATH_TO_TEMP_DIR + "changes/";
-    const static inline std::string PATH_TO_CHANGE_FILE = PATH_TO_TEMP_DIR + "changes.osc.gz";
+    const static inline std::string CHANGE_FILE_NAME = "changes.osc.gz";
+    const static inline std::string PATH_TO_CHANGE_FILE = PATH_TO_TEMP_DIR + CHANGE_FILE_NAME;
     const static inline std::string PATH_TO_NODE_FILE = PATH_TO_TEMP_DIR + "nodes.osm";
     const static inline std::string PATH_TO_WAY_FILE = PATH_TO_TEMP_DIR + "ways.osm";
     const static inline std::string PATH_TO_RELATION_FILE = PATH_TO_TEMP_DIR + "relations.osm";

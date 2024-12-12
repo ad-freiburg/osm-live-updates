@@ -12,9 +12,12 @@ format using the osm2rdf tool, with the `--add-way-node-order` option enabled. T
 consistency and reduce the size of the resulting `.ttl` file, the `--write-ogc-geo-triples none` 
 option can optionally be used, as the update of GeoSPARQL (`ogc:`) triples is currently not supported.
 
-## Accompanying services and materials
+## OsmChane files
 
-The directory containing the osm change files for the complete osm data can be found
+You can specify the path to a folder containing one or multiple change files with `-i`. If you use multiple change files you have to make sure that they can be sorted by their filename in 
+the correct order from oldest to newest.
+
+You can also specify a server containing the change files like the one for the complete osm data, which can be found
 [here](https://planet.openstreetmap.org/replication/), for minutely, hourly and daily diffs. 
 Subsets can be found at [Geofabrik](https://download.geofabrik.de), for example the daily diffs 
 for [Germany](http://download.geofabrik.de/europe/germany-updates/).
