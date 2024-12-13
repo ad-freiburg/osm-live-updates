@@ -91,8 +91,7 @@ namespace olu::osm {
         std::string url = util::URLHelper::buildUrl(pathSegments);
 
         // Get change file from server and write to cache file.
-        std::string filePath = cnst::PATH_TO_CHANGE_FILE_DIR +
-                                cnst::DIFF_CACHE_FILE + std::to_string(sequenceNumber) +
+        std::string filePath = cnst::PATH_TO_CHANGE_FILE_DIR + std::to_string(sequenceNumber) +
                                 cnst::OSM_CHANGE_FILE_EXTENSION + cnst::GZIP_EXTENSION;
         auto request = util::HttpRequest(util::GET, url);
 
