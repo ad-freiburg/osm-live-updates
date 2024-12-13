@@ -66,3 +66,4 @@ ENV DEBIAN_FRONTEND=noninteractive
 WORKDIR /app/build/
 RUN cmake -DCMAKE_BUILD_TYPE=Release -DLOGLEVEL=INFO -DUSE_PARALLEL=true -D_NO_TIMING_TESTS=ON -GNinja .. && ninja
 
+ENTRYPOINT ["/app/build/apps/olu"]
