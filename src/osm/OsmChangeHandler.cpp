@@ -35,11 +35,6 @@
 
 // The maximum number of values that should be in a query to the QLever endpoint.
 static inline constexpr int MAX_VALUES_PER_QUERY = 1024;
-// Calculate number of ids for delete queries, because there are for example two subjects
-// for each node id
-static inline constexpr int MAX_IDS_PER_NODE_DELETE_QUERY_BATCH = MAX_VALUES_PER_QUERY / 2;
-static inline constexpr int MAX_IDS_PER_WAY_DELETE_QUERY_BATCH = MAX_VALUES_PER_QUERY / 3;
-static inline constexpr int MAX_IDS_PER_REL_DELETE_QUERY_BATCH = MAX_VALUES_PER_QUERY / 2;
 
 namespace cnst = olu::config::constants;
 
@@ -193,6 +188,12 @@ namespace olu::osm {
                 }
             }
         }
+
+        if (_createdNodes.empty() && _modifiedNodes.empty() && _deletedNodes.empty() &&
+            _createdWays.empty() && _modifiedWays.empty() && _deletedWays.empty() &&
+            _createdRelations.empty() && _modifiedRelations.empty() && _deletedRelations.empty()) {
+            throw OsmChangeHandlerException("Change file is empty.");
+        }
     }
 
     void OsmChangeHandler::processElementsInChangeFile() {
@@ -340,11 +341,15 @@ namespace olu::osm {
     }
 
     void OsmChangeHandler::createDummyElements() {
-        std::cout << "Create referenced objects..." << std::endl;
-
         const std::size_t count = _referencedNodes.size() + _referencedWays.size()
             + _waysToUpdateGeometry.size() + _referencedRelations.size()
             + _relationsToUpdateGeometry.size();
+
+        if (count == 0) {
+            return;
+        }
+
+        std::cout << "Create referenced objects..." << std::endl;
         osm2rdf::util::ProgressBar createProgress(count, _config.showProgress);
         size_t counter = 0;
         createProgress.update(counter);
@@ -442,7 +447,7 @@ namespace olu::osm {
 
         doInBatches(
             nodesToDelete,
-            MAX_IDS_PER_NODE_DELETE_QUERY_BATCH,
+            MAX_VALUES_PER_QUERY,
             [this, progress, &counter](std::set<id_t> const &batch) mutable {
                 runUpdateQuery(_queryWriter.writeDeleteQuery(batch, "osmnode"),
                                cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
@@ -459,7 +464,7 @@ namespace olu::osm {
 
         doInBatches(
             waysToDelete,
-            MAX_IDS_PER_WAY_DELETE_QUERY_BATCH,
+            MAX_VALUES_PER_QUERY,
             [this, &counter, progress](std::set<id_t> const &batch) mutable {
                 runUpdateQuery(_queryWriter.writeDeleteQuery(batch, "osmway"),
                                cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
@@ -477,7 +482,7 @@ namespace olu::osm {
 
         doInBatches(
             relationsToDelete,
-            MAX_IDS_PER_REL_DELETE_QUERY_BATCH,
+            MAX_VALUES_PER_QUERY,
             [this, &counter, progress](std::set<id_t> const &batch) mutable {
                 runUpdateQuery(_queryWriter.writeDeleteQuery(batch, "osmrel"),
                                cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
@@ -490,6 +495,11 @@ namespace olu::osm {
             + _deletedWays.size() + _modifiedWays.size() + _waysToUpdateGeometry.size()
             + _deletedRelations.size() + _modifiedRelations.size()
             + _relationsToUpdateGeometry.size();
+
+        if (count == 0) {
+            std::cout << "No elements to delete..." << std::endl;
+            return;
+        }
 
         std::cout << "Deleting elements from database..." << std::endl;
         osm2rdf::util::ProgressBar deleteProgress(count, _config.showProgress);
@@ -506,6 +516,11 @@ namespace olu::osm {
 
     void OsmChangeHandler::insertTriplesToDatabase() {
         auto triples = filterRelevantTriples();
+
+        if (triples.empty()) {
+            std::cout << "No triples to insert into database..." << std::endl;
+            return;
+        }
 
         std::cout << "Inserting triples into database..." << std::endl;
         osm2rdf::util::ProgressBar insertProgress(triples.size(), _config.showProgress);

@@ -143,6 +143,10 @@ namespace olu::osm {
             }
         }
 
+        if (inputs.empty()) {
+            throw OsmUpdaterException("No input files found");
+        }
+
         osmium::io::Writer writer{cnst::PATH_TO_CHANGE_FILE, osmium::io::overwrite::allow};
         auto out = osmium::io::make_output_iterator(writer);
 
@@ -164,7 +168,7 @@ namespace olu::osm {
     }
 
     void OsmUpdater::fetchChangeFiles(int sequenceNumber) {
-        std::cout << "Fetch and merge change files ..." << std::endl;
+        std::cout << "Fetch and merge change files..." << std::endl;
 
         osm2rdf::util::ProgressBar downloadProgress(
             _latestState.sequenceNumber - sequenceNumber, _config.showProgress);
