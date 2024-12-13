@@ -149,6 +149,11 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
 
         if (sparqlGraphUriOp->is_set()) {
             graphUri = sparqlGraphUriOp->value();
+            if (!olu::util::URLHelper::isValidUri(graphUri)) {
+                std::cerr << "URI for SPARQL graph is not valid: " << graphUri << "\n"
+                          << parser.help() << "\n";
+                exit(config::ExitCode::GRAPH_URI_INVALID);
+            }
         }
 
         if (sparqlAccessTokenOp->is_set()) {
@@ -157,6 +162,12 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
 
         if (sparqlUpdateUri->is_set()) {
             sparqlEndpointUriForUpdates = sparqlUpdateUri->value();
+            if (!olu::util::URLHelper::isValidUri(sparqlEndpointUriForUpdates)) {
+                std::cerr << "URI for SPARQL updates is not valid: "
+                    << sparqlEndpointUriForUpdates << "\n"
+                    << parser.help() << "\n";
+                exit(config::ExitCode::ENDPOINT_UPDATE_URI_INVALID);
+            }
         } else {
             sparqlEndpointUriForUpdates = sparqlEndpointUri;
         }

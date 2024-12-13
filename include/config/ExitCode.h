@@ -16,6 +16,8 @@ namespace olu::config {
         INCORRECT_ARGUMENTS,
         ENDPOINT_URI_MISSING,
         ENDPOINT_URI_INVALID,
+        ENDPOINT_UPDATE_URI_INVALID,
+        GRAPH_URI_INVALID,
         INPUT_NOT_EXISTS,
         INPUT_IS_NOT_DIRECTORY
     };
