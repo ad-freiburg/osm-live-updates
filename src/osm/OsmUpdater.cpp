@@ -65,7 +65,7 @@ namespace olu::osm {
             << _latestState.sequenceNumber
             << std::endl;
 
-            if (sequenceNumber == _latestState.sequenceNumber) {
+            if (sequenceNumber > _latestState.sequenceNumber) {
                 std::cout
                 << osm2rdf::util::currentTimeFormatted()
                 << "Database is already up to date. DONE."
