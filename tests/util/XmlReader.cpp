@@ -25,7 +25,7 @@
 TEST(XmlReader, readAttribute) {
     {
         // Todo: Read path from environment
-        std::string path = "/src/tests/data/";
+        std::string path = "/app/tests/data/";
         std::ifstream xmlFile (path + "node.osm");
         std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
                              (std::istreambuf_iterator<char>()) );
@@ -43,7 +43,7 @@ TEST(XmlReader, readAttribute) {
 
     {
         // Todo: Read path from environment
-        std::string path = "/src/tests/data/";
+        std::string path = "/app/tests/data/";
         std::ifstream xmlFile (path + "node.osm");
         std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
                              (std::istreambuf_iterator<char>()) );
@@ -61,7 +61,7 @@ TEST(XmlReader, readAttribute) {
 TEST(XmlReader, readTagOfChildren) {
     {
         // Todo: Read path from environment
-        std::string path = "/src/tests/data/";
+        std::string path = "/app/tests/data/";
         std::ifstream xmlFile (path + "node.osm");
         std::string content( (std::istreambuf_iterator<char>(xmlFile) ),
                              (std::istreambuf_iterator<char>()) );

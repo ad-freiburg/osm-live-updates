@@ -25,6 +25,7 @@
 #include "osm/Way.h"
 #include "sparql/SparqlWrapper.h"
 #include "util/Types.h"
+#include "sparql/QueryWriter.h"
 
 #include <set>
 #include <string>
@@ -40,7 +41,7 @@ namespace olu::osm {
     class OsmDataFetcher {
     public:
         explicit OsmDataFetcher(const config::Config &config)
-            : _config(config), _sparqlWrapper(config) { }
+            : _config(config), _sparqlWrapper(config), _queryWriter(config) { }
 
         // Fetch from SERVER -----------------------------------------------------------------------
         /**
@@ -159,6 +160,7 @@ namespace olu::osm {
     private:
         config::Config _config;
         sparql::SparqlWrapper _sparqlWrapper;
+        sparql::QueryWriter _queryWriter;
 
         /**
          * Extracts the database state from a state file. A state file contains a sequence number

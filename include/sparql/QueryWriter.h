@@ -20,6 +20,7 @@
 #define OSM_LIVE_UPDATES_QUERYWRITER_H
 
 #include "util/Types.h"
+#include "config/Config.h"
 
 #include <string>
 #include <vector>
@@ -32,71 +33,80 @@ namespace olu::sparql {
      */
     class QueryWriter {
     public:
+        explicit QueryWriter(config::Config  config): _config(std::move(config)) { }
+
         /**
          * @returns A SPARQL query that inserts a list of triples in to the database
          */
-        static std::string writeInsertQuery(const std::vector<std::string>& triples);
+        [[nodiscard]] std::string writeInsertQuery(const std::vector<std::string>& triples) const;
 
         /**
          * @returns A SPARQL query that delete all triples with subject `osmTag:id` and all triples
          * that are linked via another node
          */
-        static std::string writeDeleteQuery(const std::set<id_t> &ids, const std::string &osmTag);
+        [[nodiscard]] std::string writeDeleteQuery(const std::set<id_t> &ids, const std::string &osmTag) const;
 
         /**
         * @returns A SPARQL query for the locations of the nodes with the given ID in WKT format
         */
-        static std::string writeQueryForNodeLocations(const std::set<id_t> &nodeIds);
+        [[nodiscard]] std::string writeQueryForNodeLocations(const std::set<id_t> &nodeIds) const;
 
         /**
          * @returns A SPARQL query for the latest timestamp of any node in the database
          */
-        static std::string writeQueryForLatestNodeTimestamp();
+        [[nodiscard]] std::string writeQueryForLatestNodeTimestamp() const;
 
         /**
         * @returns A SPARQL query for the subject of all members of the given relation
         */
-        static std::string writeQueryForRelations(const std::set<id_t> & relationIds);
+        [[nodiscard]] std::string writeQueryForRelations(const std::set<id_t> & relationIds) const;
 
         /**
         * @returns A SPARQL query for the subject of all members of the given relation
         */
-        static std::string writeQueryForWaysMembers(const std::set<id_t> &wayIds);
+        [[nodiscard]] std::string writeQueryForWaysMembers(const std::set<id_t> &wayIds) const;
 
         /**
          * @returns A SPARQL query for all nodes that are referenced by the given way
          */
-        static std::string writeQueryForReferencedNodes(const std::set<id_t> &wayIds);
+        [[nodiscard]] std::string writeQueryForReferencedNodes(const std::set<id_t> &wayIds) const;
 
         /**
          * @returns A SPARQL query for all members of the given relations
          */
-        static std::string writeQueryForRelationMembers(const std::set<id_t> &relIds);
+        [[nodiscard]] std::string writeQueryForRelationMembers(const std::set<id_t> &relIds) const;
 
         /**
         * @returns A SPARQL query for all ways that reference the given nodes
         */
-        static std::string writeQueryForWaysReferencingNodes(const std::set<id_t> &nodeIds);
+        [[nodiscard]] std::string writeQueryForWaysReferencingNodes(const std::set<id_t> &nodeIds) const;
 
         /**
         * @returns A SPARQL query for relations that reference the given nodes
         */
-        static std::string writeQueryForRelationsReferencingNodes(const std::set<id_t> &nodeIds);
+        [[nodiscard]] std::string writeQueryForRelationsReferencingNodes(const std::set<id_t> &nodeIds) const;
 
         /**
         * @returns A SPARQL query for relations that reference the given ways
         */
-        static std::string writeQueryForRelationsReferencingWays(const std::set<id_t> &wayIds);
+        [[nodiscard]] std::string writeQueryForRelationsReferencingWays(const std::set<id_t> &wayIds) const;
 
         /**
         * @returns A SPARQL query for relations that reference the given relations
         */
-        static std::string writeQueryForRelationsReferencingRelations(const std::set<id_t> &relationIds);
+        [[nodiscard]] std::string writeQueryForRelationsReferencingRelations(const std::set<id_t> &relationIds) const;
 
         /**
         * @returns A SPARQL query for tags and timestamp of the given subject
         */
-        static std::string writeQueryForTagsAndTimestamp(const std::string &subject);
+        [[nodiscard]] std::string writeQueryForTagsAndTimestamp(const std::string &subject) const;
+
+        private:
+        config::Config _config;
+
+        [[nodiscard]] std::string getFromClauseOptional() const;
+
+        [[nodiscard]] std::string wrapWithGraphOptional(const std::string& clause) const;
     };
 } // namespace olu::sparql
 

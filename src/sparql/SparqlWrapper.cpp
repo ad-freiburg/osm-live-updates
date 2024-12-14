@@ -43,15 +43,18 @@ namespace olu::sparql {
     }
 
     std::string
-    SparqlWrapper::send(const std::string& acceptValue, const std::string &endpointUri,
-                        bool isUpdate) {
-        handleFileOutput();
+    SparqlWrapper::send(const std::string& acceptValue, bool isUpdate) {
+        if (_config.sparqlOutput == config::SparqlOutput::DEBUG_FILE ||
+            (_config.sparqlOutput == config::SparqlOutput::FILE && isUpdate)) {
+            writeQueryToFileOutput();
+        }
 
         // Format and encode query
         std::string query = _prefixes + _query;
         std::string encodedQuery = util::URLHelper::encodeForUrlQuery(query);
 
-        std::string response;
+        auto endpointUri = isUpdate ?
+                _config.sparqlEndpointUriForUpdates : _config.sparqlEndpointUri;
         auto request = util::HttpRequest(util::POST, endpointUri);
         request.addHeader(cnst::HTML_KEY_CONTENT_TYPE, cnst::HTML_VALUE_CONTENT_TYPE);
         request.addHeader(cnst::HTML_KEY_ACCEPT, acceptValue);
@@ -59,9 +62,14 @@ namespace olu::sparql {
         request.addHeader("Expect", "");
 
         std::string body = (isUpdate ? "update=" : "query=") + encodedQuery;
+        body += _config.accessToken.empty() ? "" : "&access-token=" + _config.accessToken;
         request.addBody(body);
+
+        std::string response;
         try {
-            response = request.perform();
+            if (!isUpdate || _config.sparqlOutput == config::SparqlOutput::ENDPOINT) {
+                response = request.perform();
+            }
         } catch(std::exception &e) {
             std::cerr << e.what() << std::endl;
             std::string msg =
@@ -78,10 +86,9 @@ namespace olu::sparql {
 
     // _____________________________________________________________________________________________
     void SparqlWrapper::runUpdate() {
-        auto endpointUri = _config.sparqlEndpointUri + _config.pathForSparqlUpdates;
-        auto response = send(cnst::HTML_VALUE_ACCEPT_SPARQL_RESULT_JSON, endpointUri, true);
+        auto response = send(cnst::HTML_VALUE_ACCEPT_SPARQL_RESULT_JSON, true);
 
-        if (response.empty()) {
+        if (response.empty() || response == "Update successful") {
             return;
         }
 
@@ -90,6 +97,7 @@ namespace olu::sparql {
         try {
             read_json(json_stream, pt);
         } catch(std::exception &e) {
+            std::cerr << e.what() << std::endl;
             std::string msg = "Could not interpret response from SPARQL endpoint: " + response;
             throw SparqlWrapperException(msg.c_str());
         }
@@ -104,7 +112,7 @@ namespace olu::sparql {
     // _____________________________________________________________________________________________
     boost::property_tree::ptree SparqlWrapper::runQuery() {
         auto response = send(cnst::HTML_VALUE_ACCEPT_SPARQL_RESULT_XML,
-                            _config.sparqlEndpointUri, false);
+                             false);
 
         if (response.empty()) {
             throw SparqlWrapperException("Empty response from SPARQL endpoint");
@@ -117,7 +125,7 @@ namespace olu::sparql {
         // can carry on
         try {
             read_json(json_stream, pt);
-        } catch(std::exception &e) {
+        } catch(std::exception &_) {
             // If the json parsing failed that means we got a valid response from the endpoint
             boost::property_tree::ptree responseAsTree;
             util::XmlReader::populatePTreeFromString(response, responseAsTree);
@@ -134,22 +142,11 @@ namespace olu::sparql {
         throw SparqlWrapperException(msg.c_str());
     }
 
-    void SparqlWrapper::clearOutputFile() const {
-        if (_config.writeSparqlQueriesToFile) {
-            std::ofstream outputFile;
-            outputFile.open (_config.pathToSparqlQueryOutput, std::ios_base::trunc);
-            outputFile << "";
-            outputFile.close();
-        }
-    }
-
-    void SparqlWrapper::handleFileOutput() const {
-        if (_config.writeSparqlQueriesToFile) {
-            std::ofstream outputFile;
-            outputFile.open (_config.pathToSparqlQueryOutput, std::ios_base::app);
-            outputFile << _prefixes << _query << std::endl;
-            outputFile.close();
-        }
+    void SparqlWrapper::writeQueryToFileOutput() const {
+        std::ofstream outputFile;
+        outputFile.open (_config.sparqlOutputFile, std::ios_base::app);
+        outputFile << _prefixes << _query << std::endl;
+        outputFile.close();
     }
 
     void SparqlWrapper::clearCache() const {

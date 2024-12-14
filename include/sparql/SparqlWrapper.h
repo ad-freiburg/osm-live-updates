@@ -40,9 +40,7 @@ namespace olu::sparql {
      */
     class SparqlWrapper {
     public:
-        explicit SparqlWrapper(config::Config  config): _config(std::move(config)) {
-            clearOutputFile();
-        }
+        explicit SparqlWrapper(config::Config  config): _config(std::move(config)) { }
 
         /**
          * Sets the query to send to the SPARQL endpoint. The prefixes must be set
@@ -79,15 +77,12 @@ namespace olu::sparql {
         std::string _query;
         std::string _prefixes;
 
-        void clearOutputFile() const;
+        void writeQueryToFileOutput() const;
 
         /**
-         * Writes the prefixes and query to the output file if the `writeSparqlQueriesToFile` flag
-         * is set
+         * Sends a HTTP request to the sparql endpoint.
          */
-        void handleFileOutput() const;
-
-        std::string send(const std::string& acceptValue, const std::string &endpointUri, bool isUpdate);
+        std::string send(const std::string& acceptValue, bool isUpdate);
     };
 
     /**

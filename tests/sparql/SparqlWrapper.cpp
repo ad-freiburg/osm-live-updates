@@ -26,7 +26,7 @@ namespace cnst = olu::config::constants;
 namespace olu::sparql {
     TEST(SparqlWrapper, emptyQuery) {
         auto config((olu::config::Config()));
-        config.sparqlEndpointUri = cnst::QLEVER_OSM_PLANET_URI;
+        config.sparqlEndpointUri = "https://qlever.cs.uni-freiburg.de/api/osm-planet";
         auto sparqlWrapper((olu::sparql::SparqlWrapper(config)));
 
         ASSERT_THROW(sparqlWrapper.runQuery(), olu::sparql::SparqlWrapperException);
@@ -34,7 +34,7 @@ namespace olu::sparql {
 
     TEST(SparqlWrapper, nonEmptyResponseFromEndpoint) {
         auto config((olu::config::Config()));
-        config.sparqlEndpointUri = cnst::QLEVER_OSM_PLANET_URI;
+        config.sparqlEndpointUri = "https://qlever.cs.uni-freiburg.de/api/osm-planet";
         auto sparqlWrapper((olu::sparql::SparqlWrapper(config)));
         sparqlWrapper.setPrefixes({"PREFIX osmnode: <https://www.openstreetmap.org/node/>"});
         sparqlWrapper.setQuery("SELECT * WHERE { osmnode:1 ?p ?o }");

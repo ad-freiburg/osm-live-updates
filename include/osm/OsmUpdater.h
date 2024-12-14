@@ -5,6 +5,8 @@
 #ifndef OSM_LIVE_UPDATES_OSMUPDATER_H
 #define OSM_LIVE_UPDATES_OSMUPDATER_H
 
+#include <iostream>
+
 #include "config/Config.h"
 #include "osm/OsmDatabaseState.h"
 #include "osm/OsmDataFetcher.h"
@@ -20,8 +22,7 @@ namespace olu::osm {
      */
     class OsmUpdater {
     public:
-        explicit OsmUpdater(const config::Config &config) : _config(config), _odf(config),
-                                                      _latestState({}) { }
+        explicit OsmUpdater(const config::Config &config);
 
         /// Starts the update process.
         void run();
@@ -47,6 +48,40 @@ namespace olu::osm {
          * @return The sequence number to start from
          */
         [[nodiscard]] int decideStartSequenceNumber();
+
+        /**
+        * Download all change files from the given seqence number to the `latest` one, and store
+        * them in the /changes directory.
+        */
+        void fetchChangeFiles(int sequenceNumber);
+
+        /**
+        * Uses osmium to merge all change files in the /changes directory into a single one.
+        */
+        static void mergeChangeFiles(const std::string &pathToChangeFileDir);
+
+        /**
+        * Delete all files in the /changes dir
+        */
+        static void clearChangesDir();
+
+        /**
+        * Delete /tmp dir
+        */
+        static void deleteTmpDir();
+    };
+
+    /**
+    * Exception that can appear inside the `OsmUpdater` class.
+    */
+    class OsmUpdaterException final : public std::exception {
+        std::string message;
+    public:
+        explicit OsmUpdaterException(const char* msg) : message(msg) { }
+
+        [[nodiscard]] const char* what() const noexcept override {
+            return message.c_str();
+        }
     };
 
 } // namespace olu::osm

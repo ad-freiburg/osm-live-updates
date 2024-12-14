@@ -24,7 +24,7 @@ set(CMAKE_POLICY_DEFAULT_CMP0048 NEW)
 # --------------------------------------------------------------------------------------------------
 project(
         osm_live_updates
-        VERSION 0.1.0
+        VERSION 1.0.0
         DESCRIPTION "Live updates for the complete open street map data in an rdf database"
         LANGUAGES CXX
 )
@@ -42,10 +42,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_compile_options(-Wall -Wextra -Wno-missing-field-initializers)
 add_compile_options(-DGTEST_HAS_TR1_TUPLE=0 -DGTEST_USE_OWN_TR1_TUPLE=0)
 # Basic optimization
-# Deactivated because it is not working on apple silicon
-#add_compile_options(-march=native)
+add_compile_options(-march=native)
 # Enable fast-math
 add_compile_options(-ffast-math)
+
 # ----------------------------------------------------------------------------
 # External programs
 # ----------------------------------------------------------------------------
@@ -60,6 +60,7 @@ find_program(
         NAMES "cppcheck"
         DOC "Path to cppcheck executable"
 )
+
 # ----------------------------------------------------------------------------
 # Configure dependencies
 # ----------------------------------------------------------------------------
@@ -83,7 +84,6 @@ else()
     set(ZLIB_ROOT "NOT FOUND: please choose" CACHE PATH "")
     message(FATAL_ERROR "PLEASE, specify the directory where the zlib library is installed in ZLIB_ROOT")
 endif()
-
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
@@ -177,64 +177,6 @@ if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         add_subdirectory(benchmarks)
         include_directories(SYSTEM ${benchmark_SOURCE_DIR}/include)
     endif ()
-endif ()
-
-# Based on https://github.com/ad-freiburg/pfaedle/blob/master/cmake/GetGitRevisionDescription.cmake
-function(get_git_sha1 _var)
-    if (NOT GIT_FOUND)
-        find_package(Git QUIET)
-    endif ()
-
-    execute_process(COMMAND
-            "${GIT_EXECUTABLE}"
-            rev-parse --short HEAD --
-            WORKING_DIRECTORY
-            "${CMAKE_SOURCE_DIR}"
-            RESULT_VARIABLE
-            res
-            OUTPUT_VARIABLE
-            out
-            ERROR_QUIET
-            OUTPUT_STRIP_TRAILING_WHITESPACE)
-    if (NOT res EQUAL 0)
-        set(out "${out}-${res}-NOTFOUND")
-    endif ()
-    set(${_var} "${out}" PARENT_SCOPE)
-endfunction()
-function(get_git_is_dirty _var)
-    if (NOT GIT_FOUND)
-        find_package(Git QUIET)
-    endif ()
-
-    execute_process(COMMAND
-            "${GIT_EXECUTABLE}"
-            diff-index --name-only HEAD --
-            WORKING_DIRECTORY
-            "${CMAKE_SOURCE_DIR}"
-            RESULT_VARIABLE
-            res
-            OUTPUT_VARIABLE
-            out
-            ERROR_QUIET
-            OUTPUT_STRIP_TRAILING_WHITESPACE)
-    if (NOT res EQUAL 0)
-        set(out "${out}-${res}-NOTFOUND")
-    endif ()
-
-    if (NOT "${out}" STREQUAL "")
-        set(IS_DIRTY "dirty")
-    else ()
-        set(IS_DIRTY "")
-    endif ()
-    set(${_var} "${IS_DIRTY}" PARENT_SCOPE)
-endfunction()
-
-get_git_sha1(VERSION_GIT)
-get_git_is_dirty(VERSION_GIT_IS_DIRTY)
-if ("${VERSION_GIT_IS_DIRTY}" STREQUAL "")
-    set(VERSION_GIT_FULL "${VERSION_GIT}")
-else ()
-    set(VERSION_GIT_FULL "${VERSION_GIT}-${VERSION_GIT_IS_DIRTY}")
 endif ()
 
 if (CLANG_TIDY_EXE)

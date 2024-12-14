@@ -23,9 +23,10 @@
 #include "osm/OsmDataFetcher.h"
 #include "sparql/SparqlWrapper.h"
 #include "config/Config.h"
-
+#include "osm2rdf/util/ProgressBar.h"
 #include <set>
 #include <boost/property_tree/ptree.hpp>
+
 
 namespace olu::osm {
     /**
@@ -40,13 +41,15 @@ namespace olu::osm {
      */
     class OsmChangeHandler {
     public:
-        explicit OsmChangeHandler(const config::Config &config, const std::string &pathToOsmChangeFile);
+        explicit OsmChangeHandler(const config::Config &config);
         void run();
     private:
         config::Config _config;
         sparql::SparqlWrapper _sparql;
+        sparql::QueryWriter _queryWriter;
         OsmDataFetcher _odf;
 
+        // The xml element of the change file is stored here while processing the change file
         boost::property_tree::ptree _osmChangeElement;
 
         // Nodes that are in a delete-changeset in the change file.
@@ -86,39 +89,45 @@ namespace olu::osm {
         std::set<id_t> _referencedRelations;
 
         /**
-         * @Returns TRUE if the node with the given ID is contained in a `create` or `modify`
-         * changeset in the changeFile.
+        * @Returns TRUE if the node with the given ID is contained in a `create`, `modify` or
+         * 'delete' changeset in the changeFile.
          *
          * @warning All nodes inside the ChangeFile have to be processed BEFORE using this function.
          * Therefore, the earliest time this function can be called is inside the loop over the osm
          * elements inside `storeIdsOfElementsInChangeFile()` after the first way has occured.
          */
         [[nodiscard]] bool nodeInChangeFile(const id_t &nodeId) const {
-            return _modifiedNodes.contains(nodeId) || _createdNodes.contains(nodeId);
+            return _modifiedNodes.contains(nodeId) ||
+                   _createdNodes.contains(nodeId) ||
+                   _deletedNodes.contains(nodeId);
         }
 
         /**
-         * @Returns TRUE if the way with the given ID is contained in a `create` or `modify`
-         * changeset in the changeFile.
+         * @Returns TRUE if the way with the given ID is contained in a `create`, `modify` or
+         * 'delete' changeset in the changeFile.
          *
          * @warning All ways inside the ChangeFile have to be processed BEFORE using this function.
          * Therefore, the earliest time this function can be called is inside the loop over the osm
          * elements inside `storeIdsOfElementsInChangeFile()` after the first way has occured.
          */
         [[nodiscard]] bool wayInChangeFile(const id_t &wayId) const {
-            return _modifiedWays.contains(wayId) || _createdWays.contains(wayId);
+            return _modifiedWays.contains(wayId) ||
+                   _createdWays.contains(wayId) ||
+                   _deletedWays.contains(wayId);
         }
 
         /**
-         * @Returns TRUE if the relation with the given ID is contained in a `create` or `modify`
-         * changeset in the changeFile.
+         * @Returns TRUE if the relation with the given ID is contained in a `create`, `modify` or
+         * 'delete' changeset in the changeFile.
          *
          * @warning All relations inside the ChangeFile have to be processed BEFORE using this function.
          * Therefore, the earliest time this function can be called is after calling
          * `storeIdsOfElementsInChangeFile()`
          */
         [[nodiscard]] bool relationInChangeFile(const id_t &relationId) const {
-            return _modifiedRelations.contains(relationId) || _createdRelations.contains(relationId);
+            return _modifiedRelations.contains(relationId) ||
+                   _createdRelations.contains(relationId) ||
+                   _deletedRelations.contains(relationId);
         }
 
         /**
@@ -167,7 +176,7 @@ namespace olu::osm {
          */
         void getReferencesForWays();
 
-        static void createOrClearTmpFiles() ;
+        static void createTmpFiles() ;
         static void initTmpFile(const std::string& filepath) ;
         static void finalizeTmpFile(const std::string& filepath) ;
 
@@ -177,24 +186,30 @@ namespace olu::osm {
         static void addToTmpFile(const std::string& element, const std::string& elementTag) ;
 
         /**
+         * Creates dummy elements for nodes, ways and relations, while showing a progress bar on
+         * std::cout
+         */
+        void createDummyElements();
+
+        /**
          * Creates dummy nodes for the referenced nodes that are not in the change file. The dummy
          * nodes contain the node id and the location which is used for the nodes that are
          * referenced in ways and writes them to a temporary file
          */
-        void createDummyNodes();
+        void createDummyNodes(osm2rdf::util::ProgressBar &progress, size_t &counter);
 
         /**
          * Creates dummy ways for the referenced ways that are not in the change file and writes
          * them to a temporary file The dummy ways only contain the referenced nodes
          */
-        void createDummyWays();
+        void createDummyWays(osm2rdf::util::ProgressBar &progress, size_t &counter);
 
         /**
          * Creates dummy relations for the referenced relations that are not in the change file and
          * writes them to a temporary file The dummy relation only contain the members of that
          * relation
          */
-        void createDummyRelations();
+        void createDummyRelations(osm2rdf::util::ProgressBar &progress, size_t &counter);
 
         /**
          * Send a SPARQL update query to the endpoint
@@ -202,20 +217,25 @@ namespace olu::osm {
         void runUpdateQuery(const std::string& query, const std::vector<std::string> &prefixes);
 
         /**
+         * Delete all relevant triples from the database, while showing a progress bar on std::cout
+         */
+        void deleteTriplesFromDatabase();
+
+        /**
          * Send SPARQL queries to delete all triples that belong to the nodes in _deletedNodes
          */
-        void deleteNodesFromDatabase();
+        void deleteNodesFromDatabase(osm2rdf::util::ProgressBar &progress, size_t &counter);
 
         /**
          * Send SPARQL queries to delete all triples that belong to the ways in _deletedWays
          */
-        void deleteWaysFromDatabase();
+        void deleteWaysFromDatabase(osm2rdf::util::ProgressBar &progress, size_t &counter);
 
         /**
          * Send SPARQL queries to delete all triples that belong to the relations in
          * _deletedRelations
         */
-        void deleteRelationsFromDatabase();
+        void deleteRelationsFromDatabase(osm2rdf::util::ProgressBar &progress, size_t &counter);
 
         /**
          * Send SPARQL queries to insert all relevant triples

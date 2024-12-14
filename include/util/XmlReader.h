@@ -83,6 +83,27 @@ namespace olu::util {
         readTree(const pt::ptree& tree,
                  const pt::ptree::key_type& key = {},
                  const int& indent = 0);
+
+
+        /**
+         * Sanitizes the tags of a way or relation.
+         */
+        static void sanitizeXmlTags(pt::ptree &tree);
+
+        /**
+         * @return True, if the given string has a xml encoded character in it
+         */
+        static bool isXmlEncoded(const std::string &input);
+
+        /**
+         * Encodes string for xml format.
+         */
+        static std::string xmlEncode(const std::string &input);
+
+        /**
+         * Decodes string for xml format.
+         */
+        static std::string xmlDecode(const std::string &input);
     };
 
     /**

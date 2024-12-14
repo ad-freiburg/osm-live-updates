@@ -64,10 +64,10 @@ TEST(URLHelper, formatSequenceNumber) {
 TEST(URLHelper, buildUrl) {
     {
         std::vector<std::string> pathSegments;
-        pathSegments.emplace_back(constants::OSM_NODE_BASE_URL);
+        pathSegments.emplace_back("https://www.openstreetmap.org/api/0.6/node");
         pathSegments.emplace_back("state.txt");
         std::string url = URLHelper::buildUrl(pathSegments);
-        ASSERT_EQ(url, constants::OSM_NODE_BASE_URL + "/" + "state.txt");
+        ASSERT_EQ(url, "https://www.openstreetmap.org/api/0.6/node/state.txt");
     }
     {
         std::vector<std::string> pathSegments;
