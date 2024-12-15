@@ -171,7 +171,7 @@ namespace olu::osm {
         std::cout << "Fetch and merge change files..." << std::endl;
 
         osm2rdf::util::ProgressBar downloadProgress(
-            _latestState.sequenceNumber - sequenceNumber, _config.showProgress);
+            _latestState.sequenceNumber + 1 - sequenceNumber, _config.showProgress);
         size_t counter = 0;
         downloadProgress.update(counter);
 
