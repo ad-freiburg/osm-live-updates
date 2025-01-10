@@ -13,7 +13,11 @@ object in the *OsmChange* file.
 The OpenStreetMap (OSM) data must be converted to [RDF Turtle](https://www.w3.org/TR/turtle/) (TTL)
 format using the osm2rdf tool, with the `--add-way-node-order` option enabled. To maintain data 
 consistency and reduce the size of the resulting `.ttl` file, the `--write-ogc-geo-triples none` 
-option can optionally be used, as the update of GeoSPARQL (`ogc:`) triples is currently not supported.
+option can optionally be used, as the update of GeoSPARQL (`ogc:`) triples is currently not supported. 
+
+We recommend using this [fork](https://github.com/nicolano/osm2rdf.git) of osm2rdf, which `olu`
+uses internally to convert osm data. The fork avoids the generation of blank nodes for testing purposes 
+and compatibility with the [QLever](https://github.com/ad-freiburg/qlever.git) SPARQL endpoint.
 
 ## OsmChane files
 
