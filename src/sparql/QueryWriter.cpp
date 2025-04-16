@@ -54,8 +54,7 @@ olu::sparql::QueryWriter::writeDeleteQuery(const std::set<id_t> &ids, const std:
     }
 
     ss << "} ";
-    ss << wrapWithGraphOptional("?s ?p1 ?o1 . OPTIONAL { ?o1 ?p2 ?o2. }");
-    ss << " }";
+    ss << wrapWithGraphOptional("?s ?p1 ?o1 FILTER (! STRSTARTS(?p1, ogc:)) . OPTIONAL { ?o1 ?p2 ?o2. }"); ss << " }";
     return ss.str();
 }
 
