@@ -114,13 +114,8 @@ endif ()
 
 include(FetchContent)
 include(CMakePrintHelpers)
-FetchContent_Declare(popl
-        GIT_REPOSITORY  https://github.com/badaix/popl.git
-        GIT_TAG v1.3.0
-        )
-FetchContent_MakeAvailable(popl)
-include_directories(SYSTEM ${popl_SOURCE_DIR}/include)
-set(POPL_INCLUDE_DIR ${popl_SOURCE_DIR}/include)
+find_package(POPL REQUIRED)
+include_directories(SYSTEM ${POPL_INCLUDE_DIR})
 
 # User a osm2rdf branch that is tuned for this app
 FetchContent_Declare(osm2rdf
