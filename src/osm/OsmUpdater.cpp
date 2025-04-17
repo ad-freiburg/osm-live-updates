@@ -33,6 +33,18 @@ namespace olu::osm {
             std::cerr << e.what() << std::endl;
             throw OsmUpdaterException("Failed to create temporary directories");
         }
+
+        if (_config.sparqlOutput != config::ENDPOINT) {
+            try {
+                std::ofstream outputFile;
+                outputFile.open (_config.sparqlOutputFile,
+                    std::ofstream::out | std::ios_base::trunc);
+                outputFile.close();
+            } catch (const std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                throw OsmUpdaterException("Failed to clear sparql output file");
+            }
+        }
     }
 
     void OsmUpdater::run() {
