@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-FROM ubuntu:20.04
+FROM ubuntu:24.04
 LABEL authors="nicolasvontrott"
 LABEL Description="Build environment"
 
