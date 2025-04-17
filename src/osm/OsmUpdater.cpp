@@ -63,6 +63,7 @@ namespace olu::osm {
             och.run();
         } else {
             std::cout
+            << osm2rdf::util::currentTimeFormatted()
             << "Determine sequence number to start with ..."
             << std::endl;
 
@@ -93,7 +94,7 @@ namespace olu::osm {
             std::cout
             << osm2rdf::util::currentTimeFormatted()
             << "Process changes in "
-            << _latestState.sequenceNumber - sequenceNumber
+            << _latestState.sequenceNumber - sequenceNumber + 1
             << " change files"
             << std::endl;
 
@@ -180,7 +181,10 @@ namespace olu::osm {
     }
 
     void OsmUpdater::fetchChangeFiles(int sequenceNumber) {
-        std::cout << "Fetch and merge change files..." << std::endl;
+        std::cout
+        << osm2rdf::util::currentTimeFormatted()
+        << "Fetch and merge change files..."
+        << std::endl;
 
         osm2rdf::util::ProgressBar downloadProgress(
             _latestState.sequenceNumber + 1 - sequenceNumber, _config.showProgress);

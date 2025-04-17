@@ -174,7 +174,7 @@ namespace olu::config::constants {
     };
 
     // Qlever
-    const static inline std::string HEADER = "Configuration for OLU";
+    const static inline std::string HEADER = "Configuration for OLU:";
 
     const static inline std::string HELP_OPTION_SHORT = "h";
     const static inline std::string HELP_OPTION_LONG = "help";
