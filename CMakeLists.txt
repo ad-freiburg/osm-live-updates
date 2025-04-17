@@ -117,13 +117,13 @@ include(CMakePrintHelpers)
 find_package(POPL REQUIRED)
 include_directories(SYSTEM ${POPL_INCLUDE_DIR})
 
-# User a osm2rdf branch that is tuned for this app
 FetchContent_Declare(osm2rdf
-        GIT_REPOSITORY  https://github.com/nicolano/osm2rdf.git
-        GIT_TAG 48f55576280508699e740f1dc3d85c909fb6dc20
+        GIT_REPOSITORY  https://github.com/ad-freiburg/osm2rdf.git
+        GIT_TAG d25298f43b54d72d7eed4eab5a0bcdf52cfe77b5
 )
 FetchContent_MakeAvailable(osm2rdf)
 include_directories(SYSTEM ${osm2rdf_SOURCE_DIR}/include)
+include_directories(SYSTEM ${osm2rdf_SOURCE_DIR}/vendor/spatialjoin/src)
 
 find_package(Protozero REQUIRED)
 include_directories(SYSTEM ${PROTOZERO_INCLUDE_DIR})
