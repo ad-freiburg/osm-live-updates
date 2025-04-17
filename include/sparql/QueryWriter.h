@@ -106,6 +106,8 @@ namespace olu::sparql {
 
         [[nodiscard]] std::string getFromClauseOptional() const;
 
+        [[nodiscard]] static std::string getValuesClause(const std::string& osmTag, const std::set<id_t> &ids) ;
+
         [[nodiscard]] std::string wrapWithGraphOptional(const std::string& clause) const;
     };
 } // namespace olu::sparql

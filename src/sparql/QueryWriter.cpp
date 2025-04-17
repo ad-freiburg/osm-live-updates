@@ -44,17 +44,9 @@ olu::sparql::QueryWriter::writeDeleteQuery(const std::set<id_t> &ids, const std:
     std::ostringstream ss;
     ss << "DELETE { ";
     ss << wrapWithGraphOptional("?s ?p1 ?o1 . ?o1 ?p2 ?o2 . ");
-    ss << "} WHERE { VALUES ?s { ";
-
-    for (const auto & id : ids) {
-        ss << osmTag;
-        ss << ":";
-        ss << std::to_string(id);
-        ss << " ";
-    }
-
-    ss << "} ";
-    ss << wrapWithGraphOptional("?s ?p1 ?o1 FILTER (! STRSTARTS(?p1, ogc:)) . OPTIONAL { ?o1 ?p2 ?o2. }"); ss << " }";
+    ss << "WHERE { ";
+    ss << getValuesClause(osmTag + ":", ids);
+    ss << wrapWithGraphOptional("?val ?p1 ?o1 FILTER (! STRSTARTS(?p1, ogc:)) . OPTIONAL { ?o1 ?p2 ?o2. }"); ss << " }";
     return ss.str();
 }
 
@@ -64,15 +56,9 @@ olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::set<id_t> &nodeI
     std::ostringstream ss;
     ss << "SELECT ?nodeGeo ?location ";
     ss << getFromClauseOptional();
-    ss << "WHERE { VALUES ?nodeGeo { ";
-
-    for (const auto & nodeId : nodeIds) {
-        ss << "osm2rdfgeom:osm_node_";
-        ss << std::to_string(nodeId);
-        ss << " ";
-    }
-
-    ss << "} ?nodeGeo geo:asWKT ?location . }";
+    ss << "WHERE { ";
+    ss << getValuesClause("osm2rdfgeom:osm_node_", nodeIds);
+    ss << "?val geo:asWKT ?location . }";
     return ss.str();
 }
 
@@ -88,47 +74,35 @@ std::string olu::sparql::QueryWriter::writeQueryForLatestNodeTimestamp() const {
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeQueryForRelations(const std::set<id_t> & relationIds) const {
     std::ostringstream ss;
-    ss << "SELECT ?rel ?type"
+    ss << "SELECT ?val ?type"
           "(GROUP_CONCAT(?memberUri; separator=\";\") AS ?memberUris) "
           "(GROUP_CONCAT(?memberRole; separator=\";\") AS ?memberRoles) "
           "(GROUP_CONCAT(?memberPos; separator=\";\") AS ?memberPositions) ";
     ss << getFromClauseOptional();
-    ss << "WHERE { VALUES ?rel { ";
-
-    for (const auto & relId : relationIds) {
-        ss << "osmrel:";
-        ss << std::to_string(relId);
-        ss << " ";
-    }
-
-    ss << "} ?rel osmkey:type ?type . "
-          "?rel osmrel:member ?o . "
+    ss << "WHERE { ";
+    ss << getValuesClause("osmrel:", relationIds);
+    ss << "?val osmkey:type ?type . "
+          "?val osmrel:member ?o . "
           "?o osm2rdfmember:id ?memberUri . "
           "?o osm2rdfmember:role ?memberRole . "
           "?o osm2rdfmember:pos ?memberPos . "
-          "} GROUP BY ?rel ?type";
+          "} GROUP BY ?val ?type";
     return ss.str();
 }
 
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeQueryForWaysMembers(const std::set<id_t> &wayIds) const {
     std::ostringstream ss;
-    ss << "SELECT ?way "
+    ss << "SELECT ?val "
           "(GROUP_CONCAT(?nodeUri; separator=\";\") AS ?nodeUris) "
           "(GROUP_CONCAT(?nodePos; separator=\";\") AS ?nodePositions) ";
     ss << getFromClauseOptional();
-    ss << "WHERE { VALUES ?way { ";
-
-    for (const auto & wayId : wayIds) {
-        ss << "osmway:";
-        ss << std::to_string(wayId);
-        ss << " ";
-    }
-
-    ss << "} ?way osmway:node ?member . "
+    ss << "WHERE { ";
+    ss << getValuesClause("osmway:", wayIds);
+    ss << "?val osmway:node ?member . "
           "?member osmway:node ?nodeUri . "
           "?member osm2rdfmember:pos ?nodePos "
-          "} GROUP BY ?way";
+          "} GROUP BY ?val";
     return ss.str();
 }
 
@@ -137,13 +111,9 @@ std::string olu::sparql::QueryWriter::writeQueryForReferencedNodes(const std::se
     std::ostringstream ss;
     ss << "SELECT ?node ";
     ss << getFromClauseOptional();
-    ss << "WHERE { VALUES ?way { ";
-
-    for (const auto & wayId : wayIds) {
-        ss << "osmway:" + std::to_string(wayId)+ " ";
-    }
-
-    ss << "} ?way osmway:node ?member . ?member osmway:node ?node . } GROUP BY ?node";
+    ss << "WHERE { ";
+    ss << getValuesClause("osmway:", wayIds);
+    ss << "?val osmway:node ?member . ?member osmway:node ?node . } GROUP BY ?node";
     return ss.str();
 }
 
@@ -152,15 +122,9 @@ std::string olu::sparql::QueryWriter::writeQueryForRelationMembers(const std::se
     std::ostringstream ss;
     ss << "SELECT ?p ";
     ss << getFromClauseOptional();
-    ss << "WHERE { VALUES ?rel { ";
-
-    for (const auto & relId : relIds) {
-        ss << "osmrel:";
-        ss << std::to_string(relId);
-        ss << " ";
-    }
-
-    ss << "} ?rel osmrel:member ?o . ?o osm2rdfmember:id ?p . } GROUP BY ?p";
+    ss << "WHERE { ";
+    ss << getValuesClause("osmrel:", relIds);
+    ss << "?val osmrel:member ?o . ?o osm2rdfmember:id ?p . } GROUP BY ?p";
     return ss.str();
 }
 
@@ -170,15 +134,9 @@ olu::sparql::QueryWriter::writeQueryForWaysReferencingNodes(const std::set<id_t>
     std::ostringstream ss;
     ss << "SELECT ?way ";
     ss << getFromClauseOptional();
-    ss << "WHERE { VALUES ?node { ";
-
-    for (const auto & nodeId : nodeIds) {
-        ss << "osmnode:";
-        ss << std::to_string(nodeId);
-        ss << " ";
-    }
-
-    ss << "} ?identifier osmway:node ?node . ?way osmway:node ?identifier . } GROUP BY ?way";
+    ss << "WHERE { ";
+    ss << getValuesClause("osmnode:", nodeIds);
+    ss << "?identifier osmway:node ?val . ?way osmway:node ?identifier . } GROUP BY ?way";
     return ss.str();
 }
 
@@ -188,15 +146,9 @@ olu::sparql::QueryWriter::writeQueryForRelationsReferencingNodes(const std::set<
     std::ostringstream ss;
     ss << "SELECT ?s ";
     ss << getFromClauseOptional();
-    ss << "WHERE { VALUES ?node { ";
-
-    for (const auto & nodeId : nodeIds) {
-        ss << "osmnode:";
-        ss << std::to_string(nodeId);
-        ss << " ";
-    }
-
-    ss << "} ?s osmrel:member ?o . ?o osm2rdfmember:id ?node . } GROUP BY ?s";
+    ss << "WHERE { ";
+    ss << getValuesClause("osmnode:", nodeIds);
+    ss << "?s osmrel:member ?o . ?o osm2rdfmember:id ?val . } GROUP BY ?s";
     return ss.str();
 }
 
@@ -206,15 +158,9 @@ olu::sparql::QueryWriter::writeQueryForRelationsReferencingWays(const std::set<i
     std::ostringstream ss;
     ss << "SELECT ?s ";
     ss << getFromClauseOptional();
-    ss << "WHERE { VALUES ?way { ";
-
-    for (const auto & wayId : wayIds) {
-        ss << "osmway:";
-        ss << std::to_string(wayId);
-        ss << " ";
-    }
-
-    ss << "} ?s osmrel:member ?o . ?o osm2rdfmember:id ?way . } GROUP BY ?s";
+    ss << "WHERE { ";
+    ss << getValuesClause("osmway:", wayIds);
+    ss << "?s osmrel:member ?o . ?o osm2rdfmember:id ?val . } GROUP BY ?s";
     return ss.str();
 }
 
@@ -224,16 +170,10 @@ olu::sparql::QueryWriter::writeQueryForRelationsReferencingRelations(const std::
     std::ostringstream ss;
     ss << "SELECT ?s ";
     ss << getFromClauseOptional();
-    ss << "WHERE { VALUES ?rel { ";
-
-    for (const auto & relId : relationIds) {
-        ss << "osmrel:";
-        ss << std::to_string(relId);
-        ss << " ";
-    }
-
-    ss << "} ?s osmrel:member ?o . "
-          "?o osm2rdfmember:id ?rel . } "
+    ss << "WHERE { ";
+    ss << getValuesClause("osmrel:", relationIds);
+    ss << "?s osmrel:member ?o . "
+          "?o osm2rdfmember:id ?val . } "
           "GROUP BY ?s";
     return ss.str();
 }
@@ -255,6 +195,20 @@ std::string olu::sparql::QueryWriter::writeQueryForTagsAndTimestamp(const std::s
 
 std::string olu::sparql::QueryWriter::getFromClauseOptional() const {
     return  _config.graphUri.empty() ? "" : "FROM <" +_config.graphUri + "> ";
+}
+
+std::string olu::sparql::QueryWriter::getValuesClause(const std::string &osmTag,
+                                                      const std::set<id_t> &ids) {
+    std::ostringstream ss;
+    ss << "VALUES ?val { ";
+    for (const auto & id : ids) {
+        ss << osmTag;
+        ss << std::to_string(id);
+        ss << " ";
+    }
+    ss << "} ";
+
+    return  ss.str();
 }
 
 std::string olu::sparql::QueryWriter::wrapWithGraphOptional(const std::string& clause) const {
