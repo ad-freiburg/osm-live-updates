@@ -280,6 +280,16 @@ std::string olu::config::Config::getInfo(std::string_view prefix) const {
         }
     }
 
+    if (sparqlOutput != ENDPOINT) {
+        oss
+        << prefix
+        << osm2rdf::util::currentTimeFormatted()
+        << olu::config::constants::SPARQL_OUTPUT_INFO
+        << " "
+        << sparqlOutputFile
+        << std::endl;
+    }
+
     return oss.str();
 }
 

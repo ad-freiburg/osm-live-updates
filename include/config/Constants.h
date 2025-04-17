@@ -200,7 +200,7 @@ namespace olu::config::constants {
     const static inline std::string SPARQL_UPDATE_PATH_OPTION_HELP =
          "Specify a different URI for SPARQL updates.";
 
-    const static inline std::string SPARQL_OUTPUT_INFO = "Update Output:";
+    const static inline std::string SPARQL_OUTPUT_INFO = "SPARQL update output is set to file:";
     const static inline std::string SPARQL_OUTPUT_OPTION_SHORT = "o";
     const static inline std::string SPARQL_OUTPUT_OPTION_LONG = "sparql-output";
     const static inline std::string SPARQL_OUTPUT_OPTION_HELP =
