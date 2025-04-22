@@ -11,9 +11,10 @@ object in the *OsmChange* file.
 ## Preconditions
 
 The OpenStreetMap (OSM) data must be converted to [RDF Turtle](https://www.w3.org/TR/turtle/) (TTL)
-format using the osm2rdf tool, with the `--add-way-node-order` option enabled. To maintain data 
-consistency and reduce the size of the resulting `.ttl` file, the `--write-ogc-geo-triples none` 
-option can be used optionally, as updating GeoSPARQL (`ogc:`) triples is not currently supported.
+format using the osm2rdf tool, with the `--add-untagged-nodes-geometric-relations` option enabled. 
+To maintain data consistency and reduce the size of the resulting `.ttl` file, the 
+`--write-ogc-geo-triples none` option can be used optionally, as updating GeoSPARQL (`ogc:`) triples 
+is not currently supported.
 
 ## OsmChange files
 
