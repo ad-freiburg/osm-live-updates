@@ -41,12 +41,26 @@ std::string olu::sparql::QueryWriter::writeInsertQuery(const std::vector<std::st
 // _________________________________________________________________________________________________
 std::string
 olu::sparql::QueryWriter::writeDeleteQuery(const std::set<id_t> &ids, const std::string &osmTag) const {
+    std::string optionalPredicates;
+    if (osmTag == "osmnode") {
+        optionalPredicates = "VALUES ?pred { geo:asWKT }";
+    } else if (osmTag == "osmway") {
+        optionalPredicates = "VALUES ?pred { osmway:member_id osmway:member_pos geo:asWKT }";
+    } else if (osmTag == "osmrel") {
+        optionalPredicates = "VALUES ?pred { osmrel:member_id osmrel:member_role osmrel:member_pos geo:asWKT }";
+    } else {
+        const std::string msg = "Unknown osmTag: " + osmTag;
+        throw QueryWriterException(msg.c_str());
+    }
+
     std::ostringstream oss;
     oss << "DELETE { ";
-    oss << wrapWithGraphOptional("?s ?p1 ?o1 . ?o1 ?p2 ?o2 . ");
-    oss << "WHERE { ";
+    oss << wrapWithGraphOptional("?val ?p1 ?o1 . ?o1 ?pred ?o2 . ");
+    oss << "} WHERE { ";
     oss << getValuesClause(osmTag + ":", ids);
-    oss << wrapWithGraphOptional("?val ?p1 ?o1 FILTER (! STRSTARTS(?p1, ogc:)) . OPTIONAL { ?o1 ?p2 ?o2. }");
+    oss << wrapWithGraphOptional(
+        "?val ?p1 ?o1 FILTER (! STRSTARTS(?p1, ogc:)) . "
+        "OPTIONAL {" + optionalPredicates + " ?o1 ?pred ?o2. }");
     oss << " }";
     return oss.str();
 }

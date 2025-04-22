@@ -137,18 +137,21 @@ namespace olu::config::constants {
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_NODE_DELETE_QUERY {
-        "PREFIX osmnode: <https://www.openstreetmap.org/node/>",
-        "PREFIX ogc: <http://www.opengis.net/rdf#>"
+            "PREFIX osmnode: <https://www.openstreetmap.org/node/>",
+            "PREFIX ogc: <http://www.opengis.net/rdf#>",
+            "PREFIX geo: <http://www.opengis.net/ont/geosparql#>"
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_WAY_DELETE_QUERY {
             "PREFIX osmway: <https://www.openstreetmap.org/way/>",
-            "PREFIX ogc: <http://www.opengis.net/rdf#>"
+            "PREFIX ogc: <http://www.opengis.net/rdf#>",
+            "PREFIX geo: <http://www.opengis.net/ont/geosparql#>"
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_RELATION_DELETE_QUERY {
             "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
-            "PREFIX ogc: <http://www.opengis.net/rdf#>"
+            "PREFIX ogc: <http://www.opengis.net/rdf#>",
+            "PREFIX geo: <http://www.opengis.net/ont/geosparql#>"
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_WAYS_REFERENCING_NODE {

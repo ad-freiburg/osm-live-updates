@@ -111,6 +111,20 @@ namespace olu::sparql {
 
         [[nodiscard]] std::string wrapWithGraphOptional(const std::string& clause) const;
     };
+
+    /**
+ * Exception that can appear inside the `QueryWriter` class.
+ */
+    class QueryWriterException final : public std::exception {
+        std::string message;
+
+    public:
+        explicit QueryWriterException(const char* msg) : message(msg) { }
+
+        [[nodiscard]] const char* what() const noexcept override {
+            return message.c_str();
+        }
+    };
 } // namespace olu::sparql
 
 #endif //OSM_LIVE_UPDATES_QUERYWRITER_H
