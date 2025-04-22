@@ -51,7 +51,7 @@ namespace olu::osm {
                        cnst::PATH_TO_OUTPUT_FILE,
                        "-t",
                        cnst::PATH_TO_SCRATCH_DIRECTORY,
-                       "--" + osm2rdf::config::constants::ADD_WAY_NODE_ORDER_OPTION_LONG,
+                       "--" + osm2rdf::config::constants::UNTAGGED_NODES_SPATIAL_RELS_OPTION_LONG,
                        "--" + osm2rdf::config::constants::OUTPUT_COMPRESS_OPTION_LONG,
                        "none",
                        "--" + osm2rdf::config::constants::OGC_GEO_TRIPLES_OPTION_LONG,
