@@ -23,6 +23,7 @@
 #include "sparql/QueryWriter.h"
 #include "util/OsmObjectHelper.h"
 #include "util/TtlHelper.h"
+#include "osm2rdf/util/Time.h"
 
 #include <boost/property_tree/ptree.hpp>
 #include <string>
@@ -58,7 +59,10 @@ namespace olu::osm {
                                                                        _queryWriter(config),
                                                                        _odf(config) {
         try {
-            std::cout << "Process change file..." << std::endl;
+            std::cout
+            << osm2rdf::util::currentTimeFormatted()
+            << "Process change file..."
+            << std::endl;
             const auto decompressed = util::Decompressor::readGzip(cnst::PATH_TO_CHANGE_FILE);
             util::XmlReader::populatePTreeFromString(decompressed, _osmChangeElement);
             _osmChangeElement = _osmChangeElement.get_child(cnst::OSM_CHANGE_TAG);
@@ -79,7 +83,10 @@ namespace olu::osm {
         getIdsOfWaysToUpdateGeo();
         getIdsOfRelationsToUpdateGeo();
 
-        std::cout << "Fetch references..." << std::endl;
+        std::cout
+        << osm2rdf::util::currentTimeFormatted()
+        << "Fetch references..."
+        << std::endl;
         // Get the ids of all referenced objects
 //        getReferencedRelations(); Skipped atm because osm2rdf does not calculate the geometry for
 //                                  relations that reference other relations
@@ -105,15 +112,18 @@ namespace olu::osm {
         // Cache of sparql endpoint has to be cleared after the completion`
         _sparql.clearCache();
 
-        std::cout << "nodes created: " << _createdNodes.size() << " modified: "
-                << _modifiedNodes.size() << " deleted: " << _deletedNodes.size() << std::endl;
-        std::cout << "ways created: " << _createdWays.size() << " modified: "
-                << _modifiedWays.size() << " deleted: " << _deletedWays.size() << std::endl;
-        std::cout << "relations created: " << _createdRelations.size() << " modified: "
-                << _modifiedRelations.size() << " deleted: " << _deletedRelations.size() <<
-                std::endl;
-        std::cout << "updated geometries for " << _waysToUpdateGeometry.size() << " ways "
-                << _relationsToUpdateGeometry.size() << " relations" << std::endl;
+        std::cout << osm2rdf::util::currentTimeFormatted() << "nodes created: "
+            << _createdNodes.size() << " modified: " << _modifiedNodes.size() << " deleted: "
+            << _deletedNodes.size() << std::endl;
+        std::cout << osm2rdf::util::currentTimeFormatted() << "ways created: "
+            << _createdWays.size() << " modified: " << _modifiedWays.size() << " deleted: "
+            << _deletedWays.size() << std::endl;
+        std::cout << osm2rdf::util::currentTimeFormatted() << "relations created: "
+            << _createdRelations.size() << " modified: " << _modifiedRelations.size()
+            << " deleted: " << _deletedRelations.size() << std::endl;
+        std::cout << osm2rdf::util::currentTimeFormatted() << "updated geometries for "
+            << _waysToUpdateGeometry.size() << " ways " << _relationsToUpdateGeometry.size()
+            << " relations" << std::endl;
     }
 
     void OsmChangeHandler::createTmpFiles() {
@@ -349,7 +359,10 @@ namespace olu::osm {
             return;
         }
 
-        std::cout << "Create referenced objects..." << std::endl;
+        std::cout
+        << osm2rdf::util::currentTimeFormatted()
+        << "Create referenced objects..."
+        << std::endl;
         osm2rdf::util::ProgressBar createProgress(count, _config.showProgress);
         size_t counter = 0;
         createProgress.update(counter);
@@ -497,11 +510,17 @@ namespace olu::osm {
             + _relationsToUpdateGeometry.size();
 
         if (count == 0) {
-            std::cout << "No elements to delete..." << std::endl;
+            std::cout
+            << osm2rdf::util::currentTimeFormatted()
+            << "No elements to delete..."
+            << std::endl;
             return;
         }
 
-        std::cout << "Deleting elements from database..." << std::endl;
+        std::cout
+        << osm2rdf::util::currentTimeFormatted()
+        << "Deleting elements from database..."
+        << std::endl;
         osm2rdf::util::ProgressBar deleteProgress(count, _config.showProgress);
         size_t counter = 0;
         deleteProgress.update(counter);
@@ -518,11 +537,17 @@ namespace olu::osm {
         auto triples = filterRelevantTriples();
 
         if (triples.empty()) {
-            std::cout << "No triples to insert into database..." << std::endl;
+            std::cout
+            << osm2rdf::util::currentTimeFormatted()
+            << "No triples to insert into database..."
+            << std::endl;
             return;
         }
 
-        std::cout << "Inserting triples into database..." << std::endl;
+        std::cout
+        << osm2rdf::util::currentTimeFormatted()
+        << "Inserting triples into database..."
+        << std::endl;
         osm2rdf::util::ProgressBar insertProgress(triples.size(), _config.showProgress);
         size_t counter = 0;
         insertProgress.update(counter);

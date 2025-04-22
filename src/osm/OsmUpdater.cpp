@@ -33,6 +33,18 @@ namespace olu::osm {
             std::cerr << e.what() << std::endl;
             throw OsmUpdaterException("Failed to create temporary directories");
         }
+
+        if (_config.sparqlOutput != config::ENDPOINT) {
+            try {
+                std::ofstream outputFile;
+                outputFile.open (_config.sparqlOutputFile,
+                    std::ofstream::out | std::ios_base::trunc);
+                outputFile.close();
+            } catch (const std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                throw OsmUpdaterException("Failed to clear sparql output file");
+            }
+        }
     }
 
     void OsmUpdater::run() {
@@ -51,6 +63,7 @@ namespace olu::osm {
             och.run();
         } else {
             std::cout
+            << osm2rdf::util::currentTimeFormatted()
             << "Determine sequence number to start with ..."
             << std::endl;
 
@@ -81,7 +94,7 @@ namespace olu::osm {
             std::cout
             << osm2rdf::util::currentTimeFormatted()
             << "Process changes in "
-            << _latestState.sequenceNumber - sequenceNumber
+            << _latestState.sequenceNumber - sequenceNumber + 1
             << " change files"
             << std::endl;
 
@@ -168,7 +181,10 @@ namespace olu::osm {
     }
 
     void OsmUpdater::fetchChangeFiles(int sequenceNumber) {
-        std::cout << "Fetch and merge change files..." << std::endl;
+        std::cout
+        << osm2rdf::util::currentTimeFormatted()
+        << "Fetch and merge change files..."
+        << std::endl;
 
         osm2rdf::util::ProgressBar downloadProgress(
             _latestState.sequenceNumber + 1 - sequenceNumber, _config.showProgress);

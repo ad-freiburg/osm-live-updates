@@ -219,14 +219,14 @@ std::string olu::config::Config::getInfo(std::string_view prefix) const {
     std::ostringstream oss;
 
     oss
-    << prefix
     << osm2rdf::util::currentTimeFormatted()
+    << prefix
     << olu::config::constants::HEADER
     << std::endl;
 
     oss
-    << prefix
     << osm2rdf::util::currentTimeFormatted()
+    << prefix
     << olu::config::constants::SPARQL_ENDPOINT_URI_INFO
     << " "
     << sparqlEndpointUri
@@ -234,8 +234,8 @@ std::string olu::config::Config::getInfo(std::string_view prefix) const {
 
     if (!graphUri.empty()) {
         oss
-        << prefix
         << osm2rdf::util::currentTimeFormatted()
+        << prefix
         << olu::config::constants::SPARQL_GRAPH_URI_INFO
         << " "
         << graphUri
@@ -244,8 +244,8 @@ std::string olu::config::Config::getInfo(std::string_view prefix) const {
 
     if (!changeFileDir.empty()) {
         oss
-        << prefix
         << osm2rdf::util::currentTimeFormatted()
+        << prefix
         << olu::config::constants::PATH_TO_INPUT_INFO
         << " "
         << changeFileDir
@@ -253,8 +253,8 @@ std::string olu::config::Config::getInfo(std::string_view prefix) const {
     } else {
         if (!changeFileDirUri.empty()) {
             oss
-            << prefix
             << osm2rdf::util::currentTimeFormatted()
+            << prefix
             << olu::config::constants::OSM_CHANGE_FILE_DIRECTORY_URI_INFO
             << " "
             << changeFileDirUri
@@ -263,21 +263,31 @@ std::string olu::config::Config::getInfo(std::string_view prefix) const {
 
         if (sequenceNumber > 0) {
             oss
-            << prefix
             << osm2rdf::util::currentTimeFormatted()
+            << prefix
             << olu::config::constants::SEQUENCE_NUMBER_INFO
             << " "
             << sequenceNumber
             << std::endl;
         } else if (!timestamp.empty()) {
             oss
-            << prefix
             << osm2rdf::util::currentTimeFormatted()
+            << prefix
             << olu::config::constants::TIME_STAMP_INFO
             << " "
             << timestamp
             << std::endl;
         }
+    }
+
+    if (sparqlOutput != ENDPOINT) {
+        oss
+        << osm2rdf::util::currentTimeFormatted()
+        << prefix
+        << olu::config::constants::SPARQL_OUTPUT_INFO
+        << " "
+        << sparqlOutputFile
+        << std::endl;
     }
 
     return oss.str();
