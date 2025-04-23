@@ -82,6 +82,11 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
             olu::config::constants::SEQUENCE_NUMBER_OPTION_LONG,
             olu::config::constants::SEQUENCE_NUMBER_OPTION_HELP);
 
+    auto noBlankNodesOp = parser.add<popl::Switch, popl::Attribute::advanced>(
+            olu::config::constants::BLANK_NODES_OPTION_SHORT,
+            olu::config::constants::BLANK_NODES_OPTION_LONG,
+            olu::config::constants::BLANK_NODES_OPTION_HELP);
+
     try {
         parser.parse(argc, argv);
 
@@ -159,6 +164,8 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
         if (sparqlAccessTokenOp->is_set()) {
             accessToken = sparqlAccessTokenOp->value();
         }
+
+        noBlankNodes = noBlankNodesOp->is_set();
 
         if (sparqlUpdateUri->is_set()) {
             sparqlEndpointUriForUpdates = sparqlUpdateUri->value();
@@ -280,13 +287,11 @@ std::string olu::config::Config::getInfo(std::string_view prefix) const {
         }
     }
 
-    if (sparqlOutput != ENDPOINT) {
+    if (noBlankNodes) {
         oss
         << osm2rdf::util::currentTimeFormatted()
         << prefix
-        << olu::config::constants::SPARQL_OUTPUT_INFO
-        << " "
-        << sparqlOutputFile
+        << olu::config::constants::BLANK_NODES_INFO
         << std::endl;
     }
 

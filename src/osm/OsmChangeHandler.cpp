@@ -98,7 +98,8 @@ namespace olu::osm {
 
         // Convert osm objects to triples
         try {
-            Osm2ttl::convert();
+            Osm2ttl osm2ttl(_config);
+            osm2ttl.convert();
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
             throw OsmChangeHandlerException(

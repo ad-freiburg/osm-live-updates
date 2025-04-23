@@ -118,8 +118,8 @@ find_package(POPL REQUIRED)
 include_directories(SYSTEM ${POPL_INCLUDE_DIR})
 
 FetchContent_Declare(osm2rdf
-        GIT_REPOSITORY  https://github.com/ad-freiburg/osm2rdf.git
-        GIT_TAG 07a9f65216f6df2fce5d064156e6d15903e8ccfd
+        GIT_REPOSITORY  https://github.com/nicolano/osm2rdf.git
+        GIT_TAG 3ef86ff9ad22bf7ee3a60192c1e8473bb8432d33
 )
 FetchContent_MakeAvailable(osm2rdf)
 include_directories(SYSTEM ${osm2rdf_SOURCE_DIR}/include)

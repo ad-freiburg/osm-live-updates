@@ -92,6 +92,7 @@ namespace olu::config::constants {
         "PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>"
         "PREFIX osm2rdfkey: <https://osm2rdf.cs.uni-freiburg.de/rdf/key#>"
         "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
+        "PREFIX genid: <http://osm2rdf.cs.uni-freiburg.de/.well-known/genid/>"
         "PREFIX ohmway: <https://www.openhistoricalmap.org/way/>"
         "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>"
         "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>"
@@ -239,6 +240,12 @@ namespace olu::config::constants {
     const static inline std::string TIME_STAMP_OPTION_LONG = "timestamp";
     const static inline std::string TIME_STAMP_OPTION_HELP =
             "The time stamp to start the update process from.";
+
+    const static inline std::string BLANK_NODES_INFO = "Blank nodes are masked";
+    const static inline std::string BLANK_NODES_OPTION_SHORT = "";
+    const static inline std::string BLANK_NODES_OPTION_LONG = "no-blank-nodes";
+    const static inline std::string BLANK_NODES_OPTION_HELP =
+        "Avoid blank nodes by using a unique identifier for each member";
 
 } // namespace olu::config::constants
 

@@ -52,6 +52,9 @@ struct Config {
     // User specified timestamp from command line
     std::string timestamp;
 
+    // Specifies if osm2rdf should be run with the option to mask blank nodes
+    bool noBlankNodes = false;
+
     // Specifies whether a progress bar should be shown
     bool showProgress = true;
 
