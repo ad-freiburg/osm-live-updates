@@ -36,7 +36,7 @@ namespace olu::osm {
     Osm2ttl::Osm2ttl(const olu::config::Config& config) : _config(config) {}
 
     // _____________________________________________________________________________________________
-    std::filesystem::path Osm2ttl::convert() const {
+    void Osm2ttl::convert() const {
         writeToInputFile();
 
         // Create a directory for scratch, if not already existent
@@ -91,8 +91,6 @@ namespace olu::osm {
             std::cerr << e.what() << std::endl;
             std::exit(osm2rdf::config::ExitCode::EXCEPTION);
         }
-
-        return config.output;
     }
 
     // _____________________________________________________________________________________________

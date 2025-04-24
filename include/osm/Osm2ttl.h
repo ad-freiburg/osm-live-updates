@@ -30,7 +30,7 @@ namespace olu::osm {
         explicit Osm2ttl(const olu::config::Config &config);
 
         // Converts osm data to ttl triplets
-        [[nodiscard]] std::filesystem::path convert() const;
+        void convert() const;
     private:
         olu::config::Config _config;
 
