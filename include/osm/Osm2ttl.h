@@ -19,6 +19,7 @@
 #ifndef OSM_LIVE_UPDATES_OSM2TTL_H
 #define OSM_LIVE_UPDATES_OSM2TTL_H
 
+#include <config/Config.h>
 #include <osm2rdf/config/Config.h>
 #include <osm2rdf/util/Output.h>
 
@@ -26,9 +27,13 @@ namespace olu::osm {
 
     class Osm2ttl {
     public:
+        explicit Osm2ttl(const olu::config::Config &config);
+
         // Converts osm data to ttl triplets
-        static std::filesystem::path convert() ;
+        void convert() const;
     private:
+        olu::config::Config _config;
+
         template <typename T>
         static void run(const osm2rdf::config::Config& config);
         static void writeToInputFile();

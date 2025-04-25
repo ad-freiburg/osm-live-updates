@@ -117,7 +117,7 @@ namespace olu::osm {
             std::string locationAsWkt;
             for (const auto &binding : result.second.get_child("")) {
                 auto name = util::XmlReader::readAttribute("<xmlattr>.name", binding.second);
-                if (name == "nodeGeo") {
+                if (name == "val") {
                     auto uri = binding.second.get<std::string>("uri");
                     id = OsmObjectHelper::getIdFromUri(uri);
                 }
@@ -217,7 +217,7 @@ namespace olu::osm {
             std::string memberPositions;
             for (const auto &binding : result.second.get_child("")) {
                 auto name = util::XmlReader::readAttribute("<xmlattr>.name",binding.second);
-                if (name == "rel") {
+                if (name == "val") {
                     auto relUri = binding.second.get<std::string>("uri");
                     relationId = OsmObjectHelper::getIdFromUri(relUri);
                 }
@@ -290,7 +290,7 @@ namespace olu::osm {
             std::string nodePositions;
             for (const auto &binding : result.second.get_child("")) {
                 auto name = util::XmlReader::readAttribute("<xmlattr>.name",binding.second);
-                if (name == "way") {
+                if (name == "val") {
                     auto wayUri = binding.second.get<std::string>("uri");
                     wayId = OsmObjectHelper::getIdFromUri(wayUri);
                 }

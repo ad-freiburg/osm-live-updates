@@ -33,9 +33,10 @@
 namespace cnst = olu::config::constants;
 
 namespace olu::osm {
+    Osm2ttl::Osm2ttl(const olu::config::Config& config) : _config(config) {}
 
     // _____________________________________________________________________________________________
-    std::filesystem::path Osm2ttl::convert() {
+    void Osm2ttl::convert() const {
         writeToInputFile();
 
         // Create a directory for scratch, if not already existent
@@ -51,12 +52,16 @@ namespace olu::osm {
                        cnst::PATH_TO_OUTPUT_FILE,
                        "-t",
                        cnst::PATH_TO_SCRATCH_DIRECTORY,
-                       "--" + osm2rdf::config::constants::UNTAGGED_NODES_SPATIAL_RELS_OPTION_LONG,
                        "--" + osm2rdf::config::constants::OUTPUT_COMPRESS_OPTION_LONG,
                        "none",
                        "--" + osm2rdf::config::constants::OGC_GEO_TRIPLES_OPTION_LONG,
                        "none"
                        };
+
+        if (_config.noBlankNodes) {
+            arguments.emplace_back("--" + osm2rdf::config::constants::BLANK_NODES_OPTION_LONG);
+        }
+
         std::vector<char*> argv;
         for (const auto& arg : arguments) {
             argv.push_back((char*)arg.data());
@@ -86,8 +91,6 @@ namespace olu::osm {
             std::cerr << e.what() << std::endl;
             std::exit(osm2rdf::config::ExitCode::EXCEPTION);
         }
-
-        return config.output;
     }
 
     // _____________________________________________________________________________________________

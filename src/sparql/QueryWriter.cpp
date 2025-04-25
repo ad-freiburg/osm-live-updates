@@ -57,8 +57,8 @@ olu::sparql::QueryWriter::writeDeleteQuery(const std::set<id_t> &ids, const std:
     oss << "DELETE { ";
     oss << wrapWithGraphOptional("?val ?p1 ?o1 . ?o1 ?pred ?o2 . ");
     oss << "} WHERE { ";
-    oss << getValuesClause(osmTag + ":", ids);
     oss << wrapWithGraphOptional(
+        getValuesClause(osmTag + ":", ids) +
         "?val ?p1 ?o1 FILTER (! STRSTARTS(?p1, ogc:)) . "
         "OPTIONAL {" + optionalPredicates + " ?o1 ?pred ?o2. }");
     oss << " }";
@@ -69,7 +69,7 @@ olu::sparql::QueryWriter::writeDeleteQuery(const std::set<id_t> &ids, const std:
 std::string
 olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::set<id_t> &nodeIds) const {
     std::ostringstream oss;
-    oss << "SELECT ?nodeGeo ?location ";
+    oss << "SELECT ?val ?location ";
     oss << getFromClauseOptional();
     oss << "WHERE { ";
     oss << getValuesClause("osm2rdfgeom:osm_node_", nodeIds);
