@@ -457,6 +457,7 @@ namespace olu::osm {
         std::set<id_t> nodesToDelete;
         nodesToDelete.insert(_deletedNodes.begin(), _deletedNodes.end());
         nodesToDelete.insert(_modifiedNodes.begin(), _modifiedNodes.end());
+        nodesToDelete.insert(_createdNodes.begin(), _createdNodes.end());
 
         doInBatches(
             nodesToDelete,
@@ -474,6 +475,7 @@ namespace olu::osm {
         waysToDelete.insert(_deletedWays.begin(), _deletedWays.end());
         waysToDelete.insert(_modifiedWays.begin(), _modifiedWays.end());
         waysToDelete.insert(_waysToUpdateGeometry.begin(), _waysToUpdateGeometry.end());
+        waysToDelete.insert(_createdWays.begin(), _createdWays.end());
 
         doInBatches(
             waysToDelete,
@@ -492,6 +494,7 @@ namespace olu::osm {
         relationsToDelete.insert(_modifiedRelations.begin(), _modifiedRelations.end());
         relationsToDelete.insert(_relationsToUpdateGeometry.begin(),
                                  _relationsToUpdateGeometry.end());
+        relationsToDelete.insert(_createdRelations.begin(), _createdRelations.end());
 
         doInBatches(
             relationsToDelete,
