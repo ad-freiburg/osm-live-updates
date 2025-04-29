@@ -44,7 +44,7 @@ namespace olu::util {
         }
 
         if (osmTag == cnst::WAY_TAG) {
-            return predicate == "osmway:node" ||
+            return predicate == "osmway:member" ||
                    predicate == "geo:hasCentroid" ||
                    predicate == "geo:hasGeometry";
         }
