@@ -59,7 +59,7 @@ olu::sparql::QueryWriter::writeDeleteQuery(const std::set<id_t> &ids, const std:
     oss << "} WHERE { ";
     oss << wrapWithGraphOptional(
         getValuesClause(osmTag + ":", ids) +
-        "?val ?p1 ?o1 FILTER (! STRSTARTS(?p1, ogc:)) . "
+        "?val ?p1 ?o1 FILTER (! STRSTARTS(STR(?p1), STR(ogc:))) . "
         "OPTIONAL {" + optionalPredicates + " ?o1 ?pred ?o2. }");
     oss << " }";
     return oss.str();
