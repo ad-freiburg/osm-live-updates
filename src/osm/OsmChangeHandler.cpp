@@ -59,10 +59,6 @@ namespace olu::osm {
                                                                        _queryWriter(config),
                                                                        _odf(config) {
         try {
-            std::cout
-            << osm2rdf::util::currentTimeFormatted()
-            << "Process change file..."
-            << std::endl;
             const auto decompressed = util::Decompressor::readGzip(cnst::PATH_TO_CHANGE_FILE);
             util::XmlReader::populatePTreeFromString(decompressed, _osmChangeElement);
             _osmChangeElement = _osmChangeElement.get_child(cnst::OSM_CHANGE_TAG);
@@ -122,7 +118,7 @@ namespace olu::osm {
             << _createdRelations.size() << " modified: " << _modifiedRelations.size()
             << " deleted: " << _deletedRelations.size() << std::endl;
         std::cout << osm2rdf::util::currentTimeFormatted() << "updated geometries for "
-            << _waysToUpdateGeometry.size() << " ways " << _relationsToUpdateGeometry.size()
+            << _waysToUpdateGeometry.size() << " ways and " << _relationsToUpdateGeometry.size()
             << " relations" << std::endl;
     }
 
