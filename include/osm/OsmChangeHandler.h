@@ -58,6 +58,8 @@ namespace olu::osm {
         std::set<id_t> _createdNodes;
         // Nodes that are in a modify-changeset in the change file.
         std::set<id_t> _modifiedNodes;
+        // Nodes that where modified in the changeset and have a location that has changed.
+        std::set<id_t> _modifiedNodesWithChangedLocation;
         // Nodes that are referenced by a way or relation that are NOT present in the change file,
         // meaning they have to be fetched from the database
         std::set<id_t> _referencedNodes;
@@ -135,6 +137,17 @@ namespace olu::osm {
          * corresponding set (_createdNodes, _modifiedNodes, _deletedNodes, etc.).
          */
         void storeIdsOfElementsInChangeFile();
+
+        /**
+         * Checks if the location of the given nodes from the change file has changed. If so, the
+         * node is added to the _modifiedNodesWithChangedLocation set, otherwise to the
+         * _modifiedNodes set
+         *
+         * @param nodeIds The ids of the nodes to check
+         * @param nodeLocs The locations of the nodes to check
+         */
+        void checkNodesForLocationChange(std::set<id_t> &nodeIds,
+                                         const std::vector<osmium::Location> & nodeLocs);
 
         /**
          * Stores the ids of the nodes and ways that are referenced in the given relation or way in
@@ -258,6 +271,14 @@ namespace olu::osm {
          * @return The id of the element
          */
         static id_t getIdFor(const boost::property_tree::ptree &element);
+
+        /**
+         * Returns the elements location.
+         *
+         * @param element The osm element
+         * @return The location of the element
+         */
+        static osmium::Location getLocationFor(const boost::property_tree::ptree &element);
     };
 
     /**

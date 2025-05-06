@@ -70,6 +70,8 @@ namespace olu::config::constants {
 
     const static inline std::string NODE_REFERENCE_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "ref";
     const static inline std::string ID_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "id";
+    const static inline std::string LATITUDE_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "lat";
+    const static inline std::string LONGITUDE_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "lon";
 
     // SPARQL
     const static inline std::string OSM_WAY_URI = "https://www.openstreetmap.org/way/";
@@ -77,6 +79,35 @@ namespace olu::config::constants {
     const static inline std::string OSM_REL_URI = "https://www.openstreetmap.org/relation/";
     const static inline std::string OSM_GEOM_NODE_URI = "https://osm2rdf.cs.uni-freiburg.de/rdf/geom#osm_node_";
     const static inline std::string OSM_TAG_KEY = "https://www.openstreetmap.org/wiki/Key:";
+
+    // osm2rdf predicates
+    const static inline std::string OSM_2_RDF_WAY_MEMBER = "osmway:member";
+    const static inline std::string OSM_2_RDF_WAY_MEMBER_ID = "osmway:member_id";
+    const static inline std::string OSM_2_RDF_WAY_MEMBER_POS = "osmway:member_pos";
+
+    const static inline std::string OSM_2_RDF_RELATION_MEMBER = "osmrel:member";
+    const static inline std::string OSM_2_RDF_RELATION_MEMBER_ID = "osmrel:member_id";
+    const static inline std::string OSM_2_RDF_RELATION_MEMBER_POS = "osmrel:member_pos";
+    const static inline std::string OSM_2_RDF_RELATION_MEMBER_ROLE = "osmrel:member_role";
+
+    const static inline std::string OSM_2_RDF_GEO_HAS_GEOMETRY = "geo:hasGeometry";
+    const static inline std::string OSM_2_RDF_GEO_HAS_CENTROID = "geo:hasCentroid";
+    const static inline std::string OSM_2_RDF_GEO_AS_WKT = "geo:asWKT";
+
+    // variable names in query writer class
+    const static inline std::string QUERY_VARIABLE_TYPE = "type";
+    const static inline std::string QUERY_VARIABLE_KEY = "key";
+    const static inline std::string QUERY_VARIABLE_VALUE = "value";
+    const static inline std::string QUERY_VARIABLE_LOCATION = "location";
+    const static inline std::string QUERY_VARIABLE_TIMESTAMP = "timestamp";
+    const static inline std::string QUERY_VARIABLE_VERSION = "version";
+    const static inline std::string QUERY_VARIABLE_CHANGESET = "changeset";
+
+    const static inline std::string QUERY_VARIABLE_NODES = "nodes";
+
+    const static inline std::string QUERY_VARIABLE_MEMBER_URIS = "memberUris";
+    const static inline std::string QUERY_VARIABLE_MEMBER_ROLES = "memberRoles";
+    const static inline std::string QUERY_VARIABLE_MEMBER_POSITIONS = "memberPositions";
 
     const static inline std::vector<std::string> DEFAULT_PREFIXES{
         "PREFIX ohmnode: <https://www.openhistoricalmap.org/node/>"
@@ -121,14 +152,16 @@ namespace olu::config::constants {
             "PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>"
     };
 
-    const static inline std::vector<std::string> PREFIXES_FOR_WAY_TAGS{
+    const static inline std::vector<std::string> PREFIXES_FOR_WAY_TAGS_AND_META_INFO{
             "PREFIX osmway: <https://www.openstreetmap.org/way/>",
-            "PREFIX osmmeta: <https://www.openstreetmap.org/meta/>"
+            "PREFIX osmmeta: <https://www.openstreetmap.org/meta/>",
+            "PREFIX osmkey: <https://www.openstreetmap.org/wiki/Key:>"
     };
 
-    const static inline std::vector<std::string> PREFIXES_FOR_RELATION_TAGS{
+    const static inline std::vector<std::string> PREFIXES_FOR_RELATION_TAGS_AND_META_INFO{
             "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
-            "PREFIX osmmeta: <https://www.openstreetmap.org/meta/>"
+            "PREFIX osmmeta: <https://www.openstreetmap.org/meta/>",
+            "PREFIX osmkey: <https://www.openstreetmap.org/wiki/Key:>"
     };
 
     const static inline std::vector<std::string> PREFIXES_FOR_LATEST_NODE_TIMESTAMP {

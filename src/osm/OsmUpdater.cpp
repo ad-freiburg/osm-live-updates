@@ -93,9 +93,9 @@ namespace olu::osm {
 
             std::cout
             << osm2rdf::util::currentTimeFormatted()
-            << "Process changes in "
+            << "Process changes from "
             << _latestState.sequenceNumber - sequenceNumber + 1
-            << " change files"
+            << " change files..."
             << std::endl;
 
             auto och{OsmChangeHandler(_config)};

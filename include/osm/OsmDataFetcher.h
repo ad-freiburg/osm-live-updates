@@ -92,6 +92,17 @@ namespace olu::osm {
         std::vector<Node> fetchNodes(const std::set<id_t> &nodeIds);
 
         /**
+         * Sends a query to the sparql endpoint to get the location of the nodes with the given ids
+         *
+         * @warning It is not guaranteed that the SPARQL endpoint returns a location for each node
+         * ID, therefore the returned vector can have fewer elements than the given set of node ids
+         *
+         * @param nodeIds The ids of the nodes to fetch location for
+         * @return A vector containing the locations
+         */
+        std::vector<osmium::Location> fetchNodeLocations(const std::vector<id_t> &nodeIds);
+
+        /**
          * @return A vector containing a pair of the member's uri and role for all members of the
          * given relation.
          */

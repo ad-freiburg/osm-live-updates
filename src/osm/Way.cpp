@@ -26,6 +26,14 @@ namespace olu::osm {
         this->timestamp = timestamp;
     }
 
+    void Way::setVersion(version_t const &version) {
+        this->version = version;
+    }
+
+    void Way::setChangesetId(changeset_id_t const &changeset_id) {
+        this->changeset_id = changeset_id;
+    }
+
     void Way::addMember(id_t nodeId) {
         members.emplace_back(nodeId);
     }
@@ -40,6 +48,18 @@ namespace olu::osm {
         oss << "<way id=\"";
         oss << std::to_string(this->getId());
         oss << "\"";
+
+        if (this->version > 0) {
+            oss << " version=\"";
+            oss << this->version;
+            oss << "\"";
+        }
+
+        if (this->changeset_id > 0) {
+            oss << " changeset=\"";
+            oss << this->changeset_id;
+            oss << "\"";
+        }
 
         if (!this->timestamp.empty()) {
             oss << " timestamp=\"";

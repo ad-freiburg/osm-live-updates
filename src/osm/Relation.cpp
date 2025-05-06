@@ -16,6 +16,14 @@ namespace olu::osm {
         this->timestamp = timestamp;
     }
 
+    void Relation::setVersion(version_t const &version) {
+        this->version = version;
+    }
+
+    void Relation::setChangesetId(changeset_id_t const &changeset_id) {
+        this->changeset_id = changeset_id;
+    }
+
     void Relation::addMember(const RelationMember& member) {
         this->members.push_back(member);
     }
@@ -30,6 +38,18 @@ namespace olu::osm {
         oss << "<relation id=\"";
         oss << std::to_string(this->id);
         oss << "\"";
+
+        if (this->version > 0) {
+            oss << " version=\"";
+            oss << this->version;
+            oss << "\"";
+        }
+
+        if (this->changeset_id > 0) {
+            oss << " changeset=\"";
+            oss << this->changeset_id;
+            oss << "\"";
+        }
 
         if (!this->timestamp.empty()) {
             oss << " timestamp=\"";

@@ -39,20 +39,20 @@ namespace olu::util {
 
     bool TtlHelper::hasRelevantObject(const std::string& predicate, const std::string &osmTag) {
         if (osmTag == cnst::NODE_TAG) {
-            return predicate == "geo:hasCentroid" ||
-                   predicate == "geo:hasGeometry";
+            return predicate == cnst::OSM_2_RDF_GEO_HAS_CENTROID ||
+                   predicate == cnst::OSM_2_RDF_GEO_HAS_GEOMETRY;
         }
 
         if (osmTag == cnst::WAY_TAG) {
-            return predicate == "osmway:member" ||
-                   predicate == "geo:hasCentroid" ||
-                   predicate == "geo:hasGeometry";
+            return predicate == cnst::OSM_2_RDF_WAY_MEMBER ||
+                   predicate == cnst::OSM_2_RDF_GEO_HAS_CENTROID ||
+                   predicate == cnst::OSM_2_RDF_GEO_HAS_GEOMETRY;
         }
 
         if (osmTag == cnst::RELATION_TAG) {
-            return predicate == "osmrel:member" ||
-                   predicate == "geo:hasCentroid" ||
-                   predicate == "geo:hasGeometry";
+            return predicate == cnst::OSM_2_RDF_RELATION_MEMBER ||
+                   predicate == cnst::OSM_2_RDF_GEO_HAS_CENTROID ||
+                   predicate == cnst::OSM_2_RDF_GEO_HAS_GEOMETRY;
         }
 
         const std::string msg = "Cant interpret predicate: " + predicate;

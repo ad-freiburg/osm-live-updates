@@ -26,6 +26,8 @@
 namespace olu {
 
     typedef int64_t id_t;
+    typedef uint32_t changeset_id_t;
+    typedef uint32_t version_t;
 
     typedef std::string WKTPoint;
 
