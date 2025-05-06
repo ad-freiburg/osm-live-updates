@@ -108,8 +108,9 @@ namespace olu::osm {
         // Cache of sparql endpoint has to be cleared after the completion`
         _sparql.clearCache();
 
+        auto modifiedNodesCount = _modifiedNodes.size() + _modifiedNodesWithChangedLocation.size();
         std::cout << osm2rdf::util::currentTimeFormatted() << "nodes created: "
-            << _createdNodes.size() << " modified: " << _modifiedNodes.size() << " deleted: "
+            << _createdNodes.size() << " modified: " << modifiedNodesCount << " deleted: "
             << _deletedNodes.size() << std::endl;
         std::cout << osm2rdf::util::currentTimeFormatted() << "ways created: "
             << _createdWays.size() << " modified: " << _modifiedWays.size() << " deleted: "
@@ -120,6 +121,38 @@ namespace olu::osm {
         std::cout << osm2rdf::util::currentTimeFormatted() << "updated geometries for "
             << _waysToUpdateGeometry.size() << " ways and " << _relationsToUpdateGeometry.size()
             << " relations" << std::endl;
+    }
+
+    void
+    OsmChangeHandler::checkNodesForLocationChange(std::set<id_t> &nodeIds,
+                                                  const std::vector<osmium::Location> &nodeLocs) {
+        std::vector<Node> nodeLocsFromEndpoint;
+        doInBatches(
+            nodeIds,
+            MAX_VALUES_PER_QUERY,
+            [this, &nodeLocsFromEndpoint](std::set<id_t> const& batch) mutable {
+                std::vector<Node> nodes = _odf.fetchNodes(batch);
+                nodeLocsFromEndpoint.insert(nodeLocsFromEndpoint.end(),
+                    nodes.begin(), nodes.end());
+            });
+
+        if (nodeLocsFromEndpoint.size() != nodeLocs.size() ||
+            nodeLocsFromEndpoint.size() != nodeIds.size()) {
+            std::cerr << nodeLocsFromEndpoint.size() << " " << nodeLocs.size() << " " << nodeIds.size() << std::endl;
+            throw OsmChangeHandlerException("The number of modified nodes does not match "
+                                            "the number of node locations from the endpoint.");
+            }
+
+        size_t index = 0;
+        for (auto nodeId : nodeIds) {
+            if (nodeLocs[index] != nodeLocsFromEndpoint[index].getLocation()) {
+                _modifiedNodesWithChangedLocation.insert(nodeId);
+            } else {
+                _modifiedNodes.insert(nodeId);
+            }
+
+            index += 1;
+        }
     }
 
     void OsmChangeHandler::createTmpFiles() {
@@ -157,6 +190,9 @@ namespace olu::osm {
     }
 
     void OsmChangeHandler::storeIdsOfElementsInChangeFile() {
+        std::set<id_t> modifiedNodes;
+        std::vector<osmium::Location> modifiedNodeLocations;
+
         for (const auto &[changesetTag, changesetElement]: _osmChangeElement) {
             if (changesetTag == "<xmlattr>") { continue; }
 
@@ -165,7 +201,8 @@ namespace olu::osm {
 
                 if (changesetTag == cnst::MODIFY_TAG) {
                     if (elementTag == cnst::NODE_TAG) {
-                        _modifiedNodes.insert(id);
+                        modifiedNodes.emplace(id);
+                        modifiedNodeLocations.emplace_back(getLocationFor(element));
                     } else if (elementTag == cnst::WAY_TAG) {
                         _modifiedWays.insert(id);
                     } else if (elementTag == cnst::RELATION_TAG) {
@@ -195,7 +232,12 @@ namespace olu::osm {
             }
         }
 
-        if (_createdNodes.empty() && _modifiedNodes.empty() && _deletedNodes.empty() &&
+        // Check if the location of the modified nodes has changed and store them in the responding
+        // sets (_modifiedNodes or _modifiedNodesWithChangedLocation)
+        checkNodesForLocationChange(modifiedNodes, modifiedNodeLocations);
+
+        if (_createdNodes.empty() && _modifiedNodes.empty() &&
+            _modifiedNodesWithChangedLocation.empty() && _deletedNodes.empty() &&
             _createdWays.empty() && _modifiedWays.empty() && _deletedWays.empty() &&
             _createdRelations.empty() && _modifiedRelations.empty() && _deletedRelations.empty()) {
             throw OsmChangeHandlerException("Change file is empty.");
@@ -221,9 +263,9 @@ namespace olu::osm {
     }
 
     void OsmChangeHandler::getIdsOfWaysToUpdateGeo() {
-        if (!_modifiedNodes.empty()) {
+        if (!_modifiedNodesWithChangedLocation.empty()) {
             doInBatches(
-                _modifiedNodes,
+                _modifiedNodesWithChangedLocation,
                 MAX_VALUES_PER_QUERY,
                 [this](const std::set<id_t> &batch) {
                     for (const auto &wayId: _odf.fetchWaysReferencingNodes(batch)) {
@@ -237,9 +279,9 @@ namespace olu::osm {
 
     void OsmChangeHandler::getIdsOfRelationsToUpdateGeo() {
         // Get ids of relations that reference a modified node
-        if (!_modifiedNodes.empty()) {
+        if (!_modifiedNodesWithChangedLocation.empty()) {
             doInBatches(
-                _modifiedNodes,
+                _modifiedNodesWithChangedLocation,
                 MAX_VALUES_PER_QUERY,
                 [this](const std::set<id_t>& batch) {
                     for (const auto &relId: _odf.fetchRelationsReferencingNodes(batch)) {
@@ -453,6 +495,8 @@ namespace olu::osm {
         std::set<id_t> nodesToDelete;
         nodesToDelete.insert(_deletedNodes.begin(), _deletedNodes.end());
         nodesToDelete.insert(_modifiedNodes.begin(), _modifiedNodes.end());
+        nodesToDelete.insert(_modifiedNodesWithChangedLocation.begin(),
+                             _modifiedNodesWithChangedLocation.end());
         nodesToDelete.insert(_createdNodes.begin(), _createdNodes.end());
 
         doInBatches(
@@ -504,6 +548,7 @@ namespace olu::osm {
 
     void OsmChangeHandler::deleteTriplesFromDatabase() {
         const std::size_t count = _deletedNodes.size() + _modifiedNodes.size()
+            + _modifiedNodesWithChangedLocation.size()
             + _deletedWays.size() + _modifiedWays.size() + _waysToUpdateGeometry.size()
             + _deletedRelations.size() + _modifiedRelations.size()
             + _relationsToUpdateGeometry.size();
@@ -602,6 +647,8 @@ namespace olu::osm {
         std::set<id_t> nodesToInsert;
         nodesToInsert.insert(_createdNodes.begin(), _createdNodes.end());
         nodesToInsert.insert(_modifiedNodes.begin(), _modifiedNodes.end());
+        nodesToInsert.insert(_modifiedNodesWithChangedLocation.begin(),
+                             _modifiedNodesWithChangedLocation.end());
 
         std::set<id_t> waysToInsert;
         waysToInsert.insert(_createdWays.begin(), _createdWays.end());
@@ -749,4 +796,21 @@ namespace olu::osm {
         }
     }
 
+    osmium::Location OsmChangeHandler::getLocationFor(const boost::property_tree::ptree &element) {
+        double lat;
+        double lon;
+        try {
+            lat = std::stod(util::XmlReader::readAttribute(
+                config::constants::LATITUDE_ATTRIBUTE, element));
+            lon = std::stod(util::XmlReader::readAttribute(
+                config::constants::LONGITUDE_ATTRIBUTE, element));
+        } catch (std::exception &e) {
+            std::cerr << e.what() << std::endl;
+            const std::string msg = "Could not extract lat or lon from element: "
+                                    + util::XmlReader::readTree(element);
+            throw OsmDataFetcherException(msg.c_str());
+        }
+
+        return {lon, lat};
+    }
 } // namespace olu::osm

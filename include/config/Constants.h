@@ -70,6 +70,8 @@ namespace olu::config::constants {
 
     const static inline std::string NODE_REFERENCE_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "ref";
     const static inline std::string ID_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "id";
+    const static inline std::string LATITUDE_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "lat";
+    const static inline std::string LONGITUDE_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "lon";
 
     // SPARQL
     const static inline std::string OSM_WAY_URI = "https://www.openstreetmap.org/way/";
