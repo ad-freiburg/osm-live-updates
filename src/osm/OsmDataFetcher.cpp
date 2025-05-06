@@ -117,12 +117,12 @@ namespace olu::osm {
             std::string locationAsWkt;
             for (const auto &binding : result.second.get_child("")) {
                 auto name = util::XmlReader::readAttribute("<xmlattr>.name", binding.second);
-                if (name == "val") {
+                if (name == cnst::QUERY_VARIABLE_VALUE) {
                     auto uri = binding.second.get<std::string>("uri");
                     id = OsmObjectHelper::getIdFromUri(uri);
                 }
 
-                if (name == "location") {
+                if (name == cnst::QUERY_VARIABLE_LOCATION) {
                     locationAsWkt = binding.second.get<std::string>("literal");
                 }
             }
@@ -217,24 +217,24 @@ namespace olu::osm {
             std::string memberPositions;
             for (const auto &binding : result.second.get_child("")) {
                 auto name = util::XmlReader::readAttribute("<xmlattr>.name",binding.second);
-                if (name == "val") {
+                if (name == cnst::QUERY_VARIABLE_VALUE) {
                     auto relUri = binding.second.get<std::string>("uri");
                     relationId = OsmObjectHelper::getIdFromUri(relUri);
                 }
 
-                if (name == "type") {
+                if (name == cnst::QUERY_VARIABLE_TYPE) {
                     type = binding.second.get<std::string>("literal");
                 }
 
-                if (name == "memberUris") {
+                if (name == cnst::QUERY_VARIABLE_MEMBER_URIS) {
                     memberUris = binding.second.get<std::string>("literal");
                 }
 
-                if (name == "memberRoles") {
+                if (name == cnst::QUERY_VARIABLE_MEMBER_ROLES) {
                     memberRoles = binding.second.get<std::string>("literal");
                 }
 
-                if (name == "memberPositions") {
+                if (name == cnst::QUERY_VARIABLE_MEMBER_POSITIONS) {
                     memberPositions = binding.second.get<std::string>("literal");
                 }
             }
@@ -290,16 +290,16 @@ namespace olu::osm {
             std::string nodePositions;
             for (const auto &binding : result.second.get_child("")) {
                 auto name = util::XmlReader::readAttribute("<xmlattr>.name",binding.second);
-                if (name == "val") {
+                if (name == cnst::QUERY_VARIABLE_VALUE) {
                     auto wayUri = binding.second.get<std::string>("uri");
                     wayId = OsmObjectHelper::getIdFromUri(wayUri);
                 }
 
-                if (name == "nodeUris") {
+                if (name == cnst::QUERY_VARIABLE_MEMBER_URIS) {
                     nodeUris = binding.second.get<std::string>("literal");
                 }
 
-                if (name == "nodePositions") {
+                if (name == cnst::QUERY_VARIABLE_MEMBER_POSITIONS) {
                     nodePositions = binding.second.get<std::string>("literal");
                 }
             }
@@ -333,24 +333,36 @@ namespace olu::osm {
     void OsmDataFetcher::fetchWayInfos(Way &way) {
         std::string subject = "osmway:" + std::to_string(way.getId());
         auto response = runQuery(
-            _queryWriter.writeQueryForTagsAndTimestamp(subject),
-            cnst::PREFIXES_FOR_WAY_TAGS);
+            _queryWriter.writeQueryForTagsAndMetaInfo(subject),
+            cnst::PREFIXES_FOR_WAY_TAGS_AND_META_INFO);
 
         for (const auto &result : response.get_child("sparql.results")) {
             std::string key; std::string value;
             for (const auto &binding : result.second.get_child("")) {
                 auto name = util::XmlReader::readAttribute("<xmlattr>.name", binding.second);
-                if (name == "time") {
+                if (name == cnst::QUERY_VARIABLE_TIMESTAMP) {
                     way.setTimestamp(binding.second.get<std::string>("literal"));
                     continue;
                 }
 
-                if (name == "key") {
+                if (name == cnst::QUERY_VARIABLE_VERSION) {
+                    auto version = binding.second.get<version_t>("literal");
+                    way.setVersion(version);
+                    continue;
+                }
+
+                if (name == cnst::QUERY_VARIABLE_CHANGESET) {
+                    auto changeset = binding.second.get<changeset_id_t>("literal");
+                    way.setChangesetId(changeset);
+                    continue;
+                }
+
+                if (name == cnst::QUERY_VARIABLE_KEY) {
                     auto uri = binding.second.get<std::string>("uri");
                     key = uri.substr(cnst::OSM_TAG_KEY.length());
                 }
 
-                if (name == "value") {
+                if (name == cnst::QUERY_VARIABLE_VALUE) {
                     value = binding.second.get<std::string>("literal");
                 }
             }
@@ -365,30 +377,43 @@ namespace olu::osm {
     void OsmDataFetcher::fetchRelationInfos(Relation &relation) {
         std::string subject = "osmrel:" + std::to_string(relation.getId());
         auto response = runQuery(
-            _queryWriter.writeQueryForTagsAndTimestamp(subject),
-            cnst::PREFIXES_FOR_RELATION_TAGS);
+            _queryWriter.writeQueryForTagsAndMetaInfo(subject),
+            cnst::PREFIXES_FOR_RELATION_TAGS_AND_META_INFO);
 
         for (const auto &result : response.get_child("sparql.results")) {
             std::string key; std::string value;
             for (const auto &binding : result.second.get_child("")) {
                 auto name = util::XmlReader::readAttribute("<xmlattr>.name", binding.second);
-                if (name == "time") {
+
+                if (name == cnst::QUERY_VARIABLE_TIMESTAMP) {
                     relation.setTimestamp(binding.second.get<std::string>("literal"));
                     continue;
                 }
 
-                if (name == "key") {
+                if (name == cnst::QUERY_VARIABLE_VERSION) {
+                    auto version = binding.second.get<version_t>("literal");
+                    relation.setVersion(version);
+                    continue;
+                }
+
+                if (name == cnst::QUERY_VARIABLE_CHANGESET) {
+                    auto changesetString = binding.second.get<changeset_id_t>("literal");
+                    relation.setChangesetId(changesetString);
+                    continue;
+                }
+
+                if (name == cnst::QUERY_VARIABLE_KEY) {
                     auto uri = binding.second.get<std::string>("uri");
                     key = uri.substr(cnst::OSM_TAG_KEY.length());
                 }
 
-                if (name == "value") {
+                if (name == cnst::QUERY_VARIABLE_VALUE) {
                     value = binding.second.get<std::string>("literal");
                 }
             }
 
             // Type of relation is already fetched in an earlier step
-            if (!key.empty() && key != "type") {
+            if (!key.empty() && key != cnst::QUERY_VARIABLE_TYPE) {
                 relation.addTag(key, value);
             }
         }

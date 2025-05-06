@@ -99,7 +99,7 @@ namespace olu::sparql {
         /**
         * @returns A SPARQL query for tags and timestamp of the given subject
         */
-        [[nodiscard]] std::string writeQueryForTagsAndTimestamp(const std::string &subject) const;
+        [[nodiscard]] std::string writeQueryForTagsAndMetaInfo(const std::string &subject) const;
 
         private:
         config::Config _config;
@@ -107,14 +107,19 @@ namespace olu::sparql {
         [[nodiscard]] std::string getFromClauseOptional() const;
 
         [[nodiscard]] static std::string getValuesClause(const std::string& osmTag,
-                                                         const std::set<id_t> &objectIds) ;
+                                                         const std::set<id_t> &objectIds);
+
+        [[nodiscard]] static std::string getTripleClause(const std::string& subject,
+                                                         const std::string& predicate,
+                                                         const std::string& object);
 
         [[nodiscard]] std::string wrapWithGraphOptional(const std::string& clause) const;
+        [[nodiscard]] static std::string wrapWithUnion(const std::string& clause) ;
     };
 
     /**
- * Exception that can appear inside the `QueryWriter` class.
- */
+    * Exception that can appear inside the `QueryWriter` class.
+    */
     class QueryWriterException final : public std::exception {
         std::string message;
 
