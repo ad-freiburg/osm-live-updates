@@ -31,6 +31,8 @@ namespace olu::osm {
         explicit Way(const id_t id): id(id) {};
 
         void setTimestamp(std::string const& timestamp);
+        void setVersion(version_t const& version);
+        void setChangesetId(changeset_id_t const& changeset_id);
 
         void addMember(id_t nodeId);
         void addTag(const std::string& key, const std::string& value);
@@ -47,9 +49,13 @@ namespace olu::osm {
         [[nodiscard]] id_t getId() const { return id; }
         std::vector<KeyValue> getTags() { return tags; }
         std::string getTimestamp() { return timestamp; }
+        [[nodiscard]] version_t getVersion() const { return version; }
+        [[nodiscard]] changeset_id_t getChangesetId() const { return changeset_id; }
     protected:
         id_t id;
         std::string timestamp;
+        version_t version = 0;
+        changeset_id_t changeset_id = 0;
         std::vector<id_t> members;
         std::vector<KeyValue> tags;
     };
