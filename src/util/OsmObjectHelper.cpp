@@ -12,8 +12,8 @@ namespace olu::osm {
     bool OsmObjectHelper::isMultipolygon(const boost::property_tree::ptree &relation) {
         for (const auto &[tag, attr]: relation.get_child("")) {
             if (tag == "tag") {
-                if (util::XmlReader::readAttribute("<xmlattr>.k", attr) == "type" &&
-                    util::XmlReader::readAttribute("<xmlattr>.v", attr) == "multipolygon") {
+                if (util::XmlReader::readAttribute<std::string>("<xmlattr>.k", attr) == "type" &&
+                    util::XmlReader::readAttribute<std::string>("<xmlattr>.v", attr) == "multipolygon") {
                     return true;
                     }
             }
@@ -41,6 +41,12 @@ namespace olu::osm {
             throw OsmObjectHelperException(msg.c_str());
         }
     }
+
+    bool OsmObjectHelper::areMemberEqual(member_ids_t member1, member_ids_t member2) {
+        return member1.size() == member2.size() &&
+            std::equal(member1.begin(), member1.end(), member2.begin());
+    }
+
 }
 
 

@@ -70,6 +70,8 @@ namespace olu::osm {
         std::set<id_t> _createdWays;
         // Ways that are in a modify-changeset in the change file.
         std::set<id_t> _modifiedWays;
+        // Ways that are in a modify-changeset in the change file.
+        std::set<id_t> _modifiedWaysWithChangedMembers;
         // Ways that reference a node which was modified in the changeset.
         std::set<id_t> _waysToUpdateGeometry;
         // Ways that are referenced by a relation that are NOT present in the change file,
@@ -100,6 +102,7 @@ namespace olu::osm {
          */
         [[nodiscard]] bool nodeInChangeFile(const id_t &nodeId) const {
             return _modifiedNodes.contains(nodeId) ||
+                   _modifiedNodesWithChangedLocation.contains(nodeId) ||
                    _createdNodes.contains(nodeId) ||
                    _deletedNodes.contains(nodeId);
         }
@@ -114,6 +117,7 @@ namespace olu::osm {
          */
         [[nodiscard]] bool wayInChangeFile(const id_t &wayId) const {
             return _modifiedWays.contains(wayId) ||
+                   _modifiedWaysWithChangedMembers.contains(wayId) ||
                    _createdWays.contains(wayId) ||
                    _deletedWays.contains(wayId);
         }
@@ -148,6 +152,15 @@ namespace olu::osm {
          */
         void checkNodesForLocationChange(std::set<id_t> &nodeIds,
                                          const std::vector<osmium::Location> & nodeLocs);
+
+        /**
+         * Checks if the members of the given ways from the change file have changed. If so, the
+         * way is added to the _modifiedWaysWithChangedMembers set, otherwise to the
+         * _modifiedWays set
+         *
+         * @param waysWithMembers Pairs of wayIds with a vector containing the node references
+         */
+        void checkWaysForMemberChange(const std::vector<std::pair<id_t, member_ids_t>>& waysWithMembers);
 
         /**
          * Stores the ids of the nodes and ways that are referenced in the given relation or way in
@@ -235,18 +248,26 @@ namespace olu::osm {
         void deleteTriplesFromDatabase();
 
         /**
-         * Send SPARQL queries to delete all triples that belong to the nodes in _deletedNodes
+         * Send SPARQL queries to delete all triples that belong to the nodes that are inserted to
+         * the database
          */
         void deleteNodesFromDatabase(osm2rdf::util::ProgressBar &progress, size_t &counter);
 
         /**
-         * Send SPARQL queries to delete all triples that belong to the ways in _deletedWays
+         * Send SPARQL queries to delete all triples that belong to the ways that are inserted to
+         * the database
          */
         void deleteWaysFromDatabase(osm2rdf::util::ProgressBar &progress, size_t &counter);
 
         /**
-         * Send SPARQL queries to delete all triples that belong to the relations in
-         * _deletedRelations
+         * Send SPARQL queries to delete meta-data and key-value triples that belong to the ways
+         * that did not change their geometry
+         */
+        void deleteWaysMetaDataAndTags(osm2rdf::util::ProgressBar &progress, size_t &counter);
+
+        /**
+        * Send SPARQL queries to delete all triples that belong to the relations that are inserted to
+        * the database
         */
         void deleteRelationsFromDatabase(osm2rdf::util::ProgressBar &progress, size_t &counter);
 
@@ -279,6 +300,8 @@ namespace olu::osm {
          * @return The location of the element
          */
         static osmium::Location getLocationFor(const boost::property_tree::ptree &element);
+
+        static member_ids_t getMemberFor(const boost::property_tree::ptree &element);
     };
 
     /**

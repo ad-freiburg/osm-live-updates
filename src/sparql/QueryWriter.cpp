@@ -71,6 +71,22 @@ olu::sparql::QueryWriter::writeDeleteQuery(const std::set<id_t> &ids, const std:
     oss << " }";
     return oss.str();
 }
+
+// _________________________________________________________________________________________________
+std::string
+olu::sparql::QueryWriter::writeDeleteQueryForMetaAndTags(const std::set<id_t> &ids, const std::string &osmTag) const {
+    std::ostringstream oss;
+    oss << "DELETE { ";
+    oss << wrapWithGraphOptional(
+        getTripleClause("?" + cnst::QUERY_VARIABLE_VALUE, "?p", "?o"));
+    oss << "} WHERE { ";
+    oss << wrapWithGraphOptional(
+        getValuesClause(osmTag + ":", ids) +
+        getTripleClause("?" + cnst::QUERY_VARIABLE_VALUE, "?p", "?o") +
+        "FILTER (STRSTARTS(STR(?p),STR(osmmeta:)) || STRSTARTS(STR(?p),STR(osmkey:)) || STRSTARTS(STR(?p),STR(osm2rdf:facts))) .  }");
+    return oss.str();
+}
+
 // _________________________________________________________________________________________________
 std::string
 olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::set<id_t> &nodeIds) const {

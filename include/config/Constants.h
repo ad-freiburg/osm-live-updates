@@ -182,6 +182,13 @@ namespace olu::config::constants {
             "PREFIX geo: <http://www.opengis.net/ont/geosparql#>"
     };
 
+    const static inline std::vector<std::string> PREFIXES_FOR_WAY_DELETE_META_AND_TAGS_QUERY {
+            "PREFIX osmway: <https://www.openstreetmap.org/way/>",
+            "PREFIX osmmeta: <https://www.openstreetmap.org/meta/>",
+            "PREFIX osm2rdf: <https://osm2rdf.cs.uni-freiburg.de/rdf#>",
+            "PREFIX osmkey: <https://www.openstreetmap.org/wiki/Key:>"
+    };
+
     const static inline std::vector<std::string> PREFIXES_FOR_RELATION_DELETE_QUERY {
             "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
             "PREFIX ogc: <http://www.opengis.net/rdf#>",

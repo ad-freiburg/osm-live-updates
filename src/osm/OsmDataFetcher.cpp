@@ -116,7 +116,8 @@ namespace olu::osm {
             id_t id;
             std::string locationAsWkt;
             for (const auto &binding : result.second.get_child("")) {
-                auto name = util::XmlReader::readAttribute("<xmlattr>.name", binding.second);
+                auto name = util::XmlReader::readAttribute<std::string>("<xmlattr>.name",
+                                                                        binding.second);
                 if (name == cnst::QUERY_VARIABLE_VALUE) {
                     auto uri = binding.second.get<std::string>("uri");
                     id = OsmObjectHelper::getIdFromUri(uri);
@@ -216,7 +217,8 @@ namespace olu::osm {
             std::string memberRoles;
             std::string memberPositions;
             for (const auto &binding : result.second.get_child("")) {
-                auto name = util::XmlReader::readAttribute("<xmlattr>.name",binding.second);
+                auto name = util::XmlReader::readAttribute<std::string>("<xmlattr>.name",
+                                                                        binding.second);
                 if (name == cnst::QUERY_VARIABLE_VALUE) {
                     auto relUri = binding.second.get<std::string>("uri");
                     relationId = OsmObjectHelper::getIdFromUri(relUri);
@@ -289,7 +291,8 @@ namespace olu::osm {
             std::string nodeUris;
             std::string nodePositions;
             for (const auto &binding : result.second.get_child("")) {
-                auto name = util::XmlReader::readAttribute("<xmlattr>.name",binding.second);
+                auto name = util::XmlReader::readAttribute<std::string>("<xmlattr>.name",
+                                                                        binding.second);
                 if (name == cnst::QUERY_VARIABLE_VALUE) {
                     auto wayUri = binding.second.get<std::string>("uri");
                     wayId = OsmObjectHelper::getIdFromUri(wayUri);
@@ -339,7 +342,8 @@ namespace olu::osm {
         for (const auto &result : response.get_child("sparql.results")) {
             std::string key; std::string value;
             for (const auto &binding : result.second.get_child("")) {
-                auto name = util::XmlReader::readAttribute("<xmlattr>.name", binding.second);
+                auto name = util::XmlReader::readAttribute<std::string>("<xmlattr>.name",
+                                                                        binding.second);
                 if (name == cnst::QUERY_VARIABLE_TIMESTAMP) {
                     way.setTimestamp(binding.second.get<std::string>("literal"));
                     continue;
@@ -383,7 +387,8 @@ namespace olu::osm {
         for (const auto &result : response.get_child("sparql.results")) {
             std::string key; std::string value;
             for (const auto &binding : result.second.get_child("")) {
-                auto name = util::XmlReader::readAttribute("<xmlattr>.name", binding.second);
+                auto name = util::XmlReader::readAttribute<std::string>("<xmlattr>.name",
+                                                                        binding.second);
 
                 if (name == cnst::QUERY_VARIABLE_TIMESTAMP) {
                     relation.setTimestamp(binding.second.get<std::string>("literal"));
@@ -432,6 +437,54 @@ namespace olu::osm {
         }
 
         return nodeIds;
+    }
+
+    // _____________________________________________________________________________________________
+    std::vector<std::pair<id_t, member_ids_t>>
+    OsmDataFetcher::fetchWaysMembersSorted(const std::set<id_t> &wayIds) {
+        auto response = runQuery(
+            _queryWriter.writeQueryForWaysMembers(wayIds),
+            cnst::PREFIXES_FOR_WAY_MEMBERS);
+
+        std::vector<std::pair<id_t, member_ids_t>> waysWithMembers;
+        for (const auto &result : response.get_child("sparql.results")) {
+            id_t wayId = 0;
+            member_ids_t memberIds;
+            std::vector<int32_t> memberPositions;
+            for (const auto &binding : result.second.get_child("")) {
+                auto name = util::XmlReader::readAttribute<std::string>("<xmlattr>.name",
+                                                                        binding.second);
+                if (name == cnst::QUERY_VARIABLE_VALUE) {
+                    auto wayUri = binding.second.get<std::string>("uri");
+                    wayId = OsmObjectHelper::getIdFromUri(wayUri);
+                }
+
+                if (name == cnst::QUERY_VARIABLE_MEMBER_URIS) {
+                    auto memberUris = binding.second.get<std::string>("literal");
+                    memberIds = extractMembers(memberUris);
+                }
+
+                if (name == cnst::QUERY_VARIABLE_MEMBER_POSITIONS) {
+                    auto positions = binding.second.get<std::string>("literal");
+                    memberPositions = extractPositions(positions);
+                }
+            }
+
+            std::vector<std::pair<int, int>> paired;
+            for (size_t i = 0; i < memberIds.size(); ++i) {
+                paired.emplace_back(memberPositions[i], memberIds[i]);
+            }
+
+            std::ranges::sort(paired);
+
+            for (size_t i = 0; i < memberIds.size(); ++i) {
+                memberIds[i] = paired[i].second;
+            }
+
+            waysWithMembers.emplace_back(wayId, memberIds);
+        }
+
+        return waysWithMembers;
     }
 
     // _____________________________________________________________________________________________
@@ -518,6 +571,30 @@ namespace olu::osm {
         }
 
         return refRelIds;
+    }
+
+    std::vector<int> OsmDataFetcher::extractPositions(const std::string& positions) {
+        std::vector<int> integers;
+        std::stringstream ss(positions);
+        std::string token;
+
+        while (std::getline(ss, token, ';')) {
+            integers.push_back(std::stoi(token));
+        }
+
+        return integers;
+    }
+
+    std::vector<id_t> OsmDataFetcher::extractMembers(const std::string& memberUris) {
+        std::vector<id_t> memberIds;
+        std::stringstream ss(memberUris);
+        std::string token;
+
+        while (std::getline(ss, token, ';')) {
+            memberIds.push_back(OsmObjectHelper::getIdFromUri(token));
+        }
+
+        return memberIds;
     }
 
 }

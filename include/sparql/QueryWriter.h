@@ -44,7 +44,15 @@ namespace olu::sparql {
          * @returns A SPARQL query that delete all triples with subject `osmTag:id` and all triples
          * that are linked via another node
          */
-        [[nodiscard]] std::string writeDeleteQuery(const std::set<id_t> &ids, const std::string &osmTag) const;
+        [[nodiscard]] std::string
+        writeDeleteQuery(const std::set<id_t> &ids, const std::string &osmTag) const;
+
+        /**
+         * @returns A SPARQL query that delete all triples with predicate 'osmmeta:...',
+         * 'osm2rdf:facts' and 'osmkey:...' for subject `osmTag:id`
+         */
+        [[nodiscard]] std::string
+        writeDeleteQueryForMetaAndTags(const std::set<id_t> &ids, const std::string &osmTag) const;
 
         /**
         * @returns A SPARQL query for the locations of the nodes with the given ID in WKT format

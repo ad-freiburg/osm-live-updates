@@ -34,7 +34,7 @@ static void Read_Attribute(benchmark::State& state) {
     olu::util::XmlReader::populatePTreeFromString(content, tree);
 
     for (auto _ : state) {
-        std::string attribute = olu::util::XmlReader::readAttribute(
+        auto attribute = olu::util::XmlReader::readAttribute<std::string>(
                 "osm.node.id",
                 tree);
     }

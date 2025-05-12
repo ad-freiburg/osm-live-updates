@@ -22,12 +22,14 @@
 #include <cstdint>
 #include <string>
 #include <tuple>
+#include <vector>
 
 namespace olu {
 
     typedef int64_t id_t;
     typedef uint32_t changeset_id_t;
     typedef uint32_t version_t;
+    typedef  std::vector<id_t> member_ids_t;
 
     typedef std::string WKTPoint;
 

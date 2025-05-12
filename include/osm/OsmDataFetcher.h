@@ -133,7 +133,16 @@ namespace olu::osm {
           *
           * @return The subjects of all members
           */
-        std::vector<id_t> fetchWaysMembers(const std::set<id_t> &wayIds);
+        member_ids_t fetchWaysMembers(const std::set<id_t> &wayIds);
+
+        /**
+          * Sends a query to the sparql endpoint to get the ids of all nodes that are referenced
+          * in the given way
+          *
+          * @return The subjects of all members
+          */
+        std::vector<std::pair<id_t, member_ids_t>>
+        fetchWaysMembersSorted(const std::set<id_t> &wayIds);
 
         /**
          * @return The ids of all nodes and ways that are referenced by the given relations
@@ -184,6 +193,9 @@ namespace olu::osm {
 
         boost::property_tree::ptree runQuery(const std::string &query,
                                              const std::vector<std::string> &prefixes);
+
+        static std::vector<int> extractPositions(const std::string& positions);
+        static std::vector<id_t> extractMembers(const std::string& memberUris);
     };
 
     /**

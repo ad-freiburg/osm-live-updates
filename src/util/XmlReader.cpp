@@ -72,34 +72,6 @@ std::string olu::util::XmlReader::readTree(const pt::ptree &tree,
     return oss.str();
 }
 
-// _____________________________________________________________________________________________
-std::string
-olu::util::XmlReader::readAttribute(const std::string& attributePath,
-                                    const boost::property_tree::ptree& tree) {
-    std::string attributeValue;
-    try {
-        attributeValue = tree.get<std::string>(attributePath);
-    } catch (boost::property_tree::ptree_bad_path &e) {
-        std::cerr << "Path not found: " << e.what() << std::endl;
-        std::string msg = "Exception while trying to read attribute at path: " + attributePath;
-        throw XmlReaderException(msg.c_str());
-    } catch (boost::property_tree::ptree_bad_data &e) {
-        std::cerr << "Bad data: " << e.what() << std::endl;
-        std::string msg = "Exception while trying to read attribute at path: " + attributePath;
-        throw XmlReaderException(msg.c_str());
-    } catch (boost::property_tree::ptree_error &e) {
-        std::cerr << "Property tree error: " << e.what() << std::endl;
-        std::string msg = "Exception while trying to read attribute at path: " + attributePath;
-        throw XmlReaderException(msg.c_str());
-    } catch (std::exception &e) {
-        std::cerr << e.what() << std::endl;
-        std::string msg = "Exception while trying to read attribute at path: " + attributePath;
-        throw XmlReaderException(msg.c_str());
-    }
-
-    return attributeValue;
-}
-
 // _________________________________________________________________________________________________
 std::vector<std::string> olu::util::XmlReader::readTagOfChildren(
         const std::string &parentPath,
