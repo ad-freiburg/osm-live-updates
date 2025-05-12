@@ -55,6 +55,12 @@ namespace olu::sparql {
         writeDeleteQueryForMetaAndTags(const std::set<id_t> &ids, const std::string &osmTag) const;
 
         /**
+         * @returns A SPARQL query that delete all geometry triples for subjects `osmTag:id`
+         */
+        [[nodiscard]] std::string
+        writeDeleteQueryForGeometry(const std::set<id_t> &ids, const std::string &osmTag) const;
+
+        /**
         * @returns A SPARQL query for the locations of the nodes with the given ID in WKT format
         */
         [[nodiscard]] std::string writeQueryForNodeLocations(const std::set<id_t> &nodeIds) const;

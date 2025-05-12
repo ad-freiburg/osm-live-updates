@@ -74,7 +74,8 @@ olu::sparql::QueryWriter::writeDeleteQuery(const std::set<id_t> &ids, const std:
 
 // _________________________________________________________________________________________________
 std::string
-olu::sparql::QueryWriter::writeDeleteQueryForMetaAndTags(const std::set<id_t> &ids, const std::string &osmTag) const {
+olu::sparql::QueryWriter::writeDeleteQueryForMetaAndTags(const std::set<id_t> &ids,
+                                                         const std::string &osmTag) const {
     std::ostringstream oss;
     oss << "DELETE { ";
     oss << wrapWithGraphOptional(
@@ -84,6 +85,33 @@ olu::sparql::QueryWriter::writeDeleteQueryForMetaAndTags(const std::set<id_t> &i
         getValuesClause(osmTag + ":", ids) +
         getTripleClause("?" + cnst::QUERY_VARIABLE_VALUE, "?p", "?o") +
         "FILTER (STRSTARTS(STR(?p),STR(osmmeta:)) || STRSTARTS(STR(?p),STR(osmkey:)) || STRSTARTS(STR(?p),STR(osm2rdf:facts))) .  }");
+    return oss.str();
+}
+
+
+// _________________________________________________________________________________________________
+std::string
+olu::sparql::QueryWriter::writeDeleteQueryForGeometry(const std::set<id_t> &ids,
+                                                      const std::string &osmTag) const {
+    std::ostringstream oss;
+    oss << "DELETE { ";
+    oss << wrapWithGraphOptional(
+        getTripleClause("?" + cnst::QUERY_VARIABLE_VALUE, "osm2rdfgeom:obb", "?o1") +
+        getTripleClause("?" + cnst::QUERY_VARIABLE_VALUE, "osm2rdfgeom:envelope", "?o2") +
+        getTripleClause("?" + cnst::QUERY_VARIABLE_VALUE, "osm2rdfgeom:convex_hull", "?o3") +
+        getTripleClause("?" + cnst::QUERY_VARIABLE_VALUE, "osm2rdf:length", "?o4") +
+        getTripleClause("?geom", "geo:asWKT", "?o5") +
+        getTripleClause("?cent", "geo:asWKT", "?o6"));
+    oss << "} WHERE { ";
+    oss << wrapWithGraphOptional(
+        getValuesClause(osmTag + ":", ids) +
+        "OPTIONAL { ?value osm2rdfgeom:obb ?o1 . } "
+        "OPTIONAL { ?value osm2rdfgeom:envelope ?o2 . } "
+        "OPTIONAL { ?value osm2rdfgeom:convex_hull ?o3 . } "
+        "OPTIONAL { ?value osm2rdf:length ?o4 . } "
+        "OPTIONAL { ?value geo:hasGeometry ?geom . ?geom geo:asWKT ?o5 . } "
+        "OPTIONAL { ?value geo:hasCentroid ?cent . ?cent geo:asWKT ?o6 . } ");
+    oss << " }";
     return oss.str();
 }
 

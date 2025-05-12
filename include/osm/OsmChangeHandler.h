@@ -266,6 +266,12 @@ namespace olu::osm {
         void deleteWaysMetaDataAndTags(osm2rdf::util::ProgressBar &progress, size_t &counter);
 
         /**
+         * Send SPARQL queries to delete geometry triples that belong to the ways for which only the
+         * geometry changed
+         */
+        void deleteWaysGeometry(osm2rdf::util::ProgressBar &progress, size_t &counter);
+
+        /**
         * Send SPARQL queries to delete all triples that belong to the relations that are inserted to
         * the database
         */
