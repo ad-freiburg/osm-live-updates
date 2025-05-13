@@ -61,7 +61,7 @@ namespace olu::osm {
         try {
             const auto decompressed = util::Decompressor::readGzip(cnst::PATH_TO_CHANGE_FILE);
             util::XmlReader::populatePTreeFromString(decompressed, _osmChangeElement);
-            _osmChangeElement = _osmChangeElement.get_child(cnst::OSM_CHANGE_TAG);
+            _osmChangeElement = _osmChangeElement.get_child(cnst::XML_TAG_OSM_CHANGE);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
             throw OsmChangeHandlerException(
@@ -137,11 +137,19 @@ namespace olu::osm {
                     nodes.begin(), nodes.end());
             });
 
+        // Check if the number of nodes from the endpoint is equal to the number of modified nodes
+        // in the change file. If this happens we do not know which nodes are missing, so we update
+        // the references for all of them.
         if (nodeLocsFromEndpoint.size() != nodeLocs.size() ||
             nodeLocsFromEndpoint.size() != nodeIds.size()) {
-            throw OsmChangeHandlerException("The number of modified nodes does not match "
-                                            "the number of node locations from the endpoint.");
-            }
+            std::cout << osm2rdf::util::currentTimeFormatted() ;
+            std::cout << "WARNING: Some modified nodes do not exist in the endpoint. "
+                         "This indicates an inconsistency in the database." << std::endl;
+            std::ranges::copy(nodeIds,
+                              std::inserter(_modifiedNodesWithChangedLocation,
+                                                  _modifiedNodesWithChangedLocation.end()));
+            return;
+        }
 
         size_t index = 0;
         for (auto nodeId : nodeIds) {
@@ -204,11 +212,11 @@ namespace olu::osm {
     void OsmChangeHandler::addToTmpFile(const std::string& element,
                                         const std::string& elementTag) {
         std::ofstream outputFile;
-        if (elementTag == cnst::NODE_TAG) {
+        if (elementTag == cnst::XML_TAG_NODE) {
             outputFile.open (cnst::PATH_TO_NODE_FILE, std::ios::app);
-        } else if (elementTag == cnst::WAY_TAG) {
+        } else if (elementTag == cnst::XML_TAG_WAY) {
             outputFile.open (cnst::PATH_TO_WAY_FILE, std::ios::app);
-        } else if (elementTag == cnst::RELATION_TAG) {
+        } else if (elementTag == cnst::XML_TAG_REL) {
             outputFile.open (cnst::PATH_TO_RELATION_FILE, std::ios::app);
         }
 
@@ -224,38 +232,38 @@ namespace olu::osm {
         std::vector<std::pair<id_t, member_ids_t>> modifiedWaysWithMembers;
 
         for (const auto &[changesetTag, changesetElement]: _osmChangeElement) {
-            if (changesetTag == "<xmlattr>") { continue; }
+            if (changesetTag == cnst::XML_TAG_ATTR) { continue; }
 
             for (const auto &[elementTag, element]: changesetElement) {
                 auto id = getIdFor(element);
 
-                if (changesetTag == cnst::MODIFY_TAG) {
-                    if (elementTag == cnst::NODE_TAG) {
+                if (changesetTag == cnst::XML_TAG_MODIFY) {
+                    if (elementTag == cnst::XML_TAG_NODE) {
                         modifiedNodes.emplace(id);
                         modifiedNodeLocations.emplace_back(getLocationFor(element));
-                    } else if (elementTag == cnst::WAY_TAG) {
+                    } else if (elementTag == cnst::XML_TAG_WAY) {
                         modifiedWaysWithMembers.emplace_back(id, getMemberFor(element));
-                    } else if (elementTag == cnst::RELATION_TAG) {
+                    } else if (elementTag == cnst::XML_TAG_REL) {
                         _modifiedRelations.insert(id);
 
                         if (OsmObjectHelper::isMultipolygon(element)) {
                             _modifiedAreas.insert(id);
                         }
                     }
-                } else if (changesetTag == cnst::CREATE_TAG) {
-                    if (elementTag == cnst::NODE_TAG) {
+                } else if (changesetTag == cnst::XML_TAG_CREATE) {
+                    if (elementTag == cnst::XML_TAG_NODE) {
                         _createdNodes.insert(id);
-                    } else if (elementTag == cnst::WAY_TAG) {
+                    } else if (elementTag == cnst::XML_TAG_WAY) {
                         _createdWays.insert(id);
-                    } else if (elementTag == cnst::RELATION_TAG) {
+                    } else if (elementTag == cnst::XML_TAG_REL) {
                         _createdRelations.insert(id);
                     }
-                } else if (changesetTag == cnst::DELETE_TAG) {
-                    if (elementTag == cnst::NODE_TAG) {
+                } else if (changesetTag == cnst::XML_TAG_DELETE) {
+                    if (elementTag == cnst::XML_TAG_NODE) {
                         _deletedNodes.insert(id);
-                    } else if (elementTag == cnst::WAY_TAG) {
+                    } else if (elementTag == cnst::XML_TAG_WAY) {
                         _deletedWays.insert(id);
-                    } else if (elementTag == cnst::RELATION_TAG) {
+                    } else if (elementTag == cnst::XML_TAG_REL) {
                         _deletedRelations.insert(id);
                     }
                 }
@@ -280,9 +288,9 @@ namespace olu::osm {
 
     void OsmChangeHandler::processElementsInChangeFile() {
         for (auto &[changesetTag, changesetElement]: _osmChangeElement) {
-            if (changesetTag == cnst::MODIFY_TAG || changesetTag == cnst::CREATE_TAG) {
+            if (changesetTag == cnst::XML_TAG_MODIFY || changesetTag == cnst::XML_TAG_CREATE) {
                 for (auto &[elementTag, element]: changesetElement) {
-                    if (elementTag == cnst::WAY_TAG || elementTag == cnst::RELATION_TAG) {
+                    if (elementTag == cnst::XML_TAG_WAY || elementTag == cnst::XML_TAG_REL) {
                         storeIdsOfReferencedElements(element);
                         util::XmlReader::sanitizeXmlTags(element);
                     }
@@ -455,7 +463,7 @@ namespace olu::osm {
             [this, &counter, progress](std::set<id_t> const& batch) mutable {
                 progress.update(counter += batch.size());
                 for (auto const& node: _odf.fetchNodes(batch)) {
-                    addToTmpFile(node.getXml(), cnst::NODE_TAG);
+                    addToTmpFile(node.getXml(), cnst::XML_TAG_NODE);
                 }
             });
 
@@ -485,7 +493,7 @@ namespace olu::osm {
                         _odf.fetchWayInfos(way);
                     }
 
-                    addToTmpFile(way.getXml(), cnst::WAY_TAG);
+                    addToTmpFile(way.getXml(), cnst::XML_TAG_WAY);
                 }
             });
 
@@ -507,7 +515,7 @@ namespace olu::osm {
                         _odf.fetchRelationInfos(rel);
                     }
 
-                    addToTmpFile(rel.getXml(), cnst::RELATION_TAG);
+                    addToTmpFile(rel.getXml(), cnst::XML_TAG_REL);
                 }
 
             });
@@ -544,7 +552,7 @@ namespace olu::osm {
             nodesToDelete,
             MAX_VALUES_PER_QUERY,
             [this, progress, &counter](std::set<id_t> const &batch) mutable {
-                runUpdateQuery(_queryWriter.writeDeleteQuery(batch, cnst::OSM_NODE_PREFIX),
+                runUpdateQuery(_queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_NODE),
                                cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
                 progress.update(counter += batch.size());
             });
@@ -561,7 +569,7 @@ namespace olu::osm {
             waysToDelete,
             MAX_VALUES_PER_QUERY,
             [this, &counter, progress](std::set<id_t> const &batch) mutable {
-                runUpdateQuery(_queryWriter.writeDeleteQuery(batch, cnst::OSM_WAY_PREFIX),
+                runUpdateQuery(_queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_WAY),
                                cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
                 progress.update(counter += batch.size());
             });
@@ -573,7 +581,7 @@ namespace olu::osm {
             _modifiedWays,
             MAX_VALUES_PER_QUERY,
             [this, &counter, progress](std::set<id_t> const &batch) mutable {
-                runUpdateQuery(_queryWriter.writeDeleteQueryForMetaAndTags(batch, cnst::OSM_WAY_PREFIX),
+                runUpdateQuery(_queryWriter.writeDeleteQueryForMetaAndTags(batch, cnst::NAMESPACE_OSM_WAY),
                                cnst::PREFIXES_FOR_WAY_DELETE_META_AND_TAGS_QUERY);
                 progress.update(counter += batch.size());
             });
@@ -585,7 +593,7 @@ namespace olu::osm {
             _waysToUpdateGeometry,
             MAX_VALUES_PER_QUERY,
             [this, &counter, progress](std::set<id_t> const &batch) mutable {
-                runUpdateQuery(_queryWriter.writeDeleteQueryForGeometry(batch, cnst::OSM_WAY_PREFIX),
+                runUpdateQuery(_queryWriter.writeDeleteQueryForGeometry(batch, cnst::NAMESPACE_OSM_WAY),
                                cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
                 progress.update(counter += batch.size());
             });
@@ -602,7 +610,7 @@ namespace olu::osm {
             relationsToDelete,
             MAX_VALUES_PER_QUERY,
             [this, &counter, progress](std::set<id_t> const &batch) mutable {
-                runUpdateQuery(_queryWriter.writeDeleteQuery(batch, cnst::OSM_RELATION_PREFIX),
+                runUpdateQuery(_queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_REL),
                                cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
                 progress.update(counter += batch.size());
             });
@@ -614,7 +622,7 @@ namespace olu::osm {
             _relationsToUpdateGeometry,
             MAX_VALUES_PER_QUERY,
             [this, &counter, progress](std::set<id_t> const &batch) mutable {
-                runUpdateQuery(_queryWriter.writeDeleteQueryForGeometry(batch, cnst::OSM_RELATION_PREFIX),
+                runUpdateQuery(_queryWriter.writeDeleteQueryForGeometry(batch, cnst::NAMESPACE_OSM_REL),
                                cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
                 progress.update(counter += batch.size());
             });
@@ -753,7 +761,7 @@ namespace olu::osm {
             auto [sub, pre, obj] = util::TtlHelper::getTriple(line);
 
             // Decode tag values
-            if (pre.starts_with("osmkey:")) {
+            if (pre.starts_with(cnst::NAMESPACE_OSM_KEY)) {
                 obj = util::XmlReader::xmlDecode(obj);
             }
 
@@ -764,12 +772,12 @@ namespace olu::osm {
             }
 
             // Check for relevant nodes
-            if (util::TtlHelper::isRelevantNamespace(sub, cnst::NODE_TAG)) {
-                if (nodesToInsert.contains(util::TtlHelper::getIdFromSubject(sub, cnst::NODE_TAG))) {
+            if (util::TtlHelper::isRelevantNamespace(sub, cnst::XML_TAG_NODE)) {
+                if (nodesToInsert.contains(util::TtlHelper::getIdFromSubject(sub, cnst::XML_TAG_NODE))) {
 
                     relevantTriples.emplace_back(sub, pre, obj);
 
-                    if (util::TtlHelper::hasRelevantObject(pre, cnst::NODE_TAG)) {
+                    if (util::TtlHelper::hasRelevantObject(pre, cnst::XML_TAG_NODE)) {
                         currentLink = obj;
                     }
                 }
@@ -778,30 +786,33 @@ namespace olu::osm {
             }
 
             // Check for relevant ways
-            if (util::TtlHelper::isRelevantNamespace(sub, cnst::WAY_TAG)) {
-                auto wayId = util::TtlHelper::getIdFromSubject(sub, cnst::WAY_TAG);
+            if (util::TtlHelper::isRelevantNamespace(sub, cnst::XML_TAG_WAY)) {
+                auto wayId = util::TtlHelper::getIdFromSubject(sub, cnst::XML_TAG_WAY);
 
                 if (waysToInsert.contains(wayId)) {
                     relevantTriples.emplace_back(sub, pre, obj);
 
-                    if (util::TtlHelper::hasRelevantObject(pre, cnst::WAY_TAG)) {
+                    if (util::TtlHelper::hasRelevantObject(pre, cnst::XML_TAG_WAY)) {
                         currentLink = obj;
                     }
                 }
 
                 // Check for relevant meta data and tag values
                 if (_modifiedWays.contains(wayId)) {
-                    if (pre.starts_with("osmkey:") || pre.starts_with("osmmeta:") || pre.starts_with("osm2rdf:facts")) {
+                    if (pre.starts_with(cnst::NAMESPACE_OSM_KEY) ||
+                        pre.starts_with(cnst::NAMESPACE_OSM_META) ||
+                        pre.starts_with(cnst::PREFIXED_OSM2RDF_FACTS)) {
                         relevantTriples.emplace_back(sub, pre, obj);
                     }
                 }
 
                 if (_waysToUpdateGeometry.contains(wayId)) {
-                    if (pre.starts_with("osm2rdfgeom:") || pre.starts_with("osm2rdf:length")) {
+                    if (pre.starts_with(cnst::NAMESPACE_OSM2RDF_GEOM) ||
+                        pre.starts_with(config::constants::PREFIXED_OSM2RDF_LENGTH)) {
                         relevantTriples.emplace_back(sub, pre, obj);
                     }
 
-                    if (util::TtlHelper::hasRelevantObject(pre, cnst::WAY_TAG)) {
+                    if (util::TtlHelper::hasRelevantObject(pre, cnst::XML_TAG_WAY)) {
                         currentLink = obj;
                     }
                 }
@@ -810,24 +821,24 @@ namespace olu::osm {
             }
 
             // Check for relevant relations
-            if (util::TtlHelper::isRelevantNamespace(sub, cnst::RELATION_TAG)) {
-                auto relId = util::TtlHelper::getIdFromSubject(sub, cnst::RELATION_TAG);
+            if (util::TtlHelper::isRelevantNamespace(sub, cnst::XML_TAG_REL)) {
+                auto relId = util::TtlHelper::getIdFromSubject(sub, cnst::XML_TAG_REL);
                 if (relationsToInsert.contains(relId)) {
                     relevantTriples.emplace_back(sub, pre, obj);
 
-                    if (util::TtlHelper::hasRelevantObject(pre, cnst::RELATION_TAG)) {
+                    if (util::TtlHelper::hasRelevantObject(pre, cnst::XML_TAG_REL)) {
                         currentLink = obj;
                     }
                 }
 
                 if (_relationsToUpdateGeometry.contains(relId)) {
-                    if (pre.starts_with("osm2rdfgeom:") ||
-                        pre.starts_with("osm2rdf:length") ||
-                        pre.starts_with("osm2rdf:area")) {
+                    if (pre.starts_with(cnst::NAMESPACE_OSM2RDF_GEOM) ||
+                        pre.starts_with(cnst::PREFIXED_OSM2RDF_LENGTH) ||
+                        pre.starts_with(cnst::PREFIXED_OSM2RDF_AREA)) {
                         relevantTriples.emplace_back(sub, pre, obj);
                     }
 
-                    if (util::TtlHelper::hasRelevantObject(pre, cnst::RELATION_TAG)) {
+                    if (util::TtlHelper::hasRelevantObject(pre, cnst::XML_TAG_REL)) {
                         currentLink = obj;
                     }
                 }
@@ -841,18 +852,18 @@ namespace olu::osm {
     void
     OsmChangeHandler::storeIdsOfReferencedElements(const boost::property_tree::ptree& relElement) {
         for (const auto &[memberTag, element] : relElement.get_child("")) {
-            if (memberTag != "member" && memberTag != "nd") {
+            if (memberTag != cnst::XML_TAG_MEMBER && memberTag != cnst::XML_TAG_NODE_REF) {
                 continue;
             }
 
             std::string type;
-            if (memberTag == "nd") {
-                type = "node";
+            if (memberTag == cnst::XML_TAG_NODE_REF) {
+                type = cnst::XML_TAG_NODE;
             } else {
-                type = util::XmlReader::readAttribute<std::string>("<xmlattr>.type", element);
+                type = util::XmlReader::readAttribute<std::string>(cnst::XML_PATH_ATTR_TYPE, element);
             }
 
-            auto refIdAsString = util::XmlReader::readAttribute<std::string>("<xmlattr>.ref",
+            auto refIdAsString = util::XmlReader::readAttribute<std::string>(cnst::XML_PATH_ATTR_NODE_REF,
                                                                              element);
 
             id_t id;
@@ -865,15 +876,15 @@ namespace olu::osm {
                 throw OsmChangeHandlerException(msg.c_str());
             }
 
-            if (type == "node") {
+            if (type == cnst::XML_TAG_NODE) {
                 if (!nodeInChangeFile(id)) {
                     _referencedNodes.insert(id);
                 }
-            } else if (type == "way") {
+            } else if (type == cnst::XML_TAG_WAY) {
                 if (!wayInChangeFile(id)) {
                     _referencedWays.insert(id);
                 }
-            } else if (type == "relation") {
+            } else if (type == cnst::XML_TAG_REL) {
                 if (!relationInChangeFile(id)) {
                     _referencedRelations.insert(id);
                 }
@@ -887,7 +898,7 @@ namespace olu::osm {
 
     id_t OsmChangeHandler::getIdFor(const boost::property_tree::ptree &element) {
         try {
-            return util::XmlReader::readAttribute<id_t>(config::constants::ID_ATTRIBUTE,element);
+            return util::XmlReader::readAttribute<id_t>(config::constants::XML_PATH_ATTR_ID,element);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
             const std::string msg = "Could not extract identifier from element: "
@@ -901,9 +912,9 @@ namespace olu::osm {
         double lon;
         try {
             lat = util::XmlReader::readAttribute<double>(
-                config::constants::LATITUDE_ATTRIBUTE, element);
+                config::constants::XML_PATH_ATTR_LAT, element);
             lon = util::XmlReader::readAttribute<double>(
-                config::constants::LONGITUDE_ATTRIBUTE, element);
+                config::constants::XML_PATH_ATTR_LON, element);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
             const std::string msg = "Could not extract lat or lon from element: "
@@ -918,9 +929,9 @@ namespace olu::osm {
         member_ids_t wayMember;
 
         for (const auto &child : element) {
-            if (child.first == cnst::NODE_REFERENCE_TAG) {
+            if (child.first == cnst::XML_TAG_NODE_REF) {
                 wayMember.emplace_back(
-                    util::XmlReader::readAttribute<id_t>(cnst::NODE_REFERENCE_ATTRIBUTE,
+                    util::XmlReader::readAttribute<id_t>(cnst::XML_PATH_ATTR_NODE_REF,
                                                          child.second));
             }
         }

@@ -76,7 +76,7 @@ namespace olu::osm {
 
         try {
             // Redicret std::cout to avoid output from osm2rdf
-            const std::ofstream out("osm2rdf_info.txt");
+            const std::ofstream out(cnst::PATH_TO_OSM2RDF_INFO_OUTPUT_FILE);
             std::streambuf *coutbuf = std::cerr.rdbuf();
             std::cerr.rdbuf(out.rdbuf());
 

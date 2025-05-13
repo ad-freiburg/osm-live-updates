@@ -123,12 +123,17 @@ namespace olu::sparql {
         [[nodiscard]] static std::string getValuesClause(const std::string& osmTag,
                                                          const std::set<id_t> &objectIds);
 
+        [[nodiscard]] static std::string getValuesClause(const std::string& osmTag,
+                                                         const std::string &delimiter,
+                                                         const std::set<id_t> &objectIds);
+
         [[nodiscard]] static std::string getTripleClause(const std::string& subject,
                                                          const std::string& predicate,
                                                          const std::string& object);
 
         [[nodiscard]] std::string wrapWithGraphOptional(const std::string& clause) const;
-        [[nodiscard]] static std::string wrapWithUnion(const std::string& clause) ;
+        [[nodiscard]] static std::string wrapWithUnion(const std::string& clause);
+        [[nodiscard]] static std::string wrapWithOptional(const std::string& clause);
     };
 
     /**

@@ -7,13 +7,15 @@
 
 #include <iostream>
 #include <string>
+#include <config/Constants.h>
 
+namespace cnst = olu::config::constants;
 namespace olu::osm {
     bool OsmObjectHelper::isMultipolygon(const boost::property_tree::ptree &relation) {
         for (const auto &[tag, attr]: relation.get_child("")) {
-            if (tag == "tag") {
-                if (util::XmlReader::readAttribute<std::string>("<xmlattr>.k", attr) == "type" &&
-                    util::XmlReader::readAttribute<std::string>("<xmlattr>.v", attr) == "multipolygon") {
+            if (tag == cnst::XML_TAG_TAG) {
+                if (util::XmlReader::readAttribute<std::string>(cnst::XML_PATH_ATTR_KEY, attr) == "type" &&
+                    util::XmlReader::readAttribute<std::string>(cnst::XML_PATH_ATTR_VALUE, attr) == "multipolygon") {
                     return true;
                     }
             }
