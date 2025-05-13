@@ -544,7 +544,7 @@ namespace olu::osm {
             nodesToDelete,
             MAX_VALUES_PER_QUERY,
             [this, progress, &counter](std::set<id_t> const &batch) mutable {
-                runUpdateQuery(_queryWriter.writeDeleteQuery(batch, "osmnode"),
+                runUpdateQuery(_queryWriter.writeDeleteQuery(batch, cnst::OSM_NODE_PREFIX),
                                cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
                 progress.update(counter += batch.size());
             });
@@ -561,7 +561,7 @@ namespace olu::osm {
             waysToDelete,
             MAX_VALUES_PER_QUERY,
             [this, &counter, progress](std::set<id_t> const &batch) mutable {
-                runUpdateQuery(_queryWriter.writeDeleteQuery(batch, "osmway"),
+                runUpdateQuery(_queryWriter.writeDeleteQuery(batch, cnst::OSM_WAY_PREFIX),
                                cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
                 progress.update(counter += batch.size());
             });
@@ -573,7 +573,7 @@ namespace olu::osm {
             _modifiedWays,
             MAX_VALUES_PER_QUERY,
             [this, &counter, progress](std::set<id_t> const &batch) mutable {
-                runUpdateQuery(_queryWriter.writeDeleteQueryForMetaAndTags(batch, "osmway"),
+                runUpdateQuery(_queryWriter.writeDeleteQueryForMetaAndTags(batch, cnst::OSM_WAY_PREFIX),
                                cnst::PREFIXES_FOR_WAY_DELETE_META_AND_TAGS_QUERY);
                 progress.update(counter += batch.size());
             });
@@ -585,7 +585,7 @@ namespace olu::osm {
             _waysToUpdateGeometry,
             MAX_VALUES_PER_QUERY,
             [this, &counter, progress](std::set<id_t> const &batch) mutable {
-                runUpdateQuery(_queryWriter.writeDeleteQueryForGeometry(batch, "osmway"),
+                runUpdateQuery(_queryWriter.writeDeleteQueryForGeometry(batch, cnst::OSM_WAY_PREFIX),
                                cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
                 progress.update(counter += batch.size());
             });
@@ -596,16 +596,26 @@ namespace olu::osm {
         std::set<id_t> relationsToDelete;
         relationsToDelete.insert(_deletedRelations.begin(), _deletedRelations.end());
         relationsToDelete.insert(_modifiedRelations.begin(), _modifiedRelations.end());
-        relationsToDelete.insert(_relationsToUpdateGeometry.begin(),
-                                 _relationsToUpdateGeometry.end());
         relationsToDelete.insert(_createdRelations.begin(), _createdRelations.end());
 
         doInBatches(
             relationsToDelete,
             MAX_VALUES_PER_QUERY,
             [this, &counter, progress](std::set<id_t> const &batch) mutable {
-                runUpdateQuery(_queryWriter.writeDeleteQuery(batch, "osmrel"),
+                runUpdateQuery(_queryWriter.writeDeleteQuery(batch, cnst::OSM_RELATION_PREFIX),
                                cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
+                progress.update(counter += batch.size());
+            });
+    }
+
+    void OsmChangeHandler::deleteRelationsGeometry(osm2rdf::util::ProgressBar &progress,
+                                                   size_t &counter) {
+        doInBatches(
+            _relationsToUpdateGeometry,
+            MAX_VALUES_PER_QUERY,
+            [this, &counter, progress](std::set<id_t> const &batch) mutable {
+                runUpdateQuery(_queryWriter.writeDeleteQueryForGeometry(batch, cnst::OSM_RELATION_PREFIX),
+                               cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
                 progress.update(counter += batch.size());
             });
     }
@@ -639,6 +649,7 @@ namespace olu::osm {
         deleteWaysMetaDataAndTags(deleteProgress,counter);
         deleteWaysGeometry(deleteProgress, counter);
         deleteRelationsFromDatabase(deleteProgress, counter);
+        deleteRelationsGeometry(deleteProgress, counter);
 
         deleteProgress.done();
     }
@@ -724,7 +735,6 @@ namespace olu::osm {
         std::set<id_t> relationsToInsert;
         relationsToInsert.insert(_createdRelations.begin(), _createdRelations.end());
         relationsToInsert.insert(_modifiedRelations.begin(), _modifiedRelations.end());
-        relationsToInsert.insert(_relationsToUpdateGeometry.begin(), _relationsToUpdateGeometry.end());
 
         // Triples that should be inserted into the database
         std::vector<Triple> relevantTriples;
@@ -801,8 +811,21 @@ namespace olu::osm {
 
             // Check for relevant relations
             if (util::TtlHelper::isRelevantNamespace(sub, cnst::RELATION_TAG)) {
-                if (relationsToInsert.contains(util::TtlHelper::getIdFromSubject(sub, cnst::RELATION_TAG))) {
+                auto relId = util::TtlHelper::getIdFromSubject(sub, cnst::RELATION_TAG);
+                if (relationsToInsert.contains(relId)) {
                     relevantTriples.emplace_back(sub, pre, obj);
+
+                    if (util::TtlHelper::hasRelevantObject(pre, cnst::RELATION_TAG)) {
+                        currentLink = obj;
+                    }
+                }
+
+                if (_relationsToUpdateGeometry.contains(relId)) {
+                    if (pre.starts_with("osm2rdfgeom:") ||
+                        pre.starts_with("osm2rdf:length") ||
+                        pre.starts_with("osm2rdf:area")) {
+                        relevantTriples.emplace_back(sub, pre, obj);
+                    }
 
                     if (util::TtlHelper::hasRelevantObject(pre, cnst::RELATION_TAG)) {
                         currentLink = obj;

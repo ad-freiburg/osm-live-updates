@@ -278,6 +278,13 @@ namespace olu::osm {
         void deleteRelationsFromDatabase(osm2rdf::util::ProgressBar &progress, size_t &counter);
 
         /**
+         * Send SPARQL queries to delete geometry triples that belong to the ways for which only the
+         * geometry changed
+         */
+        void deleteRelationsGeometry(osm2rdf::util::ProgressBar &progress, size_t &counter);
+
+
+        /**
          * Send SPARQL queries to insert all relevant triples
          */
         void insertTriplesToDatabase();

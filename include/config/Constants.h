@@ -23,6 +23,7 @@
 #include <vector>
 
 namespace olu::config::constants {
+
     // Exception Messages
     const static inline char *const EXCEPTION_MSG_SEQUENCE_NUMBER_IS_INVALID =
         "Sequence number is invalid.";
@@ -81,6 +82,10 @@ namespace olu::config::constants {
     const static inline std::string OSM_TAG_KEY = "https://www.openstreetmap.org/wiki/Key:";
 
     // osm2rdf predicates
+    const static inline std::string OSM_NODE_PREFIX = "osmnode";
+    const static inline std::string OSM_WAY_PREFIX = "osmway";
+    const static inline std::string OSM_RELATION_PREFIX = "osmrel";
+
     const static inline std::string OSM_2_RDF_WAY_MEMBER = "osmway:member";
     const static inline std::string OSM_2_RDF_WAY_MEMBER_ID = "osmway:member_id";
     const static inline std::string OSM_2_RDF_WAY_MEMBER_POS = "osmway:member_pos";
@@ -196,6 +201,13 @@ namespace olu::config::constants {
             "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
     };
 
+    const static inline std::vector<std::string> PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY {
+            "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
+            "PREFIX geo: <http://www.opengis.net/ont/geosparql#>",
+            "PREFIX osm2rdf: <https://osm2rdf.cs.uni-freiburg.de/rdf#>",
+            "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
+    };
+
     const static inline std::vector<std::string> PREFIXES_FOR_RELATION_DELETE_QUERY {
             "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
             "PREFIX ogc: <http://www.opengis.net/rdf#>",
@@ -224,7 +236,6 @@ namespace olu::config::constants {
             "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
     };
 
-    // Qlever
     const static inline std::string HEADER = "Configuration for OLU:";
 
     const static inline std::string HELP_OPTION_SHORT = "h";
