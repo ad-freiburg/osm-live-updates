@@ -52,9 +52,9 @@ olu::sparql::QueryWriter::writeDeleteQuery(const std::set<id_t> &ids, const std:
                                                + cnst::PREFIXED_WAY_MEMBER_POS + " "
                                                + cnst::PREFIXED_GEO_AS_WKT + " }";
     } else if (osmTag == cnst::NAMESPACE_OSM_REL) {
-        optionalPredicates = "VALUES ?pred { " + cnst::PREFIXED_RELATION_MEMBER_ID + " "
-                                               + cnst::PREFIXED_RELATION_MEMBER_POS + " "
-                                               + cnst::PREFIXED_RELATION_MEMBER_ROLE + " "
+        optionalPredicates = "VALUES ?pred { " + cnst::PREFIXED_REL_MEMBER_ID + " "
+                                               + cnst::PREFIXED_REL_MEMBER_POS + " "
+                                               + cnst::PREFIXED_REL_MEMBER_ROLE + " "
                                                + cnst::PREFIXED_GEO_AS_WKT + " }";
     } else {
         const std::string msg = "Unknown osmTag: " + osmTag;
@@ -162,10 +162,10 @@ std::string olu::sparql::QueryWriter::writeQueryForRelations(const std::set<id_t
     oss << "WHERE { ";
     oss << getValuesClause(cnst::NAMESPACE_OSM_REL, relationIds);
     oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_OSM_KEY_TYPE, cnst::QUERY_VAR_TYPE);
-    oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_RELATION_MEMBER, cnst::QUERY_VAR_MEMBER);
-    oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_RELATION_MEMBER_ID, cnst::QUERY_VAR_MEMBER_ID);
-    oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_RELATION_MEMBER_ROLE, cnst::QUERY_VAR_MEMBER_ROLE);
-    oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_RELATION_MEMBER_POS, cnst::QUERY_VAR_MEMBER_POS);
+    oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_REL_MEMBER, cnst::QUERY_VAR_MEMBER);
+    oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_REL_MEMBER_ID, cnst::QUERY_VAR_MEMBER_ID);
+    oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_REL_MEMBER_ROLE, cnst::QUERY_VAR_MEMBER_ROLE);
+    oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_REL_MEMBER_POS, cnst::QUERY_VAR_MEMBER_POS);
     oss << "} GROUP BY " + cnst::QUERY_VAR_VAL + " " + cnst::QUERY_VAR_TYPE;
     return oss.str();
 }
@@ -187,6 +187,24 @@ std::string olu::sparql::QueryWriter::writeQueryForWaysMembers(const std::set<id
 }
 
 // _________________________________________________________________________________________________
+std::string olu::sparql::QueryWriter::writeQueryForRelsMembers(const std::set<id_t> &relIds) const {
+    std::ostringstream oss;
+    oss << "SELECT " + cnst::QUERY_VAR_VAL + " "
+          "(GROUP_CONCAT(?memberUri; separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_IDS + ") "
+          "(GROUP_CONCAT(?memberPos; separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_POSS + ") "
+          "(GROUP_CONCAT(?memberRole; separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_ROLES + ") ";
+    oss << getFromClauseOptional();
+    oss << "WHERE { ";
+    oss << getValuesClause(cnst::NAMESPACE_OSM_REL, relIds);
+    oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_REL_MEMBER, "?member");
+    oss << getTripleClause("?member", cnst::PREFIXED_REL_MEMBER_ID, "?memberUri");
+    oss << getTripleClause("?member", cnst::PREFIXED_REL_MEMBER_POS, "?memberPos");
+    oss << getTripleClause("?member", cnst::PREFIXED_REL_MEMBER_ROLE, "?memberRole");
+    oss << "} GROUP BY " + cnst::QUERY_VAR_VAL;
+    return oss.str();
+}
+
+// _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeQueryForReferencedNodes(const std::set<id_t> &wayIds) const {
     std::ostringstream oss;
     oss << "SELECT ?node ";
@@ -200,14 +218,14 @@ std::string olu::sparql::QueryWriter::writeQueryForReferencedNodes(const std::se
 }
 
 // _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeQueryForRelationMembers(const std::set<id_t> &relIds) const {
+std::string olu::sparql::QueryWriter::writeQueryForRelationMemberIds(const std::set<id_t> &relIds) const {
     std::ostringstream oss;
     oss << "SELECT ?p ";
     oss << getFromClauseOptional();
     oss << "WHERE { ";
     oss << getValuesClause(cnst::NAMESPACE_OSM_REL, relIds);
-    oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_RELATION_MEMBER, "?o");
-    oss << getTripleClause("?o", cnst::PREFIXED_RELATION_MEMBER_ID, "?p");
+    oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_REL_MEMBER, "?o");
+    oss << getTripleClause("?o", cnst::PREFIXED_REL_MEMBER_ID, "?p");
     oss << "} GROUP BY ?p";
     return oss.str();
 }
@@ -234,8 +252,8 @@ olu::sparql::QueryWriter::writeQueryForRelationsReferencingNodes(const std::set<
     oss << getFromClauseOptional();
     oss << "WHERE { ";
     oss << getValuesClause(cnst::NAMESPACE_OSM_NODE, nodeIds);
-    oss << getTripleClause("?s", cnst::PREFIXED_RELATION_MEMBER, "?o");
-    oss << getTripleClause("?o", cnst::PREFIXED_RELATION_MEMBER_ID, cnst::QUERY_VAR_VAL);
+    oss << getTripleClause("?s", cnst::PREFIXED_REL_MEMBER, "?o");
+    oss << getTripleClause("?o", cnst::PREFIXED_REL_MEMBER_ID, cnst::QUERY_VAR_VAL);
     oss << "} GROUP BY ?s";
     return oss.str();
 }
@@ -248,8 +266,8 @@ olu::sparql::QueryWriter::writeQueryForRelationsReferencingWays(const std::set<i
     oss << getFromClauseOptional();
     oss << "WHERE { ";
     oss << getValuesClause(cnst::NAMESPACE_OSM_WAY, wayIds);
-    oss << getTripleClause("?s", cnst::PREFIXED_RELATION_MEMBER, "?o");
-    oss << getTripleClause("?o", cnst::PREFIXED_RELATION_MEMBER_ID, cnst::QUERY_VAR_VAL);
+    oss << getTripleClause("?s", cnst::PREFIXED_REL_MEMBER, "?o");
+    oss << getTripleClause("?o", cnst::PREFIXED_REL_MEMBER_ID, cnst::QUERY_VAR_VAL);
     oss << "} GROUP BY ?s";
     return oss.str();
 }
@@ -262,8 +280,8 @@ olu::sparql::QueryWriter::writeQueryForRelationsReferencingRelations(const std::
     oss << getFromClauseOptional();
     oss << "WHERE { ";
     oss << getValuesClause(cnst::NAMESPACE_OSM_REL, relationIds);
-    oss << getTripleClause("?s", cnst::PREFIXED_RELATION_MEMBER, "?o");
-    oss << getTripleClause("?o", cnst::PREFIXED_RELATION_MEMBER_ID, cnst::QUERY_VAR_VAL);
+    oss << getTripleClause("?s", cnst::PREFIXED_REL_MEMBER, "?o");
+    oss << getTripleClause("?o", cnst::PREFIXED_REL_MEMBER_ID, cnst::QUERY_VAR_VAL);
     oss << "} ";
     oss << "GROUP BY ?s";
     return oss.str();

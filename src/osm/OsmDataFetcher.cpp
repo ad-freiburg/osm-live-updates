@@ -490,10 +490,70 @@ namespace olu::osm {
     }
 
     // _____________________________________________________________________________________________
+    std::vector<std::pair<id_t, rel_members_t>>
+    OsmDataFetcher::fetchRelsMembersSorted(const std::set<id_t> &relIds) {
+        auto response = runQuery(_queryWriter.writeQueryForRelsMembers(relIds),
+                                       cnst::PREFIXES_FOR_RELATION_MEMBERS);
+
+        std::vector<std::pair<id_t, rel_members_t>> relsWithMembers;
+        for (const auto &result : response.get_child(cnst::XML_PATH_SPARQL_RESULTS)) {
+            id_t relId = 0;
+            member_ids_t memberIds;
+            std::vector<std::string> memberTypes;
+            std::vector<int32_t> memberPositions;
+            std::vector<std::string> memberRoles;
+            for (const auto &binding : result.second.get_child("")) {
+                auto name = util::XmlReader::readAttribute<std::string>(cnst::XML_PATH_ATTR_NAME,
+                                                                        binding.second);
+                if (name == cnst::NAME_VALUE) {
+                    auto relUri = binding.second.get<std::string>(cnst::XML_TAG_URI);
+                    relId = OsmObjectHelper::getIdFromUri(relUri);
+                }
+
+                if (name == cnst::NAME_MEMBER_IDS) {
+                    auto memberUris = binding.second.get<std::string>(cnst::XML_TAG_LITERAL);
+                    memberIds = extractMembers(memberUris);
+                    memberTypes = extractMemberTags(memberUris);
+                }
+
+                if (name == cnst::NAME_MEMBER_POSS) {
+                    auto positions = binding.second.get<std::string>(cnst::XML_TAG_LITERAL);
+                    memberPositions = extractPositions(positions);
+                }
+
+                if (name == cnst::NAME_MEMBER_ROLES) {
+                    auto roles = binding.second.get<std::string>(cnst::XML_TAG_LITERAL);
+                    memberRoles = extractRoles(roles);
+                }
+            }
+
+            std::vector<std::pair<int, RelationMember>> paired;
+            for (size_t i = 0; i < memberIds.size(); ++i) {
+                paired.emplace_back(memberPositions[i],
+                    RelationMember(memberIds[i], memberTypes[i], memberRoles[i]));
+            }
+
+            // Sort by position
+            std::ranges::sort(paired, [](const auto& a, const auto& b) {
+                return a.first < b.first;
+            });
+
+            rel_members_t sortedMembers;
+            for (const auto& [pos, member] : paired) {
+                sortedMembers.push_back(member);
+            }
+
+            relsWithMembers.emplace_back(relId, sortedMembers);
+        }
+
+        return relsWithMembers;
+    }
+
+    // _____________________________________________________________________________________________
     std::pair<std::vector<id_t>, std::vector<id_t>>
     OsmDataFetcher::fetchRelationMembers(const std::set<id_t> &relIds) {
         auto response = runQuery(
-            _queryWriter.writeQueryForRelationMembers(relIds),
+            _queryWriter.writeQueryForRelationMemberIds(relIds),
             cnst::PREFIXES_FOR_RELATION_MEMBERS);
 
         std::vector<id_t> nodeIds;
@@ -587,6 +647,18 @@ namespace olu::osm {
         return integers;
     }
 
+    std::vector<std::string> OsmDataFetcher::extractRoles(const std::string& positions) {
+        std::vector<std::string> roles;
+        std::stringstream ss(positions);
+        std::string token;
+
+        while (std::getline(ss, token, ';')) {
+            roles.push_back(token);
+        }
+
+        return roles;
+    }
+
     std::vector<id_t> OsmDataFetcher::extractMembers(const std::string& memberUris) {
         std::vector<id_t> memberIds;
         std::stringstream ss(memberUris);
@@ -597,6 +669,18 @@ namespace olu::osm {
         }
 
         return memberIds;
+    }
+
+    std::vector<std::string> OsmDataFetcher::extractMemberTags(const std::string& memberUris) {
+        std::vector<std::string> memberTags;
+        std::stringstream ss(memberUris);
+        std::string token;
+
+        while (std::getline(ss, token, ';')) {
+            memberTags.push_back(OsmObjectHelper::getOsmTagFromUri(token));
+        }
+
+        return memberTags;
     }
 
 }

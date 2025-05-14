@@ -21,8 +21,11 @@ namespace olu::osm {
         static bool isMultipolygon(const boost::property_tree::ptree &relation);
 
         static id_t getIdFromUri(const std::string& uri);
+        static std::string getOsmTagFromUri(const std::string& uri);
 
-        static bool areMemberEqual(member_ids_t member1, member_ids_t member2);
+        static bool areWayMemberEqual(member_ids_t member1, member_ids_t member2);
+        static bool areRelMemberEqual(rel_members_t member1, rel_members_t member2);
+
     };
 
     /**

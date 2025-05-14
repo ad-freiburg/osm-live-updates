@@ -50,7 +50,7 @@ namespace olu::util {
         }
 
         if (osmTag == cnst::XML_TAG_REL) {
-            return predicate == cnst::PREFIXED_RELATION_MEMBER ||
+            return predicate == cnst::PREFIXED_REL_MEMBER ||
                    predicate == cnst::PREFIXED_GEO_HAS_CENTROID ||
                    predicate == cnst::PREFIXED_GEO_HAS_GEOMETRY;
         }

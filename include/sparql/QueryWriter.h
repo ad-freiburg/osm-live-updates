@@ -76,9 +76,15 @@ namespace olu::sparql {
         [[nodiscard]] std::string writeQueryForRelations(const std::set<id_t> & relationIds) const;
 
         /**
-        * @returns A SPARQL query for the subject of all members of the given relation
+        * @returns A SPARQL query for the members of the given ways with their position.
         */
         [[nodiscard]] std::string writeQueryForWaysMembers(const std::set<id_t> &wayIds) const;
+
+        /**
+        * @returns A SPARQL query for the members of the given relations with their position and
+        * roles.
+        */
+        [[nodiscard]] std::string writeQueryForRelsMembers(const std::set<id_t> &relIds) const;
 
         /**
          * @returns A SPARQL query for all nodes that are referenced by the given way
@@ -88,7 +94,7 @@ namespace olu::sparql {
         /**
          * @returns A SPARQL query for all members of the given relations
          */
-        [[nodiscard]] std::string writeQueryForRelationMembers(const std::set<id_t> &relIds) const;
+        [[nodiscard]] std::string writeQueryForRelationMemberIds(const std::set<id_t> &relIds) const;
 
         /**
         * @returns A SPARQL query for all ways that reference the given nodes

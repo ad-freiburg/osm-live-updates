@@ -68,9 +68,9 @@ namespace olu::osm {
         std::set<id_t> _deletedWays;
         // Ways that are in a create-changeset in the change file.
         std::set<id_t> _createdWays;
-        // Ways that are in a modify-changeset in the change file.
+        // Ways that are in a modify-changeset in the change file and not have a changed member list
         std::set<id_t> _modifiedWays;
-        // Ways that are in a modify-changeset in the change file.
+        // Ways that are in a modify-changeset in the change file and have a changed member list.
         std::set<id_t> _modifiedWaysWithChangedMembers;
         // Ways that reference a node which was modified in the changeset.
         std::set<id_t> _waysToUpdateGeometry;
@@ -82,8 +82,10 @@ namespace olu::osm {
         std::set<id_t> _deletedRelations;
         // Relations that are in a create-changeset in the change file.
         std::set<id_t> _createdRelations;
-        // Relations that are in a modify-changeset in the change file.
+        // Relations that are in a modify-changeset in the change file and not have a changed member list.
         std::set<id_t> _modifiedRelations;
+        // Relations that are in a modify-changeset in the change file and have a changed member list.
+        std::set<id_t> _modifiedRelsWithChangedMembers;
         // Relations that are of type multipolygon that are in a modify-changeset in the change file.
         std::set<id_t> _modifiedAreas;
         // Relations that reference a node, way or relation which was modified in the changeset.
@@ -132,6 +134,7 @@ namespace olu::osm {
          */
         [[nodiscard]] bool relationInChangeFile(const id_t &relationId) const {
             return _modifiedRelations.contains(relationId) ||
+                   _modifiedRelsWithChangedMembers.contains(relationId) ||
                    _createdRelations.contains(relationId) ||
                    _deletedRelations.contains(relationId);
         }
@@ -160,7 +163,16 @@ namespace olu::osm {
          *
          * @param waysWithMembers Pairs of wayIds with a vector containing the node references
          */
-        void checkWaysForMemberChange(const std::vector<std::pair<id_t, member_ids_t>>& waysWithMembers);
+        void
+        checkWaysForMemberChange(const std::vector<std::pair<id_t, member_ids_t>>& waysWithMembers);
+
+        /**
+         * Checks if the members of the given realtions from the change file have changed.
+         *
+         * @param relsWithMembers Pairs of relIds with a vector containing the members
+         */
+        void
+        checkRelsForMemberChange(const std::vector<std::pair<id_t, rel_members_t>>& relsWithMembers);
 
         /**
          * Stores the ids of the nodes and ways that are referenced in the given relation or way in
@@ -278,6 +290,12 @@ namespace olu::osm {
         void deleteRelationsFromDatabase(osm2rdf::util::ProgressBar &progress, size_t &counter);
 
         /**
+         * Send SPARQL queries to delete meta-data and key-value triples that belong to the
+         * relations that did not change their member and therefore their geometry
+         */
+        void deleteRelationsMetaDataAndTags(osm2rdf::util::ProgressBar &progress, size_t &counter);
+
+        /**
          * Send SPARQL queries to delete geometry triples that belong to the ways for which only the
          * geometry changed
          */
@@ -314,7 +332,16 @@ namespace olu::osm {
          */
         static osmium::Location getLocationFor(const boost::property_tree::ptree &element);
 
-        static member_ids_t getMemberFor(const boost::property_tree::ptree &element);
+        /**
+         * @return A list of all node ids that are members of the given way
+         */
+        static member_ids_t getMemberForWay(const boost::property_tree::ptree &element);
+
+        /**
+         * @return A list of all members of the given relation
+         */
+        static rel_members_t getMemberForRel(const boost::property_tree::ptree &element);
+
     };
 
     /**

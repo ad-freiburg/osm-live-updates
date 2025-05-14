@@ -145,6 +145,14 @@ namespace olu::osm {
         fetchWaysMembersSorted(const std::set<id_t> &wayIds);
 
         /**
+          * Sends a query to the sparql endpoint to get the members of the given relations
+          *
+          * @return The subjects of all members
+          */
+        std::vector<std::pair<id_t, rel_members_t>>
+        fetchRelsMembersSorted(const std::set<id_t> &relIds);
+
+        /**
          * @return The ids of all nodes and ways that are referenced by the given relations
          */
         std::pair<std::vector<id_t>, std::vector<id_t>>
@@ -196,6 +204,8 @@ namespace olu::osm {
 
         static std::vector<int> extractPositions(const std::string& positions);
         static std::vector<id_t> extractMembers(const std::string& memberUris);
+        static std::vector<std::string> extractMemberTags(const std::string& memberUris);
+        static std::vector<std::string> extractRoles(const std::string& memberRoles);
     };
 
     /**

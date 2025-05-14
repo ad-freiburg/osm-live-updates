@@ -44,11 +44,37 @@ namespace olu::osm {
         }
     }
 
-    bool OsmObjectHelper::areMemberEqual(member_ids_t member1, member_ids_t member2) {
+    std::string OsmObjectHelper::getOsmTagFromUri(const std::string& uri) {
+        if (uri.starts_with(cnst::NAMESPACE_IRI_OSM_NODE)) {
+            return cnst::XML_TAG_NODE;
+        }
+
+        if (uri.starts_with(cnst::NAMESPACE_IRI_OSM_WAY)) {
+            return cnst::XML_TAG_WAY;
+        }
+
+        if (uri.starts_with(cnst::NAMESPACE_IRI_OSM_REL)) {
+            return cnst::XML_TAG_REL;
+        }
+
+        const std::string msg = "Cant extract osm tag from uri: " + uri;
+        throw OsmObjectHelperException(msg.c_str());
+    }
+
+    bool OsmObjectHelper::areWayMemberEqual(member_ids_t member1, member_ids_t member2) {
         return member1.size() == member2.size() &&
             std::equal(member1.begin(), member1.end(), member2.begin());
     }
 
+    bool OsmObjectHelper::areRelMemberEqual(rel_members_t member1, rel_members_t member2) {
+        return member1.size() == member2.size() &&
+            std::equal(member1.begin(), member1.end(), member2.begin(),
+                     [](const RelationMember& a, const RelationMember& b) {
+                         return a.id == b.id &&
+                                a.osmTag == b.osmTag &&
+                                a.role == b.role;
+                     });
+    }
 }
 
 

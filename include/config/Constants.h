@@ -70,6 +70,7 @@ namespace olu::config::constants {
     const static inline std::string XML_TAG_REF = "ref";
     const static inline std::string XML_TAG_MEMBER = "member";
     const static inline std::string XML_TAG_TYPE = "type";
+    const static inline std::string XML_TAG_ROLE = "role";
     const static inline std::string XML_TAG_ID = "id";
     const static inline std::string XML_TAG_LAT = "lat";
     const static inline std::string XML_TAG_LON = "lon";
@@ -106,6 +107,7 @@ namespace olu::config::constants {
     const static inline std::string XML_PATH_ATTR_LAT = MakeXMLPath({XML_TAG_ATTR, XML_TAG_LAT});
     const static inline std::string XML_PATH_ATTR_LON = MakeXMLPath({XML_TAG_ATTR, XML_TAG_LON});
     const static inline std::string XML_PATH_ATTR_TYPE = MakeXMLPath({XML_TAG_ATTR, XML_TAG_TYPE});
+    const static inline std::string XML_PATH_ATTR_ROLE = MakeXMLPath({XML_TAG_ATTR, XML_TAG_ROLE});
     const static inline std::string XML_PATH_ATTR_KEY = MakeXMLPath({XML_TAG_ATTR, XML_TAG_KEY});
     const static inline std::string XML_PATH_ATTR_VALUE = MakeXMLPath({XML_TAG_ATTR, XML_TAG_VALUE});
     const static inline std::string XML_PATH_ATTR_NAME = MakeXMLPath({XML_TAG_ATTR, XML_TAG_NAME});
@@ -224,10 +226,10 @@ namespace olu::config::constants {
     const static inline std::string PREFIXED_WAY_MEMBER_ID = MakePrefixedName(NAMESPACE_OSM_WAY, NAME_MEMBER_ID);
     const static inline std::string PREFIXED_WAY_MEMBER_POS = MakePrefixedName(NAMESPACE_OSM_WAY, NAME_MEMBER_POS);
 
-    const static inline std::string PREFIXED_RELATION_MEMBER = MakePrefixedName(NAMESPACE_OSM_REL, NAME_MEMBER);
-    const static inline std::string PREFIXED_RELATION_MEMBER_ID = MakePrefixedName(NAMESPACE_OSM_REL, NAME_MEMBER_ID);
-    const static inline std::string PREFIXED_RELATION_MEMBER_POS = MakePrefixedName(NAMESPACE_OSM_REL, NAME_MEMBER_POS);
-    const static inline std::string PREFIXED_RELATION_MEMBER_ROLE = MakePrefixedName(NAMESPACE_OSM_REL, NAME_MEMBER_ROLE);
+    const static inline std::string PREFIXED_REL_MEMBER = MakePrefixedName(NAMESPACE_OSM_REL, NAME_MEMBER);
+    const static inline std::string PREFIXED_REL_MEMBER_ID = MakePrefixedName(NAMESPACE_OSM_REL, NAME_MEMBER_ID);
+    const static inline std::string PREFIXED_REL_MEMBER_POS = MakePrefixedName(NAMESPACE_OSM_REL, NAME_MEMBER_POS);
+    const static inline std::string PREFIXED_REL_MEMBER_ROLE = MakePrefixedName(NAMESPACE_OSM_REL, NAME_MEMBER_ROLE);
 
     const static inline std::string PREFIXED_GEO_HAS_GEOMETRY = MakePrefixedName(NAMESPACE_GEO, NAME_HAS_GEOMETRY);
     const static inline std::string PREFIXED_GEO_HAS_CENTROID = MakePrefixedName(NAMESPACE_GEO, NAME_HAS_CENTROID);
@@ -281,6 +283,9 @@ namespace olu::config::constants {
 
     const static inline std::vector PREFIXES_FOR_WAY_DELETE_META_AND_TAGS_QUERY {
             PREFIX_DECL_OSM_WAY, PREFIX_DECL_OSM_META, PREFIX_DECL_OSM2RDF, PREFIX_DECL_OSM_KEY};
+
+    const static inline std::vector PREFIXES_FOR_RELATION_DELETE_META_AND_TAGS_QUERY {
+            PREFIX_DECL_OSM_REL, PREFIX_DECL_OSM_META, PREFIX_DECL_OSM2RDF, PREFIX_DECL_OSM_KEY};
 
     const static inline std::vector PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY {
             PREFIX_DECL_OSM_WAY, PREFIX_DECL_GEO, PREFIX_DECL_OSM2RDF, PREFIX_DECL_OSM2RDF_GEOM};
