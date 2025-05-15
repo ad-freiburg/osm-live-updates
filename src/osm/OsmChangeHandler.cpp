@@ -105,9 +105,6 @@ namespace olu::osm {
         deleteTriplesFromDatabase();
         insertTriplesToDatabase();
 
-        // Cache of sparql endpoint has to be cleared after the completion`
-        _sparql.clearCache();
-
         const auto modifiedNodesCount = _modifiedNodes.size() +
                                                    _modifiedNodesWithChangedLocation.size();
         const auto modifiedWaysCount = _modifiedWays.size() +
@@ -323,9 +320,11 @@ namespace olu::osm {
         checkNodesForLocationChange(modifiedNodes, modifiedNodeLocations);
 
         // Check if the members of modified ways and rels have changed and store them in the
-        // responding sets
+        // responding sets (_modifiedWays/Rels or _modifiedWays/RelsWithChangedMembers)
         checkWaysForMemberChange(modifiedWaysWithMembers);
+        // std::cout << (_modifiedWaysWithChangedMembers.size() * 100 / (_modifiedWaysWithChangedMembers.size() + _modifiedWays.size())) << "% of ways have a changed member list" << std::endl;
         checkRelsForMemberChange(modifiedRelsWithMembers);
+        // std::cout << (_modifiedRelsWithChangedMembers.size() * 100 / (_modifiedRelsWithChangedMembers.size() + _modifiedRelations.size())) << "% of relations have a changed member list" << std::endl;
 
         if (_createdNodes.empty() && _modifiedNodes.empty() &&
             _modifiedNodesWithChangedLocation.empty() && _deletedNodes.empty() &&

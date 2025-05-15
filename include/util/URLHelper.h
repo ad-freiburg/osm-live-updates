@@ -27,7 +27,7 @@ namespace olu::util {
 class URLHelper {
 public:
     // Builds an url from a list of strings by concatenating them with a '/'
-    static std::string buildUrl(std::vector<std::string> &pathSegments);
+    static std::string buildUrl(const std::vector<std::string> &pathSegments);
 
     // Formats a sequence number for use in an url
     // For example: The sequence number 6177383 would be returned as 006/177/383

@@ -19,7 +19,6 @@
 #ifndef OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 #define OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 
-#include "osm/OsmDatabaseState.h"
 #include "osm/Node.h"
 #include "osm/Relation.h"
 #include "osm/Way.h"
@@ -33,52 +32,13 @@
 namespace olu::osm {
 
     /**
-     * Deals with the retrieval of osm data needed for the update process.
-     *
-     * Osm change files are fetched from the server, the URL of which must be provided by the user.
-     * The remaining data is collected from the SPARQL endpoint.
+     * Deals with the retrieval of osm data from the SPARQL endpoint that is needed for the update
+     * process.
      */
     class OsmDataFetcher {
     public:
         explicit OsmDataFetcher(const config::Config &config)
             : _config(config), _sparqlWrapper(config), _queryWriter(config) { }
-
-        // Fetch from SERVER -----------------------------------------------------------------------
-        /**
-         * Fetches the database state (sequence number and timestamp) for the given sequence number
-         * from the server
-         *
-         * @param sequenceNumber the sequence number to fetch the database state for
-         * @return The database state for the provided sequence number
-         */
-        [[nodiscard]] OsmDatabaseState fetchDatabaseState(int sequenceNumber) const;
-
-        /**
-         * Fetches the database state (sequence number and timestamp) of the latest diff from the
-         * server
-         *
-         * @return The latest database state on the server
-         */
-        [[nodiscard]] OsmDatabaseState fetchLatestDatabaseState() const;
-
-        /**
-         * Fetches the .osc change file from the server, writes it to a file and returns the path to
-         * the file. The file might be compressed with gzip.
-         *
-         * @param sequenceNumber The sequence number to fetch the change file for
-         * @return The path to the location of the fetched .osm Change file
-         */
-        std::string fetchChangeFile(int &sequenceNumber) ;
-
-        /**
-         * Fetches the 'nearest' database state for the given timestamp from the server, meaning the
-         * first state which timestamp is before the given timestamp.
-         *
-         * @param timeStamp Timestamp to fetch the `nearest` database state for
-         * @return The 'nearest' database state for the given timestamp
-         */
-        [[nodiscard]] OsmDatabaseState
-        fetchDatabaseStateForTimestamp(const std::string& timeStamp) const;
 
         /**
          * Sends a query to the sparql endpoint to get the location of the nodes with the given ids
@@ -189,15 +149,6 @@ namespace olu::osm {
         config::Config _config;
         sparql::SparqlWrapper _sparqlWrapper;
         sparql::QueryWriter _queryWriter;
-
-        /**
-         * Extracts the database state from a state file. A state file contains a sequence number
-         * and a timestamp and describes the state for an osm change file.
-         *
-         * @param stateFile The state file to extract the database state from.
-         * @return The database state described by the state file
-         */
-        static OsmDatabaseState extractStateFromStateFile(const std::string& stateFile);
 
         boost::property_tree::ptree runQuery(const std::string &query,
                                              const std::vector<std::string> &prefixes);

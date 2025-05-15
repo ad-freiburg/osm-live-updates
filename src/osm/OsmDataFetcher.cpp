@@ -18,8 +18,6 @@
 
 #include "osm/OsmDataFetcher.h"
 #include "config/Constants.h"
-#include "util/URLHelper.h"
-#include "util/HttpRequest.h"
 #include "util/OsmObjectHelper.h"
 #include "util/XmlReader.h"
 #include "sparql/QueryWriter.h"
@@ -40,68 +38,6 @@ namespace olu::osm {
         _sparqlWrapper.setQuery(query);
         _sparqlWrapper.setPrefixes(prefixes);
         return _sparqlWrapper.runQuery();
-    }
-
-    // _____________________________________________________________________________________________
-    OsmDatabaseState OsmDataFetcher::fetchDatabaseState(int sequenceNumber) const {
-        // Build url for state file
-        std::string seqNumberFormatted =
-                util::URLHelper::formatSequenceNumberForUrl(sequenceNumber);
-        std::string stateFileName =
-                seqNumberFormatted + "." + cnst::PATH_TO_STATE_FILE;
-
-        std::vector<std::string> pathSegments { };
-        pathSegments.emplace_back(_config.changeFileDirUri);
-        pathSegments.emplace_back(stateFileName);
-        std::string url = util::URLHelper::buildUrl(pathSegments);
-
-        //  state file from osm server
-        auto request = util::HttpRequest(util::GET, url);
-
-        std::string response;
-        response = request.perform();
-
-        return extractStateFromStateFile(response);
-    }
-
-    // _____________________________________________________________________________________________
-    OsmDatabaseState OsmDataFetcher::fetchLatestDatabaseState() const {
-        // Build url for state file
-        std::vector<std::string> pathSegments { };
-        pathSegments.emplace_back(_config.changeFileDirUri);
-        pathSegments.emplace_back(cnst::PATH_TO_STATE_FILE);
-        const std::string url = util::URLHelper::buildUrl(pathSegments);
-
-        // Get state file from osm server
-        auto request = util::HttpRequest(util::GET, url);
-        const std::string response = request.perform();
-        return extractStateFromStateFile(response);
-    }
-
-    // _____________________________________________________________________________________________
-    std::string OsmDataFetcher::fetchChangeFile(int &sequenceNumber) {
-        // Build url for change file
-        std::string sequenceNumberFormatted = util::URLHelper::formatSequenceNumberForUrl(
-            sequenceNumber);
-        std::string diffFilename = sequenceNumberFormatted + cnst::OSM_CHANGE_FILE_EXTENSION +
-                                   cnst::GZIP_EXTENSION;
-        std::vector<std::string> pathSegments;
-        pathSegments.emplace_back(_config.changeFileDirUri);
-        pathSegments.emplace_back(diffFilename);
-        std::string url = util::URLHelper::buildUrl(pathSegments);
-
-        // Get change file from server and write to cache file.
-        std::string filePath = cnst::PATH_TO_CHANGE_FILE_DIR + std::to_string(sequenceNumber) +
-                                cnst::OSM_CHANGE_FILE_EXTENSION + cnst::GZIP_EXTENSION;
-        auto request = util::HttpRequest(util::GET, url);
-
-        auto response = request.perform();
-        std::ofstream outputFile;
-        outputFile.open(filePath);
-        outputFile << response;
-        outputFile.close();
-
-        return filePath;
     }
 
     // _____________________________________________________________________________________________
@@ -158,48 +94,6 @@ namespace olu::osm {
         }
 
         return timestamp;
-    }
-
-    // _____________________________________________________________________________________________
-    OsmDatabaseState
-    OsmDataFetcher::fetchDatabaseStateForTimestamp(const std::string& timeStamp) const {
-        OsmDatabaseState state = fetchLatestDatabaseState();
-        while (true) {
-            if (state.timeStamp > timeStamp) {
-                auto seq = state.sequenceNumber;
-                seq--;
-                state = fetchDatabaseState(seq);
-            } else {
-                return state;
-            }
-        }
-    }
-
-    // _____________________________________________________________________________________________
-    OsmDatabaseState OsmDataFetcher::extractStateFromStateFile(const std::string& stateFile) {
-        OsmDatabaseState ods;
-        // Extract sequence number from state file
-        boost::regex regexSeqNumber("sequenceNumber=(\\d+)");
-        if (boost::smatch matchSeqNumber; regex_search(stateFile, matchSeqNumber, regexSeqNumber)) {
-            std::string number = matchSeqNumber[1];
-            ods.sequenceNumber = std::stoi(number);
-        } else {
-            throw OsmDataFetcherException(
-                    "Sequence number of latest database state could not be fetched");
-        }
-
-        // Extract timestamp from state file
-        boost::regex regexTimestamp(
-                R"(timestamp=([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}\\:[0-9]{2}\\:[0-9]{2}Z))");
-        if (boost::smatch matchTimestamp; regex_search(stateFile, matchTimestamp, regexTimestamp)) {
-            std::string timestamp = matchTimestamp[1];
-            ods.timeStamp = timestamp;
-        } else {
-            throw OsmDataFetcherException(
-                    "Timestamp of latest database state could not be fetched");
-        }
-
-        return ods;
     }
 
     // _____________________________________________________________________________________________

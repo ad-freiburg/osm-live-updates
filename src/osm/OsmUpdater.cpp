@@ -25,7 +25,7 @@
 namespace cnst = olu::config::constants;
 namespace olu::osm {
     OsmUpdater::OsmUpdater(const config::Config &config) : _config(config), _odf(config),
-                                                          _latestState({}) {
+                                                          _latestState({}), _repServer(config) {
         try {
             std::filesystem::create_directory(cnst::PATH_TO_TEMP_DIR);
             std::filesystem::create_directory(cnst::PATH_TO_CHANGE_FILE_DIR);
@@ -67,7 +67,7 @@ namespace olu::osm {
             << "Determine sequence number to start with ..."
             << std::endl;
 
-            _latestState = _odf.fetchLatestDatabaseState();
+            _latestState = _repServer.fetchLatestDatabaseState();
             const auto sequenceNumber = decideStartSequenceNumber();
 
             std::cout
@@ -123,7 +123,7 @@ namespace olu::osm {
             timestamp = _config.timestamp;
         }
 
-        auto [_, sequenceNumber] = _odf.fetchDatabaseStateForTimestamp(timestamp);
+        auto [_, sequenceNumber] = _repServer.fetchDatabaseStateForTimestamp(timestamp);
         return sequenceNumber;
     }
 
@@ -192,7 +192,7 @@ namespace olu::osm {
         downloadProgress.update(counter);
 
         while (sequenceNumber <= _latestState.sequenceNumber) {
-            auto pathToOsmChangeFile = _odf.fetchChangeFile(sequenceNumber);
+            auto pathToOsmChangeFile = _repServer.fetchChangeFile(sequenceNumber);
             downloadProgress.update(counter++);
             sequenceNumber++;
         }

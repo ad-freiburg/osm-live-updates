@@ -40,7 +40,7 @@ namespace constants = olu::config::constants;
 namespace olu::util {
 
 // _________________________________________________________________________________________________
-std::string URLHelper::buildUrl(std::vector<std::string> &pathSegments) {
+std::string URLHelper::buildUrl(const std::vector<std::string> &pathSegments) {
     std::string url;
     for( const auto& segment : pathSegments ) {
         if(&segment == &pathSegments.back() ) {
