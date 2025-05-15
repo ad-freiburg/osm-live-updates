@@ -76,7 +76,16 @@ namespace olu::osm {
 
         try {
             // Redicret std::cout to avoid output from osm2rdf
-            const std::ofstream out(cnst::PATH_TO_OSM2RDF_INFO_OUTPUT_FILE);
+            std::string outputFile;
+
+            // Keep osm2rdf output in debug mode, otherwise write to temp dierectory and delete
+            // after done
+            if (_config.sparqlOutput == config::DEBUG_FILE) {
+                outputFile = cnst::PATH_TO_OSM2RDF_INFO_OUTPUT_FILE_DEBUG;
+            } else {
+                outputFile = cnst::PATH_TO_OSM2RDF_INFO_OUTPUT_FILE;
+            }
+            const std::ofstream out(outputFile);
             std::streambuf *coutbuf = std::cerr.rdbuf();
             std::cerr.rdbuf(out.rdbuf());
 

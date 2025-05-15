@@ -57,6 +57,7 @@ namespace olu::config::constants {
     const static inline std::string PATH_TO_INPUT_FILE = PATH_TO_TEMP_DIR + "input" + OSM_EXTENSION;
     const static inline std::string PATH_TO_OUTPUT_FILE = PATH_TO_TEMP_DIR + "output" + TURTLE_FILE_EXTENSION;
     const static inline std::string PATH_TO_OSM2RDF_INFO_OUTPUT_FILE = PATH_TO_TEMP_DIR + "osm2rdf_info" + TEXT_FILE_EXTENSION;
+    const static inline std::string PATH_TO_OSM2RDF_INFO_OUTPUT_FILE_DEBUG = "osm2rdf_info" + TEXT_FILE_EXTENSION;
     const static inline std::string PATH_TO_STATE_FILE = "state" + TEXT_FILE_EXTENSION;
 
     // XML -----------------------------------------------------------------------------------------
