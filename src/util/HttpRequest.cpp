@@ -43,6 +43,7 @@ void setup_curl(CURL* curl_handle, std::string& data, const std::string& url)
     curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
     curl_easy_setopt(curl_handle, CURLOPT_WRITEDATA, &data);
     curl_easy_setopt(curl_handle, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(curl_handle, CURLOPT_FAILONERROR, true);
 
 //    curl_easy_setopt(curl_handle, CURLOPT_VERBOSE, 1L);
 }
@@ -92,9 +93,13 @@ std::string HttpRequest::perform() {
     }
 
     if (_res != CURLE_OK) {
-        std::string reason = curl_easy_strerror(_res);
+        const std::string reason = curl_easy_strerror(_res);
+        long http_code = 0;
+        curl_easy_getinfo (_curl, CURLINFO_RESPONSE_CODE, &http_code);
+
         if (_method == POST) {
             std::cerr << "POST failed with reason " << reason << std::endl;
+            std::cerr << "HTTP Code: " << http_code << std::endl;
             std::cerr << "URL: " << _url << std::endl;
             std::cerr << "Body: see Log at log.txt" << std::endl;
             std::cerr << "Response: " << response << std::endl;
@@ -105,10 +110,11 @@ std::string HttpRequest::perform() {
             outputFile.close();
         } else if (_method == GET) {
             std::cerr << "GET failed with reason " << reason << std::endl;
+            std::cerr << "HTTP Code: " << http_code << std::endl;
             std::cerr << "URL: " << _url << std::endl;
-            std::cerr << "Response: " << response << std::endl;
         }
-        throw HttpRequestException(&"Http Request failed: " [ _res]);
+
+        throw HttpRequestException(std::to_string(http_code).c_str());
     }
 
     return response;
