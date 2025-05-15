@@ -13,7 +13,7 @@ namespace olu::util {
 
     class TtlHelper {
     public:
-        static Triple getTriple(const std::string& tripleString);
+        static triple_t getTriple(const std::string& tripleString);
         static id_t getIdFromSubject(const std::string& subject, const std::string &osmTag);
         static bool isRelevantNamespace(const std::string& subject, const std::string &osmTag);
         static bool hasRelevantObject(const std::string& predicate, const std::string &osmTag);

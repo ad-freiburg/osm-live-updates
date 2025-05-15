@@ -55,7 +55,7 @@ namespace olu::osm {
 
         rel_members_t getMembers() { return members; }
         [[nodiscard]] id_t getId() const { return id; }
-        std::vector<KeyValue> getTags() { return tags; }
+        std::vector<key_value_t> getTags() { return tags; }
         std::string getTimestamp() { return timestamp; }
         [[nodiscard]] version_t getVersion() const { return version; }
         [[nodiscard]] changeset_id_t getChangesetId() const { return changeset_id; }
@@ -66,7 +66,7 @@ namespace olu::osm {
         changeset_id_t changeset_id = 0;
         std::string type;
         rel_members_t members;
-        std::vector<KeyValue> tags;
+        std::vector<key_value_t> tags;
     };
 
     /**

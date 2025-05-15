@@ -33,10 +33,10 @@ namespace olu {
     typedef std::vector<id_t> member_ids_t;
     typedef std::vector<osm::RelationMember> rel_members_t;
 
-    typedef std::string WKTPoint;
+    typedef std::string wktPoint_t;
 
-    typedef std::tuple<std::string, std::string, std::string> Triple;
-    typedef std::pair<std::string, std::string> KeyValue;
+    typedef std::tuple<std::string, std::string, std::string> triple_t;
+    typedef std::pair<std::string, std::string> key_value_t;
 }
 
 #endif //OSM_LIVE_UPDATES_TYPES_H

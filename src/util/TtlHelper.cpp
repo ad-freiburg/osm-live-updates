@@ -10,7 +10,7 @@
 namespace cnst = olu::config::constants;
 namespace olu::util {
 
-    Triple TtlHelper::getTriple(const std::string& triple) {
+    triple_t TtlHelper::getTriple(const std::string& triple) {
         const boost::regex regex(R"((\S+)\s(\S+)\s(.*)\s\.)");
         if (boost::smatch match; boost::regex_search(triple, match, regex)) {
             return std::make_tuple(match[1], match[2], match[3]);

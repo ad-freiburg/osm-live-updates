@@ -28,7 +28,7 @@ namespace olu::osm {
 
     class Node {
     public:
-        explicit Node(id_t id, const WKTPoint& locationAsWkt);
+        explicit Node(id_t id, const wktPoint_t& locationAsWkt);
 
         /**
          * Returns the node as a xml osm object.

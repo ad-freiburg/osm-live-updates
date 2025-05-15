@@ -792,7 +792,7 @@ namespace olu::osm {
         }
     }
 
-    std::vector<Triple> OsmChangeHandler::filterRelevantTriples() {
+    std::vector<triple_t> OsmChangeHandler::filterRelevantTriples() {
         std::set<id_t> nodesToInsert;
         nodesToInsert.insert(_createdNodes.begin(), _createdNodes.end());
         nodesToInsert.insert(_modifiedNodes.begin(), _modifiedNodes.end());
@@ -808,7 +808,7 @@ namespace olu::osm {
         relationsToInsert.insert(_modifiedRelsWithChangedMembers.begin(), _modifiedRelsWithChangedMembers.end());
 
         // Triples that should be inserted into the database
-        std::vector<Triple> relevantTriples;
+        std::vector<triple_t> relevantTriples;
         // current link object, for example member nodes or geometries
         std::string currentLink;
 
