@@ -21,9 +21,25 @@
 
 #include <boost/property_tree/ptree.hpp>
 #include <vector>
+#include <iostream>
 
 namespace pt = boost::property_tree;
 namespace olu::util {
+    /**
+* Exception that can appear inside the `XmlReader` class.
+*/
+    class XmlReaderException : public std::exception {
+    private:
+        std::string message;
+
+    public:
+        explicit XmlReaderException(const char* msg) : message(msg) { }
+
+        [[nodiscard]] const char* what() const noexcept override {
+            return message.c_str();
+        }
+    };
+
 
     /**
      * Helper class for dealing with xml Files. The `ptree` data class from the
@@ -42,7 +58,32 @@ namespace olu::util {
          * @param tree The property tree
          * @return The attribute at the given path.
          */
-        static std::string readAttribute(const std::string& attributePath, const pt::ptree& tree);
+        template <typename T>
+        static T readAttribute(const std::string& attributePath,
+                                              const boost::property_tree::ptree& tree) {
+            T attributeValue;
+            try {
+                attributeValue = tree.get<T>(attributePath);
+            } catch (boost::property_tree::ptree_bad_path &e) {
+                std::cerr << "Path not found: " << e.what() << std::endl;
+                std::string msg = "Exception while trying to read attribute at path: " + attributePath;
+                throw XmlReaderException(msg.c_str());
+            } catch (boost::property_tree::ptree_bad_data &e) {
+                std::cerr << "Bad data: " << e.what() << std::endl;
+                std::string msg = "Exception while trying to read attribute at path: " + attributePath;
+                throw XmlReaderException(msg.c_str());
+            } catch (boost::property_tree::ptree_error &e) {
+                std::cerr << "Property tree error: " << e.what() << std::endl;
+                std::string msg = "Exception while trying to read attribute at path: " + attributePath;
+                throw XmlReaderException(msg.c_str());
+            } catch (std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                std::string msg = "Exception while trying to read attribute at path: " + attributePath;
+                throw XmlReaderException(msg.c_str());
+            }
+
+            return attributeValue;
+        }
 
         /**
          * Returns the tag of all children of the element at `parentPath`.
@@ -104,21 +145,6 @@ namespace olu::util {
          * Decodes string for xml format.
          */
         static std::string xmlDecode(const std::string &input);
-    };
-
-    /**
- * Exception that can appear inside the `XmlReader` class.
- */
-    class XmlReaderException : public std::exception {
-    private:
-        std::string message;
-
-    public:
-        explicit XmlReaderException(const char* msg) : message(msg) { }
-
-        [[nodiscard]] const char* what() const noexcept override {
-            return message.c_str();
-        }
     };
 
 } // namespace  olu::util

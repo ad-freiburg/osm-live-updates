@@ -5,11 +5,10 @@
 #ifndef OSM_LIVE_UPDATES_OSMUPDATER_H
 #define OSM_LIVE_UPDATES_OSMUPDATER_H
 
-#include <iostream>
-
 #include "config/Config.h"
 #include "osm/OsmDatabaseState.h"
 #include "osm/OsmDataFetcher.h"
+#include "osm/OsmReplicationServerHelper.h"
 
 namespace olu::osm {
 
@@ -28,6 +27,7 @@ namespace olu::osm {
         void run();
     private:
         config::Config _config;
+        OsmReplicationServerHelper _repServer;
         OsmDataFetcher _odf;
         OsmDatabaseState _latestState;
 
@@ -50,7 +50,7 @@ namespace olu::osm {
         [[nodiscard]] int decideStartSequenceNumber();
 
         /**
-        * Download all change files from the given seqence number to the `latest` one, and store
+        * Download all change files from the given sequence number to the `latest` one, and store
         * them in the /changes directory.
         */
         void fetchChangeFiles(int sequenceNumber);

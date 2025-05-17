@@ -24,19 +24,8 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <set>
 
 namespace olu::osm {
-
-    struct RelationMember {
-        id_t id;
-        std::string osmTag;
-        std::string role;
-
-        RelationMember(const id_t id, const std::string &osmTag, const std::string &role) :
-        id(id), osmTag(osmTag), role(role) {}
-    };
-
     class Relation {
     public:
         explicit Relation(const id_t id): id(id) {};
@@ -64,9 +53,9 @@ namespace olu::osm {
          */
         [[nodiscard]] std::string getXml() const;
 
-        std::vector<RelationMember> getMembers() { return members; }
+        rel_members_t getMembers() { return members; }
         [[nodiscard]] id_t getId() const { return id; }
-        std::vector<KeyValue> getTags() { return tags; }
+        std::vector<key_value_t> getTags() { return tags; }
         std::string getTimestamp() { return timestamp; }
         [[nodiscard]] version_t getVersion() const { return version; }
         [[nodiscard]] changeset_id_t getChangesetId() const { return changeset_id; }
@@ -76,8 +65,8 @@ namespace olu::osm {
         version_t version = 0;
         changeset_id_t changeset_id = 0;
         std::string type;
-        std::vector<RelationMember> members;
-        std::vector<KeyValue> tags;
+        rel_members_t members;
+        std::vector<key_value_t> tags;
     };
 
     /**

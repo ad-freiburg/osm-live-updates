@@ -10,7 +10,7 @@
 namespace cnst = olu::config::constants;
 namespace olu::util {
 
-    Triple TtlHelper::getTriple(const std::string& triple) {
+    triple_t TtlHelper::getTriple(const std::string& triple) {
         const boost::regex regex(R"((\S+)\s(\S+)\s(.*)\s\.)");
         if (boost::smatch match; boost::regex_search(triple, match, regex)) {
             return std::make_tuple(match[1], match[2], match[3]);
@@ -21,16 +21,16 @@ namespace olu::util {
     }
 
     bool TtlHelper::isRelevantNamespace(const std::string& subject, const std::string &osmTag) {
-        if (osmTag == cnst::NODE_TAG) {
-            return subject.starts_with("osmnode:");
+        if (osmTag == cnst::XML_TAG_NODE) {
+            return subject.starts_with(cnst::NAMESPACE_OSM_NODE);
         }
 
-        if (osmTag == cnst::WAY_TAG) {
-            return subject.starts_with("osmway:");
+        if (osmTag == cnst::XML_TAG_WAY) {
+            return subject.starts_with(cnst::NAMESPACE_OSM_WAY);
         }
 
-        if (osmTag == cnst::RELATION_TAG) {
-            return subject.starts_with("osmrel:");
+        if (osmTag == cnst::XML_TAG_REL) {
+            return subject.starts_with(cnst::NAMESPACE_OSM_REL);
         }
 
         const std::string msg = "Cant interpret subject: " + subject;
@@ -38,21 +38,21 @@ namespace olu::util {
     }
 
     bool TtlHelper::hasRelevantObject(const std::string& predicate, const std::string &osmTag) {
-        if (osmTag == cnst::NODE_TAG) {
-            return predicate == cnst::OSM_2_RDF_GEO_HAS_CENTROID ||
-                   predicate == cnst::OSM_2_RDF_GEO_HAS_GEOMETRY;
+        if (osmTag == cnst::XML_TAG_NODE) {
+            return predicate == cnst::PREFIXED_GEO_HAS_CENTROID ||
+                   predicate == cnst::PREFIXED_GEO_HAS_GEOMETRY;
         }
 
-        if (osmTag == cnst::WAY_TAG) {
-            return predicate == cnst::OSM_2_RDF_WAY_MEMBER ||
-                   predicate == cnst::OSM_2_RDF_GEO_HAS_CENTROID ||
-                   predicate == cnst::OSM_2_RDF_GEO_HAS_GEOMETRY;
+        if (osmTag == cnst::XML_TAG_WAY) {
+            return predicate == cnst::PREFIXED_WAY_MEMBER ||
+                   predicate == cnst::PREFIXED_GEO_HAS_CENTROID ||
+                   predicate == cnst::PREFIXED_GEO_HAS_GEOMETRY;
         }
 
-        if (osmTag == cnst::RELATION_TAG) {
-            return predicate == cnst::OSM_2_RDF_RELATION_MEMBER ||
-                   predicate == cnst::OSM_2_RDF_GEO_HAS_CENTROID ||
-                   predicate == cnst::OSM_2_RDF_GEO_HAS_GEOMETRY;
+        if (osmTag == cnst::XML_TAG_REL) {
+            return predicate == cnst::PREFIXED_REL_MEMBER ||
+                   predicate == cnst::PREFIXED_GEO_HAS_CENTROID ||
+                   predicate == cnst::PREFIXED_GEO_HAS_GEOMETRY;
         }
 
         const std::string msg = "Cant interpret predicate: " + predicate;
@@ -61,11 +61,11 @@ namespace olu::util {
 
     id_t TtlHelper::getIdFromSubject(const std::string& subject, const std::string& osmTag) {
         std::string regexString;
-        if (osmTag == cnst::NODE_TAG) {
+        if (osmTag == cnst::XML_TAG_NODE) {
             regexString = R"((?:osmnode:|osm_node_|osm_node_centroid_)(\d+))";
-        } else if (osmTag == cnst::WAY_TAG) {
+        } else if (osmTag == cnst::XML_TAG_WAY) {
             regexString = R"((?:osmway:|osm_wayarea_)(\d+))";
-        } else if (osmTag == cnst::RELATION_TAG) {
+        } else if (osmTag == cnst::XML_TAG_REL) {
             regexString = R"((?:osmrel:|osm_relarea_)(\d+))";
         } else {
             const std::string msg = "Unknown element tag: " + osmTag;

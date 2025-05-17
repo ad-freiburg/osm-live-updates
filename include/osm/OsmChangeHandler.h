@@ -68,8 +68,10 @@ namespace olu::osm {
         std::set<id_t> _deletedWays;
         // Ways that are in a create-changeset in the change file.
         std::set<id_t> _createdWays;
-        // Ways that are in a modify-changeset in the change file.
+        // Ways that are in a modify-changeset in the change file and not have a changed member list
         std::set<id_t> _modifiedWays;
+        // Ways that are in a modify-changeset in the change file and have a changed member list.
+        std::set<id_t> _modifiedWaysWithChangedMembers;
         // Ways that reference a node which was modified in the changeset.
         std::set<id_t> _waysToUpdateGeometry;
         // Ways that are referenced by a relation that are NOT present in the change file,
@@ -80,8 +82,10 @@ namespace olu::osm {
         std::set<id_t> _deletedRelations;
         // Relations that are in a create-changeset in the change file.
         std::set<id_t> _createdRelations;
-        // Relations that are in a modify-changeset in the change file.
+        // Relations that are in a modify-changeset in the change file and not have a changed member list.
         std::set<id_t> _modifiedRelations;
+        // Relations that are in a modify-changeset in the change file and have a changed member list.
+        std::set<id_t> _modifiedRelsWithChangedMembers;
         // Relations that are of type multipolygon that are in a modify-changeset in the change file.
         std::set<id_t> _modifiedAreas;
         // Relations that reference a node, way or relation which was modified in the changeset.
@@ -100,6 +104,7 @@ namespace olu::osm {
          */
         [[nodiscard]] bool nodeInChangeFile(const id_t &nodeId) const {
             return _modifiedNodes.contains(nodeId) ||
+                   _modifiedNodesWithChangedLocation.contains(nodeId) ||
                    _createdNodes.contains(nodeId) ||
                    _deletedNodes.contains(nodeId);
         }
@@ -114,6 +119,7 @@ namespace olu::osm {
          */
         [[nodiscard]] bool wayInChangeFile(const id_t &wayId) const {
             return _modifiedWays.contains(wayId) ||
+                   _modifiedWaysWithChangedMembers.contains(wayId) ||
                    _createdWays.contains(wayId) ||
                    _deletedWays.contains(wayId);
         }
@@ -128,6 +134,7 @@ namespace olu::osm {
          */
         [[nodiscard]] bool relationInChangeFile(const id_t &relationId) const {
             return _modifiedRelations.contains(relationId) ||
+                   _modifiedRelsWithChangedMembers.contains(relationId) ||
                    _createdRelations.contains(relationId) ||
                    _deletedRelations.contains(relationId);
         }
@@ -148,6 +155,24 @@ namespace olu::osm {
          */
         void checkNodesForLocationChange(std::set<id_t> &nodeIds,
                                          const std::vector<osmium::Location> & nodeLocs);
+
+        /**
+         * Checks if the members of the given ways from the change file have changed. If so, the
+         * way is added to the _modifiedWaysWithChangedMembers set, otherwise to the
+         * _modifiedWays set
+         *
+         * @param waysWithMembers Pairs of wayIds with a vector containing the node references
+         */
+        void
+        checkWaysForMemberChange(const std::vector<std::pair<id_t, member_ids_t>>& waysWithMembers);
+
+        /**
+         * Checks if the members of the given realtions from the change file have changed.
+         *
+         * @param relsWithMembers Pairs of relIds with a vector containing the members
+         */
+        void
+        checkRelsForMemberChange(const std::vector<std::pair<id_t, rel_members_t>>& relsWithMembers);
 
         /**
          * Stores the ids of the nodes and ways that are referenced in the given relation or way in
@@ -235,20 +260,47 @@ namespace olu::osm {
         void deleteTriplesFromDatabase();
 
         /**
-         * Send SPARQL queries to delete all triples that belong to the nodes in _deletedNodes
+         * Send SPARQL queries to delete all triples that belong to the nodes that are inserted to
+         * the database
          */
         void deleteNodesFromDatabase(osm2rdf::util::ProgressBar &progress, size_t &counter);
 
         /**
-         * Send SPARQL queries to delete all triples that belong to the ways in _deletedWays
+         * Send SPARQL queries to delete all triples that belong to the ways that are inserted to
+         * the database
          */
         void deleteWaysFromDatabase(osm2rdf::util::ProgressBar &progress, size_t &counter);
 
         /**
-         * Send SPARQL queries to delete all triples that belong to the relations in
-         * _deletedRelations
+         * Send SPARQL queries to delete meta-data and key-value triples that belong to the ways
+         * that did not change their geometry
+         */
+        void deleteWaysMetaDataAndTags(osm2rdf::util::ProgressBar &progress, size_t &counter);
+
+        /**
+         * Send SPARQL queries to delete geometry triples that belong to the ways for which only the
+         * geometry changed
+         */
+        void deleteWaysGeometry(osm2rdf::util::ProgressBar &progress, size_t &counter);
+
+        /**
+        * Send SPARQL queries to delete all triples that belong to the relations that are inserted to
+        * the database
         */
         void deleteRelationsFromDatabase(osm2rdf::util::ProgressBar &progress, size_t &counter);
+
+        /**
+         * Send SPARQL queries to delete meta-data and key-value triples that belong to the
+         * relations that did not change their member and therefore their geometry
+         */
+        void deleteRelationsMetaDataAndTags(osm2rdf::util::ProgressBar &progress, size_t &counter);
+
+        /**
+         * Send SPARQL queries to delete geometry triples that belong to the ways for which only the
+         * geometry changed
+         */
+        void deleteRelationsGeometry(osm2rdf::util::ProgressBar &progress, size_t &counter);
+
 
         /**
          * Send SPARQL queries to insert all relevant triples
@@ -260,7 +312,7 @@ namespace olu::osm {
          * elements that occurred in the change file or osm elements which geometry needs to be
          * updated. Irrelevant triples are triples that where generated for referenced elements.
          */
-        std::vector<Triple> filterRelevantTriples();
+        std::vector<triple_t> filterRelevantTriples();
 
         /**
          * Returns the elements id.
@@ -279,6 +331,17 @@ namespace olu::osm {
          * @return The location of the element
          */
         static osmium::Location getLocationFor(const boost::property_tree::ptree &element);
+
+        /**
+         * @return A list of all node ids that are members of the given way
+         */
+        static member_ids_t getMemberForWay(const boost::property_tree::ptree &element);
+
+        /**
+         * @return A list of all members of the given relation
+         */
+        static rel_members_t getMemberForRel(const boost::property_tree::ptree &element);
+
     };
 
     /**

@@ -26,6 +26,7 @@
 #include <iostream>
 
 namespace pt = boost::property_tree;
+namespace cnst = olu::config::constants;
 
 // _________________________________________________________________________________________________
 void olu::util::XmlReader::populatePTreeFromString(const std::string &xml, pt::ptree &tree) {
@@ -72,34 +73,6 @@ std::string olu::util::XmlReader::readTree(const pt::ptree &tree,
     return oss.str();
 }
 
-// _____________________________________________________________________________________________
-std::string
-olu::util::XmlReader::readAttribute(const std::string& attributePath,
-                                    const boost::property_tree::ptree& tree) {
-    std::string attributeValue;
-    try {
-        attributeValue = tree.get<std::string>(attributePath);
-    } catch (boost::property_tree::ptree_bad_path &e) {
-        std::cerr << "Path not found: " << e.what() << std::endl;
-        std::string msg = "Exception while trying to read attribute at path: " + attributePath;
-        throw XmlReaderException(msg.c_str());
-    } catch (boost::property_tree::ptree_bad_data &e) {
-        std::cerr << "Bad data: " << e.what() << std::endl;
-        std::string msg = "Exception while trying to read attribute at path: " + attributePath;
-        throw XmlReaderException(msg.c_str());
-    } catch (boost::property_tree::ptree_error &e) {
-        std::cerr << "Property tree error: " << e.what() << std::endl;
-        std::string msg = "Exception while trying to read attribute at path: " + attributePath;
-        throw XmlReaderException(msg.c_str());
-    } catch (std::exception &e) {
-        std::cerr << e.what() << std::endl;
-        std::string msg = "Exception while trying to read attribute at path: " + attributePath;
-        throw XmlReaderException(msg.c_str());
-    }
-
-    return attributeValue;
-}
-
 // _________________________________________________________________________________________________
 std::vector<std::string> olu::util::XmlReader::readTagOfChildren(
         const std::string &parentPath,
@@ -108,7 +81,7 @@ std::vector<std::string> olu::util::XmlReader::readTagOfChildren(
 
     std::vector<std::string> childrenNames;
     for (const auto &child : tree.get_child(parentPath)) {
-        if (excludeXmlAttr && child.first == olu::config::constants::XML_ATTRIBUTE_TAG) {
+        if (excludeXmlAttr && child.first == olu::config::constants::XML_TAG_ATTR) {
             continue;
         }
 
@@ -121,12 +94,12 @@ std::vector<std::string> olu::util::XmlReader::readTagOfChildren(
 // _________________________________________________________________________________________________
 void olu::util::XmlReader::sanitizeXmlTags(pt::ptree &tree) {
     for (auto &tag : tree.get_child("")) {
-        if (tag.first == "tag") {
-            auto value = tag.second.get<std::string>("<xmlattr>.v");
+        if (tag.first == cnst::XML_TAG_TAG) {
+            auto value = tag.second.get<std::string>(cnst::XML_PATH_ATTR_VALUE);
             if (isXmlEncoded(value)) {
                 value = xmlEncode(value);
             }
-            tag.second.put<std::string>("<xmlattr>.v", value);
+            tag.second.put<std::string>(cnst::XML_PATH_ATTR_VALUE, value);
         }
     }
 }

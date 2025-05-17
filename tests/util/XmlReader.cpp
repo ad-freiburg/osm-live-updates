@@ -33,7 +33,7 @@ TEST(XmlReader, readAttribute) {
         pt::ptree tree;
         olu::util::XmlReader::populatePTreeFromString(content, tree);
 
-        std::string attribute = olu::util::XmlReader::readAttribute(
+        auto attribute = olu::util::XmlReader::readAttribute<std::string>(
                 "osm.node.<xmlattr>.id",
                 tree);
         ASSERT_EQ(attribute, "1");
@@ -51,7 +51,7 @@ TEST(XmlReader, readAttribute) {
         pt::ptree tree;
         olu::util::XmlReader::populatePTreeFromString(content, tree);
 
-        EXPECT_ANY_THROW(olu::util::XmlReader::readAttribute("osm.node.<xmlattr>.notExisting", tree));
+        EXPECT_ANY_THROW(olu::util::XmlReader::readAttribute<std::string>("osm.node.<xmlattr>.notExisting", tree));
 
         tree.clear();
     }
@@ -70,21 +70,21 @@ TEST(XmlReader, readTagOfChildren) {
         olu::util::XmlReader::populatePTreeFromString(content, tree);
 
         auto childrenTags = olu::util::XmlReader::readTagOfChildren(
-                olu::config::constants::OSM_TAG,
+                olu::config::constants::XML_TAG_OSM,
                 tree,
                 false);
 
         ASSERT_EQ(childrenTags.size(), 2);
-        ASSERT_EQ(childrenTags.at(0), olu::config::constants::XML_ATTRIBUTE_TAG);
-        ASSERT_EQ(childrenTags.at(1), olu::config::constants::NODE_TAG);
+        ASSERT_EQ(childrenTags.at(0), olu::config::constants::XML_TAG_ATTR);
+        ASSERT_EQ(childrenTags.at(1), olu::config::constants::XML_TAG_NODE);
 
         auto childrenTags2 = olu::util::XmlReader::readTagOfChildren(
-                olu::config::constants::OSM_TAG,
+                olu::config::constants::XML_TAG_OSM,
                 tree,
                 true);
 
         ASSERT_EQ(childrenTags2.size(), 1);
-        ASSERT_EQ(childrenTags2.at(0), olu::config::constants::NODE_TAG);
+        ASSERT_EQ(childrenTags2.at(0), olu::config::constants::XML_TAG_NODE);
 
         tree.clear();
     }

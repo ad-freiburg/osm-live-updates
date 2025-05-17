@@ -21,13 +21,13 @@
 
 #include <string>
 #include <vector>
+#include <sstream>
 
 namespace olu::config::constants {
-    // Exception Messages
-    const static inline char *const EXCEPTION_MSG_SEQUENCE_NUMBER_IS_INVALID =
-        "Sequence number is invalid.";
+    // Exception Messages --------------------------------------------------------------------------
+    const static inline auto EXCEPTION_MSG_SEQUENCE_NUMBER_IS_INVALID = "Sequence number is invalid.";
 
-    // HTML
+    // HTML ----------------------------------------------------------------------------------------
     const static inline std::string HTML_KEY_CONTENT_TYPE = "Content-Type";
     const static inline std::string HTML_VALUE_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
@@ -37,180 +37,299 @@ namespace olu::config::constants {
     const static inline std::string HTML_VALUE_ACCEPT_SPARQL_RESULT_JSON =
             "application/sparql-results+json";
 
-    // File extensions
+    // File extensions -----------------------------------------------------------------------------
     const static inline std::string OSM_CHANGE_FILE_EXTENSION = ".osc";
     const static inline std::string GZIP_EXTENSION = ".gz";
+    const static inline std::string OSM_EXTENSION = ".osm";
+    const static inline std::string TURTLE_FILE_EXTENSION = ".ttl";
+    const static inline std::string TEXT_FILE_EXTENSION = ".txt";
 
-    // File names
+    // Directory paths -----------------------------------------------------------------------------
     const static inline std::string PATH_TO_TEMP_DIR = "tmp/";
     const static inline std::string PATH_TO_CHANGE_FILE_DIR = PATH_TO_TEMP_DIR + "changes/";
-    const static inline std::string CHANGE_FILE_NAME = "changes.osc.gz";
-    const static inline std::string PATH_TO_CHANGE_FILE = PATH_TO_TEMP_DIR + CHANGE_FILE_NAME;
-    const static inline std::string PATH_TO_NODE_FILE = PATH_TO_TEMP_DIR + "nodes.osm";
-    const static inline std::string PATH_TO_WAY_FILE = PATH_TO_TEMP_DIR + "ways.osm";
-    const static inline std::string PATH_TO_RELATION_FILE = PATH_TO_TEMP_DIR + "relations.osm";
-
-    // Osm2rdf
-    const static inline std::string PATH_TO_INPUT_FILE = PATH_TO_TEMP_DIR + "input.osm";
-    const static inline std::string PATH_TO_OUTPUT_FILE = PATH_TO_TEMP_DIR + "output.ttl";
     const static inline std::string PATH_TO_SCRATCH_DIRECTORY = "osm2rdfScratch/";
 
-    // OsmChangeHandler
-    const static inline std::string XML_ATTRIBUTE_TAG = "<xmlattr>";
-    const static inline std::string NODE_TAG = "node";
-    const static inline std::string NODE_REFERENCE_TAG = "nd";
-    const static inline std::string WAY_TAG = "way";
-    const static inline std::string RELATION_TAG = "relation";
-    const static inline std::string OSM_TAG = "osm";
-    const static inline std::string OSM_CHANGE_TAG = "osmChange";
+    // File paths ----------------------------------------------------------------------------------
+    const static inline std::string PATH_TO_CHANGE_FILE = PATH_TO_TEMP_DIR + "changes" + OSM_CHANGE_FILE_EXTENSION + GZIP_EXTENSION;
+    const static inline std::string PATH_TO_NODE_FILE = PATH_TO_TEMP_DIR + "nodes" + OSM_EXTENSION;
+    const static inline std::string PATH_TO_WAY_FILE = PATH_TO_TEMP_DIR + "ways" + OSM_EXTENSION;
+    const static inline std::string PATH_TO_RELATION_FILE = PATH_TO_TEMP_DIR + "relations" + OSM_EXTENSION;
+    const static inline std::string PATH_TO_INPUT_FILE = PATH_TO_TEMP_DIR + "input" + OSM_EXTENSION;
+    const static inline std::string PATH_TO_OUTPUT_FILE = PATH_TO_TEMP_DIR + "output" + TURTLE_FILE_EXTENSION;
+    const static inline std::string PATH_TO_OSM2RDF_INFO_OUTPUT_FILE = PATH_TO_TEMP_DIR + "osm2rdf_info" + TEXT_FILE_EXTENSION;
+    const static inline std::string PATH_TO_OSM2RDF_INFO_OUTPUT_FILE_DEBUG = "osm2rdf_info" + TEXT_FILE_EXTENSION;
+    const static inline std::string PATH_TO_STATE_FILE = "state" + TEXT_FILE_EXTENSION;
 
-    const static inline std::string MODIFY_TAG = "modify";
-    const static inline std::string DELETE_TAG = "delete";
-    const static inline std::string CREATE_TAG = "create";
+    // XML -----------------------------------------------------------------------------------------
+    const static inline std::string XML_TAG_ATTR = "<xmlattr>";
+    const static inline std::string XML_TAG_NODE = "node";
+    const static inline std::string XML_TAG_NODE_REF = "nd";
+    const static inline std::string XML_TAG_WAY = "way";
+    const static inline std::string XML_TAG_REL = "relation";
+    const static inline std::string XML_TAG_OSM = "osm";
+    const static inline std::string XML_TAG_OSM_CHANGE = "osmChange";
+    const static inline std::string XML_TAG_REF = "ref";
+    const static inline std::string XML_TAG_MEMBER = "member";
+    const static inline std::string XML_TAG_TYPE = "type";
+    const static inline std::string XML_TAG_ROLE = "role";
+    const static inline std::string XML_TAG_ID = "id";
+    const static inline std::string XML_TAG_LAT = "lat";
+    const static inline std::string XML_TAG_LON = "lon";
+    const static inline std::string XML_TAG_MODIFY = "modify";
+    const static inline std::string XML_TAG_DELETE = "delete";
+    const static inline std::string XML_TAG_CREATE = "create";
+    const static inline std::string XML_TAG_SPARQL = "sparql";
+    const static inline std::string XML_TAG_RESULTS = "results";
+    const static inline std::string XML_TAG_NAME = "name";
+    const static inline std::string XML_TAG_URI = "uri";
+    const static inline std::string XML_TAG_LITERAL = "literal";
+    const static inline std::string XML_TAG_BINDING = "binding";
+    const static inline std::string XML_TAG_KEY = "k";
+    const static inline std::string XML_TAG_VALUE = "v";
+    const static inline std::string XML_TAG_TAG = "tag";
 
-    const static inline std::string NODE_REFERENCE_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "ref";
-    const static inline std::string ID_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "id";
-    const static inline std::string LATITUDE_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "lat";
-    const static inline std::string LONGITUDE_ATTRIBUTE = XML_ATTRIBUTE_TAG + "." + "lon";
+    static std::string MakeXMLPath(const std::vector<std::string> &segments) {
+        if (segments.empty()) {
+            return {};
+        }
 
-    // SPARQL
-    const static inline std::string OSM_WAY_URI = "https://www.openstreetmap.org/way/";
-    const static inline std::string OSM_NODE_URI = "https://www.openstreetmap.org/node/";
-    const static inline std::string OSM_REL_URI = "https://www.openstreetmap.org/relation/";
-    const static inline std::string OSM_GEOM_NODE_URI = "https://osm2rdf.cs.uni-freiburg.de/rdf/geom#osm_node_";
-    const static inline std::string OSM_TAG_KEY = "https://www.openstreetmap.org/wiki/Key:";
+        std::ostringstream oss;
+        auto it = segments.begin();
+        oss << *it++;
 
-    // osm2rdf predicates
-    const static inline std::string OSM_2_RDF_WAY_MEMBER = "osmway:member";
-    const static inline std::string OSM_2_RDF_WAY_MEMBER_ID = "osmway:member_id";
-    const static inline std::string OSM_2_RDF_WAY_MEMBER_POS = "osmway:member_pos";
+        for (; it != segments.end(); ++it) {
+            oss << '.' << *it;
+        }
 
-    const static inline std::string OSM_2_RDF_RELATION_MEMBER = "osmrel:member";
-    const static inline std::string OSM_2_RDF_RELATION_MEMBER_ID = "osmrel:member_id";
-    const static inline std::string OSM_2_RDF_RELATION_MEMBER_POS = "osmrel:member_pos";
-    const static inline std::string OSM_2_RDF_RELATION_MEMBER_ROLE = "osmrel:member_role";
+        return oss.str();
+    }
+    const static inline std::string XML_PATH_ATTR_NODE_REF = MakeXMLPath({XML_TAG_ATTR, XML_TAG_REF});
+    const static inline std::string XML_PATH_ATTR_ID = MakeXMLPath({XML_TAG_ATTR, XML_TAG_ID});
+    const static inline std::string XML_PATH_ATTR_LAT = MakeXMLPath({XML_TAG_ATTR, XML_TAG_LAT});
+    const static inline std::string XML_PATH_ATTR_LON = MakeXMLPath({XML_TAG_ATTR, XML_TAG_LON});
+    const static inline std::string XML_PATH_ATTR_TYPE = MakeXMLPath({XML_TAG_ATTR, XML_TAG_TYPE});
+    const static inline std::string XML_PATH_ATTR_ROLE = MakeXMLPath({XML_TAG_ATTR, XML_TAG_ROLE});
+    const static inline std::string XML_PATH_ATTR_KEY = MakeXMLPath({XML_TAG_ATTR, XML_TAG_KEY});
+    const static inline std::string XML_PATH_ATTR_VALUE = MakeXMLPath({XML_TAG_ATTR, XML_TAG_VALUE});
+    const static inline std::string XML_PATH_ATTR_NAME = MakeXMLPath({XML_TAG_ATTR, XML_TAG_NAME});
+    const static inline std::string XML_PATH_SPARQL_RESULTS = MakeXMLPath({XML_TAG_SPARQL, XML_TAG_RESULTS});
+    const static inline std::string XML_PATH_BINDING_URI = MakeXMLPath({XML_TAG_BINDING, XML_TAG_URI});
 
-    const static inline std::string OSM_2_RDF_GEO_HAS_GEOMETRY = "geo:hasGeometry";
-    const static inline std::string OSM_2_RDF_GEO_HAS_CENTROID = "geo:hasCentroid";
-    const static inline std::string OSM_2_RDF_GEO_AS_WKT = "geo:asWKT";
+    // OSM2RDF -------------------------------------------------------------------------------------
+    /// Namespaces and prefixes --------------------------------------------------------------------
+    static std::string MakePrefixDecl(const std::string &prefix, const std::string &iri) {
+            return "PREFIX " + prefix + ": <" + iri + ">";
+    }
 
-    // variable names in query writer class
-    const static inline std::string QUERY_VARIABLE_TYPE = "type";
-    const static inline std::string QUERY_VARIABLE_KEY = "key";
-    const static inline std::string QUERY_VARIABLE_VALUE = "value";
-    const static inline std::string QUERY_VARIABLE_LOCATION = "location";
-    const static inline std::string QUERY_VARIABLE_TIMESTAMP = "timestamp";
-    const static inline std::string QUERY_VARIABLE_VERSION = "version";
-    const static inline std::string QUERY_VARIABLE_CHANGESET = "changeset";
+    const static inline std::string NAMESPACE_OSM = "osm";
+    const static inline std::string NAMESPACE_IRI_OSM = "https://www.openstreetmap.org/";
+    const static inline std::string PREFIX_DECL_OSM = MakePrefixDecl(NAMESPACE_OSM, NAMESPACE_IRI_OSM);
 
-    const static inline std::string QUERY_VARIABLE_NODES = "nodes";
+    const static inline std::string NAMESPACE_OSM_NODE = "osmnode";
+    const static inline std::string NAMESPACE_IRI_OSM_NODE = "https://www.openstreetmap.org/node/";
+    const static inline std::string PREFIX_DECL_OSM_NODE = MakePrefixDecl(NAMESPACE_OSM_NODE, NAMESPACE_IRI_OSM_NODE);
 
-    const static inline std::string QUERY_VARIABLE_MEMBER_URIS = "memberUris";
-    const static inline std::string QUERY_VARIABLE_MEMBER_ROLES = "memberRoles";
-    const static inline std::string QUERY_VARIABLE_MEMBER_POSITIONS = "memberPositions";
+    const static inline std::string NAMESPACE_OSM_WAY = "osmway";
+    const static inline std::string NAMESPACE_IRI_OSM_WAY = "https://www.openstreetmap.org/way/";
+    const static inline std::string PREFIX_DECL_OSM_WAY = MakePrefixDecl(NAMESPACE_OSM_WAY, NAMESPACE_IRI_OSM_WAY);
 
-    const static inline std::vector<std::string> DEFAULT_PREFIXES{
-        "PREFIX ohmnode: <https://www.openhistoricalmap.org/node/>"
-        "PREFIX osmrel: <https://www.openstreetmap.org/relation/>"
-        "PREFIX osmnode: <https://www.openstreetmap.org/node/>"
-        "PREFIX osmkey: <https://www.openstreetmap.org/wiki/Key:>"
-        "PREFIX osmway: <https://www.openstreetmap.org/way/>"
-        "PREFIX osmmeta: <https://www.openstreetmap.org/meta/>"
-        "PREFIX osm: <https://www.openstreetmap.org/>"
-        "PREFIX osm2rdfmeta: <https://osm2rdf.cs.uni-freiburg.de/rdf/meta#>"
-        "PREFIX ohmrel: <https://www.openhistoricalmap.org/relation/>"
-        "PREFIX osmt: <https://www.openstreetmap.org/wiki/Key:>"
-        "PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>"
-        "PREFIX osm2rdfkey: <https://osm2rdf.cs.uni-freiburg.de/rdf/key#>"
-        "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
-        "PREFIX genid: <http://osm2rdf.cs.uni-freiburg.de/.well-known/genid/>"
-        "PREFIX ohmway: <https://www.openhistoricalmap.org/way/>"
-        "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>"
-        "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>"
-        "PREFIX ohm: <https://www.openhistoricalmap.org/>"
-        "PREFIX wd: <http://www.wikidata.org/entity/>"
-        "PREFIX osm2rdf: <https://osm2rdf.cs.uni-freiburg.de/rdf#>"
-        "PREFIX ogc: <http://www.opengis.net/rdf#>"
-        "PREFIX geo: <http://www.opengis.net/ont/geosparql#>"};
+    const static inline std::string NAMESPACE_OSM_REL = "osmrel";
+    const static inline std::string NAMESPACE_IRI_OSM_REL = "https://www.openstreetmap.org/relation/";
+    const static inline std::string PREFIX_DECL_OSM_REL = MakePrefixDecl(NAMESPACE_OSM_REL, NAMESPACE_IRI_OSM_REL);
 
-    const static inline std::vector<std::string> PREFIXES_FOR_NODE_LOCATION{
-            "PREFIX osmnode: <https://www.openstreetmap.org/node/>",
-            "PREFIX geo: <http://www.opengis.net/ont/geosparql#>",
-            "PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>"
-    };
+    const static inline std::string NAMESPACE_OSM_KEY = "osmkey";
+    const static inline std::string NAMESPACE_IRI_OSM_KEY = "https://www.openstreetmap.org/wiki/Key:";
+    const static inline std::string PREFIX_DECL_OSM_KEY = MakePrefixDecl(NAMESPACE_OSM_KEY, NAMESPACE_IRI_OSM_KEY);
 
-    const static inline std::vector<std::string> PREFIXES_FOR_RELATION_MEMBERS{
-            "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
-            "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
-            "PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>",
-            "PREFIX osm: <https://www.openstreetmap.org/>",
-            "PREFIX osmkey: <https://www.openstreetmap.org/wiki/Key:>"
-    };
+    const static inline std::string NAMESPACE_OSM_META = "osmmeta";
+    const static inline std::string NAMESPACE_IRI_OSM_META = "https://www.openstreetmap.org/meta/";
+    const static inline std::string PREFIX_DECL_OSM_META = MakePrefixDecl(NAMESPACE_OSM_META, NAMESPACE_IRI_OSM_META);
 
-    const static inline std::vector<std::string> PREFIXES_FOR_WAY_MEMBERS{
-            "PREFIX osmway: <https://www.openstreetmap.org/way/>",
-            "PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>"
-    };
+    const static inline std::string NAMESPACE_OSM2RDF = "osm2rdf";
+    const static inline std::string NAMESPACE_IRI_OSM2RDF = "https://osm2rdf.cs.uni-freiburg.de/rdf#";
+    const static inline std::string PREFIX_DECL_OSM2RDF = MakePrefixDecl(NAMESPACE_OSM2RDF, NAMESPACE_IRI_OSM2RDF);
 
-    const static inline std::vector<std::string> PREFIXES_FOR_WAY_TAGS_AND_META_INFO{
-            "PREFIX osmway: <https://www.openstreetmap.org/way/>",
-            "PREFIX osmmeta: <https://www.openstreetmap.org/meta/>",
-            "PREFIX osmkey: <https://www.openstreetmap.org/wiki/Key:>"
-    };
+    const static inline std::string NAMESPACE_OSM2RDF_META = "osm2rdfmeta";
+    const static inline std::string NAMESPACE_IRI_OSM2RDF_META = "https://osm2rdf.cs.uni-freiburg.de/rdf/meta#";
+    const static inline std::string PREFIX_DECL_OSM2RDF_META = MakePrefixDecl(NAMESPACE_OSM2RDF_META, NAMESPACE_IRI_OSM2RDF_META);
 
-    const static inline std::vector<std::string> PREFIXES_FOR_RELATION_TAGS_AND_META_INFO{
-            "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
-            "PREFIX osmmeta: <https://www.openstreetmap.org/meta/>",
-            "PREFIX osmkey: <https://www.openstreetmap.org/wiki/Key:>"
-    };
+    const static inline std::string NAMESPACE_OSM2RDF_MEMBER = "osm2rdfmember";
+    const static inline std::string NAMESPACE_IRI_OSM2RDF_MEMBER = "https://osm2rdf.cs.uni-freiburg.de/rdf/member#";
+    const static inline std::string PREFIX_DECL_OSM2RDF_MEMBER = MakePrefixDecl(NAMESPACE_OSM2RDF_MEMBER, NAMESPACE_IRI_OSM2RDF_MEMBER);
 
-    const static inline std::vector<std::string> PREFIXES_FOR_LATEST_NODE_TIMESTAMP {
-            "PREFIX osmmeta: <https://www.openstreetmap.org/meta/>",
-            "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>",
-            "PREFIX osm: <https://www.openstreetmap.org/>"
-    };
+    const static inline std::string NAMESPACE_OSM2RDF_KEY = "osm2rdfkey";
+    const static inline std::string NAMESPACE_IRI_OSM2RDF_KEY = "https://osm2rdf.cs.uni-freiburg.de/rdf/key#";
+    const static inline std::string PREFIX_DECL_OSM2RDF_KEY = MakePrefixDecl(NAMESPACE_OSM2RDF_KEY, NAMESPACE_IRI_OSM2RDF_KEY);
 
-    const static inline std::vector<std::string> PREFIXES_FOR_NODE_DELETE_QUERY {
-            "PREFIX osmnode: <https://www.openstreetmap.org/node/>",
-            "PREFIX ogc: <http://www.opengis.net/rdf#>",
-            "PREFIX geo: <http://www.opengis.net/ont/geosparql#>"
-    };
+    const static inline std::string NAMESPACE_OSM2RDF_GEOM = "osm2rdfgeom";
+    const static inline std::string NAMESPACE_IRI_OSM2RDF_GEOM = "https://osm2rdf.cs.uni-freiburg.de/rdf/geom#";
+    const static inline std::string PREFIX_DECL_OSM2RDF_GEOM = MakePrefixDecl(NAMESPACE_OSM2RDF_GEOM, NAMESPACE_IRI_OSM2RDF_GEOM);
 
-    const static inline std::vector<std::string> PREFIXES_FOR_WAY_DELETE_QUERY {
-            "PREFIX osmway: <https://www.openstreetmap.org/way/>",
-            "PREFIX ogc: <http://www.opengis.net/rdf#>",
-            "PREFIX geo: <http://www.opengis.net/ont/geosparql#>"
-    };
+    const static inline std::string NAMESPACE_OSM2RDF_GENID = "genid";
+    const static inline std::string NAMESPACE_IRI_OSM2RDF_GENID = "http://osm2rdf.cs.uni-freiburg.de/.well-known/genid/";
+    const static inline std::string PREFIX_DECL_OSM2RDF_GENID = MakePrefixDecl(NAMESPACE_OSM2RDF_GENID, NAMESPACE_IRI_OSM2RDF_GENID);
 
-    const static inline std::vector<std::string> PREFIXES_FOR_RELATION_DELETE_QUERY {
-            "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
-            "PREFIX ogc: <http://www.opengis.net/rdf#>",
-            "PREFIX geo: <http://www.opengis.net/ont/geosparql#>"
-    };
+    const static inline std::string NAMESPACE_RDF = "rdf";
+    const static inline std::string NAMESPACE_IRI_RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+    const static inline std::string PREFIX_DECL_RDF = MakePrefixDecl(NAMESPACE_RDF, NAMESPACE_IRI_RDF);
 
-    const static inline std::vector<std::string> PREFIXES_FOR_WAYS_REFERENCING_NODE {
-            "PREFIX osmway: <https://www.openstreetmap.org/way/>",
-            "PREFIX osmnode: <https://www.openstreetmap.org/node/>"
-    };
+    const static inline std::string NAMESPACE_XSD = "xsd";
+    const static inline std::string NAMESPACE_IRI_XSD = "http://www.w3.org/2001/XMLSchema#";
+    const static inline std::string PREFIX_DECL_XSD = MakePrefixDecl(NAMESPACE_XSD, NAMESPACE_IRI_XSD);
 
-    const static inline std::vector<std::string> PREFIXES_FOR_RELATIONS_REFERENCING_NODE {
-            "PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>",
-            "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
-            "PREFIX osmnode: <https://www.openstreetmap.org/node/>"
-    };
+    const static inline std::string NAMESPACE_WD = "wd";
+    const static inline std::string NAMESPACE_IRI_WD = "http://www.wikidata.org/entity/";
+    const static inline std::string PREFIX_DECL_WD = MakePrefixDecl(NAMESPACE_WD, NAMESPACE_IRI_WD);
 
-    const static inline std::vector<std::string> PREFIXES_FOR_RELATIONS_REFERENCING_WAY {
-            "PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>",
-            "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
-            "PREFIX osmway: <https://www.openstreetmap.org/way/>"
-    };
+    const static inline std::string NAMESPACE_OGC = "ogc";
+    const static inline std::string NAMESPACE_IRI_OGC = "http://www.opengis.net/rdf#";
+    const static inline std::string PREFIX_DECL_OGC = MakePrefixDecl(NAMESPACE_OGC, NAMESPACE_IRI_OGC);
 
-    const static inline std::vector<std::string> PREFIXES_FOR_RELATIONS_REFERENCING_RELATIONS {
-            "PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>",
-            "PREFIX osmrel: <https://www.openstreetmap.org/relation/>",
-    };
+    const static inline std::string NAMESPACE_GEO = "geo";
+    const static inline std::string NAMESPACE_IRI_GEO = "http://www.opengis.net/ont/geosparql#";
+    const static inline std::string PREFIX_DECL_GEO = MakePrefixDecl(NAMESPACE_GEO, NAMESPACE_IRI_GEO);
 
-    // Qlever
+    /// Names --------------------------------------------------------------------------------------
+    const static inline std::string NAME_MEMBER = "member";
+    const static inline std::string NAME_MEMBER_ID = "member_id";
+    const static inline std::string NAME_MEMBER_POS = "member_pos";
+    const static inline std::string NAME_MEMBER_ROLE = "member_role";
+    const static inline std::string NAME_MEMBER_IDS = "member_ids";
+    const static inline std::string NAME_MEMBER_POSS = "member_poss";
+    const static inline std::string NAME_MEMBER_ROLES = "member_roles";
+
+    const static inline std::string NAME_HAS_GEOMETRY = "hasGeometry";
+    const static inline std::string NAME_HAS_CENTROID = "hasCentroid";
+    const static inline std::string NAME_AS_WKT = "asWKT";
+
+    const static inline std::string NAME_FACTS = "facts";
+    const static inline std::string NAME_AREA = "area";
+    const static inline std::string NAME_LENGTH = "length";
+    const static inline std::string NAME_OBB = "obb";
+    const static inline std::string NAME_ENVELOPE = "envelope";
+    const static inline std::string NAME_CONVEX_HULL = "convex_hull";
+    const static inline std::string NAME_TYPE = "type";
+    const static inline std::string NAME_KEY = "key";
+    const static inline std::string NAME_VALUE = "value";
+    const static inline std::string NAME_LOCATION = "location";
+    const static inline std::string NAME_TIMESTAMP = "timestamp";
+    const static inline std::string NAME_VERSION = "version";
+    const static inline std::string NAME_CHANGESET = "changeset";
+    const static inline std::string NAME_OSM_NODE_ =  "osm_node_";
+    const static inline std::string NAME_NODE =  "node";
+    const static inline std::string NAME_NODES =  "nodes";
+
+    /// Prefixed names -----------------------------------------------------------------------------
+    static std::string MakePrefixedName(const std::string &prefix, const std::string &name) {
+        return prefix + ":" + name;
+    }
+    const static inline std::string PREFIXED_WAY_MEMBER = MakePrefixedName(NAMESPACE_OSM_WAY, NAME_MEMBER);
+    const static inline std::string PREFIXED_WAY_MEMBER_ID = MakePrefixedName(NAMESPACE_OSM_WAY, NAME_MEMBER_ID);
+    const static inline std::string PREFIXED_WAY_MEMBER_POS = MakePrefixedName(NAMESPACE_OSM_WAY, NAME_MEMBER_POS);
+
+    const static inline std::string PREFIXED_REL_MEMBER = MakePrefixedName(NAMESPACE_OSM_REL, NAME_MEMBER);
+    const static inline std::string PREFIXED_REL_MEMBER_ID = MakePrefixedName(NAMESPACE_OSM_REL, NAME_MEMBER_ID);
+    const static inline std::string PREFIXED_REL_MEMBER_POS = MakePrefixedName(NAMESPACE_OSM_REL, NAME_MEMBER_POS);
+    const static inline std::string PREFIXED_REL_MEMBER_ROLE = MakePrefixedName(NAMESPACE_OSM_REL, NAME_MEMBER_ROLE);
+
+    const static inline std::string PREFIXED_GEO_HAS_GEOMETRY = MakePrefixedName(NAMESPACE_GEO, NAME_HAS_GEOMETRY);
+    const static inline std::string PREFIXED_GEO_HAS_CENTROID = MakePrefixedName(NAMESPACE_GEO, NAME_HAS_CENTROID);
+    const static inline std::string PREFIXED_GEO_AS_WKT = MakePrefixedName(NAMESPACE_GEO, NAME_AS_WKT);
+
+    const static inline std::string PREFIXED_OSM2RDF_FACTS = MakePrefixedName(NAMESPACE_OSM2RDF, NAME_FACTS);
+    const static inline std::string PREFIXED_OSM2RDF_AREA = MakePrefixedName(NAMESPACE_OSM2RDF, NAME_AREA);
+    const static inline std::string PREFIXED_OSM2RDF_LENGTH = MakePrefixedName(NAMESPACE_OSM2RDF, NAME_LENGTH);
+    const static inline std::string PREFIXED_OSM2RDF_GEOM_OBB = MakePrefixedName(NAMESPACE_OSM2RDF_GEOM, NAME_OBB);
+    const static inline std::string PREFIXED_OSM2RDF_GEOM_ENVELOPE = MakePrefixedName(NAMESPACE_OSM2RDF_GEOM, NAME_ENVELOPE);
+    const static inline std::string PREFIXED_OSM2RDF_GEOM_CONVEX_HULL = MakePrefixedName(NAMESPACE_OSM2RDF_GEOM, NAME_CONVEX_HULL);
+    const static inline std::string PREFIXED_OSM2RDF_GEOM_NODE_ = MakePrefixedName(NAMESPACE_OSM2RDF_GEOM, NAME_OSM_NODE_);
+
+    const static inline std::string PREFIXED_OSM_NODE = MakePrefixedName(NAMESPACE_OSM, NAME_NODE);
+    const static inline std::string PREFIXED_OSM_KEY_TYPE = MakePrefixedName(NAMESPACE_OSM_KEY, NAME_TYPE);
+    const static inline std::string PREFIXED_OSM_META_TIMESTAMP = MakePrefixedName(NAMESPACE_OSM_META, NAME_TIMESTAMP);
+    const static inline std::string PREFIXED_OSM_META_VERSION = MakePrefixedName(NAMESPACE_OSM_META, NAME_VERSION);
+    const static inline std::string PREFIXED_OSM_META_CHANGESET = MakePrefixedName(NAMESPACE_OSM_META, NAME_CHANGESET);
+
+    const static inline std::string PREFIXED_RDF_TYPE = MakePrefixedName(NAMESPACE_RDF, NAME_TYPE);
+
+    /// Prefix declarations ------------------------------------------------------------------------
+    const static inline std::vector DEFAULT_PREFIXES {
+            PREFIX_DECL_OSM, PREFIX_DECL_OSM_NODE, PREFIX_DECL_OSM_WAY, PREFIX_DECL_OSM_REL, PREFIX_DECL_OSM_KEY, PREFIX_DECL_OSM_META,
+            PREFIX_DECL_OSM2RDF, PREFIX_DECL_OSM2RDF_KEY, PREFIX_DECL_OSM2RDF_GEOM, PREFIX_DECL_OSM2RDF_META, PREFIX_DECL_OSM2RDF_GENID, PREFIX_DECL_OSM2RDF_MEMBER,
+            PREFIX_DECL_WD, PREFIX_DECL_GEO, PREFIX_DECL_OGC, PREFIX_DECL_RDF, PREFIX_DECL_XSD};
+
+    const static inline std::vector PREFIXES_FOR_NODE_LOCATION {
+            PREFIX_DECL_OSM_NODE, PREFIX_DECL_GEO, PREFIX_DECL_OSM2RDF_GEOM};
+
+    const static inline std::vector PREFIXES_FOR_RELATION_MEMBERS{
+            PREFIX_DECL_OSM_REL, PREFIX_DECL_RDF, PREFIX_DECL_OSM2RDF_MEMBER, PREFIX_DECL_OSM, PREFIX_DECL_OSM_KEY};
+
+    const static inline std::vector PREFIXES_FOR_WAY_MEMBERS{
+            PREFIX_DECL_OSM_WAY, PREFIX_DECL_OSM2RDF_MEMBER};
+
+    const static inline std::vector PREFIXES_FOR_WAY_TAGS_AND_META_INFO{
+            PREFIX_DECL_OSM_WAY, PREFIX_DECL_OSM_META, PREFIX_DECL_OSM_KEY};
+
+    const static inline std::vector PREFIXES_FOR_RELATION_TAGS_AND_META_INFO{
+            PREFIX_DECL_OSM_REL, PREFIX_DECL_OSM_META, PREFIX_DECL_OSM_KEY};
+
+    const static inline std::vector PREFIXES_FOR_LATEST_NODE_TIMESTAMP {
+            PREFIX_DECL_OSM_META, PREFIX_DECL_OSM, PREFIX_DECL_RDF};
+
+    const static inline std::vector PREFIXES_FOR_NODE_DELETE_QUERY {
+            PREFIX_DECL_OSM_NODE, PREFIX_DECL_OGC, PREFIX_DECL_GEO};
+
+    const static inline std::vector PREFIXES_FOR_WAY_DELETE_QUERY {
+            PREFIX_DECL_OSM_WAY, PREFIX_DECL_OGC, PREFIX_DECL_GEO};
+
+    const static inline std::vector PREFIXES_FOR_WAY_DELETE_META_AND_TAGS_QUERY {
+            PREFIX_DECL_OSM_WAY, PREFIX_DECL_OSM_META, PREFIX_DECL_OSM2RDF, PREFIX_DECL_OSM_KEY};
+
+    const static inline std::vector PREFIXES_FOR_RELATION_DELETE_META_AND_TAGS_QUERY {
+            PREFIX_DECL_OSM_REL, PREFIX_DECL_OSM_META, PREFIX_DECL_OSM2RDF, PREFIX_DECL_OSM_KEY};
+
+    const static inline std::vector PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY {
+            PREFIX_DECL_OSM_WAY, PREFIX_DECL_GEO, PREFIX_DECL_OSM2RDF, PREFIX_DECL_OSM2RDF_GEOM};
+
+    const static inline std::vector PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY {
+            PREFIX_DECL_OSM_REL, PREFIX_DECL_GEO, PREFIX_DECL_OSM2RDF, PREFIX_DECL_OSM2RDF_GEOM};
+
+    const static inline std::vector PREFIXES_FOR_RELATION_DELETE_QUERY {
+            PREFIX_DECL_OSM_REL, PREFIX_DECL_OGC, PREFIX_DECL_GEO};
+
+    const static inline std::vector PREFIXES_FOR_WAYS_REFERENCING_NODE {
+            PREFIX_DECL_OSM_WAY, PREFIX_DECL_OSM_NODE};
+
+    const static inline std::vector PREFIXES_FOR_RELATIONS_REFERENCING_NODE {
+            PREFIX_DECL_OSM2RDF_MEMBER, PREFIX_DECL_OSM_REL, PREFIX_DECL_OSM_NODE};
+
+    const static inline std::vector PREFIXES_FOR_RELATIONS_REFERENCING_WAY {
+            PREFIX_DECL_OSM2RDF_MEMBER, PREFIX_DECL_OSM_REL, PREFIX_DECL_OSM_WAY};
+
+    const static inline std::vector PREFIXES_FOR_RELATIONS_REFERENCING_RELATIONS {
+            PREFIX_DECL_OSM2RDF_MEMBER, PREFIX_DECL_OSM_REL};
+
+    // Query variables -----------------------------------------------------------------------------
+    static std::string MakeQueryVar(const std::string &name) {
+            return "?" + name;
+    }
+    const static inline std::string QUERY_VAR_TYPE = MakeQueryVar(NAME_TYPE);
+    const static inline std::string QUERY_VAR_KEY = MakeQueryVar(NAME_KEY);
+    const static inline std::string QUERY_VAR_VAL = MakeQueryVar(NAME_VALUE);
+    const static inline std::string QUERY_VAR_LOC = MakeQueryVar(NAME_LOCATION);
+    const static inline std::string QUERY_VAR_TIMESTAMP = MakeQueryVar(NAME_TIMESTAMP);
+    const static inline std::string QUERY_VAR_VERSION = MakeQueryVar(NAME_VERSION);
+    const static inline std::string QUERY_VAR_CHANGESET = MakeQueryVar(NAME_CHANGESET);
+    const static inline std::string QUERY_VAR_NODES = MakeQueryVar(NAME_NODES);
+    const static inline std::string QUERY_VAR_MEMBER = MakeQueryVar(NAME_MEMBER);
+    const static inline std::string QUERY_VAR_MEMBER_ID = MakeQueryVar(NAME_MEMBER_ID);
+    const static inline std::string QUERY_VAR_MEMBER_ROLE = MakeQueryVar(NAME_MEMBER_ROLE);
+    const static inline std::string QUERY_VAR_MEMBER_POS = MakeQueryVar(NAME_MEMBER_POS);
+    const static inline std::string QUERY_VAR_MEMBER_IDS = MakeQueryVar(NAME_MEMBER_IDS);
+    const static inline std::string QUERY_VAR_MEMBER_ROLES = MakeQueryVar(NAME_MEMBER_ROLES);
+    const static inline std::string QUERY_VAR_MEMBER_POSS = MakeQueryVar(NAME_MEMBER_POSS);
+
+    // Options and output --------------------------------------------------------------------------
     const static inline std::string HEADER = "Configuration for OLU:";
 
     const static inline std::string HELP_OPTION_SHORT = "h";

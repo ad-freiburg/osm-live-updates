@@ -16,27 +16,24 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef OSM_LIVE_UPDATES_TYPES_H
-#define OSM_LIVE_UPDATES_TYPES_H
+#ifndef RELATIONMEMBER_H
+#define RELATIONMEMBER_H
 
-#include <cstdint>
+#include "util/Types.h"
+
 #include <string>
-#include <tuple>
-#include <vector>
-#include <osm/RelationMember.h>
+#include <utility>
 
-namespace olu {
+namespace olu::osm {
 
-    typedef int64_t id_t;
-    typedef uint32_t changeset_id_t;
-    typedef uint32_t version_t;
-    typedef std::vector<id_t> member_ids_t;
-    typedef std::vector<osm::RelationMember> rel_members_t;
+    struct RelationMember {
+        int64_t id;
+        std::string osmTag;
+        std::string role;
 
-    typedef std::string wktPoint_t;
-
-    typedef std::tuple<std::string, std::string, std::string> triple_t;
-    typedef std::pair<std::string, std::string> key_value_t;
+        RelationMember(const int64_t id, std::string osmTag, std::string role) :
+        id(id), osmTag(std::move(osmTag)), role(std::move(role)) {}
+    };
 }
 
-#endif //OSM_LIVE_UPDATES_TYPES_H
+#endif //RELATIONMEMBER_H

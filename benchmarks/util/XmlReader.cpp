@@ -34,7 +34,7 @@ static void Read_Attribute(benchmark::State& state) {
     olu::util::XmlReader::populatePTreeFromString(content, tree);
 
     for (auto _ : state) {
-        std::string attribute = olu::util::XmlReader::readAttribute(
+        auto attribute = olu::util::XmlReader::readAttribute<std::string>(
                 "osm.node.id",
                 tree);
     }
@@ -81,7 +81,7 @@ static void Read_Tag_Of_Children(benchmark::State& state) {
 
     for (auto _ : state) {
         auto childrenTags = olu::util::XmlReader::readTagOfChildren(
-                olu::config::constants::OSM_TAG,
+                olu::config::constants::XML_TAG_OSM,
                 tree,
                 false);
     }
