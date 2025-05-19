@@ -75,6 +75,12 @@ namespace olu::osm {
                                 a.role == b.role;
                      });
     }
+
+    ChangeAction OsmObjectHelper::getChangeAction(const osmium::OSMObject &osmObject) {
+        if (osmObject.deleted()) { return ChangeAction::DELETE; }
+        if (osmObject.version() == 1) { return ChangeAction::CREATE; }
+        return ChangeAction::MODIFY;
+    }
 }
 
 

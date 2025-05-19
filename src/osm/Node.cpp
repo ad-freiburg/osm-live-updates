@@ -27,6 +27,11 @@
 static inline constexpr int MAX_NODE_LOC_PRECISION = 7;
 
 namespace olu::osm {
+    Node::Node(const id_t id, const osmium::Location& location) {
+        this->id = id;
+        this->loc = location;
+    }
+
     Node::Node(const id_t id, const wktPoint_t& locationAsWkt) {
         this->id = id;
 
@@ -49,4 +54,5 @@ namespace olu::osm {
 
         return oss.str();
     }
+
 }
