@@ -39,7 +39,7 @@ namespace olu::osm {
         [[nodiscard]] std::set<id_t> getDeletedWays() const { return _deletedWays; }
 
         [[nodiscard]] std::set<id_t> getModifiedWaysWithChangedMembers() const {
-            return _modifiedWaysWithChangedMembers;}
+            return _modifiedWaysWithChangedMembers; }
 
         void printWayStatistics() const;
 

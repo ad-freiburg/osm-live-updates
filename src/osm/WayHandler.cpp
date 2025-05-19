@@ -68,7 +68,13 @@ olu::osm::WayHandler::checkWaysForMemberChange(std::set<id_t> modifiedNodesWithC
             continue;
         }
 
-        for (const auto &[wayId, nodeRefsEndpoint]: _odf.fetchWaysMembersSorted({wayId})) {
+        const auto &membersEndpoint =  _odf.fetchWaysMembersSorted({wayId});
+        if (membersEndpoint.empty()) {
+            _createdWays.insert(wayId);
+            continue;
+        }
+
+        for (const auto &[wayId, nodeRefsEndpoint]: membersEndpoint) {
             if (OsmObjectHelper::areWayMemberEqual(nodeRefs, nodeRefsEndpoint)) {
                 _modifiedWays.insert(wayId);
             } else {

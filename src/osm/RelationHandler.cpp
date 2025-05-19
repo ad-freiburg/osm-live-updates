@@ -110,7 +110,13 @@ void olu::osm::RelationHandler::checkRelationsForMemberChange(
             continue;
         }
 
-        for (const auto &[relId, memberEndpoint]: _odf.fetchRelsMembersSorted({relId})) {
+        const auto membersEndpoint = _odf.fetchRelsMembersSorted({relId});
+        if (membersEndpoint.empty()) {
+            _createdRelations.insert(relId);
+            continue;
+        }
+
+        for (const auto &[relId, memberEndpoint]: membersEndpoint) {
             if (OsmObjectHelper::areRelMemberEqual(relMembers, memberEndpoint)) {
                 _modifiedRelations.insert(relId);
             } else {
