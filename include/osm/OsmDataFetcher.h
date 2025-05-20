@@ -50,6 +50,7 @@ namespace olu::osm {
          * @return A vector containing node objects with the location and id
          */
         std::vector<Node> fetchNodes(const std::set<id_t> &nodeIds);
+        std::vector<std::pair<id_t, osmium::Location>> fetchNodeLocations(const std::set<id_t> &nodeIds);
 
         /**
          * Sends a query to the sparql endpoint to get the location of the nodes with the given ids

@@ -10,6 +10,7 @@
 #include <osmium/visitor.hpp>
 #include <osmium/object_pointer_collection.hpp>
 #include <osmium/io/file.hpp>
+#include <osmium/io/xml_input.hpp>
 #include <osmium/io/xml_output.hpp>
 #include <osmium/io/writer.hpp>
 #include <osmium/io/gzip_compression.hpp>

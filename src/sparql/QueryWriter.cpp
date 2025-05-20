@@ -120,8 +120,8 @@ olu::sparql::QueryWriter::writeDeleteQueryForGeometry(const std::set<id_t> &ids,
         wrapWithOptional(getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_OSM2RDF_AREA, "?o5")) +
         wrapWithOptional(getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_GEO_HAS_GEOMETRY, "?geom") +
                          getTripleClause("?geom", cnst::PREFIXED_GEO_AS_WKT, "?o6")) +
-        wrapWithOptional(getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_GEO_HAS_CENTROID, "?geom") +
-                         getTripleClause("?geom", cnst::PREFIXED_GEO_AS_WKT, "?o7")));
+        wrapWithOptional(getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_GEO_HAS_CENTROID, "?cent") +
+                         getTripleClause("?cent", cnst::PREFIXED_GEO_AS_WKT, "?o7")));
     oss << " }";
     return oss.str();
 }

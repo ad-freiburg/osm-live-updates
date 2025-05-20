@@ -25,8 +25,16 @@
 #include "config/Config.h"
 #include "osm2rdf/util/ProgressBar.h"
 #include <set>
-#include <boost/property_tree/ptree.hpp>
+#include <osmium/handler.hpp>
 
+#include "NodeHandler.h"
+#include "ReferencesHandler.h"
+#include "RelationHandler.h"
+#include "WayHandler.h"
+
+namespace osmium::memory {
+    class CallbackBuffer;
+}
 
 namespace olu::osm {
     /**
@@ -39,7 +47,7 @@ namespace olu::osm {
      * - Osm elements within the `delete` changeset are deleted from the database.
      * - Osm elements within the `modify` changeset are modified in the database.
      */
-    class OsmChangeHandler {
+    class OsmChangeHandler: public osmium::handler::Handler {
     public:
         explicit OsmChangeHandler(const config::Config &config);
         void run();
@@ -49,136 +57,44 @@ namespace olu::osm {
         sparql::QueryWriter _queryWriter;
         OsmDataFetcher _odf;
 
-        // The xml element of the change file is stored here while processing the change file
-        boost::property_tree::ptree _osmChangeElement;
+        /**
+         * Osmium handler for the nodes in the change file.
+         * Sorts the ids of the nodes into the respective sets (_createdNodes,
+         * _modifiedNodes/_modifiedNodesWithChangedLocation, _deletedNodes).
+         */
+        NodeHandler _nodeHandler;
 
-        // Nodes that are in a delete-changeset in the change file.
-        std::set<id_t> _deletedNodes;
-        // Nodes that are in a create-changeset in the change file.
-        std::set<id_t> _createdNodes;
-        // Nodes that are in a modify-changeset in the change file.
-        std::set<id_t> _modifiedNodes;
-        // Nodes that where modified in the changeset and have a location that has changed.
-        std::set<id_t> _modifiedNodesWithChangedLocation;
-        // Nodes that are referenced by a way or relation that are NOT present in the change file,
-        // meaning they have to be fetched from the database
-        std::set<id_t> _referencedNodes;
+        /**
+         * Osmium handler for the ways in the change file.
+         * Sorts the ids of the ways into the respective sets (_createdWays,
+         * _modifiedWays/_modifiedWaysWithChangedMembers, _deletedWays).
+         */
+        WayHandler _wayHandler;
 
-        // Ways that are in a delete-changeset in the change file.
-        std::set<id_t> _deletedWays;
-        // Ways that are in a create-changeset in the change file.
-        std::set<id_t> _createdWays;
-        // Ways that are in a modify-changeset in the change file and not have a changed member list
-        std::set<id_t> _modifiedWays;
-        // Ways that are in a modify-changeset in the change file and have a changed member list.
-        std::set<id_t> _modifiedWaysWithChangedMembers;
+        /**
+         * Osmium handler for the relations in the change file.
+         * Sorts the ids of the relations into the respective sets (_createdRelations,
+         * _modifiedRelations/_modifiedRelationsWithChangedMembers, _deletedRelations).
+         */
+        RelationHandler _relationHandler;
+
+        /**
+         * Osmium handler for the references (member nodes, ways and relations) in the change file.
+         * Sorts the ids of the references into the respective sets (_referencedNodes,
+         * _referencedWays, _referencedRelations).
+         */
+        ReferencesHandler _referencesHandler;
+
+
         // Ways that reference a node which was modified in the changeset.
         std::set<id_t> _waysToUpdateGeometry;
-        // Ways that are referenced by a relation that are NOT present in the change file,
-        // meaning they have to be fetched from the database
-        std::set<id_t> _referencedWays;
-
-        // Relations that are in a delete-changeset in the change file.
-        std::set<id_t> _deletedRelations;
-        // Relations that are in a create-changeset in the change file.
-        std::set<id_t> _createdRelations;
-        // Relations that are in a modify-changeset in the change file and not have a changed member list.
-        std::set<id_t> _modifiedRelations;
-        // Relations that are in a modify-changeset in the change file and have a changed member list.
-        std::set<id_t> _modifiedRelsWithChangedMembers;
-        // Relations that are of type multipolygon that are in a modify-changeset in the change file.
-        std::set<id_t> _modifiedAreas;
         // Relations that reference a node, way or relation which was modified in the changeset.
         std::set<id_t> _relationsToUpdateGeometry;
-        // Relations that are referenced by a relation that are NOT present in the change file,
-        // meaning they have to be fetched from the database
-        std::set<id_t> _referencedRelations;
 
-        /**
-        * @Returns TRUE if the node with the given ID is contained in a `create`, `modify` or
-         * 'delete' changeset in the changeFile.
-         *
-         * @warning All nodes inside the ChangeFile have to be processed BEFORE using this function.
-         * Therefore, the earliest time this function can be called is inside the loop over the osm
-         * elements inside `storeIdsOfElementsInChangeFile()` after the first way has occured.
-         */
-        [[nodiscard]] bool nodeInChangeFile(const id_t &nodeId) const {
-            return _modifiedNodes.contains(nodeId) ||
-                   _modifiedNodesWithChangedLocation.contains(nodeId) ||
-                   _createdNodes.contains(nodeId) ||
-                   _deletedNodes.contains(nodeId);
-        }
-
-        /**
-         * @Returns TRUE if the way with the given ID is contained in a `create`, `modify` or
-         * 'delete' changeset in the changeFile.
-         *
-         * @warning All ways inside the ChangeFile have to be processed BEFORE using this function.
-         * Therefore, the earliest time this function can be called is inside the loop over the osm
-         * elements inside `storeIdsOfElementsInChangeFile()` after the first way has occured.
-         */
-        [[nodiscard]] bool wayInChangeFile(const id_t &wayId) const {
-            return _modifiedWays.contains(wayId) ||
-                   _modifiedWaysWithChangedMembers.contains(wayId) ||
-                   _createdWays.contains(wayId) ||
-                   _deletedWays.contains(wayId);
-        }
-
-        /**
-         * @Returns TRUE if the relation with the given ID is contained in a `create`, `modify` or
-         * 'delete' changeset in the changeFile.
-         *
-         * @warning All relations inside the ChangeFile have to be processed BEFORE using this function.
-         * Therefore, the earliest time this function can be called is after calling
-         * `storeIdsOfElementsInChangeFile()`
-         */
-        [[nodiscard]] bool relationInChangeFile(const id_t &relationId) const {
-            return _modifiedRelations.contains(relationId) ||
-                   _modifiedRelsWithChangedMembers.contains(relationId) ||
-                   _createdRelations.contains(relationId) ||
-                   _deletedRelations.contains(relationId);
-        }
-
-        /**
-         * Loops over the change file and stores the ids of all occurring elements in the
-         * corresponding set (_createdNodes, _modifiedNodes, _deletedNodes, etc.).
-         */
-        void storeIdsOfElementsInChangeFile();
-
-        /**
-         * Checks if the location of the given nodes from the change file has changed. If so, the
-         * node is added to the _modifiedNodesWithChangedLocation set, otherwise to the
-         * _modifiedNodes set
-         *
-         * @param nodeIds The ids of the nodes to check
-         * @param nodeLocs The locations of the nodes to check
-         */
-        void checkNodesForLocationChange(std::set<id_t> &nodeIds,
-                                         const std::vector<osmium::Location> & nodeLocs);
-
-        /**
-         * Checks if the members of the given ways from the change file have changed. If so, the
-         * way is added to the _modifiedWaysWithChangedMembers set, otherwise to the
-         * _modifiedWays set
-         *
-         * @param waysWithMembers Pairs of wayIds with a vector containing the node references
-         */
-        void
-        checkWaysForMemberChange(const std::vector<std::pair<id_t, member_ids_t>>& waysWithMembers);
-
-        /**
-         * Checks if the members of the given realtions from the change file have changed.
-         *
-         * @param relsWithMembers Pairs of relIds with a vector containing the members
-         */
-        void
-        checkRelsForMemberChange(const std::vector<std::pair<id_t, rel_members_t>>& relsWithMembers);
-
-        /**
-         * Stores the ids of the nodes and ways that are referenced in the given relation or way in
-         * the _referencedNodes or _referencedWays set
-         */
-        void storeIdsOfReferencedElements(const boost::property_tree::ptree& relElement);
+        void processChangeFile();
+        void getObjectsToUpdate();
+        void handleReferences();
+        void convertToTtl();
 
         /**
          * Loops over the change file and stores the relevant ones in a temporary file, and the
@@ -202,18 +118,6 @@ namespace olu::osm {
          */
         void getReferencedRelations();
 
-        /**
-         * Fetches the ids of all ways that are referenced in relations which geometry will be
-         * changed in this update process and stores them in the corresponding set
-         */
-        void getReferencesForRelations();
-
-        /**
-         * Fetches the ids of all nodes that are referenced in either ways or relations which
-         * geometries will be needed and stores them in the corresponding set
-         */
-        void getReferencesForWays();
-
         static void createTmpFiles() ;
         static void initTmpFile(const std::string& filepath) ;
         static void finalizeTmpFile(const std::string& filepath) ;
@@ -222,6 +126,7 @@ namespace olu::osm {
          * Writes the given osm element to its corresponding temporary file
          */
         static void addToTmpFile(const std::string& element, const std::string& elementTag) ;
+
 
         /**
          * Creates dummy elements for nodes, ways and relations, while showing a progress bar on
@@ -234,20 +139,23 @@ namespace olu::osm {
          * nodes contain the node id and the location which is used for the nodes that are
          * referenced in ways and writes them to a temporary file
          */
-        void createDummyNodes(osm2rdf::util::ProgressBar &progress, size_t &counter);
+        void createDummyNodes(osm2rdf::util::ProgressBar &progress,
+                              size_t &counter);
 
         /**
          * Creates dummy ways for the referenced ways that are not in the change file and writes
          * them to a temporary file The dummy ways only contain the referenced nodes
          */
-        void createDummyWays(osm2rdf::util::ProgressBar &progress, size_t &counter);
+        void createDummyWays(osm2rdf::util::ProgressBar &progress,
+                             size_t &counter);
 
         /**
          * Creates dummy relations for the referenced relations that are not in the change file and
          * writes them to a temporary file The dummy relation only contain the members of that
          * relation
          */
-        void createDummyRelations(osm2rdf::util::ProgressBar &progress, size_t &counter);
+        void createDummyRelations(
+            osm2rdf::util::ProgressBar &progress, size_t &counter);
 
         /**
          * Send a SPARQL update query to the endpoint
@@ -313,35 +221,6 @@ namespace olu::osm {
          * updated. Irrelevant triples are triples that where generated for referenced elements.
          */
         std::vector<triple_t> filterRelevantTriples();
-
-        /**
-         * Returns the elements id.
-         *
-         * Example: For a node element with id 1787 the function would return '1787'
-         *
-         * @param element The osm element
-         * @return The id of the element
-         */
-        static id_t getIdFor(const boost::property_tree::ptree &element);
-
-        /**
-         * Returns the elements location.
-         *
-         * @param element The osm element
-         * @return The location of the element
-         */
-        static osmium::Location getLocationFor(const boost::property_tree::ptree &element);
-
-        /**
-         * @return A list of all node ids that are members of the given way
-         */
-        static member_ids_t getMemberForWay(const boost::property_tree::ptree &element);
-
-        /**
-         * @return A list of all members of the given relation
-         */
-        static rel_members_t getMemberForRel(const boost::property_tree::ptree &element);
-
     };
 
     /**

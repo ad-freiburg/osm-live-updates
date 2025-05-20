@@ -1,4 +1,4 @@
-// Copyright 2024, University of Freiburg
+// Copyright 2025, University of Freiburg
 // Authors: Nicolas von Trott <nicolasvontrott@gmail.com>.
 
 // This file is part of osm-live-updates.
@@ -16,29 +16,19 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef OSM_LIVE_UPDATES_OSM2TTL_H
-#define OSM_LIVE_UPDATES_OSM2TTL_H
-
-#include <config/Config.h>
-#include <osm2rdf/config/Config.h>
-#include <osm2rdf/util/Output.h>
+#ifndef CHANGEACTIONHELPER_H
+#define CHANGEACTIONHELPER_H
 
 namespace olu::osm {
 
-    class Osm2ttl {
-    public:
-        explicit Osm2ttl(const olu::config::Config &config);
-
-        // Converts osm data to ttl triplets
-        void convert() const;
-    private:
-        olu::config::Config _config;
-
-        template <typename T>
-        static void run(const osm2rdf::config::Config& config);
-        static void writeToInputFile();
+    /**
+     * An osm object in a change file can either be inside an <create> <modify> or <delete>
+     * XML node. This XML node describes the change action performed on the osm element.
+     */
+    enum class ChangeAction {
+        CREATE, MODIFY, DELETE
     };
 
-} // namespace olu::osm
+}
 
-#endif //OSM_LIVE_UPDATES_OSM2TTL_H
+#endif //CHANGEACTIONHELPER_H

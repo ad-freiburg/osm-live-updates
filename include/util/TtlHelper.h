@@ -6,6 +6,7 @@
 #define TTLHELPER_H
 
 #include "Types.h"
+#include "osm/OsmObject.h"
 
 #include <string>
 
@@ -13,10 +14,74 @@ namespace olu::util {
 
     class TtlHelper {
     public:
-        static triple_t getTriple(const std::string& tripleString);
-        static id_t getIdFromSubject(const std::string& subject, const std::string &osmTag);
-        static bool isRelevantNamespace(const std::string& subject, const std::string &osmTag);
-        static bool hasRelevantObject(const std::string& predicate, const std::string &osmTag);
+        /**
+         * Parses a triple string into its components.
+         * This function is not doing any validation because it is intended to be used with the
+         * output from osm2rdf, which is assumed to be in the correct format:
+         * "subject predicate object ."
+         *
+         * @param tripleString The triple string to parse, in the format:
+         * "subject predicate object ."
+         * @return A tuple containing strings with the subject, predicate, and object of the triple
+         */
+        static triple_t parseTriple(const std::string& tripleString);
+
+        /**
+         * Parses the id from a prefixed name like "osmnode:1" or "osm2rdfgeom:osm_way_centroid_1".
+         * The prefixed has to end with the id number. There is again no validation of the input,
+         * so make sure it is in the correct format.
+         *
+         * @param prefixedName The prefixed name to extract the id from.
+         * @return The extracted id as an id_t type.
+         */
+        static id_t parseId(const std::string& prefixedName);
+
+        /**
+         * Checks if the given subject is in the relevant namespace for the given osm object type:
+         * "osmnode:..." for nodes, "osmway:..." for ways and "osmrel:..." for relations.
+         *
+         * @param subject The subject string to check.
+         * @param osmObject The osm object type to check the namespace for.
+         * @return True if the subject is in the relevant namespace, false otherwise.
+         */
+        static bool
+        isInNamespaceForOsmObject(const std::string& subject, const osm::OsmObject & osmObject);
+
+        /**
+         * Checks if the given predicate describes a tag or metadata of the given osm object.
+         *
+         * @param predicate The predicate string to check.
+         * @param osmObject The osm object type to check the predicate for.
+         * @return True if the predicate describes a tag or metadata, false otherwise.
+         */
+        static bool
+        isMetadataOrTagPredicate(const std::string& predicate, const osm::OsmObject & osmObject);
+
+        /**
+         * Checks if the given predicate describes the geometry of the given osm object.
+         *
+         * @param predicate The predicate string to check.
+         * @param osmObject The osm object type to check the predicate for.
+         * @return True if the predicate describes the geometry, false otherwise.
+         */
+        static bool
+        isGeometryPredicate(const std::string& predicate, const osm::OsmObject & osmObject);
+
+        /**
+         * Checks if a predicate links to an object,
+         * which has a triple that is relevant to an osm object. For example, members of ways and
+         * relations have triples on their own which are relevant for the way or relation:
+         * "osmrel:11892035 osmrel:member _:6_168 ."
+         * "_:6_168 osm2rdfmember:id osmway:1058514204 ."
+         * The object "_6_168" is a blank node, which links to the triple beneath.
+         *
+         * @param predicate The predicate string to check.
+         * @param osmObject The osm object type to check the predicate for.
+         * @return True if the predicate links to an object with a relevant triple, false otherwise.
+         */
+        static bool
+        hasRelevantObject(const std::string& predicate, const osm::OsmObject & osmObject);
+
     };
 
     /**

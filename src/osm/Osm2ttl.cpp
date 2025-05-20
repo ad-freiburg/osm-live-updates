@@ -104,8 +104,10 @@ namespace olu::osm {
 
     // _____________________________________________________________________________________________
     void Osm2ttl::writeToInputFile() {
-        const std::string command = "osmium sort " + cnst::PATH_TO_NODE_FILE + " " +
-                                    cnst::PATH_TO_WAY_FILE + " " + cnst::PATH_TO_RELATION_FILE +
+        const std::string command = "osmium sort " + cnst::PATH_TO_CHANGE_FILE + " " +
+                                                     cnst::PATH_TO_NODE_FILE + " " +
+                                                     cnst::PATH_TO_WAY_FILE + " " +
+                                                     cnst::PATH_TO_RELATION_FILE +
                                     " -o " + cnst::PATH_TO_INPUT_FILE + " --overwrite > /dev/null";
 
         const int res = system(command.c_str());

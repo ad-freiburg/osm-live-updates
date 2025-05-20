@@ -29,9 +29,10 @@ namespace olu::osm {
     class Node {
     public:
         explicit Node(id_t id, const wktPoint_t& locationAsWkt);
+        explicit Node(id_t id, const osmium::Location& location);
 
         /**
-         * Returns the node as a xml osm object.
+         * Returns the node as a XML osm object.
          *
          * @example For a node with id: `1` and location: `POINT(13.5690032 42.7957187)` the function
          * would return: `<node id="1" lat="42.7957187" lon="13.5690032"/>`

@@ -58,6 +58,8 @@ struct Config {
     // Specifies whether a progress bar should be shown
     bool showProgress = true;
 
+    int maxValuesPerQuery = 1024;
+
     // Specifies what happens with the sparql output
     // - ENDPOINT: The sparql updates are send to the sparql endpoint
     // - FILE: The sparql updates are written to a file

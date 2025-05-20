@@ -23,7 +23,12 @@
 
 namespace olu::osm {
     void Way::setTimestamp(std::string const &timestamp) {
-        this->timestamp = timestamp;
+        // Ensure the timestamp ends with 'Z' to indicate UTC which is needed for osmium
+        if (timestamp.ends_with("Z")) {
+            this->timestamp = timestamp;
+        } else {
+            this->timestamp = timestamp + "Z";
+        }
     }
 
     void Way::setVersion(version_t const &version) {
@@ -64,7 +69,7 @@ namespace olu::osm {
         if (!this->timestamp.empty()) {
             oss << " timestamp=\"";
             oss << this->timestamp;
-            oss << "Z\"";
+            oss << "\"";
         }
 
         oss << ">";
