@@ -367,7 +367,7 @@ namespace olu::osm {
                     }
 
                     // Add the dummy relation to the buffer if it is not already in the change file
-                    if (_relationHandler.relationInChangeFile(rel.getId())) {
+                    if (!_relationHandler.relationInChangeFile(rel.getId())) {
                         addToTmpFile(rel.getXml(), cnst::XML_TAG_REL);
                     }
                 }
