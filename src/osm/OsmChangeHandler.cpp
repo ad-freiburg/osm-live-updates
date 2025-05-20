@@ -693,7 +693,8 @@ namespace olu::osm {
 
                 if (_waysToUpdateGeometry.contains(wayId)) {
                     if (pre.starts_with(cnst::NAMESPACE_OSM2RDF_GEOM) ||
-                        pre.starts_with(config::constants::PREFIXED_OSM2RDF_LENGTH)) {
+                        pre.starts_with(cnst::PREFIXED_OSM2RDF_LENGTH) ||
+                        pre.starts_with(cnst::PREFIXED_OSM2RDF_AREA)) {
                         relevantTriples.emplace_back(sub, pre, obj);
                     }
 
