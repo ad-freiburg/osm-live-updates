@@ -602,6 +602,8 @@ namespace olu::osm {
     }
 
     std::vector<triple_t> OsmChangeHandler::filterRelevantTriples() {
+        // Get the ids of all nodes, ways and relations for which the triples should be inserted
+        // into the database
         std::set<id_t> nodesToInsert;
         for (const auto &nodeId: _nodeHandler.getCreatedNodes()) {
             nodesToInsert.insert(nodeId);
@@ -631,7 +633,7 @@ namespace olu::osm {
 
         // Triples that should be inserted into the database
         std::vector<triple_t> relevantTriples;
-        // current link object, for example member nodes or geometries
+        // current link object, for example, member nodes or geometries
         std::string currentLink;
 
         // Loop over each triple that osm2rdf outputs
@@ -639,102 +641,109 @@ namespace olu::osm {
         std::ifstream osm2rdfOutput;
         osm2rdfOutput.open(cnst::PATH_TO_OUTPUT_FILE);
         while (std::getline(osm2rdfOutput, line)) {
-            if (line.starts_with("@")) {
-                continue;
-            }
+            // Filer out prefixes at the start of the document
+            if (line.starts_with("@")) { continue; }
 
-            auto [sub, pre, obj] = util::TtlHelper::getTriple(line);
+
+            auto [subject, predicate, object] = util::TtlHelper::parseTriple(line);
 
             // Decode tag values
-            if (pre.starts_with(cnst::NAMESPACE_OSM_KEY)) {
-                obj = util::XmlReader::xmlDecode(obj);
+            if (predicate.starts_with(cnst::NAMESPACE_OSM_KEY)) {
+                object = util::XmlReader::xmlDecode(object);
             }
 
             // Check if there is currently a link set
-            if (!currentLink.empty() && currentLink == sub) {
-                relevantTriples.emplace_back(sub, pre, obj);
+            if (!currentLink.empty() && currentLink == subject) {
+                relevantTriples.emplace_back(subject, predicate, object);
                 continue;
             }
 
-            // Check for relevant nodes
-            if (util::TtlHelper::isRelevantNamespace(sub, cnst::XML_TAG_NODE)) {
-                if (nodesToInsert.contains(util::TtlHelper::getIdFromSubject(sub, cnst::XML_TAG_NODE))) {
+            // Check all triples that are in the "osmnode" namespace.
+            if (util::TtlHelper::isInNamespaceForOsmObject(subject, OsmObject::NODE)) {
+                if (nodesToInsert.contains(util::TtlHelper::parseId(subject))) {
+                    relevantTriples.emplace_back(subject, predicate, object);
 
-                    relevantTriples.emplace_back(sub, pre, obj);
-
-                    if (util::TtlHelper::hasRelevantObject(pre, cnst::XML_TAG_NODE)) {
-                        currentLink = obj;
+                    if (util::TtlHelper::hasRelevantObject(predicate, OsmObject::NODE)) {
+                        currentLink = object;
                     }
                 }
 
                 continue;
             }
 
-            // Check for relevant ways
-            if (util::TtlHelper::isRelevantNamespace(sub, cnst::XML_TAG_WAY)) {
-                auto wayId = util::TtlHelper::getIdFromSubject(sub, cnst::XML_TAG_WAY);
+            // Check all triples that are in the "osmway" namespace.
+            if (util::TtlHelper::isInNamespaceForOsmObject(subject, OsmObject::WAY)) {
+                auto wayId = util::TtlHelper::parseId(subject);
 
                 if (waysToInsert.contains(wayId)) {
-                    relevantTriples.emplace_back(sub, pre, obj);
+                    relevantTriples.emplace_back(subject, predicate, object);
 
-                    if (util::TtlHelper::hasRelevantObject(pre, cnst::XML_TAG_WAY)) {
-                        currentLink = obj;
+                    // Check if the object links to a relevant triple for the geometry of the
+                    // relation
+                    // (For example, "osmway:member" links to the object which describes
+                    // the member)
+                    if (util::TtlHelper::hasRelevantObject(predicate, OsmObject::WAY)) {
+                        currentLink = object;
                     }
                 }
 
-                // Check for relevant meta data and tag values
+                // We only update the triples for the metadata and tags of the ways that are in the
+                // modifiedWays set.
                 if (_wayHandler.getModifiedWays().contains(wayId)) {
-                    if (pre.starts_with(cnst::NAMESPACE_OSM_KEY) ||
-                        pre.starts_with(cnst::NAMESPACE_OSM_META) ||
-                        pre.starts_with(cnst::PREFIXED_OSM2RDF_FACTS)) {
-                        relevantTriples.emplace_back(sub, pre, obj);
+                    if (util::TtlHelper::isMetadataOrTagPredicate(predicate, OsmObject::WAY)) {
+                        relevantTriples.emplace_back(subject, predicate, object);
                     }
                 }
 
+                // We only update the triples that describe the geometry of the ways that are in the
+                // _waysToUpdateGeometry set.
                 if (_waysToUpdateGeometry.contains(wayId)) {
-                    if (pre.starts_with(cnst::NAMESPACE_OSM2RDF_GEOM) ||
-                        pre.starts_with(cnst::PREFIXED_OSM2RDF_LENGTH) ||
-                        pre.starts_with(cnst::PREFIXED_OSM2RDF_AREA)) {
-                        relevantTriples.emplace_back(sub, pre, obj);
+                    if (util::TtlHelper::isGeometryPredicate(predicate, OsmObject::WAY)) {
+                        relevantTriples.emplace_back(subject, predicate, object);
                     }
 
-                    if (util::TtlHelper::hasRelevantObject(pre, cnst::XML_TAG_WAY)) {
-                        currentLink = obj;
+                    // Check if the object links to a relevant triple for the geometry of the
+                    // relation (For example, osm2rdfgeom:osm_node_1)
+                    if (util::TtlHelper::hasRelevantObject(predicate, OsmObject::WAY)) {
+                        currentLink = object;
                     }
                 }
 
                 continue;
             }
 
-            // Check for relevant relations
-            if (util::TtlHelper::isRelevantNamespace(sub, cnst::XML_TAG_REL)) {
-                auto relId = util::TtlHelper::getIdFromSubject(sub, cnst::XML_TAG_REL);
+            // Check all triples that are in the "osmrel" namespace.
+            if (util::TtlHelper::isInNamespaceForOsmObject(subject, OsmObject::RELATION)) {
+                auto relId = util::TtlHelper::parseId(subject);
                 if (relationsToInsert.contains(relId)) {
-                    relevantTriples.emplace_back(sub, pre, obj);
+                    relevantTriples.emplace_back(subject, predicate, object);
 
-                    if (util::TtlHelper::hasRelevantObject(pre, cnst::XML_TAG_REL)) {
-                        currentLink = obj;
+                    // (For example, "osmrel:member" links to the object which describes
+                    // the member)
+                    if (util::TtlHelper::hasRelevantObject(predicate, OsmObject::RELATION)) {
+                        currentLink = object;
                     }
                 }
 
-                // Check for relevant meta data and tag values
+                // We only update the triples for the metadata and tags of the relations that are
+                // in the modifiedRelations set.
                 if (_relationHandler.getModifiedRelations().contains(relId)) {
-                    if (pre.starts_with(cnst::NAMESPACE_OSM_KEY) ||
-                        pre.starts_with(cnst::NAMESPACE_OSM_META) ||
-                        pre.starts_with(cnst::PREFIXED_OSM2RDF_FACTS)) {
-                        relevantTriples.emplace_back(sub, pre, obj);
-                        }
+                    if (util::TtlHelper::isMetadataOrTagPredicate(predicate, OsmObject::RELATION)) {
+                        relevantTriples.emplace_back(subject, predicate, object);
+                    }
                 }
 
+                // We only update the triples that describe the geometry of the relations that are
+                // in the _relationsToUpdateGeometry set.
                 if (_relationsToUpdateGeometry.contains(relId)) {
-                    if (pre.starts_with(cnst::NAMESPACE_OSM2RDF_GEOM) ||
-                        pre.starts_with(cnst::PREFIXED_OSM2RDF_LENGTH) ||
-                        pre.starts_with(cnst::PREFIXED_OSM2RDF_AREA)) {
-                        relevantTriples.emplace_back(sub, pre, obj);
+                    if (util::TtlHelper::isGeometryPredicate(predicate, OsmObject::RELATION)) {
+                        relevantTriples.emplace_back(subject, predicate, object);
                     }
 
-                    if (util::TtlHelper::hasRelevantObject(pre, cnst::XML_TAG_REL)) {
-                        currentLink = obj;
+                    // Check if the object links to a relevant triple for the geometry of the
+                    // relation (For example, osm2rdfgeom:osm_node_1)
+                    if (util::TtlHelper::hasRelevantObject(predicate, OsmObject::RELATION)) {
+                        currentLink = object;
                     }
                 }
             }
