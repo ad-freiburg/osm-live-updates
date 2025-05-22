@@ -20,14 +20,12 @@
 #define OSMOBJECT_H
 
 namespace olu::osm {
-
     /**
      * Possible types of osm objects in a change file.
      */
-    enum class OsmObject {
+    enum class OsmObjectType {
         NODE, WAY, RELATION
     };
-
 }
 
 #endif //OSMOBJECT_H

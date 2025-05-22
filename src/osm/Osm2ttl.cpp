@@ -17,18 +17,21 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "osm/Osm2ttl.h"
+
+#include <omp.h>
+
+#include <iostream>
+
 #include "osm2rdf/util/Time.h"
 #include "osm2rdf/config/ExitCode.h"
-#include "config/Constants.h"
 #include "osm2rdf/Version.h"
+#include "osm2rdf/config/Config.h"
+#include "osm2rdf/util/Output.h"
+#include "osm2rdf/ttl/Writer.h"
+#include "osm2rdf/ttl/Format.h"
+#include "osm2rdf/osm/OsmiumHandler.h"
 
-#include <osm2rdf/config/Config.h>
-#include <osm2rdf/util/Output.h>
-#include <osm2rdf/ttl/Writer.h>
-#include <osm2rdf/osm/OsmiumHandler.h>
-#include <osm2rdf/ttl/Format.h>
-#include <iostream>
-#include <omp.h>
+#include "config/Constants.h"
 
 namespace cnst = olu::config::constants;
 

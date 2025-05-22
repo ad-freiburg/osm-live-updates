@@ -19,12 +19,13 @@
 #include "osm/NodeHandler.h"
 
 #include <iostream>
-#include <osmium/osm/node.hpp>
 #include <ranges>
 
-#include "osm/Node.h"
+#include "osmium/osm/node.hpp"
 #include "osm2rdf/util/Time.h"
-#include "util/OsmObjectHelper.h"
+
+#include "osm/Node.h"
+#include "osm/OsmObjectHelper.h"
 #include "util/BatchHelper.h"
 
 void olu::osm::NodeHandler::node(const osmium::Node& node) {

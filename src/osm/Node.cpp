@@ -17,11 +17,12 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "osm/Node.h"
-#include "spatialjoin/WKTParse.h"
 
 #include <iostream>
 #include <sstream>
 #include <string>
+
+#include "spatialjoin/WKTParse.h"
 
 /// The maximum number of decimals for the location in a node
 static inline constexpr int MAX_NODE_LOC_PRECISION = 7;

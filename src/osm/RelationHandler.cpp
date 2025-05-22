@@ -16,15 +16,15 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <iostream>
-
 #include "osm/RelationHandler.h"
 
-#include <config/Constants.h>
+#include <iostream>
 
-#include "util/OsmObjectHelper.h"
-#include "osm2rdf/util/Time.h"
 #include "osmium/osm/relation.hpp"
+#include "osm2rdf/util/Time.h"
+
+#include "config/Constants.h"
+#include "osm/OsmObjectHelper.h"
 
 namespace cnst = olu::config::constants;
 
@@ -37,30 +37,15 @@ void olu::osm::RelationHandler::relation(const osmium::Relation& relation) {
             _deletedRelations.insert(relation.id());
             break;
         case ChangeAction::MODIFY:
-            auto typeTag = relation.tags()["type"];
+            const auto typeTag = relation.tags()["type"];
             if (typeTag != nullptr && (strcmp(typeTag, "multipolygon") == 0 ||
                                        strcmp(typeTag, "boundary") == 0)) {
                 _modifiedAreas.insert(relation.id());
             }
 
-            rel_members_t members;
+            std::vector<RelationMember> members;
             for (auto &member: relation.members()) {
-                std::string osmTag;
-                switch (member.type()) {
-                    case osmium::item_type::node:
-                        osmTag = cnst::XML_TAG_NODE;
-                        break;
-                    case osmium::item_type::way:
-                        osmTag = cnst::XML_TAG_WAY;
-                        break;
-                    case osmium::item_type::relation:
-                        osmTag = cnst::XML_TAG_REL;
-                        break;
-                    default:
-                        ;
-                }
-
-                members.push_back({member.ref(), osmTag, member.role()});
+                members.push_back(RelationMember(member.ref(), member.type(),member.role()));
             }
 
             _modifiedRelationsBuffer.emplace(relation.id(), members);
@@ -70,7 +55,8 @@ void olu::osm::RelationHandler::relation(const osmium::Relation& relation) {
 void olu::osm::RelationHandler::printRelationStatistics() const {
     std::cout << osm2rdf::util::currentTimeFormatted()
             << "relations created: " << _createdRelations.size()
-            << " modified: " << _modifiedRelations.size() + _modifiedRelationsWithChangedMembers.size()
+            << " modified: " << _modifiedRelations.size()
+                                + _modifiedRelationsWithChangedMembers.size()
             << " deleted: " << _deletedRelations.size()
             << std::endl;
 }
@@ -79,23 +65,22 @@ void olu::osm::RelationHandler::checkRelationsForMemberChange(
     const std::set<id_t> &modifiedNodesWithChangedLocation,
     const std::set<id_t> &modifiedWaysWithChangedMembers) {
 
-
     for (const auto &[relId, relMembers] : _modifiedRelationsBuffer) {
         bool hasModifiedMember = false;
         for (const auto &member : relMembers) {
-            if (member.osmTag == cnst::XML_TAG_NODE) {
+            if (member.type == OsmObjectType::NODE) {
                 if (modifiedNodesWithChangedLocation.contains(member.id)) {
                     _modifiedRelationsWithChangedMembers.insert(relId);
                     hasModifiedMember = true;
                     break;
                 }
-            } else if (member.osmTag == cnst::XML_TAG_WAY) {
+            } else if (member.type == OsmObjectType::WAY) {
                 if (modifiedWaysWithChangedMembers.contains(member.id)) {
                     _modifiedRelationsWithChangedMembers.insert(relId);
                     hasModifiedMember = true;
                     break;
                 }
-            } else if (member.osmTag == cnst::XML_TAG_REL) {
+            } else if (member.type == OsmObjectType::RELATION) {
                 // At the moment all relations that have a relation as member are handled
                 // as if their geometry has changed. This is not ideal, but to be sure that the
                 // geometry hasn't changed we would have to check for all members that are relations
@@ -117,7 +102,7 @@ void olu::osm::RelationHandler::checkRelationsForMemberChange(
         }
 
         for (const auto &[relId, memberEndpoint]: membersEndpoint) {
-            if (OsmObjectHelper::areRelMemberEqual(relMembers, memberEndpoint)) {
+            if (RelationMember::areRelMemberEqual(relMembers, memberEndpoint)) {
                 _modifiedRelations.insert(relId);
             } else {
                 _modifiedRelationsWithChangedMembers.insert(relId);

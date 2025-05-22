@@ -1,32 +1,47 @@
+// Copyright 2024, University of Freiburg
+// Authors: Nicolas von Trott <nicolasvontrott@gmail.com>.
+
+// This file is part of osm-live-updates.
 //
-// Created by Nicolas von Trott on 11.09.24.
+// osm-live-updates is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
 //
+// osm-live-updates is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "osm/OsmUpdater.h"
-#include "osm/OsmChangeHandler.h"
-#include "config/Constants.h"
-#include "osm2rdf/util/Time.h"
-
-#include <osmium/visitor.hpp>
-#include <osmium/object_pointer_collection.hpp>
-#include <osmium/io/file.hpp>
-#include <osmium/io/xml_input.hpp>
-#include <osmium/io/xml_output.hpp>
-#include <osmium/io/writer.hpp>
-#include <osmium/io/gzip_compression.hpp>
-#include <osmium/io/output_iterator.hpp>
-#include <osmium/io/reader.hpp>
-#include <osmium/memory/buffer.hpp>
-#include <osmium/osm/object_comparisons.hpp>
 
 #include <algorithm>
 #include <iostream>
 #include <filesystem>
 
+#include "osmium/visitor.hpp"
+#include "osmium/object_pointer_collection.hpp"
+#include "osmium/io/file.hpp"
+#include "osmium/io/xml_input.hpp"
+#include "osmium/io/xml_output.hpp"
+#include "osmium/io/writer.hpp"
+#include "osmium/io/gzip_compression.hpp"
+#include "osmium/io/output_iterator.hpp"
+#include "osmium/io/reader.hpp"
+#include "osmium/memory/buffer.hpp"
+#include "osmium/osm/object_comparisons.hpp"
+
+#include "osm/OsmChangeHandler.h"
+#include "config/Constants.h"
+#include "osm2rdf/util/Time.h"
+
 namespace cnst = olu::config::constants;
 namespace olu::osm {
-    OsmUpdater::OsmUpdater(const config::Config &config) : _config(config), _odf(config),
-                                                          _latestState({}), _repServer(config) {
+    OsmUpdater::OsmUpdater(const config::Config &config) : _config(config), _repServer(config),
+                                                          _odf(config), _latestState({}) {
         try {
             std::filesystem::create_directory(cnst::PATH_TO_TEMP_DIR);
             std::filesystem::create_directory(cnst::PATH_TO_CHANGE_FILE_DIR);

@@ -5,27 +5,37 @@
 #ifndef OSM_LIVE_UPDATES_OSMOBJECTHELPER_H
 #define OSM_LIVE_UPDATES_OSMOBJECTHELPER_H
 
-#include "util/Types.h"
-#include "osm/ChangeAction.h"
-
 #include <string>
-#include <boost/property_tree/ptree.hpp>
-#include <osmium/osm/object.hpp>
+
+#include "osmium/osm/object.hpp"
+
+#include "osm/OsmObjectType.h"
+#include "osm/ChangeAction.h"
+#include "util/Types.h"
 
 namespace olu::osm {
     class OsmObjectHelper {
     public:
+        /**
+         * Parses the id from an uri like "https://www.openstreetmap.org/node/1" or
+         * "https://osm2rdf.cs.uni-freiburg.de/rdf/geom#osm_node_10916447545".
+         *
+         * The uri has to end with the id number.
+         * There is no validation of the input,
+         * so make sure it is in the correct format.
+         *
+         * @param uri The uri to extract the id from.
+         * @return The extracted id as an id_t type.
+         */
+        static id_t parseIdFromUri(const std::string_view &uri);
+
+        static OsmObjectType parseOsmTypeFromUri(const std::string& uri);
 
         /**
-         * @return True if the given relation is of type "multipolygon"
+         * Returns true if the two lists of way members are equal.
+         * This is the case if the members in both lists are exactly the same and in the same order
          */
-        static bool isMultipolygon(const boost::property_tree::ptree &relation);
-
-        static id_t getIdFromUri(const std::string& uri);
-        static std::string getOsmTagFromUri(const std::string& uri);
-
         static bool areWayMemberEqual(member_ids_t member1, member_ids_t member2);
-        static bool areRelMemberEqual(rel_members_t member1, rel_members_t member2);
 
         /**
          * To check whether an object has been created or modified, we check if the version is

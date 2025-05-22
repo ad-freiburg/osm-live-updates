@@ -17,26 +17,26 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "osm/OsmChangeHandler.h"
-#include "osm/NodeHandler.h"
-#include "util/XmlReader.h"
-#include "config/Constants.h"
-#include "sparql/QueryWriter.h"
-#include "util/OsmObjectHelper.h"
-#include "util/TtlHelper.h"
-#include "osm2rdf/util/Time.h"
-#include "util/BatchHelper.h"
-#include "osm2rdf/util/ProgressBar.h"
 
 #include <string>
 #include <iostream>
 #include <set>
-#include <regex>
-#include <osmium/visitor.hpp>
-#include <osmium/builder/osm_object_builder.hpp>
-#include <osmium/io/pbf_output.hpp>
-#include <osmium/io/writer.hpp>
-#include <osmium/osm/entity_bits.hpp>
-#include <osmium/osm/object_comparisons.hpp>
+
+#include "osmium/visitor.hpp"
+#include "osmium/builder/osm_object_builder.hpp"
+#include "osmium/io/pbf_output.hpp"
+#include "osmium/io/writer.hpp"
+#include "osmium/osm/entity_bits.hpp"
+#include "osmium/osm/object_comparisons.hpp"
+#include "osm2rdf/util/Time.h"
+#include "osm2rdf/util/ProgressBar.h"
+
+#include "config/Constants.h"
+#include "osm/NodeHandler.h"
+#include "sparql/QueryWriter.h"
+#include "util/XmlReader.h"
+#include "util/TtlHelper.h"
+#include "util/BatchHelper.h"
 
 namespace cnst = olu::config::constants;
 
@@ -659,11 +659,11 @@ namespace olu::osm {
             }
 
             // Check all triples that are in the "osmnode" namespace.
-            if (util::TtlHelper::isInNamespaceForOsmObject(subject, OsmObject::NODE)) {
+            if (util::TtlHelper::isInNamespaceForOsmObject(subject, OsmObjectType::NODE)) {
                 if (nodesToInsert.contains(util::TtlHelper::parseId(subject))) {
                     relevantTriples.emplace_back(subject, predicate, object);
 
-                    if (util::TtlHelper::hasRelevantObject(predicate, OsmObject::NODE)) {
+                    if (util::TtlHelper::hasRelevantObject(predicate, OsmObjectType::NODE)) {
                         currentLink = object;
                     }
                 }
@@ -672,7 +672,7 @@ namespace olu::osm {
             }
 
             // Check all triples that are in the "osmway" namespace.
-            if (util::TtlHelper::isInNamespaceForOsmObject(subject, OsmObject::WAY)) {
+            if (util::TtlHelper::isInNamespaceForOsmObject(subject, OsmObjectType::WAY)) {
                 auto wayId = util::TtlHelper::parseId(subject);
 
                 if (waysToInsert.contains(wayId)) {
@@ -682,7 +682,7 @@ namespace olu::osm {
                     // relation
                     // (For example, "osmway:member" links to the object which describes
                     // the member)
-                    if (util::TtlHelper::hasRelevantObject(predicate, OsmObject::WAY)) {
+                    if (util::TtlHelper::hasRelevantObject(predicate, OsmObjectType::WAY)) {
                         currentLink = object;
                     }
                 }
@@ -690,7 +690,7 @@ namespace olu::osm {
                 // We only update the triples for the metadata and tags of the ways that are in the
                 // modifiedWays set.
                 if (_wayHandler.getModifiedWays().contains(wayId)) {
-                    if (util::TtlHelper::isMetadataOrTagPredicate(predicate, OsmObject::WAY)) {
+                    if (util::TtlHelper::isMetadataOrTagPredicate(predicate, OsmObjectType::WAY)) {
                         relevantTriples.emplace_back(subject, predicate, object);
                     }
                 }
@@ -698,13 +698,13 @@ namespace olu::osm {
                 // We only update the triples that describe the geometry of the ways that are in the
                 // _waysToUpdateGeometry set.
                 if (_waysToUpdateGeometry.contains(wayId)) {
-                    if (util::TtlHelper::isGeometryPredicate(predicate, OsmObject::WAY)) {
+                    if (util::TtlHelper::isGeometryPredicate(predicate, OsmObjectType::WAY)) {
                         relevantTriples.emplace_back(subject, predicate, object);
                     }
 
                     // Check if the object links to a relevant triple for the geometry of the
                     // relation (For example, osm2rdfgeom:osm_node_1)
-                    if (util::TtlHelper::hasRelevantObject(predicate, OsmObject::WAY)) {
+                    if (util::TtlHelper::hasRelevantObject(predicate, OsmObjectType::WAY)) {
                         currentLink = object;
                     }
                 }
@@ -713,14 +713,14 @@ namespace olu::osm {
             }
 
             // Check all triples that are in the "osmrel" namespace.
-            if (util::TtlHelper::isInNamespaceForOsmObject(subject, OsmObject::RELATION)) {
+            if (util::TtlHelper::isInNamespaceForOsmObject(subject, OsmObjectType::RELATION)) {
                 auto relId = util::TtlHelper::parseId(subject);
                 if (relationsToInsert.contains(relId)) {
                     relevantTriples.emplace_back(subject, predicate, object);
 
                     // (For example, "osmrel:member" links to the object which describes
                     // the member)
-                    if (util::TtlHelper::hasRelevantObject(predicate, OsmObject::RELATION)) {
+                    if (util::TtlHelper::hasRelevantObject(predicate, OsmObjectType::RELATION)) {
                         currentLink = object;
                     }
                 }
@@ -728,7 +728,7 @@ namespace olu::osm {
                 // We only update the triples for the metadata and tags of the relations that are
                 // in the modifiedRelations set.
                 if (_relationHandler.getModifiedRelations().contains(relId)) {
-                    if (util::TtlHelper::isMetadataOrTagPredicate(predicate, OsmObject::RELATION)) {
+                    if (util::TtlHelper::isMetadataOrTagPredicate(predicate, OsmObjectType::RELATION)) {
                         relevantTriples.emplace_back(subject, predicate, object);
                     }
                 }
@@ -736,13 +736,13 @@ namespace olu::osm {
                 // We only update the triples that describe the geometry of the relations that are
                 // in the _relationsToUpdateGeometry set.
                 if (_relationsToUpdateGeometry.contains(relId)) {
-                    if (util::TtlHelper::isGeometryPredicate(predicate, OsmObject::RELATION)) {
+                    if (util::TtlHelper::isGeometryPredicate(predicate, OsmObjectType::RELATION)) {
                         relevantTriples.emplace_back(subject, predicate, object);
                     }
 
                     // Check if the object links to a relevant triple for the geometry of the
                     // relation (For example, osm2rdfgeom:osm_node_1)
-                    if (util::TtlHelper::hasRelevantObject(predicate, OsmObject::RELATION)) {
+                    if (util::TtlHelper::hasRelevantObject(predicate, OsmObjectType::RELATION)) {
                         currentLink = object;
                     }
                 }

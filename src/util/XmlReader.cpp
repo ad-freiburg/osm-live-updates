@@ -25,71 +25,7 @@
 #include <string>
 #include <iostream>
 
-namespace pt = boost::property_tree;
 namespace cnst = olu::config::constants;
-
-// _________________________________________________________________________________________________
-void olu::util::XmlReader::populatePTreeFromString(const std::string &xml, pt::ptree &tree) {
-    std::stringstream ss;
-    ss << xml;
-
-    try {
-        read_xml(ss, tree, pt::xml_parser::trim_whitespace);
-    } catch(std::exception &e) {
-        std::cout << e.what() << std::endl;
-        std::string msg = "Exception while trying to read the xml: " + xml;
-        throw XmlReaderException(msg.c_str());
-    }
-}
-
-// _________________________________________________________________________________________________
-void olu::util::XmlReader::populatePTreeFromFile(const std::string &pathToFile,
-                                                 boost::property_tree::ptree &tree) {
-    std::ifstream ifs (pathToFile);
-    const std::string fileContent( (std::istreambuf_iterator<char>(ifs) ),
-                                (std::istreambuf_iterator<char>()) );
-
-    populatePTreeFromString(fileContent, tree);
-}
-
-// _________________________________________________________________________________________________
-std::string olu::util::XmlReader::readTree(const pt::ptree &tree,
-                                           const pt::ptree::key_type& key,
-                                           const int& indent) {
-    std::ostringstream oss;
-
-    try {
-        write_xml_element(oss,
-                          key,
-                          tree,
-                          indent,
-                          pt::xml_parser::xml_writer_settings<pt::ptree::key_type>{});
-    } catch(std::exception &e) {
-        std::cout << e.what() << std::endl;
-        std::string msg = "Exception while trying to write tree as string";
-        throw XmlReaderException(msg.c_str());
-    }
-
-    return oss.str();
-}
-
-// _________________________________________________________________________________________________
-std::vector<std::string> olu::util::XmlReader::readTagOfChildren(
-        const std::string &parentPath,
-        const boost::property_tree::ptree &tree,
-        const bool excludeXmlAttr) {
-
-    std::vector<std::string> childrenNames;
-    for (const auto &child : tree.get_child(parentPath)) {
-        if (excludeXmlAttr && child.first == olu::config::constants::XML_TAG_ATTR) {
-            continue;
-        }
-
-        childrenNames.push_back(child.first);
-    }
-
-    return childrenNames;
-}
 
 // _________________________________________________________________________________________________
 void olu::util::XmlReader::sanitizeXmlTags(pt::ptree &tree) {
@@ -104,11 +40,11 @@ void olu::util::XmlReader::sanitizeXmlTags(pt::ptree &tree) {
     }
 }
 
+// _________________________________________________________________________________________________
 bool olu::util::XmlReader::isXmlEncoded(const std::string &input) {
     const boost::regex xmlEntityRegex("&(amp|lt|gt|quot|apos|#xA|#xD|#x9);");
     return regex_search(input, xmlEntityRegex);
 }
-
 
 // _________________________________________________________________________________________________
 std::string olu::util::XmlReader::xmlEncode(const std::string &input) {

@@ -86,7 +86,7 @@ namespace olu::osm {
         std::set<id_t> _createdRelations;
 
         // Buffer to store the members of the relations that are in a modify-changeset in the change file.
-        std::map<id_t, rel_members_t> _modifiedRelationsBuffer;
+        std::map<id_t, std::vector<RelationMember>> _modifiedRelationsBuffer;
         // Relations that are in a modify-changeset in the change file and not have a changed member
         std::set<id_t> _modifiedRelations;
         // Relations that are in a modify-changeset in the change file and have a changed member list.

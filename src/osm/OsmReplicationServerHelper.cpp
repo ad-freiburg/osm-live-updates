@@ -1,17 +1,32 @@
-//
-// Created by Nicolas von Trott on 15.05.25.
-//
+// Copyright 2025, University of Freiburg
+// Authors: Nicolas von Trott <nicolasvontrott@gmail.com>.
 
-#include "config/Constants.h"
+// This file is part of osm-live-updates.
+//
+// osm-live-updates is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// osm-live-updates is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
+
 #include "osm/OsmReplicationServerHelper.h"
-#include "util/URLHelper.h"
-#include "util/HttpRequest.h"
 
 #include <vector>
-#include <boost/regex.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include <iostream>
 #include <fstream>
+
+#include "boost/regex.hpp"
+
+#include "config/Constants.h"
+#include "util/URLHelper.h"
+#include "util/HttpRequest.h"
 
 namespace cnst = olu::config::constants;
 namespace olu::osm {

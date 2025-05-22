@@ -19,7 +19,7 @@
 #include <iostream>
 
 #include "osm/WayHandler.h"
-#include "util/OsmObjectHelper.h"
+#include "osm/OsmObjectHelper.h"
 #include "osm2rdf/util/Time.h"
 #include "osmium/osm/way.hpp"
 
