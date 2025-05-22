@@ -19,17 +19,32 @@
 #ifndef OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 #define OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 
+#include "config/Constants.h"
 #include "osm/Node.h"
 #include "osm/Relation.h"
 #include "osm/Way.h"
 #include "sparql/SparqlWrapper.h"
 #include "util/Types.h"
 #include "sparql/QueryWriter.h"
+#include "simdjson.h"
 
 #include <set>
 #include <string>
 
 namespace olu::osm {
+
+    /**
+     * Exception that can appear inside the `OsmDataFetcher` class.
+     */
+    class OsmDataFetcherException final : public std::exception {
+        std::string message;
+    public:
+        explicit OsmDataFetcherException(const char* msg) : message(msg) { }
+
+        [[nodiscard]] const char* what() const noexcept override {
+            return message.c_str();
+        }
+    };
 
     /**
      * Deals with the retrieval of osm data from the SPARQL endpoint that is needed for the update
@@ -38,7 +53,7 @@ namespace olu::osm {
     class OsmDataFetcher {
     public:
         explicit OsmDataFetcher(const config::Config &config)
-            : _config(config), _sparqlWrapper(config), _queryWriter(config) { }
+            : _config(config), _sparqlWrapper(config), _queryWriter(config), _parser() { }
 
         /**
          * Sends a query to the sparql endpoint to get the location of the nodes with the given ids
@@ -110,7 +125,7 @@ namespace olu::osm {
           *
           * @return The subjects of all members
           */
-        std::vector<std::pair<id_t, rel_members_t>>
+        std::vector<std::pair<id_t, std::vector<RelationMember>>>
         fetchRelsMembersSorted(const std::set<id_t> &relIds);
 
         /**
@@ -150,26 +165,52 @@ namespace olu::osm {
         config::Config _config;
         sparql::SparqlWrapper _sparqlWrapper;
         sparql::QueryWriter _queryWriter;
+        simdjson::ondemand::parser _parser;
 
-        boost::property_tree::ptree runQuery(const std::string &query,
-                                             const std::vector<std::string> &prefixes);
+        simdjson::padded_string runQuery(const std::string &query,
+                                         const std::vector<std::string> &prefixes);
 
-        static std::vector<int> extractPositions(const std::string& positions);
-        static std::vector<id_t> extractMembers(const std::string& memberUris);
-        static std::vector<std::string> extractMemberTags(const std::string& memberUris);
-        static std::vector<std::string> extractRoles(const std::string& memberRoles);
-    };
+        /**
+         * Parses the items in a list that is delimited by ";" and applies the given function to
+         * each item in the list.
+         * @tparam T The return type of the function that is applied to each item in the list
+         * @param list The list of items that are delimited by ";"
+         * @param function The function to apply to each item in the list
+         * @return A vector containing the manipulated items of the list.
+         */
+        template <typename T> std::vector<T>
+        parseValueList(const std::string_view &list, std::function<T(std::string)> function);
 
-    /**
-     * Exception that can appear inside the `OsmDataFetcher` class.
-     */
-    class OsmDataFetcherException final : public std::exception {
-        std::string message;
-    public:
-        explicit OsmDataFetcherException(const char* msg) : message(msg) { }
+        /**
+        * Returns the JSON element at "results.bindings" for the given document.
+        */
+        static simdjson::simdjson_result<simdjson::westmere::ondemand::value> getBindings(
+            simdjson::simdjson_result<simdjson::ondemand::document> &doc) {
+            return doc[config::constants::KEY_RESULTS][config::constants::KEY_BINDINGS];
+        }
 
-        [[nodiscard]] const char* what() const noexcept override {
-            return message.c_str();
+        /**
+        * Returns the string at the "value" element for the given JSON element.
+        */
+        template <typename T> static T getValue(
+            simdjson::simdjson_result<simdjson::westmere::ondemand::value> value) {
+            try {
+                if constexpr (std::is_same_v<T, std::string_view>) {
+                    return value[config::constants::KEY_VALUE].get_string();
+                } else if constexpr (std::is_same_v<T, std::string>) {
+                    return std::string(value[config::constants::KEY_VALUE].get_string().value());
+                } else if constexpr (std::is_same_v<T, int>) {
+                    const auto intString = std::string(value[config::constants::KEY_VALUE].get_string().value());
+                    return std::stoi(intString);
+                }
+            } catch (std::exception &e) {
+                std::cerr << e.what() << std::endl;
+                const std::string msg = "Cannot get value for binding: "
+                                        + std::string(value.raw_json().value());
+                throw OsmDataFetcherException(msg.c_str());
+            }
+
+            throw OsmDataFetcherException("The type of the value is not supported atm.");
         }
     };
 

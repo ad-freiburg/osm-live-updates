@@ -30,7 +30,7 @@ project(
 )
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake" ${CMAKE_MODULE_PATH})
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # export compile commands to tools like clang
@@ -124,6 +124,15 @@ FetchContent_Declare(osm2rdf
 FetchContent_MakeAvailable(osm2rdf)
 include_directories(SYSTEM ${osm2rdf_SOURCE_DIR}/include)
 include_directories(SYSTEM ${osm2rdf_SOURCE_DIR}/vendor/spatialjoin/src)
+
+FetchContent_Declare(
+        simdjson
+        GIT_REPOSITORY https://github.com/simdjson/simdjson.git
+        GIT_TAG  tags/v3.12.3
+        GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(simdjson)
+include_directories(SYSTEM ${simdjson_SOURCE_DIR}/include)
 
 find_package(Protozero REQUIRED)
 include_directories(SYSTEM ${PROTOZERO_INCLUDE_DIR})

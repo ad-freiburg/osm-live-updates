@@ -63,7 +63,7 @@ namespace olu::sparql {
          *
          * @return The response from the SPARQL endpoint.
          */
-        boost::property_tree::ptree runQuery();
+        std::string runQuery();
 
         /**
          * Sends a POST request with the encoded prefixes and the update query as body to the SPARQL
