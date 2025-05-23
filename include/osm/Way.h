@@ -38,10 +38,10 @@ namespace olu::osm {
         void addTag(const std::string& key, const std::string& value);
 
         /**
-        * Returns an osm xml element for a way with an id and node references.
+        * Returns an osm XML element for a way with an id and node references.
         *
-        * @example For wayId: `1` and nodeRefs: `{1,2,3}` the function
-        * would return: `<way id="1"><nd ref="1"/><nd ref="2"/><nd ref="3"/></way>`
+        * For wayId: `1` and nodeRefs: `{1,2,3}` the function would return:
+        * `<way id="1"><nd ref="1"/><nd ref="2"/><nd ref="3"/></way>`
         */
         [[nodiscard]] std::string getXml() const;
 

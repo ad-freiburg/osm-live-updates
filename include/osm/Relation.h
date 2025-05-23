@@ -48,9 +48,9 @@ namespace olu::osm {
                                       std::vector<RelationMember> member2);
 
         /**
-         * Returns an osm xml relation with an id and members.
+         * Returns an osm XML relation with an id and members.
          *
-         * @example For relationId: `1` and members: `{
+         * For relationId: `1` and members: `{
          * ("https://www.openstreetmap.org/node/1", "amin_centre"),
          * ("https://www.openstreetmap.org/way/1", "outer"),
          * ("https://www.openstreetmap.org/relation/1", "inner")}` the

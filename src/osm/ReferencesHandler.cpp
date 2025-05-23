@@ -23,7 +23,7 @@
 
 #include "util/BatchHelper.h"
 
-
+// _________________________________________________________________________________________________
 void olu::osm::ReferencesHandler::way(const osmium::Way &way) {
     for (const auto& node : way.nodes()) {
         if (!_nodeHandler.nodeInChangeFile(node.ref())) {
@@ -32,6 +32,7 @@ void olu::osm::ReferencesHandler::way(const osmium::Way &way) {
     }
 }
 
+// _________________________________________________________________________________________________
 void olu::osm::ReferencesHandler::relation(const osmium::Relation& relation) {
     for (const auto& member : relation.members()) {
         switch (member.type()) {
@@ -59,6 +60,7 @@ void olu::osm::ReferencesHandler::relation(const osmium::Relation& relation) {
     }
 }
 
+// _________________________________________________________________________________________________
 void olu::osm::ReferencesHandler::getReferencesForRelations(const std::set<id_t> &relationIds) {
     if (!relationIds.empty()) {
         util::BatchHelper::doInBatches(
@@ -76,6 +78,7 @@ void olu::osm::ReferencesHandler::getReferencesForRelations(const std::set<id_t>
     }
 }
 
+// _________________________________________________________________________________________________
 void olu::osm::ReferencesHandler::getReferencesForWays(const std::set<id_t> &wayIds) {
     if (!wayIds.empty()) {
         util::BatchHelper::doInBatches(

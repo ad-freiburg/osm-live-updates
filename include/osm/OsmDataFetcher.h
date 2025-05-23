@@ -60,7 +60,8 @@ namespace olu::osm {
          * Sends a query to the sparql endpoint to get the location of the nodes with the given ids
          *
          * @warning It is not guaranteed that the SPARQL endpoint returns a location for each node
-         * ID, therefore the returned vector can have fewer elements than the given set of node ids
+         * ID. Therefore,
+         * the returned vector can have fewer elements than the given set of node ids
          *
          * @param nodeIds The ids of the nodes to fetch location for
          * @return A vector containing node objects with the location and id
@@ -72,7 +73,8 @@ namespace olu::osm {
          * Sends a query to the sparql endpoint to get the location of the nodes with the given ids
          *
          * @warning It is not guaranteed that the SPARQL endpoint returns a location for each node
-         * ID, therefore the returned vector can have fewer elements than the given set of node ids
+         * ID. Therefore,
+         * the returned vector can have fewer elements than the given set of node ids
          *
          * @param nodeIds The ids of the nodes to fetch location for
          * @return A vector containing the locations
@@ -183,36 +185,16 @@ namespace olu::osm {
         parseValueList(const std::string_view &list, std::function<T(std::string)> function);
 
         /**
-        * Returns the JSON element at "results.bindings" for the given document.
-        */
+         * Returns the JSON element at "results.bindings" for the given document.
+         */
         static simdjson::simdjson_result<simdjson::westmere::ondemand::value> getBindings(
-            simdjson::simdjson_result<simdjson::ondemand::document> &doc) {
-            return doc[config::constants::KEY_RESULTS][config::constants::KEY_BINDINGS];
-        }
+            simdjson::simdjson_result<simdjson::ondemand::document> &doc);
 
         /**
-        * Returns the string at the "value" element for the given JSON element.
-        */
+         * Returns the string at the "value" element for the given JSON element.
+         */
         template <typename T> static T getValue(
-            simdjson::simdjson_result<simdjson::westmere::ondemand::value> value) {
-            try {
-                if constexpr (std::is_same_v<T, std::string_view>) {
-                    return value[config::constants::KEY_VALUE].get_string();
-                } else if constexpr (std::is_same_v<T, std::string>) {
-                    return std::string(value[config::constants::KEY_VALUE].get_string().value());
-                } else if constexpr (std::is_same_v<T, int>) {
-                    const auto intString = std::string(value[config::constants::KEY_VALUE].get_string().value());
-                    return std::stoi(intString);
-                }
-            } catch (std::exception &e) {
-                std::cerr << e.what() << std::endl;
-                const std::string msg = "Cannot get value for binding: "
-                                        + std::string(value.raw_json().value());
-                throw OsmDataFetcherException(msg.c_str());
-            }
-
-            throw OsmDataFetcherException("The type of the value is not supported atm.");
-        }
+            simdjson::simdjson_result<simdjson::westmere::ondemand::value> value);
     };
 
 } // namespace olu

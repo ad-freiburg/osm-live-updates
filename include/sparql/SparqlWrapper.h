@@ -27,14 +27,15 @@
 namespace olu::sparql {
 
     /**
-     * Wrapper class that handles communication with a SPARQL endpoint. In order to successfully
-     * send a request to the SPARQL endpoint, the prefixes, query and method must be set with the
+     * Wrapper class that handles communication with a SPARQL endpoint.
+     * To successfully send a request to the SPARQL endpoint,
+     * the prefixes, query and method must be set with the
      * corresponding functions. Then the request can be sent with `runQuery`.
      *
      * This class will currently only work with QLever SPARQL endpoints.
      *
-     * If the `writeSparqlQueriesToFile` flag is set, all SPARQL queries that were send to the
-     * endpoint will be stored in a .txt file located at the path which is specified in the config
+     * If the `writeSparqlQueriesToFile` flag is set, all SPARQL queries sent to the endpoint will
+     * be stored in a .txt file located at the path which is specified in the config
      * (`pathToSparqlQueryOutput`)
      */
     class SparqlWrapper {

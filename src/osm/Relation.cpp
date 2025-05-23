@@ -20,102 +20,106 @@
 
 #include <sstream>
 
+#include "config/Constants.h"
 #include "util/XmlReader.h"
 
-namespace olu::osm {
-    void Relation::setType(std::string const &type) {
-        this->type = type;
+// _________________________________________________________________________________________________
+void olu::osm::Relation::setType(std::string const &type) {
+    this->type = type;
+}
+
+// _________________________________________________________________________________________________
+void olu::osm::Relation::setTimestamp(std::string const &timestamp) {
+    // Ensure the timestamp ends with 'Z' to indicate UTC which is needed for osmium
+    if (timestamp.ends_with("Z")) {
+        this->timestamp = timestamp;
+    } else {
+        this->timestamp = timestamp + "Z";
     }
+}
 
-    void Relation::setTimestamp(std::string const &timestamp) {
-        // Ensure the timestamp ends with 'Z' to indicate UTC which is needed for osmium
-        if (timestamp.ends_with("Z")) {
-            this->timestamp = timestamp;
-        } else {
-            this->timestamp = timestamp + "Z";
-        }
-    }
+// _________________________________________________________________________________________________
+void olu::osm::Relation::setVersion(version_t const &version) {
+    this->version = version;
+}
 
-    void Relation::setVersion(version_t const &version) {
-        this->version = version;
-    }
+// _________________________________________________________________________________________________
+void olu::osm::Relation::setChangesetId(changeset_id_t const &changeset_id) {
+    this->changeset_id = changeset_id;
+}
 
-    void Relation::setChangesetId(changeset_id_t const &changeset_id) {
-        this->changeset_id = changeset_id;
-    }
+void olu::osm::Relation::addMember(const RelationMember& member) {
+    this->members.push_back(member);
+}
 
-    void Relation::addMember(const RelationMember& member) {
-        this->members.push_back(member);
-    }
+// _________________________________________________________________________________________________
+void olu::osm::Relation::addTag(const std::string& key, const std::string& value) {
+    tags.emplace_back(key, util::XmlHelper::xmlEncode(value));
+}
 
-    void Relation::addTag(const std::string& key, const std::string& value) {
-        tags.emplace_back(key, util::XmlHelper::xmlEncode(value));
-    }
+// _________________________________________________________________________________________________
+std::string olu::osm::Relation::getXml() const {
+    std::ostringstream oss;
 
-    std::string Relation::getXml() const {
-        std::ostringstream oss;
+    oss << "<relation id=\"";
+    oss << std::to_string(this->id);
+    oss << "\"";
 
-        oss << "<relation id=\"";
-        oss << std::to_string(this->id);
+    if (this->version > 0) {
+        oss << " version=\"";
+        oss << this->version;
         oss << "\"";
-
-        if (this->version > 0) {
-            oss << " version=\"";
-            oss << this->version;
-            oss << "\"";
-        }
-
-        if (this->changeset_id > 0) {
-            oss << " changeset=\"";
-            oss << this->changeset_id;
-            oss << "\"";
-        }
-
-        if (!this->timestamp.empty()) {
-            oss << " timestamp=\"";
-            oss << this->timestamp;
-            oss << "\"";
-        }
-
-        oss << ">";
-
-        for (const auto &[id, type, role] : this->members) {
-            oss << "<member type=\"";
-
-            switch (type) {
-                case OsmObjectType::NODE:
-                    oss << config::constants::XML_TAG_NODE;
-                    break;
-                case OsmObjectType::WAY:
-                    oss << config::constants::XML_TAG_WAY;
-                    break;
-                case OsmObjectType::RELATION:
-                    oss << config::constants::XML_TAG_REL;
-                    break;
-            }
-
-            oss << "\" ref=\"";
-            oss << std::to_string(id);
-            oss << "\" role=\"";
-            oss << role;
-            oss << "\"/>";
-        }
-
-        oss << R"(<tag k="type" v=")";
-        oss << this->type;
-        oss << "\"/>";
-
-        for (const auto& [key, value] : this->tags) {
-            oss << "<tag k=\"";
-            oss << key;
-            oss << "\" v=\"";
-            oss << value;
-            oss << "\"/>";
-        }
-
-        oss << "</relation>";
-
-        return oss.str();
     }
 
+    if (this->changeset_id > 0) {
+        oss << " changeset=\"";
+        oss << this->changeset_id;
+        oss << "\"";
+    }
+
+    if (!this->timestamp.empty()) {
+        oss << " timestamp=\"";
+        oss << this->timestamp;
+        oss << "\"";
+    }
+
+    oss << ">";
+
+    for (const auto &[id, type, role] : this->members) {
+        oss << "<member type=\"";
+
+        switch (type) {
+            case OsmObjectType::NODE:
+                oss << config::constants::XML_TAG_NODE;
+                break;
+            case OsmObjectType::WAY:
+                oss << config::constants::XML_TAG_WAY;
+                break;
+            case OsmObjectType::RELATION:
+                oss << config::constants::XML_TAG_REL;
+                break;
+        }
+
+        oss << "\" ref=\"";
+        oss << std::to_string(id);
+        oss << "\" role=\"";
+        oss << role;
+        oss << "\"/>";
+    }
+
+    oss << R"(<tag k="type" v=")";
+    oss << this->type;
+    oss << "\"/>";
+
+    for (const auto& [key, value] : this->tags) {
+        oss << "<tag k=\"";
+        oss << key;
+        oss << "\" v=\"";
+        oss << value;
+        oss << "\"/>";
+    }
+
+    oss << "</relation>";
+
+    return oss.str();
 }

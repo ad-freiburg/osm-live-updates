@@ -25,6 +25,7 @@
 
 #include "osm/OsmObjectHelper.h"
 
+// _________________________________________________________________________________________________
 void olu::osm::WayHandler::printWayStatistics() const {
     std::cout << osm2rdf::util::currentTimeFormatted()
             << "ways created: " << _createdWays.size()
@@ -33,6 +34,7 @@ void olu::osm::WayHandler::printWayStatistics() const {
             << std::endl;
 }
 
+// _________________________________________________________________________________________________
 void olu::osm::WayHandler::way(const osmium::Way &way) {
     switch (OsmObjectHelper::getChangeAction(way)) {
         case ChangeAction::CREATE:
@@ -52,10 +54,11 @@ void olu::osm::WayHandler::way(const osmium::Way &way) {
     }
 }
 
-void
-olu::osm::WayHandler::checkWaysForMemberChange(std::set<id_t> modifiedNodesWithChangedLocation) {
+// _________________________________________________________________________________________________
+void olu::osm::WayHandler::checkWaysForMemberChange(
+    const std::set<id_t> &modifiedNodesWithChangedLocation) {
     for (const auto &[wayId, nodeRefs] : _modifiedWaysBuffer) {
-        // We have to check if a node reference of the way has its location changed and if so,
+        // We have to check if a node reference of the way has its location changed, and if so,
         // the ways geometry has to be updated nevertheless
         bool hasModifiedNode = false;
         for (const auto &nodeId : nodeRefs) {

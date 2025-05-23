@@ -41,7 +41,7 @@ namespace olu::sparql {
         [[nodiscard]] std::string writeInsertQuery(const std::vector<std::string>& triples) const;
 
         /**
-         * @returns A SPARQL query that delete all triples with subject `osmTag:id` and all triples
+         * @returns A SPARQL query that deletes all triples with subject `osmTag:id` and all triples
          * that are linked via another node
          */
         [[nodiscard]] std::string
@@ -71,7 +71,7 @@ namespace olu::sparql {
         [[nodiscard]] std::string writeQueryForLatestNodeTimestamp() const;
 
         /**
-        * @returns A SPARQL query for the subject of all members of the given relation
+        * @returns A SPARQL query for the subject of all members, that belong to the given relation
         */
         [[nodiscard]] std::string writeQueryForRelations(const std::set<id_t> & relationIds) const;
 
@@ -97,7 +97,7 @@ namespace olu::sparql {
         [[nodiscard]] std::string writeQueryForRelationMemberIds(const std::set<id_t> &relIds) const;
 
         /**
-        * @returns A SPARQL query for all ways that reference the given nodes
+        * @returns A SPARQL query for every way that references the given nodes
         */
         [[nodiscard]] std::string writeQueryForWaysReferencingNodes(const std::set<id_t> &nodeIds) const;
 

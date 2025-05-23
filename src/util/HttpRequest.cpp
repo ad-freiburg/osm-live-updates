@@ -24,8 +24,6 @@
 
 #include "curl/curl.h"
 
-namespace olu::util {
-
 // _________________________________________________________________________________________________
 static size_t WriteMemoryCallback(void* contents, size_t size, size_t nmemb, void* userp)
 {
@@ -49,7 +47,7 @@ void setup_curl(CURL* curl_handle, std::string& data, const std::string& url)
 }
 
 // _________________________________________________________________________________________________
-HttpRequest::HttpRequest(const HttpMethod& method, const std::string& url) {
+olu::util::HttpRequest::HttpRequest(const HttpMethod& method, const std::string& url) {
     _curl = curl_easy_init();
     _method = method;
     _res = CURLcode::CURLE_FAILED_INIT;
@@ -58,24 +56,24 @@ HttpRequest::HttpRequest(const HttpMethod& method, const std::string& url) {
 }
 
 // _________________________________________________________________________________________________
-HttpRequest::~HttpRequest() {
+olu::util::HttpRequest::~HttpRequest() {
     curl_easy_cleanup(_curl);
     curl_slist_free_all(_chunk);
 }
 
 // _________________________________________________________________________________________________
-void HttpRequest::addHeader(const std::string& key, const std::string& value) {
+void olu::util::HttpRequest::addHeader(const std::string& key, const std::string& value) {
     std::string header = key + ": " + value;
     _chunk = curl_slist_append(_chunk, header.c_str());
 }
 
 // _________________________________________________________________________________________________
-void HttpRequest::addBody(std::string body) {
+void olu::util::HttpRequest::addBody(std::string body) {
     _body = std::move(body);
 }
 
 // _________________________________________________________________________________________________
-std::string HttpRequest::perform() {
+std::string olu::util::HttpRequest::perform() {
     std::string response;
     curl_easy_setopt(_curl, CURLOPT_HTTPHEADER, _chunk);
 
@@ -119,5 +117,3 @@ std::string HttpRequest::perform() {
 
     return response;
 }
-
-} // namespace olu::util

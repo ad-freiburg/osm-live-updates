@@ -29,64 +29,74 @@
 #include "util/HttpRequest.h"
 #include "util/URLHelper.h"
 
-// ____________________________________________________________________________
+// _________________________________________________________________________________________________
 void olu::config::Config::fromArgs(int argc, char **argv) {
     popl::OptionParser parser("Allowed options");
 
-    auto helpOp = parser.add<popl::Switch>(
-            olu::config::constants::HELP_OPTION_SHORT,
-            olu::config::constants::HELP_OPTION_LONG,
-            olu::config::constants::HELP_OPTION_HELP);
+    const auto helpOp = parser.add<popl::Switch>(
+        constants::HELP_OPTION_SHORT,
+        constants::HELP_OPTION_LONG,
+        constants::HELP_OPTION_HELP);
 
-    auto sparqlGraphUriOp = parser.add<popl::Value<std::string>, popl::Attribute::optional>(
-            olu::config::constants::SPARQL_GRAPH_URI_OPTION_SHORT,
-            olu::config::constants::SPARQL_GRAPH_URI_OPTION_LONG,
-            olu::config::constants::SPARQL_GRAPH_URI_OPTION_HELP);
+    const auto sparqlGraphUriOp = parser.add<popl::Value<std::string>,
+                                                                   popl::Attribute::optional>(
+        constants::SPARQL_GRAPH_URI_OPTION_SHORT,
+        constants::SPARQL_GRAPH_URI_OPTION_LONG,
+        constants::SPARQL_GRAPH_URI_OPTION_HELP);
 
-    auto sparqlAccessTokenOp = parser.add<popl::Value<std::string>, popl::Attribute::optional>(
-            olu::config::constants::SPARQL_ACCESS_TOKEN_OPTION_SHORT,
-            olu::config::constants::SPARQL_ACCESS_TOKEN_OPTION_LONG,
-            olu::config::constants::SPARQL_ACCESS_TOKEN_OPTION_HELP);
+    const auto sparqlAccessTokenOp = parser.add<popl::Value<std::string>,
+                                                                      popl::Attribute::optional>(
+        constants::SPARQL_ACCESS_TOKEN_OPTION_SHORT,
+        constants::SPARQL_ACCESS_TOKEN_OPTION_LONG,
+        constants::SPARQL_ACCESS_TOKEN_OPTION_HELP);
 
-    auto sparqlUpdateUri = parser.add<popl::Value<std::string>, popl::Attribute::optional>(
-            olu::config::constants::SPARQL_UPDATE_PATH_OPTION_SHORT,
-            olu::config::constants::SPARQL_UPDATE_PATH_OPTION_LONG,
-            olu::config::constants::SPARQL_UPDATE_PATH_OPTION_HELP);
+    const auto sparqlUpdateUri = parser.add<popl::Value<std::string>,
+                                                                  popl::Attribute::optional>(
+        constants::SPARQL_UPDATE_PATH_OPTION_SHORT,
+        constants::SPARQL_UPDATE_PATH_OPTION_LONG,
+        constants::SPARQL_UPDATE_PATH_OPTION_HELP);
 
-    auto pathToOsmChangeFileInputDirOp = parser.add<popl::Value<std::string>, popl::Attribute::optional>(
-            olu::config::constants::PATH_TO_INPUT_OPTION_SHORT,
-            olu::config::constants::PATH_TO_INPUT_OPTION_LONG,
-            olu::config::constants::PATH_TO_INPUT_OPTION_HELP);
+    const auto pathToOsmChangeFileInputDirOp = parser.add<popl::Value<std::string>,
+                                                                                popl::Attribute::optional>(
+        constants::PATH_TO_INPUT_OPTION_SHORT,
+        constants::PATH_TO_INPUT_OPTION_LONG,
+        constants::PATH_TO_INPUT_OPTION_HELP);
 
-    auto osmChangeFileServerUriOp = parser.add<popl::Value<std::string>, popl::Attribute::optional>(
-            olu::config::constants::OSM_CHANGE_FILE_SERVER_URI_OPTION_SHORT,
-            olu::config::constants::OSM_CHANGE_FILE_SERVER_URI_OPTION_LONG,
-            olu::config::constants::OSM_CHANGE_FILE_SERVER_URI_OPTION_HELP);
+    const auto osmChangeFileServerUriOp = parser.add<popl::Value<std::string>,
+                                                                           popl::Attribute::optional>(
+        constants::OSM_CHANGE_FILE_SERVER_URI_OPTION_SHORT,
+        constants::OSM_CHANGE_FILE_SERVER_URI_OPTION_LONG,
+        constants::OSM_CHANGE_FILE_SERVER_URI_OPTION_HELP);
 
-    auto sparqlOutputOp = parser.add<popl::Value<std::string>, popl::Attribute::optional>(
-            olu::config::constants::SPARQL_OUTPUT_OPTION_SHORT,
-            olu::config::constants::SPARQL_OUTPUT_OPTION_LONG,
-            olu::config::constants::SPARQL_OUTPUT_OPTION_HELP);
+    const auto sparqlOutputOp = parser.add<popl::Value<std::string>,
+                                                                 popl::Attribute::optional>(
+        constants::SPARQL_OUTPUT_OPTION_SHORT,
+        constants::SPARQL_OUTPUT_OPTION_LONG,
+        constants::SPARQL_OUTPUT_OPTION_HELP);
 
-    auto sparqlOutputFormatOp = parser.add<popl::Switch, popl::Attribute::optional>(
-            olu::config::constants::SPARQL_OUTPUT_FORMAT_OPTION_SHORT,
-            olu::config::constants::SPARQL_OUTPUT_FORMAT_OPTION_LONG,
-            olu::config::constants::SPARQL_OUTPUT_FORMAT_OPTION_HELP);
+    const auto sparqlOutputFormatOp = parser.add<popl::Switch,
+                                                                 popl::Attribute::optional>(
+        constants::SPARQL_OUTPUT_FORMAT_OPTION_SHORT,
+        constants::SPARQL_OUTPUT_FORMAT_OPTION_LONG,
+        constants::SPARQL_OUTPUT_FORMAT_OPTION_HELP);
 
-    auto timestampOp = parser.add<popl::Value<std::string>, popl::Attribute::optional>(
-            olu::config::constants::TIME_STAMP_OPTION_SHORT,
-            olu::config::constants::TIME_STAMP_OPTION_LONG,
-            olu::config::constants::TIME_STAMP_OPTION_HELP);
+    const auto timestampOp = parser.add<popl::Value<std::string>,
+                                                              popl::Attribute::optional>(
+        constants::TIME_STAMP_OPTION_SHORT,
+        constants::TIME_STAMP_OPTION_LONG,
+        constants::TIME_STAMP_OPTION_HELP);
 
-    auto sequenceNumberOp = parser.add<popl::Value<int>, popl::Attribute::optional>(
-            olu::config::constants::SEQUENCE_NUMBER_OPTION_SHORT,
-            olu::config::constants::SEQUENCE_NUMBER_OPTION_LONG,
-            olu::config::constants::SEQUENCE_NUMBER_OPTION_HELP);
+    const auto sequenceNumberOp = parser.add<popl::Value<int>,
+                                                                popl::Attribute::optional>(
+        constants::SEQUENCE_NUMBER_OPTION_SHORT,
+        constants::SEQUENCE_NUMBER_OPTION_LONG,
+        constants::SEQUENCE_NUMBER_OPTION_HELP);
 
-    auto noBlankNodesOp = parser.add<popl::Switch, popl::Attribute::advanced>(
-            olu::config::constants::BLANK_NODES_OPTION_SHORT,
-            olu::config::constants::BLANK_NODES_OPTION_LONG,
-            olu::config::constants::BLANK_NODES_OPTION_HELP);
+    const auto noBlankNodesOp = parser.add<popl::Switch,
+                                                           popl::Attribute::advanced>(
+        constants::BLANK_NODES_OPTION_SHORT,
+        constants::BLANK_NODES_OPTION_LONG,
+        constants::BLANK_NODES_OPTION_HELP);
 
     try {
         parser.parse(argc, argv);
@@ -99,7 +109,7 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
             } else {
                 std::cerr << parser.help(popl::Attribute::expert) << "\n";
             }
-            exit(olu::config::ExitCode::SUCCESS);
+            exit(SUCCESS);
         }
 
         if (!parser.unknown_options().empty()) {
@@ -108,26 +118,26 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
                 std::cerr << option << "\n";
             }
             std::cerr << "\n" << parser.help() << "\n";
-            exit(olu::config::ExitCode::UNKNOWN_ARGUMENT);
+            exit(UNKNOWN_ARGUMENT);
         }
 
         // Handle sparql endpoint uri
         if (parser.non_option_args().size() != 1) {
             std::cerr << "No SPARQL endpoint URI specified!\n" << parser.help() << "\n";
-            exit(config::ExitCode::ENDPOINT_URI_MISSING);
+            exit(ENDPOINT_URI_MISSING);
         }
         sparqlEndpointUri = parser.non_option_args()[0];
         if (!olu::util::URLHelper::isValidUri(sparqlEndpointUri)) {
             std::cerr << "SPARQL endpoint URI is not valid: " << sparqlEndpointUri << "\n"
                       << parser.help() << "\n";
-            exit(config::ExitCode::ENDPOINT_URI_INVALID);
+            exit(ENDPOINT_URI_INVALID);
         }
 
         if (pathToOsmChangeFileInputDirOp->is_set() == osmChangeFileServerUriOp->is_set()) {
             std::cerr << "You have to EITHER provide the path to an directory with the change files "
                          "you want to process (--input) or the URI to an server where the osm change "
                          "files are located (--file-server)" << std::endl;
-            exit(olu::config::ExitCode::INCORRECT_ARGUMENTS);
+            exit(INCORRECT_ARGUMENTS);
         }
 
         if (pathToOsmChangeFileInputDirOp->is_set()) {
@@ -135,12 +145,12 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
             if (!std::filesystem::exists(changeFileDir)) {
                 std::cerr << "Input does not exist: " << changeFileDir << "\n"
                           << parser.help() << "\n";
-                exit(config::ExitCode::INPUT_NOT_EXISTS);
+                exit(INPUT_NOT_EXISTS);
             }
             if (!std::filesystem::is_directory(changeFileDir)) {
                 std::cerr << "Input is not a directory: " << changeFileDir << "\n"
                           << parser.help() << "\n";
-                exit(config::ExitCode::INPUT_IS_NOT_DIRECTORY);
+                exit(INPUT_IS_NOT_DIRECTORY);
             }
         }
 
@@ -149,7 +159,7 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
             if (!olu::util::URLHelper::isValidUri(changeFileDirUri)) {
                 std::cerr << "URI for OsmChange file server is not valid: " << changeFileDirUri << "\n"
                           << parser.help() << "\n";
-                exit(config::ExitCode::ENDPOINT_URI_INVALID);
+                exit(ENDPOINT_URI_INVALID);
             }
         }
 
@@ -158,7 +168,7 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
             if (!olu::util::URLHelper::isValidUri(graphUri)) {
                 std::cerr << "URI for SPARQL graph is not valid: " << graphUri << "\n"
                           << parser.help() << "\n";
-                exit(config::ExitCode::GRAPH_URI_INVALID);
+                exit(GRAPH_URI_INVALID);
             }
         }
 
@@ -174,7 +184,7 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
                 std::cerr << "URI for SPARQL updates is not valid: "
                     << sparqlEndpointUriForUpdates << "\n"
                     << parser.help() << "\n";
-                exit(config::ExitCode::ENDPOINT_UPDATE_URI_INVALID);
+                exit(ENDPOINT_UPDATE_URI_INVALID);
             }
         } else {
             sparqlEndpointUriForUpdates = sparqlEndpointUri;
@@ -219,7 +229,7 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
             std::cerr << "value:  " << e.value() << "\n";
         }
 
-        exit(olu::config::ExitCode::FAILURE);
+        exit(FAILURE);
     }
 }
 

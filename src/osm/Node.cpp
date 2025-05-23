@@ -27,33 +27,33 @@
 /// The maximum number of decimals for the location in a node
 static inline constexpr int MAX_NODE_LOC_PRECISION = 7;
 
-namespace olu::osm {
-    Node::Node(const id_t id, const osmium::Location& location) {
-        this->id = id;
-        this->loc = location;
+// _________________________________________________________________________________________________
+olu::osm::Node::Node(const id_t id, const osmium::Location& location) {
+    this->id = id;
+    this->loc = location;
+}
+
+// _________________________________________________________________________________________________
+olu::osm::Node::Node(const id_t id, const wktPoint_t& locationAsWkt) {
+    this->id = id;
+
+    try {
+        const auto point = util::geo::pointFromWKT<double>(locationAsWkt);
+        this->loc = osmium::Location( point.getX(), point.getY() );
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        const std::string message = "Location can not be inferred from WKT point: "
+                                        + locationAsWkt;
+        throw NodeException(message.c_str());
     }
+}
 
-    Node::Node(const id_t id, const wktPoint_t& locationAsWkt) {
-        this->id = id;
+// _________________________________________________________________________________________________
+std::string olu::osm::Node::getXml() const {
+    std::ostringstream oss;
+    oss.precision(MAX_NODE_LOC_PRECISION);
+    oss << std::fixed << "<node id=\"" << this->getId() << "\" lat=\"" << this->loc.lat()
+        << "\" lon=\"" << this->loc.lon() << "\"/>";
 
-        try {
-            const auto point = util::geo::pointFromWKT<double>(locationAsWkt);
-            this->loc = osmium::Location( point.getX(), point.getY() );
-        } catch (const std::exception& e) {
-            std::cerr << e.what() << std::endl;
-            const std::string message = "Location can not be inferred from WKT point: "
-                                            + locationAsWkt;
-            throw NodeException(message.c_str());
-        }
-    }
-
-    std::string Node::getXml() const {
-        std::ostringstream oss;
-        oss.precision(MAX_NODE_LOC_PRECISION);
-        oss << std::fixed << "<node id=\"" << this->getId() << "\" lat=\"" << this->loc.lat()
-            << "\" lon=\"" << this->loc.lon() << "\"/>";
-
-        return oss.str();
-    }
-
+    return oss.str();
 }

@@ -24,23 +24,22 @@
 namespace olu::util {
 
     /**
-     * Helper class for dealing with xml Files. The `ptree` data class from the
-     * `boost::property_tree` library is used to store xml elements.
+     * Helper class for dealing with XML Files.
      */
     class XmlHelper {
     public:
         /**
-         * @return True, if the given string has a xml encoded character in it
+         * @return True, if the given string has a XML encoded character in it
          */
         static bool isXmlEncoded(const std::string &input);
 
         /**
-         * Encodes string for xml format.
+         * Encodes string for XML format.
          */
         static std::string xmlEncode(const std::string &input);
 
         /**
-         * Decodes string for xml format.
+         * Decodes string for XML format.
          */
         static std::string xmlDecode(const std::string &input);
     };

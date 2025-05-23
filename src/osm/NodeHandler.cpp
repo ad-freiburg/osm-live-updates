@@ -28,6 +28,7 @@
 #include "osm/OsmObjectHelper.h"
 #include "util/BatchHelper.h"
 
+// _________________________________________________________________________________________________
 void olu::osm::NodeHandler::node(const osmium::Node& node) {
     switch (OsmObjectHelper::getChangeAction(node)) {
         case ChangeAction::CREATE:
@@ -42,6 +43,7 @@ void olu::osm::NodeHandler::node(const osmium::Node& node) {
     }
 }
 
+// _________________________________________________________________________________________________
 void olu::osm::NodeHandler::printNodeStatistics() const {
     std::cout << osm2rdf::util::currentTimeFormatted()
     << "nodes created: " << _createdNodes.size()
@@ -50,9 +52,10 @@ void olu::osm::NodeHandler::printNodeStatistics() const {
     << std::endl;
 }
 
+// _________________________________________________________________________________________________
 void olu::osm::NodeHandler::checkNodesForLocationChange() {
     auto keysView = std::views::keys(_modifiedNodesBuffer);
-    auto nodeIds = std::set(keysView.begin(), keysView.end());
+    const auto nodeIds = std::set(keysView.begin(), keysView.end());
 
     std::map<id_t, osmium::Location> remoteNodes;
     util::BatchHelper::doInBatches(

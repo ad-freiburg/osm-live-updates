@@ -44,7 +44,7 @@ olu::osm::OsmDataFetcher::OsmDataFetcher::runQuery(const std::string &query,
     return simdjson::padded_string(_sparqlWrapper.runQuery());
 }
 
-// _____________________________________________________________________________________________
+// _________________________________________________________________________________________________
 std::vector<olu::osm::Node>
 olu::osm::OsmDataFetcher::OsmDataFetcher::fetchNodes(const std::set<id_t> &nodeIds) {
     const auto response = runQuery(
@@ -359,7 +359,7 @@ namespace olu::osm {
             });
 
             std::vector<RelationMember> sortedMembers;
-            for (const auto& [pos, member] : paired) {
+            for (const auto &member: paired | std::views::values) {
                 sortedMembers.push_back(member);
             }
 
@@ -473,4 +473,35 @@ olu::osm::OsmDataFetcher::parseValueList(const std::string_view &list,
     }
 
     return items;
+}
+
+// _________________________________________________________________________________________________
+simdjson::simdjson_result<simdjson::westmere::ondemand::value>
+olu::osm::OsmDataFetcher::getBindings(
+    simdjson::simdjson_result<simdjson::ondemand::document> &doc) {
+    return doc[config::constants::KEY_RESULTS][config::constants::KEY_BINDINGS];
+}
+
+// _________________________________________________________________________________________________
+template <typename T> T
+olu::osm::OsmDataFetcher::getValue(
+    simdjson::simdjson_result<simdjson::westmere::ondemand::value> value) {
+    try {
+        if constexpr (std::is_same_v<T, std::string_view>) {
+            return value[config::constants::KEY_VALUE].get_string();
+        } else if constexpr (std::is_same_v<T, std::string>) {
+            return std::string(value[config::constants::KEY_VALUE].get_string().value());
+        } else if constexpr (std::is_same_v<T, int>) {
+            const auto intString = std::string(
+                value[config::constants::KEY_VALUE].get_string().value());
+            return std::stoi(intString);
+        }
+    } catch (std::exception &e) {
+        std::cerr << e.what() << std::endl;
+        const std::string msg = "Cannot get value for binding: "
+                                + std::string(value.raw_json().value());
+        throw OsmDataFetcherException(msg.c_str());
+    }
+
+    throw OsmDataFetcherException("The type of the value is not supported atm.");
 }

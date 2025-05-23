@@ -51,7 +51,7 @@ namespace olu::osm {
          *
          * @param modifiedNodesWithChangedLocation The ids of modified nodes with a changed location
          */
-        void checkWaysForMemberChange(std::set<id_t> modifiedNodesWithChangedLocation);
+        void checkWaysForMemberChange(const std::set<id_t> &modifiedNodesWithChangedLocation);
 
         /**
          * @return True if the change file contains no ways.
@@ -67,9 +67,9 @@ namespace olu::osm {
          * @Returns TRUE if the way with the given ID is contained in a `create`, `modify` or
          * 'delete' changeset in the changeFile.
          *
-         * @warning All ways inside the ChangeFile have to be processed BEFORE using this function.
+         * @warning Every way inside the ChangeFile has to be processed BEFORE using this function.
          * Therefore, the earliest time this function can be called is inside the loop over the osm
-         * elements inside `storeIdsOfElementsInChangeFile()` after the first way has occured.
+         * elements inside `storeIdsOfElementsInChangeFile()` after the first way has occurred.
          */
         [[nodiscard]] bool wayInChangeFile(const id_t &wayId) const {
             return _modifiedWays.contains(wayId) ||

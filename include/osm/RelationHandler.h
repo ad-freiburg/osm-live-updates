@@ -45,7 +45,7 @@ namespace olu::osm {
         void printRelationStatistics() const;
 
         /**
-         * Checks if the members of the given realtions from the change file have changed.
+         * Checks if the members of the given relations from the change file have changed.
          */
         void
         checkRelationsForMemberChange(const std::set<id_t> &modifiedNodesWithChangedLocation,

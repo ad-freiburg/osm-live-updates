@@ -38,7 +38,7 @@ namespace olu::util {
 
         /**
          * Checks if the given subject is in the relevant namespace for the given osm object type:
-         * "osmnode:..." for nodes, "osmway:..." for ways and "osmrel:..." for relations.
+         * "osmnode: ..." for nodes, "osmway: ..." for ways and "osmrel: ..." for relations.
          *
          * @param subject The subject string to check.
          * @param osmObject The osm object type to check the namespace for.
@@ -71,7 +71,7 @@ namespace olu::util {
         /**
          * Checks if a predicate links to an object,
          * which has a triple that is relevant to an osm object. For example, members of ways and
-         * relations have triples on their own which are relevant for the way or relation:
+         * relations have triples on their own, which are relevant for the way or relation:
          * "osmrel:11892035 osmrel:member _:6_168 ."
          * "_:6_168 osm2rdfmember:id osmway:1058514204 ."
          * The object "_6_168" is a blank node, which links to the triple beneath.

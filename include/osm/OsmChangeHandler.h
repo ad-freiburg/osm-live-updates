@@ -147,8 +147,8 @@ namespace olu::osm {
 
         /**
          * Creates dummy relations for the referenced relations that are not in the change file and
-         * writes them to a temporary file The dummy relation only contain the members of that
-         * relation
+         * writes them to a temporary file.
+         * The dummy relation only contains the members of that relation
          */
         void createDummyRelations(
             osm2rdf::util::ProgressBar &progress, size_t &counter);
@@ -216,7 +216,7 @@ namespace olu::osm {
          * elements that occurred in the change file or osm elements which geometry needs to be
          * updated. Irrelevant triples are triples that where generated for referenced elements.
          */
-        std::vector<triple_t> filterRelevantTriples();
+        std::vector<triple_t> filterRelevantTriples() const;
     };
 
     /**

@@ -28,6 +28,7 @@
 
 namespace cnst = olu::config::constants;
 
+// _________________________________________________________________________________________________
 void olu::osm::RelationHandler::relation(const osmium::Relation& relation) {
     switch (OsmObjectHelper::getChangeAction(relation)) {
         case ChangeAction::CREATE:
@@ -52,6 +53,7 @@ void olu::osm::RelationHandler::relation(const osmium::Relation& relation) {
     }
 }
 
+// _________________________________________________________________________________________________
 void olu::osm::RelationHandler::printRelationStatistics() const {
     std::cout << osm2rdf::util::currentTimeFormatted()
             << "relations created: " << _createdRelations.size()
@@ -61,6 +63,7 @@ void olu::osm::RelationHandler::printRelationStatistics() const {
             << std::endl;
 }
 
+// _________________________________________________________________________________________________
 void olu::osm::RelationHandler::checkRelationsForMemberChange(
     const std::set<id_t> &modifiedNodesWithChangedLocation,
     const std::set<id_t> &modifiedWaysWithChangedMembers) {
@@ -81,10 +84,10 @@ void olu::osm::RelationHandler::checkRelationsForMemberChange(
                     break;
                 }
             } else if (member.type == OsmObjectType::RELATION) {
-                // At the moment all relations that have a relation as member are handled
+                // At the moment, all relations that have a relation as member are handled
                 // as if their geometry has changed. This is not ideal, but to be sure that the
-                // geometry hasn't changed we would have to check for all members that are relations
-                // if their geometry has changed, but this is not known at this point.
+                // geometry hasn't changed, we would have to check for all members that are
+                // relations if their geometry has changed, but this is not known at this point.
                 _modifiedRelationsWithChangedMembers.insert(relId);
                 hasModifiedMember = true;
                 break;

@@ -27,7 +27,8 @@
 namespace cnst = olu::config::constants;
 
 // _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeInsertQuery(const std::vector<std::string>& triples) const {
+std::string
+olu::sparql::QueryWriter::writeInsertQuery(const std::vector<std::string>& triples) const {
     std::ostringstream tripleClause;
     for (const auto & element : triples) {
         tripleClause << element;
@@ -44,7 +45,8 @@ std::string olu::sparql::QueryWriter::writeInsertQuery(const std::vector<std::st
 
 // _________________________________________________________________________________________________
 std::string
-olu::sparql::QueryWriter::writeDeleteQuery(const std::set<id_t> &ids, const std::string &osmTag) const {
+olu::sparql::QueryWriter::writeDeleteQuery(const std::set<id_t> &ids,
+                                           const std::string &osmTag) const {
     std::string optionalPredicates;
     if (osmTag == cnst::NAMESPACE_OSM_NODE) {
         optionalPredicates = "VALUES ?pred { "+ cnst::PREFIXED_GEO_AS_WKT +" }";
@@ -308,15 +310,18 @@ std::string olu::sparql::QueryWriter::writeQueryForTagsAndMetaInfo(const std::st
     return oss.str();
 }
 
+// _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::getFromClauseOptional() const {
     return  _config.graphUri.empty() ? "" : "FROM <" +_config.graphUri + "> ";
 }
 
+// _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::getValuesClause(const std::string &osmTag,
                                                       const std::set<id_t> &objectIds) {
     return getValuesClause(osmTag, ":", objectIds);
 }
 
+// _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::getValuesClause(const std::string &osmTag,
                                                       const std::string &delimiter,
                                                       const std::set<id_t> &objectIds) {
@@ -333,18 +338,22 @@ std::string olu::sparql::QueryWriter::getValuesClause(const std::string &osmTag,
     return  oss.str();
 }
 
+// _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::wrapWithGraphOptional(const std::string& clause) const {
     return _config.graphUri.empty() ? clause : "GRAPH <" + _config.graphUri + "> { " + clause + " } ";
 }
 
+// _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::wrapWithUnion(const std::string& clause) {
     return "UNION { " + clause + " } ";
 }
 
+// _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::wrapWithOptional(const std::string& clause) {
     return "OPTIONAL { " + clause + " } ";
 }
 
+// _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::getTripleClause(const std::string& subject,
                                                       const std::string& predicate,
                                                       const std::string& object) {

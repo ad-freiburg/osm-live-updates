@@ -61,7 +61,7 @@ struct Config {
     int maxValuesPerQuery = 1024;
 
     // Specifies what happens with the sparql output
-    // - ENDPOINT: The sparql updates are send to the sparql endpoint
+    // - ENDPOINT: The sparql updates are sent to the sparql endpoint
     // - FILE: The sparql updates are written to a file
     // - DEBUG: All sparql queries and updates are written to a file
     SparqlOutput sparqlOutput = ENDPOINT;
