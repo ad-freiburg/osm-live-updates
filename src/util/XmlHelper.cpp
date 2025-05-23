@@ -16,11 +16,12 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
+#include "util/XmlHelper.h"
+
 #include <string>
 
 #include "boost/regex.hpp"
 
-#include "util/XmlReader.h"
 #include "config/Constants.h"
 
 namespace cnst = olu::config::constants;

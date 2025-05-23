@@ -16,8 +16,8 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef OSM_LIVE_UPDATES_XMLREADER_H
-#define OSM_LIVE_UPDATES_XMLREADER_H
+#ifndef OSM_LIVE_UPDATES_XMLHELPER_H
+#define OSM_LIVE_UPDATES_XMLHELPER_H
 
 #include <string>
 
@@ -29,7 +29,7 @@ namespace olu::util {
     class XmlHelper {
     public:
         /**
-         * @return True, if the given string has a XML encoded character in it
+         * @return True, if the given string has an XML encoded character in it
          */
         static bool isXmlEncoded(const std::string &input);
 
@@ -46,4 +46,4 @@ namespace olu::util {
 
 } // namespace  olu::util
 
-#endif //OSM_LIVE_UPDATES_XMLREADER_H
+#endif //OSM_LIVE_UPDATES_XMLHELPER_H

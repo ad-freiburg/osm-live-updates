@@ -21,7 +21,7 @@
 #include <sstream>
 
 #include "config/Constants.h"
-#include "util/XmlReader.h"
+#include "util/XmlHelper.h"
 
 // _________________________________________________________________________________________________
 void olu::osm::Relation::setType(std::string const &type) {

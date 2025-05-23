@@ -70,7 +70,7 @@ olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config)
 void olu::osm::OsmUpdater::run() {
     // Handle either local directory with change files or external one depending on the user
     // input
-    if (!(_config.changeFileDir.empty())) {
+    if (!_config.changeFileDir.empty()) {
         std::cout
         << osm2rdf::util::currentTimeFormatted()
         << "Start handling change files at:  "
@@ -154,9 +154,9 @@ struct object_order_type_id_reverse_version_delete {
 
     bool operator()(const osmium::OSMObject& lhs, const osmium::OSMObject& rhs) const noexcept {
         return const_tie(lhs.type(), lhs.id() > 0, lhs.positive_id(), rhs.version(), rhs.deleted(),
-                    ((lhs.timestamp().valid() && rhs.timestamp().valid()) ? rhs.timestamp() : osmium::Timestamp())) <
+                    lhs.timestamp().valid() && rhs.timestamp().valid() ? rhs.timestamp() : osmium::Timestamp()) <
                const_tie(rhs.type(), rhs.id() > 0, rhs.positive_id(), lhs.version(), lhs.deleted(),
-                    ((lhs.timestamp().valid() && rhs.timestamp().valid()) ? lhs.timestamp() : osmium::Timestamp()));
+                    lhs.timestamp().valid() && rhs.timestamp().valid() ? lhs.timestamp() : osmium::Timestamp());
     }
 
     /// @pre lhs and rhs must not be nullptr
@@ -183,14 +183,14 @@ void olu::osm::OsmUpdater::mergeChangeFiles(const std::string &pathToChangeFileD
     }
 
     osmium::io::Writer writer{cnst::PATH_TO_CHANGE_FILE, osmium::io::overwrite::allow};
-    auto out = osmium::io::make_output_iterator(writer);
+    const auto out = make_output_iterator(writer);
 
     std::vector<osmium::memory::Buffer> changes;
     osmium::ObjectPointerCollection objects;
     for (const osmium::io::File& change_file : inputs) {
         osmium::io::Reader reader{change_file, osmium::osm_entity_bits::object};
         while (osmium::memory::Buffer buffer = reader.read()) {
-            osmium::apply(buffer, objects);
+            apply(buffer, objects);
             changes.push_back(std::move(buffer));
         }
         reader.close();
@@ -228,7 +228,7 @@ void olu::osm::OsmUpdater::clearChangesDir() {
     try {
         for (const auto& entry : std::filesystem::directory_iterator(
             cnst::PATH_TO_CHANGE_FILE_DIR)) {
-            std::filesystem::remove_all(entry.path());
+            remove_all(entry.path());
         }
     } catch (const std::filesystem::filesystem_error& e) {
         std::cerr << e.what() << std::endl;
@@ -239,9 +239,8 @@ void olu::osm::OsmUpdater::clearChangesDir() {
 // _________________________________________________________________________________________________
 void olu::osm::OsmUpdater::deleteTmpDir() {
     try {
-        for (const auto& entry : std::filesystem::directory_iterator(
-            cnst::PATH_TO_TEMP_DIR)) {
-            std::filesystem::remove_all(entry.path());
+        for (const auto& entry : std::filesystem::directory_iterator(cnst::PATH_TO_TEMP_DIR)) {
+                remove_all(entry.path());
             }
     } catch (const std::filesystem::filesystem_error& e) {
         std::cerr << e.what() << std::endl;

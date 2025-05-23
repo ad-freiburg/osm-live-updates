@@ -36,7 +36,7 @@
 namespace cnst = olu::config::constants;
 
 // _________________________________________________________________________________________________
-olu::osm::Osm2ttl::Osm2ttl(const olu::config::Config& config) : _config(config) {}
+olu::osm::Osm2ttl::Osm2ttl(const config::Config& config) : _config(config) {}
 
 // _________________________________________________________________________________________________
 void olu::osm::Osm2ttl::convert() const {
@@ -78,10 +78,10 @@ void olu::osm::Osm2ttl::convert() const {
 #endif
 
     try {
-        // Redicret std::cout to avoid output from osm2rdf
+        // Redirect std::cout to avoid output from osm2rdf
         std::string outputFile;
 
-        // Keep osm2rdf output in debug mode, otherwise write to temp dierectory and delete
+        // Keep osm2rdf output in debug mode, otherwise write to temp directory and delete
         // after done
         if (_config.sparqlOutput == config::DEBUG_FILE) {
             outputFile = cnst::PATH_TO_OSM2RDF_INFO_OUTPUT_FILE_DEBUG;

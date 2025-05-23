@@ -57,7 +57,7 @@ olu::osm::OsmReplicationServerHelper::fetchDatabaseStateFromUrl(
 
 // _________________________________________________________________________________________________
 olu::osm::OsmDatabaseState
-olu::osm::OsmReplicationServerHelper::fetchDatabaseStateForSeqNumber(int sequenceNumber) const {
+olu::osm::OsmReplicationServerHelper::fetchDatabaseStateForSeqNumber(const int sequenceNumber) const {
     const auto stateFileName =
             util::URLHelper::formatSequenceNumberForUrl(sequenceNumber) + "." +
             cnst::PATH_TO_STATE_FILE;

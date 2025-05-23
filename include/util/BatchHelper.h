@@ -29,7 +29,7 @@ namespace olu::util {
     class BatchHelper {
     public :
         static void doInBatches(const std::set<id_t>& set,
-                         const long elementsPerBatch,
+                         const size_t elementsPerBatch,
                          const std::function<void(std::set<id_t>)> &func) {
             std::vector vector(set.begin(), set.end());
             std::vector<std::set<id_t> > vectorBatches;

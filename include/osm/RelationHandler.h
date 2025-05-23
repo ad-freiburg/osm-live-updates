@@ -51,11 +51,29 @@ namespace olu::osm {
         checkRelationsForMemberChange(const std::set<id_t> &modifiedNodesWithChangedLocation,
                                       const std::set<id_t>& modifiedWaysWithChangedMembers);
 
+        /**
+         * Returns true if one of the members of the relation with the given ID was modified in the
+         * change file, in a way, that the relation geometry is affected.
+         * If that is the case, the relation id is inserted in the
+         * _modifiedRelationsWithChangedMembers set
+         *
+         * @param relationId The id of the relation to check the members for.
+         * @param members The members of the relation.
+         * @param modifiedNodesWithChangedLocation The set with the ids of all nodes in the change
+         * file that have a modified location
+         * @param modifiedWaysWithChangedMembers The set with the ids of all ways in the change
+         * file that have a modified member list
+         * @return True if one of the members of the relation was modified in the change file.
+         */
+        bool memberWasModifiedInChangeFile(const id_t &relationId,
+                                           const std::vector<RelationMember> &members,
+                                           const std::set<id_t> &modifiedNodesWithChangedLocation,
+                                           const std::set<id_t> &modifiedWaysWithChangedMembers);
 
         /**
          * @return True if the change file contains no relations.
          */
-        bool empty() const {
+        [[nodiscard]] bool empty() const {
             return _createdRelations.empty() &&
                    _modifiedRelations.empty() &&
                    _modifiedRelationsWithChangedMembers.empty() &&

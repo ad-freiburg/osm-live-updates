@@ -95,5 +95,5 @@ std::string olu::util::URLHelper::encodeForUrlQuery(const std::string &value) {
 // _________________________________________________________________________________________________
 bool olu::util::URLHelper::isValidUri(const std::string &uri) {
     const boost::regex regex(R"(((\w+:\/\/)[-a-zA-Z0-9:@;?&=\/%\+\.\*!'\(\),\$_\{\}\^~\[\]`#|]+))");
-    return boost::regex_match (uri, regex);
+    return regex_match (uri, regex);
 }

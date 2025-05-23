@@ -98,18 +98,11 @@ bool olu::util::TtlHelper::isMetadataOrTagPredicate(const std::string &predicate
         case osm::OsmObjectType::NODE:
             throw TtlHelperException("Node subjects should not be checked for metadata or "
                                      "tag predicates");
-        case osm::OsmObjectType::WAY:
-            return predicate.starts_with(cnst::NAMESPACE_OSM_KEY) ||
-                   predicate.starts_with(cnst::NAMESPACE_OSM_META) ||
-                   predicate.starts_with(cnst::PREFIXED_OSM2RDF_FACTS);
-        case osm::OsmObjectType::RELATION:
+        default:
             return predicate.starts_with(cnst::NAMESPACE_OSM_KEY) ||
                    predicate.starts_with(cnst::NAMESPACE_OSM_META) ||
                    predicate.starts_with(cnst::PREFIXED_OSM2RDF_FACTS);
     }
-
-    const std::string msg = "Cant interpret predicate for metadata and tag check: " + predicate;
-    throw TtlHelperException(msg.c_str());
 }
 
 // _________________________________________________________________________________________________
@@ -119,18 +112,11 @@ bool olu::util::TtlHelper::isGeometryPredicate(const std::string &predicate,
         case osm::OsmObjectType::NODE:
             throw TtlHelperException("Node subjects should not be checked for geometry "
                                      "predicates");
-        case osm::OsmObjectType::WAY:
-            return predicate.starts_with(cnst::NAMESPACE_OSM2RDF_GEOM) ||
-                   predicate.starts_with(cnst::PREFIXED_OSM2RDF_LENGTH) ||
-                   predicate.starts_with(cnst::PREFIXED_OSM2RDF_AREA);
-        case osm::OsmObjectType::RELATION:
+        default:
             return predicate.starts_with(cnst::NAMESPACE_OSM2RDF_GEOM) ||
                    predicate.starts_with(cnst::PREFIXED_OSM2RDF_LENGTH) ||
                    predicate.starts_with(cnst::PREFIXED_OSM2RDF_AREA);
     }
-
-    const std::string msg = "Cant interpret predicate for geometry check: " + predicate;
-    throw TtlHelperException(msg.c_str());
 }
 
 // _________________________________________________________________________________________________

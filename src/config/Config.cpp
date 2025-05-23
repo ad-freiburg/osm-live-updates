@@ -30,7 +30,7 @@
 #include "util/URLHelper.h"
 
 // _________________________________________________________________________________________________
-void olu::config::Config::fromArgs(int argc, char **argv) {
+void olu::config::Config::fromArgs(const int argc, char **argv) {
     popl::OptionParser parser("Allowed options");
 
     const auto helpOp = parser.add<popl::Switch>(
@@ -127,7 +127,7 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
             exit(ENDPOINT_URI_MISSING);
         }
         sparqlEndpointUri = parser.non_option_args()[0];
-        if (!olu::util::URLHelper::isValidUri(sparqlEndpointUri)) {
+        if (!util::URLHelper::isValidUri(sparqlEndpointUri)) {
             std::cerr << "SPARQL endpoint URI is not valid: " << sparqlEndpointUri << "\n"
                       << parser.help() << "\n";
             exit(ENDPOINT_URI_INVALID);
@@ -156,7 +156,7 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
 
         if (osmChangeFileServerUriOp->is_set()) {
             changeFileDirUri = osmChangeFileServerUriOp->value();
-            if (!olu::util::URLHelper::isValidUri(changeFileDirUri)) {
+            if (!util::URLHelper::isValidUri(changeFileDirUri)) {
                 std::cerr << "URI for OsmChange file server is not valid: " << changeFileDirUri << "\n"
                           << parser.help() << "\n";
                 exit(ENDPOINT_URI_INVALID);
@@ -165,7 +165,7 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
 
         if (sparqlGraphUriOp->is_set()) {
             graphUri = sparqlGraphUriOp->value();
-            if (!olu::util::URLHelper::isValidUri(graphUri)) {
+            if (!util::URLHelper::isValidUri(graphUri)) {
                 std::cerr << "URI for SPARQL graph is not valid: " << graphUri << "\n"
                           << parser.help() << "\n";
                 exit(GRAPH_URI_INVALID);
@@ -180,7 +180,7 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
 
         if (sparqlUpdateUri->is_set()) {
             sparqlEndpointUriForUpdates = sparqlUpdateUri->value();
-            if (!olu::util::URLHelper::isValidUri(sparqlEndpointUriForUpdates)) {
+            if (!util::URLHelper::isValidUri(sparqlEndpointUriForUpdates)) {
                 std::cerr << "URI for SPARQL updates is not valid: "
                     << sparqlEndpointUriForUpdates << "\n"
                     << parser.help() << "\n";
@@ -233,19 +233,19 @@ void olu::config::Config::fromArgs(int argc, char **argv) {
     }
 }
 
-std::string olu::config::Config::getInfo(std::string_view prefix) const {
+std::string olu::config::Config::getInfo(const std::string_view prefix) const {
     std::ostringstream oss;
 
     oss
     << osm2rdf::util::currentTimeFormatted()
     << prefix
-    << olu::config::constants::HEADER
+    << constants::HEADER
     << std::endl;
 
     oss
     << osm2rdf::util::currentTimeFormatted()
     << prefix
-    << olu::config::constants::SPARQL_ENDPOINT_URI_INFO
+    << constants::SPARQL_ENDPOINT_URI_INFO
     << " "
     << sparqlEndpointUri
     << std::endl;
@@ -254,7 +254,7 @@ std::string olu::config::Config::getInfo(std::string_view prefix) const {
         oss
         << osm2rdf::util::currentTimeFormatted()
         << prefix
-        << olu::config::constants::SPARQL_GRAPH_URI_INFO
+        << constants::SPARQL_GRAPH_URI_INFO
         << " "
         << graphUri
         << std::endl;
@@ -264,7 +264,7 @@ std::string olu::config::Config::getInfo(std::string_view prefix) const {
         oss
         << osm2rdf::util::currentTimeFormatted()
         << prefix
-        << olu::config::constants::PATH_TO_INPUT_INFO
+        << constants::PATH_TO_INPUT_INFO
         << " "
         << changeFileDir
         << std::endl;
@@ -273,7 +273,7 @@ std::string olu::config::Config::getInfo(std::string_view prefix) const {
             oss
             << osm2rdf::util::currentTimeFormatted()
             << prefix
-            << olu::config::constants::OSM_CHANGE_FILE_DIRECTORY_URI_INFO
+            << constants::OSM_CHANGE_FILE_DIRECTORY_URI_INFO
             << " "
             << changeFileDirUri
             << std::endl;
@@ -283,7 +283,7 @@ std::string olu::config::Config::getInfo(std::string_view prefix) const {
             oss
             << osm2rdf::util::currentTimeFormatted()
             << prefix
-            << olu::config::constants::SEQUENCE_NUMBER_INFO
+            << constants::SEQUENCE_NUMBER_INFO
             << " "
             << sequenceNumber
             << std::endl;
@@ -291,7 +291,7 @@ std::string olu::config::Config::getInfo(std::string_view prefix) const {
             oss
             << osm2rdf::util::currentTimeFormatted()
             << prefix
-            << olu::config::constants::TIME_STAMP_INFO
+            << constants::TIME_STAMP_INFO
             << " "
             << timestamp
             << std::endl;
@@ -302,7 +302,7 @@ std::string olu::config::Config::getInfo(std::string_view prefix) const {
         oss
         << osm2rdf::util::currentTimeFormatted()
         << prefix
-        << olu::config::constants::BLANK_NODES_INFO
+        << constants::BLANK_NODES_INFO
         << std::endl;
     }
 

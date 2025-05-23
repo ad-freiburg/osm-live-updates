@@ -45,7 +45,7 @@ void olu::osm::WayHandler::way(const osmium::Way &way) {
             break;
         case ChangeAction::MODIFY:
             std::vector<id_t> nodeRefs;
-            for (auto &nodeRef: way.nodes()) {
+            for (const auto &nodeRef: way.nodes()) {
                 nodeRefs.push_back(nodeRef.ref());
             }
 

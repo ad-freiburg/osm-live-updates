@@ -25,13 +25,14 @@
 #include "curl/curl.h"
 
 // _________________________________________________________________________________________________
-static size_t WriteMemoryCallback(void* contents, size_t size, size_t nmemb, void* userp)
+static size_t WriteMemoryCallback(void* contents, const size_t size, const size_t nmemb,
+                                  void* userp)
 {
-    size_t realsize = size * nmemb;
+    const size_t realSize = size * nmemb;
     auto& mem = *static_cast<std::string*>(userp);
-    mem.append(static_cast<char*>(contents), realsize);
-    memset(contents, 0, realsize);
-    return realsize;
+    mem.append(static_cast<char*>(contents), realSize);
+    memset(contents, 0, realSize);
+    return realSize;
 }
 
 // _________________________________________________________________________________________________
@@ -50,7 +51,7 @@ void setup_curl(CURL* curl_handle, std::string& data, const std::string& url)
 olu::util::HttpRequest::HttpRequest(const HttpMethod& method, const std::string& url) {
     _curl = curl_easy_init();
     _method = method;
-    _res = CURLcode::CURLE_FAILED_INIT;
+    _res = CURLE_FAILED_INIT;
     _url = url;
     setup_curl(_curl, _data, url);
 }
@@ -63,7 +64,7 @@ olu::util::HttpRequest::~HttpRequest() {
 
 // _________________________________________________________________________________________________
 void olu::util::HttpRequest::addHeader(const std::string& key, const std::string& value) {
-    std::string header = key + ": " + value;
+    const std::string header = key + ": " + value;
     _chunk = curl_slist_append(_chunk, header.c_str());
 }
 

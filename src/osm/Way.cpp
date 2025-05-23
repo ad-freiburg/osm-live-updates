@@ -20,7 +20,7 @@
 
 #include <sstream>
 
-#include "util/XmlReader.h"
+#include "util/XmlHelper.h"
 
 // _________________________________________________________________________________________________
 void olu::osm::Way::setTimestamp(std::string const &timestamp) {

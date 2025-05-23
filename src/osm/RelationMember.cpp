@@ -87,7 +87,7 @@ olu::osm::RelationMember::RelationMember(const id_t &id, const osmium::item_type
         default:
             const std::string msg = "Cannot initialize relation member from unknown osmium "
                                     "item type";
-        throw RelationMemberException(msg.c_str());;
+        throw RelationMemberException(msg.c_str());
     }
 }
 
