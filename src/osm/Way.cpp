@@ -17,9 +17,10 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "osm/Way.h"
-#include "util/XmlReader.h"
 
 #include <sstream>
+
+#include "util/XmlReader.h"
 
 namespace olu::osm {
     void Way::setTimestamp(std::string const &timestamp) {

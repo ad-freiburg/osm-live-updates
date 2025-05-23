@@ -19,17 +19,18 @@
 #ifndef OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 #define OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 
+#include <set>
+#include <string>
+
+#include "simdjson.h"
+
 #include "config/Constants.h"
 #include "osm/Node.h"
 #include "osm/Relation.h"
 #include "osm/Way.h"
 #include "sparql/SparqlWrapper.h"
-#include "util/Types.h"
 #include "sparql/QueryWriter.h"
-#include "simdjson.h"
-
-#include <set>
-#include <string>
+#include "util/Types.h"
 
 namespace olu::osm {
 

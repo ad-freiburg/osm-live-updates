@@ -16,29 +16,14 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
+#include <string>
+
+#include "boost/regex.hpp"
+
 #include "util/XmlReader.h"
 #include "config/Constants.h"
 
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/xml_parser.hpp>
-#include <boost/regex.hpp>
-#include <string>
-#include <iostream>
-
 namespace cnst = olu::config::constants;
-
-// _________________________________________________________________________________________________
-void olu::util::XmlHelper::sanitizeXmlTags(pt::ptree &tree) {
-    for (auto &tag : tree.get_child("")) {
-        if (tag.first == cnst::XML_TAG_TAG) {
-            auto value = tag.second.get<std::string>(cnst::XML_PATH_ATTR_VALUE);
-            if (isXmlEncoded(value)) {
-                value = xmlEncode(value);
-            }
-            tag.second.put<std::string>(cnst::XML_PATH_ATTR_VALUE, value);
-        }
-    }
-}
 
 // _________________________________________________________________________________________________
 bool olu::util::XmlHelper::isXmlEncoded(const std::string &input) {

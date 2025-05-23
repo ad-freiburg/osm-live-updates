@@ -19,11 +19,12 @@
 #ifndef OSM_LIVE_UPDATES_HTTPREQUEST_H
 #define OSM_LIVE_UPDATES_HTTPREQUEST_H
 
-#include "util/HttpMethod.h"
-
 #include <string>
 #include <vector>
+
 #include <curl/curl.h>
+
+#include "util/HttpMethod.h"
 
 namespace olu::util {
 

@@ -19,10 +19,10 @@
 #ifndef BATCHHELPER_H
 #define BATCHHELPER_H
 
-#include "util/Types.h"
-
 #include <set>
 #include <functional>
+
+#include "util/Types.h"
 
 namespace olu::util {
 

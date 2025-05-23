@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <iostream>
 #include <filesystem>
+#include <fstream>
 
 #include "osmium/visitor.hpp"
 #include "osmium/object_pointer_collection.hpp"

@@ -19,11 +19,12 @@
 #ifndef WAYHANDLER_H
 #define WAYHANDLER_H
 
-#include <osmium/handler.hpp>
 #include <map>
 #include <set>
 
-#include "OsmDataFetcher.h"
+#include "osmium/handler.hpp"
+
+#include "osm/OsmDataFetcher.h"
 
 namespace olu::osm {
 

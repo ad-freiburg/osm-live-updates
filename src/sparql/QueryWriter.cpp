@@ -17,11 +17,12 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "sparql/QueryWriter.h"
-#include "config/Constants.h"
 
 #include <string>
 #include <vector>
 #include <sstream>
+
+#include "config/Constants.h"
 
 namespace cnst = olu::config::constants;
 

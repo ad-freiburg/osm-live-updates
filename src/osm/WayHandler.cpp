@@ -16,12 +16,14 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
+#include "osm/WayHandler.h"
+
 #include <iostream>
 
-#include "osm/WayHandler.h"
-#include "osm/OsmObjectHelper.h"
-#include "osm2rdf/util/Time.h"
 #include "osmium/osm/way.hpp"
+#include "osm2rdf/util/Time.h"
+
+#include "osm/OsmObjectHelper.h"
 
 void olu::osm::WayHandler::printWayStatistics() const {
     std::cout << osm2rdf::util::currentTimeFormatted()

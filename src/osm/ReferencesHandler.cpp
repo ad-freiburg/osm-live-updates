@@ -17,10 +17,12 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "osm/ReferencesHandler.h"
-#include "util/BatchHelper.h"
 
 #include "osm2rdf/osm/Relation.h"
 #include "osmium/osm/way.hpp"
+
+#include "util/BatchHelper.h"
+
 
 void olu::osm::ReferencesHandler::way(const osmium::Way &way) {
     for (const auto& node : way.nodes()) {

@@ -19,22 +19,18 @@
 #ifndef OSM_LIVE_UPDATES_OSMCHANGEHANDLER_H
 #define OSM_LIVE_UPDATES_OSMCHANGEHANDLER_H
 
-#include "osm/Osm2ttl.h"
-#include "osm/OsmDataFetcher.h"
-#include "sparql/SparqlWrapper.h"
-#include "config/Config.h"
-#include "osm2rdf/util/ProgressBar.h"
 #include <set>
-#include <osmium/handler.hpp>
 
-#include "NodeHandler.h"
-#include "ReferencesHandler.h"
-#include "RelationHandler.h"
-#include "WayHandler.h"
+#include "osmium/handler.hpp"
+#include "osm2rdf/util/ProgressBar.h"
 
-namespace osmium::memory {
-    class CallbackBuffer;
-}
+#include "config/Config.h"
+#include "osm/OsmDataFetcher.h"
+#include "osm/NodeHandler.h"
+#include "osm/ReferencesHandler.h"
+#include "osm/RelationHandler.h"
+#include "osm/WayHandler.h"
+#include "sparql/SparqlWrapper.h"
 
 namespace olu::osm {
     /**

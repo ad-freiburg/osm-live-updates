@@ -17,13 +17,10 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "osm/Relation.h"
-#include "util/XmlReader.h"
 
 #include <sstream>
 
-namespace osmium::memory {
-    class CallbackBuffer;
-}
+#include "util/XmlReader.h"
 
 namespace olu::osm {
     void Relation::setType(std::string const &type) {

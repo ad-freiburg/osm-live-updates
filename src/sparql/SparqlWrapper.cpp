@@ -17,14 +17,16 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "sparql/SparqlWrapper.h"
-#include "util/URLHelper.h"
-#include "util/HttpRequest.h"
-#include "config/Constants.h"
 
 #include <string>
 #include <fstream>
 #include <iostream>
-#include <simdjson/padded_string.h>
+
+#include "simdjson/padded_string.h"
+
+#include "util/URLHelper.h"
+#include "util/HttpRequest.h"
+#include "config/Constants.h"
 
 namespace cnst = olu::config::constants;
 

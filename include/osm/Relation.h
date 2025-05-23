@@ -19,13 +19,13 @@
 #ifndef RELATION_H
 #define RELATION_H
 
-#include "util/Types.h"
-
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "RelationMember.h"
+#include "osm/RelationMember.h"
+#include "util/Types.h"
+
 
 namespace olu::osm {
     class Relation {

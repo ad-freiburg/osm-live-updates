@@ -17,13 +17,14 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "util/URLHelper.h"
-#include "config/Constants.h"
 
 #include <stdexcept>
-#include <boost/asio/connect.hpp>
 #include <iostream>
 #include <iomanip>
-#include <boost/regex.hpp>
+
+#include "boost/regex.hpp"
+
+#include "config/Constants.h"
 
 const static inline int MIN_SEQ_NUMBER = 0;
 const static inline int MAX_SEQ_NUMBER = 999999999;

@@ -1,32 +1,33 @@
-// Copyright 2020, University of Freiburg
-// Authors: Axel Lehmann <lehmann@cs.uni-freiburg.de>
-//          Patrick Brosi <brosi@cs.uni-freiburg.de>.
+// Copyright 2024, University of Freiburg
+// Authors: Nicolas von Trott <nicolasvontrott@gmail.com>.
 
-// This file is part of olu.
+// This file is part of osm-live-updates.
 //
-// olu is free software: you can redistribute it and/or modify
+// osm-live-updates is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
 //
-// olu is distributed in the hope that it will be useful,
+// osm-live-updates is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 //
 // You should have received a copy of the GNU General Public License
-// along with olu.  If not, see <https://www.gnu.org/licenses/>.
+// along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "config/Config.h"
-#include "config/Constants.h"
-#include "config/ExitCode.h"
-#include "osm2rdf/util/Time.h"
 
 #include <filesystem>
 #include <string>
-#include <popl.hpp>
-#include <util/HttpRequest.h>
-#include <util/URLHelper.h>
+
+#include "popl.hpp"
+#include "osm2rdf/util/Time.h"
+
+#include "config/Constants.h"
+#include "config/ExitCode.h"
+#include "util/HttpRequest.h"
+#include "util/URLHelper.h"
 
 // ____________________________________________________________________________
 void olu::config::Config::fromArgs(int argc, char **argv) {

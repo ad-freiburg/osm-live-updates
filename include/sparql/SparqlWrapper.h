@@ -19,11 +19,10 @@
 #ifndef OSM_LIVE_UPDATES_SPARQLWRAPPER_H
 #define OSM_LIVE_UPDATES_SPARQLWRAPPER_H
 
-#include "config/Config.h"
-
 #include <string>
 #include <vector>
-#include <boost/property_tree/ptree.hpp>
+
+#include "config/Config.h"
 
 namespace olu::sparql {
 

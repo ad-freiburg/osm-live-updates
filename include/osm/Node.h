@@ -21,8 +21,9 @@
 
 #include "string"
 
-#include "util/Types.h"
 #include "osmium/osm/location.hpp"
+
+#include "util/Types.h"
 
 namespace olu::osm {
 

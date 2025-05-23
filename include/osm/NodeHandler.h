@@ -20,8 +20,9 @@
 #define NODEHANDLER_H
 
 #include <map>
-#include <osmium/handler.hpp>
 #include <set>
+
+#include "osmium/handler.hpp"
 
 #include "OsmDataFetcher.h"
 

@@ -19,9 +19,8 @@
 #ifndef OSM_LIVE_UPDATES_OSM2TTL_H
 #define OSM_LIVE_UPDATES_OSM2TTL_H
 
-#include <config/Config.h>
-#include <osm2rdf/config/Config.h>
-#include <osm2rdf/util/Output.h>
+#include "osm2rdf/config/Config.h"
+#include "config/Config.h"
 
 namespace olu::osm {
 

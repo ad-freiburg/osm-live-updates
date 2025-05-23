@@ -18,11 +18,11 @@
 
 #include "util/HttpRequest.h"
 
-#include <curl/curl.h>
 #include <iostream>
 #include <fstream>
-#include <vector>
 #include <cstring>
+
+#include "curl/curl.h"
 
 namespace olu::util {
 

@@ -19,11 +19,12 @@
 #ifndef RELATIONHANDLER_H
 #define RELATIONHANDLER_H
 
-#include <osmium/handler.hpp>
 #include <map>
 #include <set>
 
-#include "OsmDataFetcher.h"
+#include "osmium/handler.hpp"
+
+#include "osm/OsmDataFetcher.h"
 
 namespace olu::osm {
     class RelationHandler: public osmium::handler::Handler {

@@ -5,10 +5,10 @@
 #ifndef TTLHELPER_H
 #define TTLHELPER_H
 
-#include "Types.h"
-#include "osm/OsmObjectType.h"
-
 #include <string>
+
+#include "util/Types.h"
+#include "osm/OsmObjectType.h"
 
 namespace olu::util {
 

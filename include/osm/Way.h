@@ -19,10 +19,10 @@
 #ifndef OSM_LIVE_UPDATES_WAY_H
 #define OSM_LIVE_UPDATES_WAY_H
 
-#include "util/Types.h"
-
 #include <string>
 #include <vector>
+
+#include "util/Types.h"
 
 namespace olu::osm {
 
