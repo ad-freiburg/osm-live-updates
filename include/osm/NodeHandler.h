@@ -56,6 +56,12 @@ namespace olu::osm {
             allNodes.insert(_deletedNodes.begin(), _deletedNodes.end());
             return allNodes;
         }
+        [[nodiscard]] size_t getNumOfNodes() const {
+            return _createdNodes.size() +
+                   _modifiedNodes.size() +
+                   _modifiedNodesWithChangedLocation.size() +
+                   _deletedNodes.size();
+        }
 
         /**
          * Prints the number of created, modified and deleted nodes to the console.

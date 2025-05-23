@@ -87,11 +87,6 @@ namespace olu::osm {
         // Relations that reference a node, way or relation which was modified in the changeset.
         std::set<id_t> _relationsToUpdateGeometry;
 
-        void processChangeFile();
-        void getObjectsToUpdate();
-        void handleReferences();
-        void convertToTtl();
-
         /**
          * Loops over the change file and stores the relevant ones in a temporary file, and the
          * referenced elements in the corresponding set

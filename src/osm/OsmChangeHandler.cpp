@@ -97,6 +97,19 @@ void olu::osm::OsmChangeHandler::run() {
         throw OsmChangeHandlerException("Change file is empty.");
     }
 
+    std::cout
+    << osm2rdf::util::currentTimeFormatted()
+    << "Fetch IDs of objects that need to be updated..."
+    << std::endl;
+    // Fetch the ids of all ways and relations that need to be updated, meaning they reference an
+    // OSM object that changed their geometry because of elements in the change file.
+    getIdsOfWaysToUpdateGeo();
+    getIdsOfRelationsToUpdateGeo();
+
+    std::cout
+    << osm2rdf::util::currentTimeFormatted()
+    << "Fetch references..."
+    << std::endl;
     // Loop over the ways and relations a second time to store the ids of the referenced
     // elements.
     // We will need to retrieve them later from the endpoint (if they are not already
@@ -107,18 +120,8 @@ void olu::osm::OsmChangeHandler::run() {
     osmium::apply(referencesReader, _referencesHandler);
     referencesReader.close();
 
-    getIdsOfWaysToUpdateGeo();
-    getIdsOfRelationsToUpdateGeo();
-
-    std::cout
-    << osm2rdf::util::currentTimeFormatted()
-    << "Fetch references..."
-    << std::endl;
     // Fetch the ids of all nodes and ways that are referenced by relations which are not in the
     // change file.
-    // We will later create placeholder objects for them (for nodes, which hold the locations,
-    // and for ways and relations, which hold the members) so that osm2rdf can calculate the
-    // geometries.
     std::set relationIds(_referencesHandler.getReferencedRelations());
     relationIds.insert(_relationsToUpdateGeometry.begin(),
                         _relationsToUpdateGeometry.end());
@@ -524,16 +527,10 @@ void olu::osm::OsmChangeHandler::deleteRelationsGeometry(osm2rdf::util::Progress
 
 // _________________________________________________________________________________________________
 void olu::osm::OsmChangeHandler::deleteTriplesFromDatabase() {
-    const std::size_t count = _nodeHandler.getDeletedNodes().size()
-        + _nodeHandler.getModifiedNodes().size()
-        + _nodeHandler.getModifiedNodesWithChangedLocation().size()
-        + _wayHandler.getDeletedWays().size()
-        + _wayHandler.getModifiedWays().size()
-        + _wayHandler.getModifiedWaysWithChangedMembers().size()
+    const std::size_t count = _nodeHandler.getNumOfNodes()
+        + _wayHandler.getNumOfWays()
         + _waysToUpdateGeometry.size()
-        + _relationHandler.getDeletedRelations().size()
-        + _relationHandler.getModifiedRelations().size()
-        + _relationHandler.getModifiedRelationsWithChangedMembers().size()
+        + _relationHandler.getNumOfRelations()
         + _relationsToUpdateGeometry.size();
 
     if (count == 0) {

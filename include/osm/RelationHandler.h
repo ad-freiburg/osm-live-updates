@@ -41,6 +41,21 @@ namespace olu::osm {
 
         [[nodiscard]] std::set<id_t> getModifiedRelationsWithChangedMembers() const {
             return _modifiedRelationsWithChangedMembers;}
+        [[nodiscard]] std::set<id_t> getAllRelations() const {
+            std::set<id_t> allRelations;
+            allRelations.insert(_createdRelations.begin(), _createdRelations.end());
+            allRelations.insert(_modifiedRelations.begin(), _modifiedRelations.end());
+            allRelations.insert(_modifiedRelationsWithChangedMembers.begin(),
+                                _modifiedRelationsWithChangedMembers.end());
+            allRelations.insert(_deletedRelations.begin(), _deletedRelations.end());
+            return allRelations;
+        }
+        [[nodiscard]] size_t getNumOfRelations() const {
+            return _createdRelations.size() +
+                   _modifiedRelations.size() +
+                   _modifiedRelationsWithChangedMembers.size() +
+                   _deletedRelations.size();
+        }
 
         void printRelationStatistics() const;
 
