@@ -31,9 +31,9 @@ TEST(XmlReader, readAttribute) {
                              (std::istreambuf_iterator<char>()) );
 
         pt::ptree tree;
-        olu::util::XmlReader::populatePTreeFromString(content, tree);
+        olu::util::XmlHelper::populatePTreeFromString(content, tree);
 
-        auto attribute = olu::util::XmlReader::readAttribute<std::string>(
+        auto attribute = olu::util::XmlHelper::readAttribute<std::string>(
                 "osm.node.<xmlattr>.id",
                 tree);
         ASSERT_EQ(attribute, "1");
@@ -49,9 +49,9 @@ TEST(XmlReader, readAttribute) {
                              (std::istreambuf_iterator<char>()) );
 
         pt::ptree tree;
-        olu::util::XmlReader::populatePTreeFromString(content, tree);
+        olu::util::XmlHelper::populatePTreeFromString(content, tree);
 
-        EXPECT_ANY_THROW(olu::util::XmlReader::readAttribute<std::string>("osm.node.<xmlattr>.notExisting", tree));
+        EXPECT_ANY_THROW(olu::util::XmlHelper::readAttribute<std::string>("osm.node.<xmlattr>.notExisting", tree));
 
         tree.clear();
     }
@@ -67,9 +67,9 @@ TEST(XmlReader, readTagOfChildren) {
                              (std::istreambuf_iterator<char>()) );
 
         pt::ptree tree;
-        olu::util::XmlReader::populatePTreeFromString(content, tree);
+        olu::util::XmlHelper::populatePTreeFromString(content, tree);
 
-        auto childrenTags = olu::util::XmlReader::readTagOfChildren(
+        auto childrenTags = olu::util::XmlHelper::readTagOfChildren(
                 olu::config::constants::XML_TAG_OSM,
                 tree,
                 false);
@@ -78,7 +78,7 @@ TEST(XmlReader, readTagOfChildren) {
         ASSERT_EQ(childrenTags.at(0), olu::config::constants::XML_TAG_ATTR);
         ASSERT_EQ(childrenTags.at(1), olu::config::constants::XML_TAG_NODE);
 
-        auto childrenTags2 = olu::util::XmlReader::readTagOfChildren(
+        auto childrenTags2 = olu::util::XmlHelper::readTagOfChildren(
                 olu::config::constants::XML_TAG_OSM,
                 tree,
                 true);

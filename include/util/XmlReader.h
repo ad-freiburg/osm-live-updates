@@ -45,7 +45,7 @@ namespace olu::util {
      * Helper class for dealing with xml Files. The `ptree` data class from the
      * `boost::property_tree` library is used to store xml elements.
      */
-    class XmlReader {
+    class XmlHelper {
     public:
         /**
          * Reads the attribute at the given path from the given tree.

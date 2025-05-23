@@ -28,7 +28,7 @@
 namespace cnst = olu::config::constants;
 
 // _________________________________________________________________________________________________
-void olu::util::XmlReader::sanitizeXmlTags(pt::ptree &tree) {
+void olu::util::XmlHelper::sanitizeXmlTags(pt::ptree &tree) {
     for (auto &tag : tree.get_child("")) {
         if (tag.first == cnst::XML_TAG_TAG) {
             auto value = tag.second.get<std::string>(cnst::XML_PATH_ATTR_VALUE);
@@ -41,13 +41,13 @@ void olu::util::XmlReader::sanitizeXmlTags(pt::ptree &tree) {
 }
 
 // _________________________________________________________________________________________________
-bool olu::util::XmlReader::isXmlEncoded(const std::string &input) {
+bool olu::util::XmlHelper::isXmlEncoded(const std::string &input) {
     const boost::regex xmlEntityRegex("&(amp|lt|gt|quot|apos|#xA|#xD|#x9);");
     return regex_search(input, xmlEntityRegex);
 }
 
 // _________________________________________________________________________________________________
-std::string olu::util::XmlReader::xmlEncode(const std::string &input) {
+std::string olu::util::XmlHelper::xmlEncode(const std::string &input) {
     std::stringstream ss;
 
     for (const auto c : input) {
@@ -68,7 +68,7 @@ std::string olu::util::XmlReader::xmlEncode(const std::string &input) {
 }
 
 // _________________________________________________________________________________________________
-std::string olu::util::XmlReader::xmlDecode(const std::string &input) {
+std::string olu::util::XmlHelper::xmlDecode(const std::string &input) {
     std::string output;
     std::string::size_type pos = 0, prev_pos = 0;
 

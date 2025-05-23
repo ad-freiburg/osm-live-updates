@@ -52,7 +52,7 @@ namespace olu::osm {
     }
 
     void Relation::addTag(const std::string& key, const std::string& value) {
-        tags.emplace_back(key, util::XmlReader::xmlEncode(value));
+        tags.emplace_back(key, util::XmlHelper::xmlEncode(value));
     }
 
     std::string Relation::getXml() const {

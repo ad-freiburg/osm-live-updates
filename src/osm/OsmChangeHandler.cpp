@@ -649,7 +649,7 @@ namespace olu::osm {
 
             // Decode tag values
             if (predicate.starts_with(cnst::NAMESPACE_OSM_KEY)) {
-                object = util::XmlReader::xmlDecode(object);
+                object = util::XmlHelper::xmlDecode(object);
             }
 
             // Check if there is currently a link set

@@ -31,10 +31,10 @@ static void Read_Attribute(benchmark::State& state) {
                          (std::istreambuf_iterator<char>()) );
 
     pt::ptree tree;
-    olu::util::XmlReader::populatePTreeFromString(content, tree);
+    olu::util::XmlHelper::populatePTreeFromString(content, tree);
 
     for (auto _ : state) {
-        auto attribute = olu::util::XmlReader::readAttribute<std::string>(
+        auto attribute = olu::util::XmlHelper::readAttribute<std::string>(
                 "osm.node.id",
                 tree);
     }
@@ -50,7 +50,7 @@ static void Populate_PTree_From_String_Node(benchmark::State& state) {
 
     for (auto _ : state) {
         pt::ptree tree;
-        olu::util::XmlReader::populatePTreeFromString(content, tree);
+        olu::util::XmlHelper::populatePTreeFromString(content, tree);
     }
 }
 BENCHMARK(Populate_PTree_From_String_Node);
@@ -64,7 +64,7 @@ static void Populate_PTree_From_String_Change_File(benchmark::State& state) {
 
     for (auto _ : state) {
         pt::ptree tree;
-        olu::util::XmlReader::populatePTreeFromString(content, tree);
+        olu::util::XmlHelper::populatePTreeFromString(content, tree);
     }
 }
 BENCHMARK(Populate_PTree_From_String_Change_File);
@@ -77,10 +77,10 @@ static void Read_Tag_Of_Children(benchmark::State& state) {
                          (std::istreambuf_iterator<char>()) );
 
     pt::ptree tree;
-    olu::util::XmlReader::populatePTreeFromString(content, tree);
+    olu::util::XmlHelper::populatePTreeFromString(content, tree);
 
     for (auto _ : state) {
-        auto childrenTags = olu::util::XmlReader::readTagOfChildren(
+        auto childrenTags = olu::util::XmlHelper::readTagOfChildren(
                 olu::config::constants::XML_TAG_OSM,
                 tree,
                 false);
