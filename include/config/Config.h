@@ -31,6 +31,9 @@ enum SparqlOutput {
 };
 
 struct Config {
+    static constexpr u_int16_t DEFAULT_WKT_PRECISION = 7;
+    static constexpr u_int32_t DEFAULT_BATCH_SIZE = 1024;
+
     // The uri of the SPARQL endpoint for queries
     std::string sparqlEndpointUri;
     // The uri to the SPARQL endpoint to update. If not specified by user, this will be the same as
@@ -58,7 +61,11 @@ struct Config {
     // Specifies whether a progress bar should be shown
     bool showProgress = true;
 
-    size_t maxValuesPerQuery = 1024;
+    // The number of values or triples that should be sent in one batch to the SPARQL endpoint
+    size_t batchSize = DEFAULT_BATCH_SIZE;
+
+    // The precision that should be used for the WKT representation of the coordinates.
+    uint16_t wktPrecision = DEFAULT_WKT_PRECISION;
 
     // Specifies what happens with the sparql output
     // - ENDPOINT: The sparql updates are sent to the sparql endpoint

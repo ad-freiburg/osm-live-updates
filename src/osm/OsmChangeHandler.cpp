@@ -201,7 +201,7 @@ void olu::osm::OsmChangeHandler::getIdsOfWaysToUpdateGeo() {
     if (!_nodeHandler.getModifiedNodesWithChangedLocation().empty()) {
         util::BatchHelper::doInBatches(
             _nodeHandler.getModifiedNodesWithChangedLocation(),
-            _config.maxValuesPerQuery,
+            _config.batchSize,
             [this](const std::set<id_t> &batch) {
                 for (const auto &wayId: _odf.fetchWaysReferencingNodes(batch)) {
                     if (!_wayHandler.wayInChangeFile(wayId)) {
@@ -218,7 +218,7 @@ void olu::osm::OsmChangeHandler::getIdsOfRelationsToUpdateGeo() {
     if (!_nodeHandler.getModifiedNodesWithChangedLocation().empty()) {
         util::BatchHelper::doInBatches(
             _nodeHandler.getModifiedNodesWithChangedLocation(),
-            _config.maxValuesPerQuery,
+            _config.batchSize,
             [this](const std::set<id_t>& batch) {
                 for (const auto &relId: _odf.fetchRelationsReferencingNodes(batch)) {
                     if (!_relationHandler.relationInChangeFile(relId)) {
@@ -238,7 +238,7 @@ void olu::osm::OsmChangeHandler::getIdsOfRelationsToUpdateGeo() {
     if (!updatedWays.empty()) {
         util::BatchHelper::doInBatches(
             updatedWays,
-            _config.maxValuesPerQuery,
+            _config.batchSize,
             [this](const std::set<id_t>& batch) {
                 for (const auto &relId: _odf.fetchRelationsReferencingWays(batch)) {
                     if (!_relationHandler.relationInChangeFile(relId)) {
@@ -271,7 +271,7 @@ void olu::osm::OsmChangeHandler::getReferencedRelations() {
     if (!_relationsToUpdateGeometry.empty()) {
         util::BatchHelper::doInBatches(
                 _relationsToUpdateGeometry,
-            _config.maxValuesPerQuery,
+            _config.batchSize,
             [this](const std::set<id_t>& batch) {
                 for (const auto &relId: _odf.fetchRelationsReferencingRelations(batch)) {
                     if (!_relationsToUpdateGeometry.contains(relId) &&
@@ -317,7 +317,7 @@ void olu::osm::OsmChangeHandler::createDummyNodes(osm2rdf::util::ProgressBar &pr
                                                   size_t &counter) {
     util::BatchHelper::doInBatches(
         _referencesHandler.getReferencedNodes(),
-        _config.maxValuesPerQuery,
+        _config.batchSize,
         [this, &counter, progress](std::set<id_t> const& batch) mutable {
             progress.update(counter += batch.size());
             for (auto const& node: _odf.fetchNodes(batch)) {
@@ -342,7 +342,7 @@ void olu::osm::OsmChangeHandler::createDummyWays(osm2rdf::util::ProgressBar &pro
 
     util::BatchHelper::doInBatches(
         wayIds,
-        _config.maxValuesPerQuery,
+        _config.batchSize,
         [this, progress, &counter](std::set<id_t> const& batch) mutable {
             progress.update(counter += batch.size());
             for (auto& way: _odf.fetchWays(batch)) {
@@ -378,7 +378,7 @@ void olu::osm::OsmChangeHandler::createDummyRelations(osm2rdf::util::ProgressBar
 
     util::BatchHelper::doInBatches(
         relations,
-        _config.maxValuesPerQuery,
+        _config.batchSize,
         [this, &counter, progress](std::set<id_t> const& batch) mutable {
             progress.update(counter += batch.size());
             for (auto& rel: _odf.fetchRelations(batch)) {
@@ -417,7 +417,7 @@ void olu::osm::OsmChangeHandler::deleteNodesFromDatabase(osm2rdf::util::Progress
                                                          size_t &counter) {
     util::BatchHelper::doInBatches(
         _nodeHandler.getAllNodes(),
-        _config.maxValuesPerQuery,
+        _config.batchSize,
         [this, progress, &counter](std::set<id_t> const &batch) mutable {
             runUpdateQuery(_queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_NODE),
                            cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
@@ -441,7 +441,7 @@ void olu::osm::OsmChangeHandler::deleteWaysFromDatabase(osm2rdf::util::ProgressB
 
     util::BatchHelper::doInBatches(
         waysToDelete,
-        _config.maxValuesPerQuery,
+        _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
             runUpdateQuery(_queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_WAY),
                            cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
@@ -454,7 +454,7 @@ void olu::osm::OsmChangeHandler::deleteWaysMetaDataAndTags(osm2rdf::util::Progre
                                                            size_t &counter) {
     util::BatchHelper::doInBatches(
         _wayHandler.getModifiedWays(),
-        _config.maxValuesPerQuery,
+        _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
             runUpdateQuery(_queryWriter.writeDeleteQueryForMetaAndTags(batch, cnst::NAMESPACE_OSM_WAY),
                            cnst::PREFIXES_FOR_WAY_DELETE_META_AND_TAGS_QUERY);
@@ -467,7 +467,7 @@ void olu::osm::OsmChangeHandler::deleteRelationsMetaDataAndTags(osm2rdf::util::P
                                                                 size_t &counter) {
     util::BatchHelper::doInBatches(
         _relationHandler.getModifiedRelations(),
-        _config.maxValuesPerQuery,
+        _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
             runUpdateQuery(_queryWriter.writeDeleteQueryForMetaAndTags(batch, cnst::NAMESPACE_OSM_REL),
                            cnst::PREFIXES_FOR_RELATION_DELETE_META_AND_TAGS_QUERY);
@@ -480,7 +480,7 @@ void olu::osm::OsmChangeHandler::deleteWaysGeometry(osm2rdf::util::ProgressBar &
                                                     size_t &counter) {
     util::BatchHelper::doInBatches(
         _waysToUpdateGeometry,
-        _config.maxValuesPerQuery,
+        _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
             runUpdateQuery(_queryWriter.writeDeleteQueryForGeometry(batch, cnst::NAMESPACE_OSM_WAY),
                            cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
@@ -504,7 +504,7 @@ void olu::osm::OsmChangeHandler::deleteRelationsFromDatabase(osm2rdf::util::Prog
 
     util::BatchHelper::doInBatches(
         relationsToDelete,
-        _config.maxValuesPerQuery,
+        _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
             runUpdateQuery(_queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_REL),
                            cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
@@ -517,7 +517,7 @@ void olu::osm::OsmChangeHandler::deleteRelationsGeometry(osm2rdf::util::Progress
                                                          size_t &counter) {
     util::BatchHelper::doInBatches(
         _relationsToUpdateGeometry,
-        _config.maxValuesPerQuery,
+        _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
             runUpdateQuery(_queryWriter.writeDeleteQueryForGeometry(batch, cnst::NAMESPACE_OSM_REL),
                            cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
@@ -615,14 +615,14 @@ void olu::osm::OsmChangeHandler::insertTriplesToDatabase() {
 
         tripleBatch.emplace_back(triple.str());
 
-        if (tripleBatch.size() == _config.maxValuesPerQuery || i == triples.size() - 1) {
+        if (tripleBatch.size() == _config.batchSize || i == triples.size() - 1) {
             runUpdateQuery(_queryWriter.writeInsertQuery(tripleBatch), cnst::DEFAULT_PREFIXES);
             tripleBatch.clear();
 
             if (i == triples.size() - 1) {
                 insertProgress.done();
             } else {
-                insertProgress.update(counter += _config.maxValuesPerQuery);
+                insertProgress.update(counter += _config.batchSize);
             }
         }
     }

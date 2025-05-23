@@ -39,64 +39,76 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
         constants::HELP_OPTION_HELP);
 
     const auto sparqlGraphUriOp = parser.add<popl::Value<std::string>,
-                                                                   popl::Attribute::optional>(
+        popl::Attribute::optional>(
         constants::SPARQL_GRAPH_URI_OPTION_SHORT,
         constants::SPARQL_GRAPH_URI_OPTION_LONG,
         constants::SPARQL_GRAPH_URI_OPTION_HELP);
 
     const auto sparqlAccessTokenOp = parser.add<popl::Value<std::string>,
-                                                                      popl::Attribute::optional>(
+        popl::Attribute::optional>(
         constants::SPARQL_ACCESS_TOKEN_OPTION_SHORT,
         constants::SPARQL_ACCESS_TOKEN_OPTION_LONG,
         constants::SPARQL_ACCESS_TOKEN_OPTION_HELP);
 
     const auto sparqlUpdateUri = parser.add<popl::Value<std::string>,
-                                                                  popl::Attribute::optional>(
+        popl::Attribute::optional>(
         constants::SPARQL_UPDATE_PATH_OPTION_SHORT,
         constants::SPARQL_UPDATE_PATH_OPTION_LONG,
         constants::SPARQL_UPDATE_PATH_OPTION_HELP);
 
     const auto pathToOsmChangeFileInputDirOp = parser.add<popl::Value<std::string>,
-                                                                                popl::Attribute::optional>(
+        popl::Attribute::optional>(
         constants::PATH_TO_INPUT_OPTION_SHORT,
         constants::PATH_TO_INPUT_OPTION_LONG,
         constants::PATH_TO_INPUT_OPTION_HELP);
 
     const auto osmChangeFileServerUriOp = parser.add<popl::Value<std::string>,
-                                                                           popl::Attribute::optional>(
+        popl::Attribute::optional>(
         constants::OSM_CHANGE_FILE_SERVER_URI_OPTION_SHORT,
         constants::OSM_CHANGE_FILE_SERVER_URI_OPTION_LONG,
         constants::OSM_CHANGE_FILE_SERVER_URI_OPTION_HELP);
 
     const auto sparqlOutputOp = parser.add<popl::Value<std::string>,
-                                                                 popl::Attribute::optional>(
+        popl::Attribute::optional>(
         constants::SPARQL_OUTPUT_OPTION_SHORT,
         constants::SPARQL_OUTPUT_OPTION_LONG,
         constants::SPARQL_OUTPUT_OPTION_HELP);
 
     const auto sparqlOutputFormatOp = parser.add<popl::Switch,
-                                                                 popl::Attribute::optional>(
+        popl::Attribute::optional>(
         constants::SPARQL_OUTPUT_FORMAT_OPTION_SHORT,
         constants::SPARQL_OUTPUT_FORMAT_OPTION_LONG,
         constants::SPARQL_OUTPUT_FORMAT_OPTION_HELP);
 
     const auto timestampOp = parser.add<popl::Value<std::string>,
-                                                              popl::Attribute::optional>(
+        popl::Attribute::optional>(
         constants::TIME_STAMP_OPTION_SHORT,
         constants::TIME_STAMP_OPTION_LONG,
         constants::TIME_STAMP_OPTION_HELP);
 
     const auto sequenceNumberOp = parser.add<popl::Value<int>,
-                                                                popl::Attribute::optional>(
+        popl::Attribute::optional>(
         constants::SEQUENCE_NUMBER_OPTION_SHORT,
         constants::SEQUENCE_NUMBER_OPTION_LONG,
         constants::SEQUENCE_NUMBER_OPTION_HELP);
 
     const auto noBlankNodesOp = parser.add<popl::Switch,
-                                                           popl::Attribute::advanced>(
+        popl::Attribute::advanced>(
         constants::BLANK_NODES_OPTION_SHORT,
         constants::BLANK_NODES_OPTION_LONG,
         constants::BLANK_NODES_OPTION_HELP);
+
+    const auto wktPrecisionOp = parser.add<popl::Value<u_int16_t>,
+        popl::Attribute::advanced>(
+        constants::WKT_PRECISION_OPTION_SHORT,
+        constants::WKT_PRECISION_OPTION_LONG,
+        constants::WKT_PRECISION_OPTION_HELP);
+
+    const auto batchSizeOp = parser.add<popl::Value<u_int32_t>,
+        popl::Attribute::advanced>(
+        constants::BATCH_SIZE_OPTION_SHORT,
+        constants::BATCH_SIZE_OPTION_LONG,
+        constants::BATCH_SIZE_OPTION_HELP);
 
     try {
         parser.parse(argc, argv);
@@ -196,6 +208,14 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
 
         if (sequenceNumberOp->is_set()) {
             sequenceNumber = sequenceNumberOp->value();
+        }
+
+        if (wktPrecisionOp->is_set()) {
+            wktPrecision = wktPrecisionOp->value();
+        }
+
+        if (batchSizeOp->is_set()) {
+            batchSize = batchSizeOp->value();
         }
 
         if (sparqlOutputOp->is_set()) {
@@ -303,6 +323,26 @@ std::string olu::config::Config::getInfo(const std::string_view prefix) const {
         << osm2rdf::util::currentTimeFormatted()
         << prefix
         << constants::BLANK_NODES_INFO
+        << std::endl;
+    }
+
+    if (wktPrecision != DEFAULT_WKT_PRECISION) {
+        oss
+        << osm2rdf::util::currentTimeFormatted()
+        << prefix
+        << constants::WKT_PRECISION_INFO
+        << " "
+        << std::to_string(wktPrecision)
+        << std::endl;
+    }
+
+    if (batchSize != DEFAULT_BATCH_SIZE) {
+        oss
+        << osm2rdf::util::currentTimeFormatted()
+        << prefix
+        << constants::BATCH_SIZE_INFO
+        << " "
+        << std::to_string(batchSize)
         << std::endl;
     }
 

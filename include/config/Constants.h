@@ -23,6 +23,8 @@
 #include <vector>
 #include <sstream>
 
+#include "Config.h"
+
 namespace olu::config::constants {
     // Exception Messages --------------------------------------------------------------------------
     const static inline auto EXCEPTION_MSG_SEQUENCE_NUMBER_IS_INVALID = "Sequence number is invalid.";
@@ -406,6 +408,20 @@ namespace olu::config::constants {
     const static inline std::string BLANK_NODES_OPTION_LONG = "no-blank-nodes";
     const static inline std::string BLANK_NODES_OPTION_HELP =
         "Avoid blank nodes by using a unique identifier for each member";
+
+    const static inline std::string WKT_PRECISION_INFO = "Precision for WKT Points: ";
+    const static inline std::string WKT_PRECISION_OPTION_SHORT = "";
+    const static inline std::string WKT_PRECISION_OPTION_LONG = "wkt-precision";
+    const static inline std::string WKT_PRECISION_OPTION_HELP =
+        "The precision for the WKT representation of the coordinates. Default is "
+        + std::to_string(Config::DEFAULT_WKT_PRECISION) + ".";
+
+    const static inline std::string BATCH_SIZE_INFO = "Number of values per batch:";
+    const static inline std::string BATCH_SIZE_OPTION_SHORT = "";
+    const static inline std::string BATCH_SIZE_OPTION_LONG = "batch-size";
+    const static inline std::string BATCH_SIZE_OPTION_HELP =
+        "The number of values or triples that should be sent in one batch to the SPARQL endpoint. "
+        "Default is " + std::to_string(Config::DEFAULT_BATCH_SIZE) + ".";
 
 } // namespace olu::config::constants
 

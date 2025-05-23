@@ -60,7 +60,7 @@ void olu::osm::NodeHandler::checkNodesForLocationChange() {
     std::map<id_t, osmium::Location> remoteNodes;
     util::BatchHelper::doInBatches(
         nodeIds,
-        _config.maxValuesPerQuery,
+        _config.batchSize,
         [this, &remoteNodes](std::set<id_t> const& batch) mutable {
             for (const auto& node : _odf.fetchNodes(batch)) {
                 remoteNodes.emplace(node.getId(), node.getLocation());

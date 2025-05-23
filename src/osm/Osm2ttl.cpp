@@ -58,7 +58,9 @@ void olu::osm::Osm2ttl::convert() const {
                    "--" + osm2rdf::config::constants::OUTPUT_COMPRESS_OPTION_LONG,
                    "none",
                    "--" + osm2rdf::config::constants::OGC_GEO_TRIPLES_OPTION_LONG,
-                   "none"
+                   "none",
+                    "--" + osm2rdf::config::constants::WKT_PRECISION_OPTION_LONG,
+                   std::to_string(_config.wktPrecision),
                    };
 
     if (_config.noBlankNodes) {

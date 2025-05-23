@@ -21,11 +21,9 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <config/Config.h>
 
 #include "spatialjoin/WKTParse.h"
-
-/// The maximum number of decimals for the location in a node
-static inline constexpr int MAX_NODE_LOC_PRECISION = 7;
 
 // _________________________________________________________________________________________________
 olu::osm::Node::Node(const id_t id, const osmium::Location& location) {
@@ -51,7 +49,7 @@ olu::osm::Node::Node(const id_t id, const wktPoint_t& locationAsWkt) {
 // _________________________________________________________________________________________________
 std::string olu::osm::Node::getXml() const {
     std::ostringstream oss;
-    oss.precision(MAX_NODE_LOC_PRECISION);
+    oss.precision(config::Config::DEFAULT_WKT_PRECISION);
     oss << std::fixed << "<node id=\"" << this->getId() << "\" lat=\"" << this->loc.lat()
         << "\" lon=\"" << this->loc.lon() << "\"/>";
 
