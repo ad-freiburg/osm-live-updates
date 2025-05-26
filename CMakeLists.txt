@@ -67,7 +67,7 @@ find_program(
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
-find_package(Boost REQUIRED serialization iostreams regex)
+find_package(Boost 1.81 REQUIRED serialization iostreams regex url)
 mark_as_advanced(CLEAR BOOST_ROOT)
 
 if(Boost_FOUND)

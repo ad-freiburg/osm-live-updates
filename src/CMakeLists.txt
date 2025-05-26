@@ -36,6 +36,7 @@ target_link_libraries(olu_library PRIVATE
         Boost::serialization
         Boost::iostreams
         Boost::regex
+        Boost::url
         Threads::Threads
         ${ZLIB_LIBRARIES}
         ${CURL_LIBRARIES}

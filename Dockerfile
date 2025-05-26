@@ -38,10 +38,10 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     clang-tidy \
     cppcheck \
     g++ \
-    libboost-dev \
-    libboost-serialization-dev \
-    libboost-regex-dev \
-    libboost-iostreams-dev \
+    libboost-serialization1.83-dev \
+    libboost-regex1.83-dev \
+    libboost-iostreams1.83-dev \
+    libboost-url1.83-dev \
     libexpat1-dev \
     libbz2-dev \
     zlib1g-dev \
