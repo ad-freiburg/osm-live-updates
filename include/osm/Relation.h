@@ -19,11 +19,13 @@
 #ifndef RELATION_H
 #define RELATION_H
 
-#include "util/Types.h"
-
 #include <string>
 #include <utility>
 #include <vector>
+
+#include "osm/RelationMember.h"
+#include "util/Types.h"
+
 
 namespace olu::osm {
     class Relation {
@@ -39,9 +41,16 @@ namespace olu::osm {
         void addTag(const std::string& key, const std::string& value);
 
         /**
-         * Returns an osm xml relation with an id and members.
+         * Returns true if the two lists of relation members are equal.
+         * This is the case if the members in both lists are exactly the same and in the same order
+         */
+        static bool areRelMemberEqual(std::vector<RelationMember>,
+                                      std::vector<RelationMember> member2);
+
+        /**
+         * Returns an osm XML relation with an id and members.
          *
-         * @example For relationId: `1` and members: `{
+         * For relationId: `1` and members: `{
          * ("https://www.openstreetmap.org/node/1", "amin_centre"),
          * ("https://www.openstreetmap.org/way/1", "outer"),
          * ("https://www.openstreetmap.org/relation/1", "inner")}` the
@@ -53,7 +62,7 @@ namespace olu::osm {
          */
         [[nodiscard]] std::string getXml() const;
 
-        rel_members_t getMembers() { return members; }
+        std::vector<RelationMember> getMembers() { return members; }
         [[nodiscard]] id_t getId() const { return id; }
         std::vector<key_value_t> getTags() { return tags; }
         std::string getTimestamp() { return timestamp; }
@@ -65,7 +74,7 @@ namespace olu::osm {
         version_t version = 0;
         changeset_id_t changeset_id = 0;
         std::string type;
-        rel_members_t members;
+        std::vector<RelationMember> members;
         std::vector<key_value_t> tags;
     };
 

@@ -17,11 +17,13 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "osm/ReferencesHandler.h"
-#include "util/BatchHelper.h"
 
 #include "osm2rdf/osm/Relation.h"
 #include "osmium/osm/way.hpp"
 
+#include "util/BatchHelper.h"
+
+// _________________________________________________________________________________________________
 void olu::osm::ReferencesHandler::way(const osmium::Way &way) {
     for (const auto& node : way.nodes()) {
         if (!_nodeHandler.nodeInChangeFile(node.ref())) {
@@ -30,6 +32,7 @@ void olu::osm::ReferencesHandler::way(const osmium::Way &way) {
     }
 }
 
+// _________________________________________________________________________________________________
 void olu::osm::ReferencesHandler::relation(const osmium::Relation& relation) {
     for (const auto& member : relation.members()) {
         switch (member.type()) {
@@ -57,11 +60,12 @@ void olu::osm::ReferencesHandler::relation(const osmium::Relation& relation) {
     }
 }
 
+// _________________________________________________________________________________________________
 void olu::osm::ReferencesHandler::getReferencesForRelations(const std::set<id_t> &relationIds) {
     if (!relationIds.empty()) {
         util::BatchHelper::doInBatches(
                 relationIds,
-                _config.maxValuesPerQuery,
+                _config.batchSize,
                 [this](const std::set<id_t>& batch) {
                 auto [nodeIds, wayIds] = _odf.fetchRelationMembers(batch);
                 for (const auto &wayId: wayIds) {
@@ -74,11 +78,12 @@ void olu::osm::ReferencesHandler::getReferencesForRelations(const std::set<id_t>
     }
 }
 
+// _________________________________________________________________________________________________
 void olu::osm::ReferencesHandler::getReferencesForWays(const std::set<id_t> &wayIds) {
     if (!wayIds.empty()) {
         util::BatchHelper::doInBatches(
         wayIds,
-        _config.maxValuesPerQuery,
+        _config.batchSize,
         [this](const std::set<id_t>& batch) {
             for (const auto &nodeId: _odf.fetchWaysMembers(batch)) {
                 _referencedNodes.insert(nodeId);

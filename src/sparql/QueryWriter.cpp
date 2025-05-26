@@ -17,16 +17,18 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "sparql/QueryWriter.h"
-#include "config/Constants.h"
 
 #include <string>
 #include <vector>
 #include <sstream>
 
+#include "config/Constants.h"
+
 namespace cnst = olu::config::constants;
 
 // _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeInsertQuery(const std::vector<std::string>& triples) const {
+std::string
+olu::sparql::QueryWriter::writeInsertQuery(const std::vector<std::string>& triples) const {
     std::ostringstream tripleClause;
     for (const auto & element : triples) {
         tripleClause << element;
@@ -43,7 +45,8 @@ std::string olu::sparql::QueryWriter::writeInsertQuery(const std::vector<std::st
 
 // _________________________________________________________________________________________________
 std::string
-olu::sparql::QueryWriter::writeDeleteQuery(const std::set<id_t> &ids, const std::string &osmTag) const {
+olu::sparql::QueryWriter::writeDeleteQuery(const std::set<id_t> &ids,
+                                           const std::string &osmTag) const {
     std::string optionalPredicates;
     if (osmTag == cnst::NAMESPACE_OSM_NODE) {
         optionalPredicates = "VALUES ?pred { "+ cnst::PREFIXED_GEO_AS_WKT +" }";
@@ -207,26 +210,26 @@ std::string olu::sparql::QueryWriter::writeQueryForRelsMembers(const std::set<id
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeQueryForReferencedNodes(const std::set<id_t> &wayIds) const {
     std::ostringstream oss;
-    oss << "SELECT ?node ";
+    oss << "SELECT " + cnst::QUERY_VAR_NODE + " ";
     oss << getFromClauseOptional();
     oss << "WHERE { ";
     oss << getValuesClause(cnst::NAMESPACE_OSM_WAY, wayIds);
     oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_WAY_MEMBER, cnst::QUERY_VAR_MEMBER);
-    oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_WAY_MEMBER_ID, "?node");
-    oss << "} GROUP BY ?node";
+    oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_WAY_MEMBER_ID, cnst::QUERY_VAR_NODE);
+    oss << "} GROUP BY " + cnst::QUERY_VAR_NODE;
     return oss.str();
 }
 
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeQueryForRelationMemberIds(const std::set<id_t> &relIds) const {
     std::ostringstream oss;
-    oss << "SELECT ?p ";
+    oss << "SELECT " + cnst::QUERY_VAR_MEMBER + " ";
     oss << getFromClauseOptional();
     oss << "WHERE { ";
     oss << getValuesClause(cnst::NAMESPACE_OSM_REL, relIds);
     oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_REL_MEMBER, "?o");
-    oss << getTripleClause("?o", cnst::PREFIXED_REL_MEMBER_ID, "?p");
-    oss << "} GROUP BY ?p";
+    oss << getTripleClause("?o", cnst::PREFIXED_REL_MEMBER_ID, cnst::QUERY_VAR_MEMBER);
+    oss << "} GROUP BY " + cnst::QUERY_VAR_MEMBER;
     return oss.str();
 }
 
@@ -234,13 +237,13 @@ std::string olu::sparql::QueryWriter::writeQueryForRelationMemberIds(const std::
 std::string
 olu::sparql::QueryWriter::writeQueryForWaysReferencingNodes(const std::set<id_t> &nodeIds) const {
     std::ostringstream oss;
-    oss << "SELECT ?way ";
+    oss << "SELECT ?way " + cnst::QUERY_VAR_WAY + " ";
     oss << getFromClauseOptional();
     oss << "WHERE { ";
     oss << getValuesClause(cnst::NAMESPACE_OSM_NODE, nodeIds);
     oss << getTripleClause("?s", cnst::PREFIXED_WAY_MEMBER_ID, cnst::QUERY_VAR_VAL);
-    oss << getTripleClause("?way", cnst::PREFIXED_WAY_MEMBER, "?s");
-    oss << "} GROUP BY ?way";
+    oss << getTripleClause(cnst::QUERY_VAR_WAY, cnst::PREFIXED_WAY_MEMBER, "?s");
+    oss << "} GROUP BY " + cnst::QUERY_VAR_WAY;
     return oss.str();
 }
 
@@ -248,13 +251,13 @@ olu::sparql::QueryWriter::writeQueryForWaysReferencingNodes(const std::set<id_t>
 std::string
 olu::sparql::QueryWriter::writeQueryForRelationsReferencingNodes(const std::set<id_t> &nodeIds) const {
     std::ostringstream oss;
-    oss << "SELECT ?s ";
+    oss << "SELECT " + cnst::QUERY_VAR_REL + " ";
     oss << getFromClauseOptional();
     oss << "WHERE { ";
     oss << getValuesClause(cnst::NAMESPACE_OSM_NODE, nodeIds);
-    oss << getTripleClause("?s", cnst::PREFIXED_REL_MEMBER, "?o");
+    oss << getTripleClause(cnst::QUERY_VAR_REL, cnst::PREFIXED_REL_MEMBER, "?o");
     oss << getTripleClause("?o", cnst::PREFIXED_REL_MEMBER_ID, cnst::QUERY_VAR_VAL);
-    oss << "} GROUP BY ?s";
+    oss << "} GROUP BY " + cnst::QUERY_VAR_REL;
     return oss.str();
 }
 
@@ -262,13 +265,13 @@ olu::sparql::QueryWriter::writeQueryForRelationsReferencingNodes(const std::set<
 std::string
 olu::sparql::QueryWriter::writeQueryForRelationsReferencingWays(const std::set<id_t> &wayIds) const {
     std::ostringstream oss;
-    oss << "SELECT ?s ";
+    oss << "SELECT " + cnst::QUERY_VAR_REL + " ";
     oss << getFromClauseOptional();
     oss << "WHERE { ";
     oss << getValuesClause(cnst::NAMESPACE_OSM_WAY, wayIds);
-    oss << getTripleClause("?s", cnst::PREFIXED_REL_MEMBER, "?o");
+    oss << getTripleClause(cnst::QUERY_VAR_REL, cnst::PREFIXED_REL_MEMBER, "?o");
     oss << getTripleClause("?o", cnst::PREFIXED_REL_MEMBER_ID, cnst::QUERY_VAR_VAL);
-    oss << "} GROUP BY ?s";
+    oss << "} GROUP BY  " + cnst::QUERY_VAR_REL;
     return oss.str();
 }
 
@@ -307,15 +310,18 @@ std::string olu::sparql::QueryWriter::writeQueryForTagsAndMetaInfo(const std::st
     return oss.str();
 }
 
+// _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::getFromClauseOptional() const {
     return  _config.graphUri.empty() ? "" : "FROM <" +_config.graphUri + "> ";
 }
 
+// _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::getValuesClause(const std::string &osmTag,
                                                       const std::set<id_t> &objectIds) {
     return getValuesClause(osmTag, ":", objectIds);
 }
 
+// _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::getValuesClause(const std::string &osmTag,
                                                       const std::string &delimiter,
                                                       const std::set<id_t> &objectIds) {
@@ -332,18 +338,22 @@ std::string olu::sparql::QueryWriter::getValuesClause(const std::string &osmTag,
     return  oss.str();
 }
 
+// _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::wrapWithGraphOptional(const std::string& clause) const {
     return _config.graphUri.empty() ? clause : "GRAPH <" + _config.graphUri + "> { " + clause + " } ";
 }
 
+// _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::wrapWithUnion(const std::string& clause) {
     return "UNION { " + clause + " } ";
 }
 
+// _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::wrapWithOptional(const std::string& clause) {
     return "OPTIONAL { " + clause + " } ";
 }
 
+// _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::getTripleClause(const std::string& subject,
                                                       const std::string& predicate,
                                                       const std::string& object) {

@@ -21,8 +21,9 @@
 
 #include "string"
 
-#include "util/Types.h"
 #include "osmium/osm/location.hpp"
+
+#include "util/Types.h"
 
 namespace olu::osm {
 
@@ -32,9 +33,9 @@ namespace olu::osm {
         explicit Node(id_t id, const osmium::Location& location);
 
         /**
-         * Returns the node as a XML osm object.
+         * Returns the node as an XML osm object.
          *
-         * @example For a node with id: `1` and location: `POINT(13.5690032 42.7957187)` the function
+         * For a node with id: `1` and location: `POINT(13.5690032 42.7957187)` the function
          * would return: `<node id="1" lat="42.7957187" lon="13.5690032"/>`
          */
         [[nodiscard]] std::string getXml() const;

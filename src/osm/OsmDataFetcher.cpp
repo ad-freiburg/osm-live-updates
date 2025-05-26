@@ -17,156 +17,134 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "osm/OsmDataFetcher.h"
-#include "config/Constants.h"
-#include "util/OsmObjectHelper.h"
-#include "util/XmlReader.h"
-#include "sparql/QueryWriter.h"
 
 #include <vector>
-#include <boost/regex.hpp>
-#include <boost/property_tree/ptree.hpp>
 #include <iostream>
 #include <fstream>
+#include <map>
+#include <strstream>
+#include <spanstream>
+
+#include "simdjson.h"
+
+#include "config/Constants.h"
+#include "osm/OsmObjectHelper.h"
+#include "osm/RelationMember.h"
+#include "sparql/QueryWriter.h"
+#include "util/Types.h"
 
 namespace cnst = olu::config::constants;
+
+// _________________________________________________________________________________________________
+simdjson::padded_string
+olu::osm::OsmDataFetcher::OsmDataFetcher::runQuery(const std::string &query,
+                                                   const std::vector<std::string> &prefixes) {
+    _sparqlWrapper.setQuery(query);
+    _sparqlWrapper.setPrefixes(prefixes);
+    return {_sparqlWrapper.runQuery()};
+}
+
+// _________________________________________________________________________________________________
+std::vector<olu::osm::Node>
+olu::osm::OsmDataFetcher::OsmDataFetcher::fetchNodes(const std::set<id_t> &nodeIds) {
+    const auto response = runQuery(
+        _queryWriter.writeQueryForNodeLocations(nodeIds),
+        cnst::PREFIXES_FOR_NODE_LOCATION);
+
+    std::vector<Node> nodes;
+    nodes.reserve(nodeIds.size());
+
+    for (auto doc = _parser.iterate(response); auto binding : getBindings(doc)) {
+        auto nodeUri = getValue<std::string_view>(binding[cnst::NAME_VALUE]);
+        auto nodeLocationAsWkt = getValue<std::string_view>(binding[cnst::NAME_LOCATION]);
+        nodes.emplace_back(OsmObjectHelper::parseIdFromUri(nodeUri), wktPoint_t(nodeLocationAsWkt));
+    }
+
+    if (nodes.size() > nodeIds.size()) {
+        std::cerr << "The SPARQL endpoint returned " << std::to_string(nodes.size())
+                  << " locations, for " << std::to_string(nodeIds.size())
+                  << " nodes." << std::endl;
+        throw OsmDataFetcherException("Exception while trying to fetch nodes locations");
+    }
+
+    return nodes;
+}
+
+// _________________________________________________________________________________________________
+std::string olu::osm::OsmDataFetcher::OsmDataFetcher::fetchLatestTimestampOfAnyNode() {
+    const auto response = runQuery(
+        _queryWriter.writeQueryForLatestNodeTimestamp(),
+        cnst::PREFIXES_FOR_LATEST_NODE_TIMESTAMP);
+
+    std::string timestamp;
+    const auto error = _parser.iterate(response).at_path(
+        "$.results.bindings[0].timestamp.value").get_string(timestamp);
+    if (error || timestamp.empty()) {
+        std::cerr << "JSON error: " << error << std::endl;
+        throw OsmDataFetcherException("Could not parse latest timestamp of any node from "
+                                      "sparql endpoint");
+    }
+
+    return timestamp;
+}
+
 namespace olu::osm {
-    // _____________________________________________________________________________________________
-    boost::property_tree::ptree OsmDataFetcher::runQuery(
-        const std::string &query,
-        const std::vector<std::string> &prefixes) {
-
-        _sparqlWrapper.setQuery(query);
-        _sparqlWrapper.setPrefixes(prefixes);
-        return _sparqlWrapper.runQuery();
-    }
-
-    // _____________________________________________________________________________________________
-    std::vector<Node>
-    OsmDataFetcher::fetchNodes(const std::set<id_t> &nodeIds) {
-        auto response = runQuery(
-            _queryWriter.writeQueryForNodeLocations(nodeIds),
-            cnst::PREFIXES_FOR_NODE_LOCATION);
-
-        std::vector<Node> nodes;
-        for (const auto &result : response.get_child(cnst::XML_PATH_SPARQL_RESULTS)) {
-            id_t id;
-            std::string locationAsWkt;
-            for (const auto &binding : result.second.get_child("")) {
-                auto name = util::XmlReader::readAttribute<std::string>(cnst::XML_PATH_ATTR_NAME,
-                                                                        binding.second);
-                if (name == cnst::NAME_VALUE) {
-                    auto uri = binding.second.get<std::string>(cnst::XML_TAG_URI);
-                    id = OsmObjectHelper::getIdFromUri(uri);
-                }
-
-                if (name == cnst::NAME_LOCATION) {
-                    locationAsWkt = binding.second.get<std::string>(cnst::XML_TAG_LITERAL);
-                }
-            }
-
-            nodes.emplace_back( id, locationAsWkt );
-        }
-
-        if (nodes.size() > nodeIds.size()) {
-            std::cout
-                << "The SPARQL endpoint returned " << std::to_string(nodes.size())
-                << " locations, for " << std::to_string(nodeIds.size())
-                << " nodes." << std::endl;
-            throw OsmDataFetcherException("Exception while trying to fetch nodes locations");
-        }
-
-        return nodes;
-    }
-
-    // _____________________________________________________________________________________________
-    std::string OsmDataFetcher::fetchLatestTimestampOfAnyNode() {
-        const auto response = runQuery(
-            _queryWriter.writeQueryForLatestNodeTimestamp(),
-            cnst::PREFIXES_FOR_LATEST_NODE_TIMESTAMP);
-
-        std::string timestamp;
-        try {
-            timestamp = response.get<std::string>("sparql.results.result.binding.literal");
-        } catch (std::exception &e) {
-            std::cerr << e.what() << std::endl;
-            throw OsmDataFetcherException(
-                    "Could not fetch latest timestamp of any node from sparql endpoint");
-        }
-
-        return timestamp;
-    }
-
     // _____________________________________________________________________________________________
     std::vector<Relation>
     OsmDataFetcher::fetchRelations(const std::set<id_t> &relationIds) {
-        auto response = runQuery(
+        const auto response = runQuery(
             _queryWriter.writeQueryForRelations(relationIds),
             cnst::PREFIXES_FOR_RELATION_MEMBERS);
 
         std::vector<Relation> relations;
-        for (const auto &result : response.get_child(cnst::XML_PATH_SPARQL_RESULTS)) {
-            id_t relationId;
-            std::string type;
-            std::string memberUris;
-            std::string memberRoles;
-            std::string memberPositions;
-            for (const auto &binding : result.second.get_child("")) {
-                auto name = util::XmlReader::readAttribute<std::string>(cnst::XML_PATH_ATTR_NAME,
-                                                                        binding.second);
-                if (name == cnst::NAME_VALUE) {
-                    auto relUri = binding.second.get<std::string>(cnst::XML_TAG_URI);
-                    relationId = OsmObjectHelper::getIdFromUri(relUri);
-                }
+        relations.reserve(relationIds.size());
 
-                if (name == cnst::NAME_TYPE) {
-                    type = binding.second.get<std::string>(cnst::XML_TAG_LITERAL);
-                }
+        for (auto doc = _parser.iterate(response); auto binding : getBindings(doc)) {
 
-                if (name == cnst::NAME_MEMBER_IDS) {
-                    memberUris = binding.second.get<std::string>(cnst::XML_TAG_LITERAL);
-                }
-
-                if (name == cnst::NAME_MEMBER_ROLES) {
-                    memberRoles = binding.second.get<std::string>(cnst::XML_TAG_LITERAL);
-                }
-
-                if (name == cnst::NAME_MEMBER_POSS) {
-                    memberPositions = binding.second.get<std::string>(cnst::XML_TAG_LITERAL);
-                }
-            }
-
+            // Set id and type of the relation
+            auto relationUri = getValue<std::string_view>(binding[cnst::NAME_VALUE]);
+            auto relationId = OsmObjectHelper::parseIdFromUri(relationUri);
             Relation relation(relationId);
-            relation.setType(type);
 
-            std::stringstream uriStream(memberUris);
-            std::stringstream rolesStream(memberRoles);
-            std::stringstream posStream(memberPositions);
+            auto relationType = getValue<std::string>(binding[cnst::NAME_TYPE]);
+            relation.setType(relationType);
 
-            std::string uri;
-            std::string role;
-            std::string position;
+            // Extract members for the relation
+            auto memberUriList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_IDS]);
+            std::ispanstream uriStream(memberUriList);
+            auto memberRolesList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_ROLES]);
+            std::ispanstream rolesStream(memberRolesList);
+            auto memberPosList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_POSS]);
+            std::ispanstream posStream(memberPosList);
+
+            std::string memberUri;
+            std::string memberRole;
+            std::string memberPositionString;
             std::map<int, RelationMember> members;
-            while (std::getline(uriStream, uri, ';')) {
-                if (uri.empty()) { continue; }
-
-                std::getline(rolesStream, role, ';');
-                std::getline(posStream, position, ';');
-                id_t id = OsmObjectHelper::getIdFromUri(uri);
-
-                std::string osmTag;
-                if (uri.starts_with(cnst::NAMESPACE_IRI_OSM_NODE)) {
-                    osmTag = cnst::XML_TAG_NODE;
-                } else if (uri.starts_with(cnst::NAMESPACE_IRI_OSM_WAY)) {
-                    osmTag = cnst::XML_TAG_WAY;
-                } else if (uri.starts_with(cnst::NAMESPACE_IRI_OSM_REL)) {
-                    osmTag = cnst::XML_TAG_REL;
+            while (std::getline(uriStream, memberUri, ';')) {
+                if (memberUri.empty()) {
+                    throw OsmDataFetcherException("Cannot parse member uri");
                 }
-                members.emplace(std::stoi(position), RelationMember(id, osmTag, role));
+
+                std::getline(rolesStream, memberRole, ';');
+                std::getline(posStream, memberPositionString, ';');
+
+                int memberPosition;
+                try {
+                    memberPosition = std::stoi(memberPositionString);
+                } catch (std::exception &e) {
+                    std::cerr << e.what() << std::endl;
+                    const std::string msg = "Cannot parse member position: " + memberPositionString;
+                    throw OsmDataFetcherException(msg.c_str());
+                }
+
+                members.emplace(memberPosition, RelationMember(memberUri, memberRole));
             }
 
-            for (auto [pos, member] : members) {
+            for (const auto &member : members | std::views::values) {
                 relation.addMember(member);
             }
+
             relations.emplace_back(relation);
         }
 
@@ -180,46 +158,32 @@ namespace olu::osm {
             cnst::PREFIXES_FOR_WAY_MEMBERS);
 
         std::vector<Way> ways;
-        for (const auto &result : response.get_child(cnst::XML_PATH_SPARQL_RESULTS)) {
-            id_t wayId;
-            std::string nodeUris;
-            std::string nodePositions;
-            for (const auto &binding : result.second.get_child("")) {
-                auto name = util::XmlReader::readAttribute<std::string>(cnst::XML_PATH_ATTR_NAME,
-                                                                        binding.second);
-                if (name == cnst::NAME_VALUE) {
-                    auto wayUri = binding.second.get<std::string>(cnst::XML_TAG_URI);
-                    wayId = OsmObjectHelper::getIdFromUri(wayUri);
-                }
+        ways.reserve(wayIds.size());
 
-                if (name == cnst::NAME_MEMBER_IDS) {
-                    nodeUris = binding.second.get<std::string>(cnst::XML_TAG_LITERAL);
-                }
+        for (auto doc = _parser.iterate(response); auto binding : getBindings(doc)) {
+            auto wayUri = getValue<std::string_view>(binding[cnst::NAME_VALUE]);
+            Way way(OsmObjectHelper::parseIdFromUri(wayUri));
 
-                if (name == cnst::NAME_MEMBER_POSS) {
-                    nodePositions = binding.second.get<std::string>(cnst::XML_TAG_LITERAL);
-                }
-            }
-
-            Way way(wayId);
-
-            std::stringstream uriStream(nodeUris);
-            std::stringstream posStream(nodePositions);
+            std::ispanstream uriStream(
+                getValue<std::string_view>(binding[cnst::NAME_MEMBER_IDS]));
+            std::ispanstream posStream(
+                getValue<std::string_view>(binding[cnst::NAME_MEMBER_POSS]));
 
             std::string uri;
             std::string position;
-            std::map<int, id_t> nodes;
+            std::map<int, id_t> members;
             while (std::getline(uriStream, uri, ';')) {
                 if (uri.empty()) { continue; }
 
                 std::getline(posStream, position, ';');
-                id_t id = OsmObjectHelper::getIdFromUri(uri);
-                nodes.emplace(std::stoi(position), id);
+                id_t memberId = OsmObjectHelper::parseIdFromUri(uri);
+                members.emplace(std::stoi(position), memberId);
             }
 
-            for (auto [pos, nodeId] : nodes) {
-                way.addMember(nodeId);
+            for (const auto &member : members | std::views::values) {
+                way.addMember(member);
             }
+
             ways.emplace_back(way);
         }
 
@@ -230,44 +194,25 @@ namespace olu::osm {
     void OsmDataFetcher::fetchWayInfos(Way &way) {
         const std::string subject = cnst::MakePrefixedName(cnst::NAMESPACE_OSM_WAY,
                                                            std::to_string(way.getId()));
-        auto response = runQuery(
+        const auto response = runQuery(
             _queryWriter.writeQueryForTagsAndMetaInfo(subject),
             cnst::PREFIXES_FOR_WAY_TAGS_AND_META_INFO);
 
-        for (const auto &result : response.get_child(cnst::XML_PATH_SPARQL_RESULTS)) {
-            std::string key; std::string value;
-            for (const auto &binding : result.second.get_child("")) {
-                auto name = util::XmlReader::readAttribute<std::string>(cnst::XML_PATH_ATTR_NAME,
-                                                                        binding.second);
-                if (name == cnst::NAME_TIMESTAMP) {
-                    way.setTimestamp(binding.second.get<std::string>(cnst::XML_TAG_LITERAL));
-                    continue;
-                }
-
-                if (name == cnst::NAME_VERSION) {
-                    auto version = binding.second.get<version_t>(cnst::XML_TAG_LITERAL);
-                    way.setVersion(version);
-                    continue;
-                }
-
-                if (name == cnst::NAME_CHANGESET) {
-                    auto changeset = binding.second.get<changeset_id_t>(cnst::XML_TAG_LITERAL);
-                    way.setChangesetId(changeset);
-                    continue;
-                }
-
-                if (name == cnst::NAME_KEY) {
-                    auto uri = binding.second.get<std::string>(cnst::XML_TAG_URI);
-                    key = uri.substr(cnst::NAMESPACE_IRI_OSM_KEY.length());
-                }
-
-                if (name == cnst::NAME_VALUE) {
-                    value = binding.second.get<std::string>(cnst::XML_TAG_LITERAL);
-                }
-            }
-
-            if (!key.empty()) {
+        for (auto doc = _parser.iterate(response); auto binding: getBindings(doc)) {
+            if (binding[cnst::NAME_KEY].error() == simdjson::SUCCESS) {
+                auto key = getValue<std::string>(binding[cnst::NAME_KEY]);
+                auto value = getValue<std::string>(binding[cnst::NAME_VALUE]);
                 way.addTag(key, value);
+            } else if (binding[cnst::NAME_TIMESTAMP].error() == simdjson::SUCCESS) {
+                way.setTimestamp(getValue<std::string>(binding[cnst::NAME_TIMESTAMP]));
+            } else if (binding[cnst::NAME_VERSION].error() == simdjson::SUCCESS) {
+                way.setVersion(getValue<int>(binding[cnst::NAME_VERSION]));
+            } else if (binding[cnst::NAME_CHANGESET].error() == simdjson::SUCCESS) {
+                way.setChangesetId(getValue<int>(binding[cnst::NAME_CHANGESET]));
+            } else {
+                const std::string msg = "Cannot parse way info: "
+                                        + std::string(binding.raw_json().value());
+                throw OsmDataFetcherException(msg.c_str());
             }
         }
     }
@@ -276,60 +221,39 @@ namespace olu::osm {
     void OsmDataFetcher::fetchRelationInfos(Relation &relation) {
         const std::string subject = cnst::MakePrefixedName(cnst::NAMESPACE_OSM_REL,
                                                            std::to_string(relation.getId()));
-        auto response = runQuery(
+        const auto response = runQuery(
             _queryWriter.writeQueryForTagsAndMetaInfo(subject),
             cnst::PREFIXES_FOR_RELATION_TAGS_AND_META_INFO);
 
-        for (const auto &result : response.get_child(cnst::XML_PATH_SPARQL_RESULTS)) {
-            std::string key; std::string value;
-            for (const auto &binding : result.second.get_child("")) {
-                auto name = util::XmlReader::readAttribute<std::string>(cnst::XML_PATH_ATTR_NAME,
-                                                                        binding.second);
-
-                if (name == cnst::NAME_TIMESTAMP) {
-                    relation.setTimestamp(binding.second.get<std::string>(cnst::XML_TAG_LITERAL));
-                    continue;
-                }
-
-                if (name == cnst::NAME_VERSION) {
-                    auto version = binding.second.get<version_t>(cnst::XML_TAG_LITERAL);
-                    relation.setVersion(version);
-                    continue;
-                }
-
-                if (name == cnst::NAME_CHANGESET) {
-                    auto changesetString = binding.second.get<changeset_id_t>(cnst::XML_TAG_LITERAL);
-                    relation.setChangesetId(changesetString);
-                    continue;
-                }
-
-                if (name == cnst::NAME_KEY) {
-                    auto uri = binding.second.get<std::string>(cnst::XML_TAG_URI);
-                    key = uri.substr(cnst::NAMESPACE_IRI_OSM_KEY.length());
-                }
-
-                if (name == cnst::NAME_VALUE) {
-                    value = binding.second.get<std::string>(cnst::XML_TAG_LITERAL);
-                }
-            }
-
-            // Type of relation is already fetched in an earlier step
-            if (!key.empty() && key != cnst::NAME_TYPE) {
+        for (auto doc = _parser.iterate(response); auto binding: getBindings(doc)) {
+            if (binding[cnst::NAME_KEY].error() == simdjson::SUCCESS) {
+                auto key = getValue<std::string>(binding[cnst::NAME_KEY]);
+                auto value = getValue<std::string>(binding[cnst::NAME_VALUE]);
                 relation.addTag(key, value);
+            } else if (binding[cnst::NAME_TIMESTAMP].error() == simdjson::SUCCESS) {
+                relation.setTimestamp(getValue<std::string>(binding[cnst::NAME_TIMESTAMP]));
+            } else if (binding[cnst::NAME_VERSION].error() == simdjson::SUCCESS) {
+                relation.setVersion(getValue<int>(binding[cnst::NAME_VERSION]));
+            } else if (binding[cnst::NAME_CHANGESET].error() == simdjson::SUCCESS) {
+                relation.setChangesetId(getValue<int>(binding[cnst::NAME_CHANGESET]));
+            } else {
+                const std::string msg = "Cannot parse way info: "
+                                        + std::string(binding.raw_json().value());
+                throw OsmDataFetcherException(msg.c_str());
             }
         }
     }
 
     // _____________________________________________________________________________________________
     std::vector<id_t> OsmDataFetcher::fetchWaysMembers(const std::set<id_t> &wayIds) {
-        auto response = runQuery(
+        const auto response = runQuery(
             _queryWriter.writeQueryForReferencedNodes(wayIds),
             cnst::PREFIXES_FOR_WAY_MEMBERS);
 
         std::vector<id_t> nodeIds;
-        for (const auto &result : response.get_child(cnst::XML_PATH_SPARQL_RESULTS)) {
-            auto memberUri = result.second.get<std::string>(cnst::XML_PATH_BINDING_URI);
-            nodeIds.emplace_back(OsmObjectHelper::getIdFromUri(memberUri));
+        for (auto doc = _parser.iterate(response); auto binding : getBindings(doc)) {
+            auto nodeUri = getValue<std::string_view>(binding[cnst::NAME_NODE]);
+            nodeIds.emplace_back(OsmObjectHelper::parseIdFromUri(nodeUri));
         }
 
         return nodeIds;
@@ -338,34 +262,31 @@ namespace olu::osm {
     // _____________________________________________________________________________________________
     std::vector<std::pair<id_t, member_ids_t>>
     OsmDataFetcher::fetchWaysMembersSorted(const std::set<id_t> &wayIds) {
-        auto response = runQuery(
+        const auto response = runQuery(
             _queryWriter.writeQueryForWaysMembers(wayIds),
             cnst::PREFIXES_FOR_WAY_MEMBERS);
 
         std::vector<std::pair<id_t, member_ids_t>> waysWithMembers;
-        for (const auto &result : response.get_child(cnst::XML_PATH_SPARQL_RESULTS)) {
-            id_t wayId = 0;
-            member_ids_t memberIds;
-            std::vector<int32_t> memberPositions;
-            for (const auto &binding : result.second.get_child("")) {
-                auto name = util::XmlReader::readAttribute<std::string>(cnst::XML_PATH_ATTR_NAME,
-                                                                        binding.second);
-                if (name == cnst::NAME_VALUE) {
-                    auto wayUri = binding.second.get<std::string>(cnst::XML_TAG_URI);
-                    wayId = OsmObjectHelper::getIdFromUri(wayUri);
-                }
+        waysWithMembers.reserve(wayIds.size());
 
-                if (name == cnst::NAME_MEMBER_IDS) {
-                    auto memberUris = binding.second.get<std::string>(cnst::XML_TAG_LITERAL);
-                    memberIds = extractMembers(memberUris);
-                }
+        for (auto doc = _parser.iterate(response); auto binding : getBindings(doc)) {
+            auto wayUri = getValue<std::string_view>(binding[cnst::NAME_VALUE]);
+            id_t wayId = OsmObjectHelper::parseIdFromUri(wayUri);
 
-                if (name == cnst::NAME_MEMBER_POSS) {
-                    auto positions = binding.second.get<std::string>(cnst::XML_TAG_LITERAL);
-                    memberPositions = extractPositions(positions);
-                }
-            }
+            auto memberUriList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_IDS]);
+            member_ids_t memberIds = parseValueList<id_t>(memberUriList,
+                [](const std::string &uri) {
+                    return OsmObjectHelper::parseIdFromUri(uri);
+                });
 
+            auto memberPositionsList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_POSS]);
+            std::vector<int> memberPositions = parseValueList<int>(memberPositionsList,
+                [](const std::string &pos) {
+                    return stoi(pos);
+                });
+
+            // The list of members that the sparql endpoint returns is not necessarily sorted, so
+            // we have to sort them by their position
             std::vector<std::pair<int, int>> paired;
             for (size_t i = 0; i < memberIds.size(); ++i) {
                 paired.emplace_back(memberPositions[i], memberIds[i]);
@@ -384,42 +305,39 @@ namespace olu::osm {
     }
 
     // _____________________________________________________________________________________________
-    std::vector<std::pair<id_t, rel_members_t>>
+    std::vector<std::pair<id_t, std::vector<RelationMember>>>
     OsmDataFetcher::fetchRelsMembersSorted(const std::set<id_t> &relIds) {
-        auto response = runQuery(_queryWriter.writeQueryForRelsMembers(relIds),
+        const auto response = runQuery(_queryWriter.writeQueryForRelsMembers(relIds),
                                        cnst::PREFIXES_FOR_RELATION_MEMBERS);
 
-        std::vector<std::pair<id_t, rel_members_t>> relsWithMembers;
-        for (const auto &result : response.get_child(cnst::XML_PATH_SPARQL_RESULTS)) {
-            id_t relId = 0;
-            member_ids_t memberIds;
-            std::vector<std::string> memberTypes;
-            std::vector<int32_t> memberPositions;
-            std::vector<std::string> memberRoles;
-            for (const auto &binding : result.second.get_child("")) {
-                auto name = util::XmlReader::readAttribute<std::string>(cnst::XML_PATH_ATTR_NAME,
-                                                                        binding.second);
-                if (name == cnst::NAME_VALUE) {
-                    auto relUri = binding.second.get<std::string>(cnst::XML_TAG_URI);
-                    relId = OsmObjectHelper::getIdFromUri(relUri);
-                }
+        std::vector<std::pair<id_t, std::vector<RelationMember>>> relsWithMembers;
+        relsWithMembers.reserve(relIds.size());
 
-                if (name == cnst::NAME_MEMBER_IDS) {
-                    auto memberUris = binding.second.get<std::string>(cnst::XML_TAG_LITERAL);
-                    memberIds = extractMembers(memberUris);
-                    memberTypes = extractMemberTags(memberUris);
-                }
+        for (auto doc = _parser.iterate(response); auto binding : getBindings(doc)) {
+            auto relUri = getValue<std::string_view>(binding[cnst::NAME_VALUE]);
+            id_t relId = OsmObjectHelper::parseIdFromUri(relUri);
 
-                if (name == cnst::NAME_MEMBER_POSS) {
-                    auto positions = binding.second.get<std::string>(cnst::XML_TAG_LITERAL);
-                    memberPositions = extractPositions(positions);
-                }
+            auto memberUriList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_IDS]);
+            member_ids_t memberIds = parseValueList<id_t>(memberUriList,
+                [](const std::string &uri) {
+                    return OsmObjectHelper::parseIdFromUri(uri);
+                });
+            std::vector<OsmObjectType> memberTypes = parseValueList<OsmObjectType>(memberUriList,
+                [](const std::string &uri) {
+                    return OsmObjectHelper::parseOsmTypeFromUri(uri);
+                });
 
-                if (name == cnst::NAME_MEMBER_ROLES) {
-                    auto roles = binding.second.get<std::string>(cnst::XML_TAG_LITERAL);
-                    memberRoles = extractRoles(roles);
-                }
-            }
+            auto memberPositionsList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_POSS]);
+            std::vector<int> memberPositions = parseValueList<int>(memberPositionsList,
+                [](const std::string &pos) {
+                    return stoi(pos);
+                });
+
+            auto memberRolesList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_POSS]);
+            std::vector<std::string> memberRoles = parseValueList<std::string>(memberRolesList,
+                [](const std::string &pos) {
+                    return pos;
+                });
 
             std::vector<std::pair<int, RelationMember>> paired;
             for (size_t i = 0; i < memberIds.size(); ++i) {
@@ -432,8 +350,8 @@ namespace olu::osm {
                 return a.first < b.first;
             });
 
-            rel_members_t sortedMembers;
-            for (const auto& [pos, member] : paired) {
+            std::vector<RelationMember> sortedMembers;
+            for (const auto &member: paired | std::views::values) {
                 sortedMembers.push_back(member);
             }
 
@@ -446,20 +364,20 @@ namespace olu::osm {
     // _____________________________________________________________________________________________
     std::pair<std::vector<id_t>, std::vector<id_t>>
     OsmDataFetcher::fetchRelationMembers(const std::set<id_t> &relIds) {
-        auto response = runQuery(
+        const auto response = runQuery(
             _queryWriter.writeQueryForRelationMemberIds(relIds),
             cnst::PREFIXES_FOR_RELATION_MEMBERS);
 
         std::vector<id_t> nodeIds;
         std::vector<id_t> wayIds;
-        for (const auto &result : response.get_child(cnst::XML_PATH_SPARQL_RESULTS)) {
-            auto memberUri = result.second.get<std::string>(cnst::XML_PATH_BINDING_URI);
+        for (auto doc = _parser.iterate(response); auto binding : getBindings(doc)) {
+            auto memberUri = getValue<std::string_view>(binding[cnst::NAME_MEMBER]);
 
-            id_t id = OsmObjectHelper::getIdFromUri(memberUri);
+            id_t memberId = OsmObjectHelper::parseIdFromUri(memberUri);
             if (memberUri.starts_with(cnst::NAMESPACE_IRI_OSM_NODE)) {
-                nodeIds.emplace_back(id);
+                nodeIds.emplace_back(memberId);
             } else if (memberUri.starts_with(cnst::NAMESPACE_IRI_OSM_WAY)) {
-                wayIds.emplace_back(id);
+                wayIds.emplace_back(memberId);
             }
         }
 
@@ -468,14 +386,14 @@ namespace olu::osm {
 
     // _____________________________________________________________________________________________
     std::vector<id_t> OsmDataFetcher::fetchWaysReferencingNodes(const std::set<id_t> &nodeIds) {
-        auto response = runQuery(
+        const auto response = runQuery(
             _queryWriter.writeQueryForWaysReferencingNodes(nodeIds),
             cnst::PREFIXES_FOR_WAYS_REFERENCING_NODE);
 
         std::vector<id_t> memberSubjects;
-        for (const auto &result : response.get_child(cnst::XML_PATH_SPARQL_RESULTS)) {
-            auto memberUri = result.second.get<std::string>(cnst::XML_PATH_BINDING_URI);
-            memberSubjects.emplace_back(OsmObjectHelper::getIdFromUri(memberUri));
+        for (auto doc = _parser.iterate(response); auto binding : getBindings(doc)) {
+            auto memberUri = getValue<std::string_view>(binding[cnst::NAME_WAY]);
+            memberSubjects.emplace_back(OsmObjectHelper::parseIdFromUri(memberUri));
         }
 
         return memberSubjects;
@@ -484,15 +402,14 @@ namespace olu::osm {
     // _____________________________________________________________________________________________
     std::vector<id_t>
     OsmDataFetcher::fetchRelationsReferencingNodes(const std::set<id_t> &nodeIds) {
-        auto response = runQuery(
+        const auto response = runQuery(
             _queryWriter.writeQueryForRelationsReferencingNodes(nodeIds),
             cnst::PREFIXES_FOR_RELATIONS_REFERENCING_NODE);
 
         std::vector<id_t> relationIds;
-        for (const auto &result : response.get_child(
-                cnst::XML_PATH_SPARQL_RESULTS)) {
-            auto memberUri = result.second.get<std::string>(cnst::XML_PATH_BINDING_URI);
-            relationIds.emplace_back(OsmObjectHelper::getIdFromUri(memberUri));
+        for (auto doc = _parser.iterate(response); auto binding : getBindings(doc)) {
+            auto memberUri = getValue<std::string_view>(binding[cnst::NAME_REL]);
+            relationIds.emplace_back(OsmObjectHelper::parseIdFromUri(memberUri));
         }
 
         return relationIds;
@@ -500,14 +417,14 @@ namespace olu::osm {
 
     // _____________________________________________________________________________________________
     std::vector<id_t> OsmDataFetcher::fetchRelationsReferencingWays(const std::set<id_t> &wayIds) {
-        auto response = runQuery(
+        const auto response = runQuery(
             _queryWriter.writeQueryForRelationsReferencingWays(wayIds),
             cnst::PREFIXES_FOR_RELATIONS_REFERENCING_WAY);
 
         std::vector<id_t> relationIds;
-        for (const auto &result : response.get_child(cnst::XML_PATH_SPARQL_RESULTS)) {
-            auto uri = result.second.get<std::string>(cnst::XML_PATH_BINDING_URI);
-            relationIds.emplace_back(OsmObjectHelper::getIdFromUri(uri));
+        for (auto doc = _parser.iterate(response); auto binding : getBindings(doc)) {
+            auto memberUri = getValue<std::string_view>(binding[cnst::NAME_REL]);
+            relationIds.emplace_back(OsmObjectHelper::parseIdFromUri(memberUri));
         }
 
         return relationIds;
@@ -516,65 +433,62 @@ namespace olu::osm {
     // _____________________________________________________________________________________________
     std::vector<id_t>
     OsmDataFetcher::fetchRelationsReferencingRelations(const std::set<id_t> &relationIds) {
-        auto response = runQuery(
+        const auto response = runQuery(
             _queryWriter.writeQueryForRelationsReferencingRelations(relationIds),
             cnst::PREFIXES_FOR_RELATIONS_REFERENCING_RELATIONS);
 
         std::vector<id_t> refRelIds;
-        for (const auto &result : response.get_child(cnst::XML_PATH_SPARQL_RESULTS)) {
-            auto uri = result.second.get<std::string>(cnst::XML_PATH_BINDING_URI);
-            refRelIds.emplace_back(OsmObjectHelper::getIdFromUri(uri));
+        for (auto doc = _parser.iterate(response); auto binding : getBindings(doc)) {
+            auto memberUri = getValue<std::string_view>(binding[cnst::NAME_REL]);
+            refRelIds.emplace_back(OsmObjectHelper::parseIdFromUri(memberUri));
         }
 
         return refRelIds;
     }
+}
 
-    std::vector<int> OsmDataFetcher::extractPositions(const std::string& positions) {
-        std::vector<int> integers;
-        std::stringstream ss(positions);
-        std::string token;
+// _________________________________________________________________________________________________
+template <typename T> std::vector<T>
+olu::osm::OsmDataFetcher::parseValueList(const std::string_view &list,
+                                         const std::function<T(std::string)> function) {
+    std::vector<T> items;
+    std::ispanstream stream(list);
 
-        while (std::getline(ss, token, ';')) {
-            integers.push_back(std::stoi(token));
-        }
-
-        return integers;
+    std::string token;
+    while (std::getline(stream, token, ';')) {
+        items.push_back(function(token));
     }
 
-    std::vector<std::string> OsmDataFetcher::extractRoles(const std::string& positions) {
-        std::vector<std::string> roles;
-        std::stringstream ss(positions);
-        std::string token;
+    return items;
+}
 
-        while (std::getline(ss, token, ';')) {
-            roles.push_back(token);
+// _________________________________________________________________________________________________
+simdjson::simdjson_result<simdjson::westmere::ondemand::value>
+olu::osm::OsmDataFetcher::getBindings(
+    simdjson::simdjson_result<simdjson::ondemand::document> &doc) {
+    return doc[config::constants::KEY_RESULTS][config::constants::KEY_BINDINGS];
+}
+
+// _________________________________________________________________________________________________
+template <typename T> T
+olu::osm::OsmDataFetcher::getValue(
+    simdjson::simdjson_result<simdjson::westmere::ondemand::value> value) {
+    try {
+        if constexpr (std::is_same_v<T, std::string_view>) {
+            return value[config::constants::KEY_VALUE].get_string();
+        } else if constexpr (std::is_same_v<T, std::string>) {
+            return std::string(value[config::constants::KEY_VALUE].get_string().value());
+        } else if constexpr (std::is_same_v<T, int>) {
+            const auto intString = std::string(
+                value[config::constants::KEY_VALUE].get_string().value());
+            return std::stoi(intString);
         }
-
-        return roles;
+    } catch (std::exception &e) {
+        std::cerr << e.what() << std::endl;
+        const std::string msg = "Cannot get value for binding: "
+                                + std::string(value.raw_json().value());
+        throw OsmDataFetcherException(msg.c_str());
     }
 
-    std::vector<id_t> OsmDataFetcher::extractMembers(const std::string& memberUris) {
-        std::vector<id_t> memberIds;
-        std::stringstream ss(memberUris);
-        std::string token;
-
-        while (std::getline(ss, token, ';')) {
-            memberIds.push_back(OsmObjectHelper::getIdFromUri(token));
-        }
-
-        return memberIds;
-    }
-
-    std::vector<std::string> OsmDataFetcher::extractMemberTags(const std::string& memberUris) {
-        std::vector<std::string> memberTags;
-        std::stringstream ss(memberUris);
-        std::string token;
-
-        while (std::getline(ss, token, ';')) {
-            memberTags.push_back(OsmObjectHelper::getOsmTagFromUri(token));
-        }
-
-        return memberTags;
-    }
-
+    throw OsmDataFetcherException("The type of the value is not supported atm.");
 }

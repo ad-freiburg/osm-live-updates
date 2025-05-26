@@ -16,13 +16,16 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
+#include "osm/WayHandler.h"
+
 #include <iostream>
 
-#include "osm/WayHandler.h"
-#include "util/OsmObjectHelper.h"
-#include "osm2rdf/util/Time.h"
 #include "osmium/osm/way.hpp"
+#include "osm2rdf/util/Time.h"
 
+#include "osm/OsmObjectHelper.h"
+
+// _________________________________________________________________________________________________
 void olu::osm::WayHandler::printWayStatistics() const {
     std::cout << osm2rdf::util::currentTimeFormatted()
             << "ways created: " << _createdWays.size()
@@ -31,6 +34,7 @@ void olu::osm::WayHandler::printWayStatistics() const {
             << std::endl;
 }
 
+// _________________________________________________________________________________________________
 void olu::osm::WayHandler::way(const osmium::Way &way) {
     switch (OsmObjectHelper::getChangeAction(way)) {
         case ChangeAction::CREATE:
@@ -41,7 +45,7 @@ void olu::osm::WayHandler::way(const osmium::Way &way) {
             break;
         case ChangeAction::MODIFY:
             std::vector<id_t> nodeRefs;
-            for (auto &nodeRef: way.nodes()) {
+            for (const auto &nodeRef: way.nodes()) {
                 nodeRefs.push_back(nodeRef.ref());
             }
 
@@ -50,10 +54,11 @@ void olu::osm::WayHandler::way(const osmium::Way &way) {
     }
 }
 
-void
-olu::osm::WayHandler::checkWaysForMemberChange(std::set<id_t> modifiedNodesWithChangedLocation) {
+// _________________________________________________________________________________________________
+void olu::osm::WayHandler::checkWaysForMemberChange(
+    const std::set<id_t> &modifiedNodesWithChangedLocation) {
     for (const auto &[wayId, nodeRefs] : _modifiedWaysBuffer) {
-        // We have to check if a node reference of the way has its location changed and if so,
+        // We have to check if a node reference of the way has its location changed, and if so,
         // the ways geometry has to be updated nevertheless
         bool hasModifiedNode = false;
         for (const auto &nodeId : nodeRefs) {

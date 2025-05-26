@@ -5,10 +5,10 @@
 #ifndef TTLHELPER_H
 #define TTLHELPER_H
 
-#include "Types.h"
-#include "osm/OsmObject.h"
-
 #include <string>
+
+#include "util/Types.h"
+#include "osm/OsmObjectType.h"
 
 namespace olu::util {
 
@@ -38,14 +38,14 @@ namespace olu::util {
 
         /**
          * Checks if the given subject is in the relevant namespace for the given osm object type:
-         * "osmnode:..." for nodes, "osmway:..." for ways and "osmrel:..." for relations.
+         * "osmnode: ..." for nodes, "osmway: ..." for ways and "osmrel: ..." for relations.
          *
          * @param subject The subject string to check.
          * @param osmObject The osm object type to check the namespace for.
          * @return True if the subject is in the relevant namespace, false otherwise.
          */
         static bool
-        isInNamespaceForOsmObject(const std::string& subject, const osm::OsmObject & osmObject);
+        isInNamespaceForOsmObject(const std::string& subject, const osm::OsmObjectType & osmObject);
 
         /**
          * Checks if the given predicate describes a tag or metadata of the given osm object.
@@ -55,7 +55,8 @@ namespace olu::util {
          * @return True if the predicate describes a tag or metadata, false otherwise.
          */
         static bool
-        isMetadataOrTagPredicate(const std::string& predicate, const osm::OsmObject & osmObject);
+        isMetadataOrTagPredicate(const std::string& predicate,
+                                 const osm::OsmObjectType & osmObject);
 
         /**
          * Checks if the given predicate describes the geometry of the given osm object.
@@ -65,12 +66,12 @@ namespace olu::util {
          * @return True if the predicate describes the geometry, false otherwise.
          */
         static bool
-        isGeometryPredicate(const std::string& predicate, const osm::OsmObject & osmObject);
+        isGeometryPredicate(const std::string& predicate, const osm::OsmObjectType & osmObject);
 
         /**
          * Checks if a predicate links to an object,
          * which has a triple that is relevant to an osm object. For example, members of ways and
-         * relations have triples on their own which are relevant for the way or relation:
+         * relations have triples on their own, which are relevant for the way or relation:
          * "osmrel:11892035 osmrel:member _:6_168 ."
          * "_:6_168 osm2rdfmember:id osmway:1058514204 ."
          * The object "_6_168" is a blank node, which links to the triple beneath.
@@ -80,7 +81,7 @@ namespace olu::util {
          * @return True if the predicate links to an object with a relevant triple, false otherwise.
          */
         static bool
-        hasRelevantObject(const std::string& predicate, const osm::OsmObject & osmObject);
+        hasRelevantObject(const std::string& predicate, const osm::OsmObjectType & osmObject);
 
     };
 

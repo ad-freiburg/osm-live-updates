@@ -17,30 +17,29 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "util/URLHelper.h"
-#include "config/Constants.h"
 
 #include <stdexcept>
-#include <boost/asio/connect.hpp>
 #include <iostream>
 #include <iomanip>
-#include <boost/regex.hpp>
 
-const static inline int MIN_SEQ_NUMBER = 0;
-const static inline int MAX_SEQ_NUMBER = 999999999;
+#include "boost/regex.hpp"
 
-const static inline int FORMATTED_SEQ_NUMBER_LENGTH = 9;
-const static inline int SEGMENT_LENGTH = 3;
+#include "config/Constants.h"
 
-const static inline int START_POS_FIRST_SEGMENT = 0;
-const static inline int START_POS_SECOND_SEGMENT = 3;
-const static inline int START_POS_THIRD_SEGMENT = 6;
+static inline constexpr int MIN_SEQ_NUMBER = 0;
+static inline constexpr int MAX_SEQ_NUMBER = 999999999;
+
+static inline constexpr int FORMATTED_SEQ_NUMBER_LENGTH = 9;
+static inline constexpr int SEGMENT_LENGTH = 3;
+
+static inline constexpr int START_POS_FIRST_SEGMENT = 0;
+static inline constexpr int START_POS_SECOND_SEGMENT = 3;
+static inline constexpr int START_POS_THIRD_SEGMENT = 6;
 
 namespace constants = olu::config::constants;
 
-namespace olu::util {
-
 // _________________________________________________________________________________________________
-std::string URLHelper::buildUrl(const std::vector<std::string> &pathSegments) {
+std::string olu::util::URLHelper::buildUrl(const std::vector<std::string> &pathSegments) {
     std::string url;
     for( const auto& segment : pathSegments ) {
         if(&segment == &pathSegments.back() ) {
@@ -54,7 +53,7 @@ std::string URLHelper::buildUrl(const std::vector<std::string> &pathSegments) {
 }
 
 // _________________________________________________________________________________________________
-std::string URLHelper::formatSequenceNumberForUrl(int &sequenceNumber) {
+std::string olu::util::URLHelper::formatSequenceNumberForUrl(const int &sequenceNumber) {
     if (sequenceNumber < MIN_SEQ_NUMBER || sequenceNumber > MAX_SEQ_NUMBER) {
         throw std::invalid_argument(constants::EXCEPTION_MSG_SEQUENCE_NUMBER_IS_INVALID);
     }
@@ -64,15 +63,18 @@ std::string URLHelper::formatSequenceNumberForUrl(int &sequenceNumber) {
         sequenceNumberStr.insert(0, "0");
     }
 
-    // Format sequence number for file path which looks like XXX/XXX/XXX
-    std::string firstSegment = sequenceNumberStr.substr(START_POS_FIRST_SEGMENT, SEGMENT_LENGTH);
-    std::string secondSegment = sequenceNumberStr.substr(START_POS_SECOND_SEGMENT, SEGMENT_LENGTH);
-    std::string thirdSegment = sequenceNumberStr.substr(START_POS_THIRD_SEGMENT, SEGMENT_LENGTH);
+    // Format sequence number for a file path which looks like XXX/XXX/XXX
+    const std::string firstSegment = sequenceNumberStr.substr(START_POS_FIRST_SEGMENT,
+                                                              SEGMENT_LENGTH);
+    const std::string secondSegment = sequenceNumberStr.substr(START_POS_SECOND_SEGMENT,
+                                                               SEGMENT_LENGTH);
+    const std::string thirdSegment = sequenceNumberStr.substr(START_POS_THIRD_SEGMENT,
+                                                              SEGMENT_LENGTH);
     return firstSegment + "/" + secondSegment + "/" + thirdSegment;
 }
 
 // _________________________________________________________________________________________________
-std::string URLHelper::encodeForUrlQuery(const std::string &value) {
+std::string olu::util::URLHelper::encodeForUrlQuery(const std::string &value) {
     std::ostringstream escaped;
     escaped.fill('0');
     escaped << std::hex;
@@ -84,15 +86,14 @@ std::string URLHelper::encodeForUrlQuery(const std::string &value) {
             continue;
         }
         // Any other characters are percent-encoded
-        escaped << '%' << std::setw(2) << int((unsigned char)c);
+        escaped << '%' << std::setw(2) << static_cast<int>(static_cast<unsigned char>(c));
     }
 
     return escaped.str();
 }
 
-bool URLHelper::isValidUri(const std::string &uri) {
+// _________________________________________________________________________________________________
+bool olu::util::URLHelper::isValidUri(const std::string &uri) {
     const boost::regex regex(R"(((\w+:\/\/)[-a-zA-Z0-9:@;?&=\/%\+\.\*!'\(\),\$_\{\}\^~\[\]`#|]+))");
-    return boost::regex_match (uri, regex);
+    return regex_match (uri, regex);
 }
-
-} // namespace olu::util

@@ -19,6 +19,8 @@
 #ifndef OSMREPLICATIONSERVERHELPER_H
 #define OSMREPLICATIONSERVERHELPER_H
 
+#include <string>
+
 #include "config/Config.h"
 #include "osm/OsmDatabaseState.h"
 

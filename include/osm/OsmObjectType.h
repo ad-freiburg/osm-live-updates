@@ -1,4 +1,4 @@
-// Copyright 2024, University of Freiburg
+// Copyright 2025, University of Freiburg
 // Authors: Nicolas von Trott <nicolasvontrott@gmail.com>.
 
 // This file is part of osm-live-updates.
@@ -16,23 +16,16 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef OSM_LIVE_UPDATES_DECOMPRESSOR_H
-#define OSM_LIVE_UPDATES_DECOMPRESSOR_H
+#ifndef OSMOBJECT_H
+#define OSMOBJECT_H
 
-#include "string"
-
-namespace olu::util {
-
+namespace olu::osm {
     /**
-     * Utility class for reading files that are compressed with gzip or bzip2 using the
-     * corresponding decompressor from the `boost::iostreams` package
+     * Possible types of osm objects in a change file.
      */
-    class Decompressor {
-    public:
-        static std::string readGzip(const std::string& path);
-        static std::string readBzip2(const std::string& path);
+    enum class OsmObjectType {
+        NODE, WAY, RELATION
     };
+}
 
-} // namespace olu::util
-
-#endif //OSM_LIVE_UPDATES_DECOMPRESSOR_H
+#endif //OSMOBJECT_H

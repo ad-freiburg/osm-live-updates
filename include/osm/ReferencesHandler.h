@@ -19,10 +19,11 @@
 #ifndef REFERENCESHANDLER_H
 #define REFERENCESHANDLER_H
 
-#include <osmium/handler.hpp>
-#include "NodeHandler.h"
-#include "WayHandler.h"
-#include "RelationHandler.h"
+#include "osmium/handler.hpp"
+
+#include "osm/NodeHandler.h"
+#include "osm/WayHandler.h"
+#include "osm/RelationHandler.h"
 
 namespace olu::osm {
     class ReferencesHandler: public osmium::handler::Handler {

@@ -19,22 +19,18 @@
 #ifndef OSM_LIVE_UPDATES_OSMCHANGEHANDLER_H
 #define OSM_LIVE_UPDATES_OSMCHANGEHANDLER_H
 
-#include "osm/Osm2ttl.h"
-#include "osm/OsmDataFetcher.h"
-#include "sparql/SparqlWrapper.h"
-#include "config/Config.h"
-#include "osm2rdf/util/ProgressBar.h"
 #include <set>
-#include <osmium/handler.hpp>
 
-#include "NodeHandler.h"
-#include "ReferencesHandler.h"
-#include "RelationHandler.h"
-#include "WayHandler.h"
+#include "osmium/handler.hpp"
+#include "osm2rdf/util/ProgressBar.h"
 
-namespace osmium::memory {
-    class CallbackBuffer;
-}
+#include "config/Config.h"
+#include "osm/OsmDataFetcher.h"
+#include "osm/NodeHandler.h"
+#include "osm/ReferencesHandler.h"
+#include "osm/RelationHandler.h"
+#include "osm/WayHandler.h"
+#include "sparql/SparqlWrapper.h"
 
 namespace olu::osm {
     /**
@@ -91,11 +87,6 @@ namespace olu::osm {
         // Relations that reference a node, way or relation which was modified in the changeset.
         std::set<id_t> _relationsToUpdateGeometry;
 
-        void processChangeFile();
-        void getObjectsToUpdate();
-        void handleReferences();
-        void convertToTtl();
-
         /**
          * Loops over the change file and stores the relevant ones in a temporary file, and the
          * referenced elements in the corresponding set
@@ -151,8 +142,8 @@ namespace olu::osm {
 
         /**
          * Creates dummy relations for the referenced relations that are not in the change file and
-         * writes them to a temporary file The dummy relation only contain the members of that
-         * relation
+         * writes them to a temporary file.
+         * The dummy relation only contains the members of that relation
          */
         void createDummyRelations(
             osm2rdf::util::ProgressBar &progress, size_t &counter);
@@ -220,7 +211,33 @@ namespace olu::osm {
          * elements that occurred in the change file or osm elements which geometry needs to be
          * updated. Irrelevant triples are triples that where generated for referenced elements.
          */
-        std::vector<triple_t> filterRelevantTriples();
+        [[nodiscard]] std::vector<triple_t> filterRelevantTriples() const;
+
+        /**
+         * Checks if the given triple is relevant for the osm node object it belongs to and adds it
+         * to the relevantTriples vector if that is the case.
+         */
+        static void filterNodeTriple(const triple_t &nodeTriple, const std::set<id_t> &nodesToInsert,
+                              std::vector<triple_t> &relevantTriples,
+                              std::string &currentLink);
+
+        /**
+         * Checks if the given triple is relevant for the osm way object it belongs to and adds it
+         * to the relevantTriples vector if that is the case.
+         */
+        void filterWayTriple(const triple_t &wayTriple, const std::set<id_t> &waysToInsert,
+                             std::vector<triple_t> &relevantTriples,
+                             std::string &currentLink) const;
+
+        /**
+         * Checks if the given triple is relevant for the osm relation object it belongs to and
+         * adds it to the relevantTriples vector if that is the case.
+         */
+        void filterRelationTriple(const triple_t &relationTriple,
+                                                 const std::set<id_t> &relationsToInsert,
+                                                 std::vector<triple_t> &relevantTriples,
+                                                 std::string &currentLink) const;
+
     };
 
     /**

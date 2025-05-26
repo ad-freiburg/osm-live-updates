@@ -29,10 +29,10 @@ public:
     // Builds an url from a list of strings by concatenating them with a '/'
     static std::string buildUrl(const std::vector<std::string> &pathSegments);
 
-    // Formats a sequence number for use in an url
-    // For example: The sequence number 6177383 would be returned as 006/177/383
+    // Formats a sequence number for use in an url,
+    // For example, The sequence number 6177383 would be returned as 006/177/383
     // @throw 'std::invalid_argument' if sequence number is empty or too long
-    static std::string formatSequenceNumberForUrl(int &sequenceNumber);
+    static std::string formatSequenceNumberForUrl(const int &sequenceNumber);
 
     // Url encodes the given string
     static std::string encodeForUrlQuery(const std::string& value);

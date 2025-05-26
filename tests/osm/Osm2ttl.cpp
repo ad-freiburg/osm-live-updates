@@ -18,8 +18,6 @@
 
 #include "osm/Osm2ttl.h"
 #include "config/Constants.h"
-#include "gtest/gtest.h"
-#include "util/Decompressor.h"
 
 namespace cnst = olu::config::constants;
 

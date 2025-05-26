@@ -19,23 +19,23 @@
 #ifndef OSM_LIVE_UPDATES_SPARQLWRAPPER_H
 #define OSM_LIVE_UPDATES_SPARQLWRAPPER_H
 
-#include "config/Config.h"
-
 #include <string>
 #include <vector>
-#include <boost/property_tree/ptree.hpp>
+
+#include "config/Config.h"
 
 namespace olu::sparql {
 
     /**
-     * Wrapper class that handles communication with a SPARQL endpoint. In order to successfully
-     * send a request to the SPARQL endpoint, the prefixes, query and method must be set with the
+     * Wrapper class that handles communication with a SPARQL endpoint.
+     * To successfully send a request to the SPARQL endpoint,
+     * the prefixes, query and method must be set with the
      * corresponding functions. Then the request can be sent with `runQuery`.
      *
      * This class will currently only work with QLever SPARQL endpoints.
      *
-     * If the `writeSparqlQueriesToFile` flag is set, all SPARQL queries that were send to the
-     * endpoint will be stored in a .txt file located at the path which is specified in the config
+     * If the `writeSparqlQueriesToFile` flag is set, all SPARQL queries sent to the endpoint will
+     * be stored in a .txt file located at the path which is specified in the config
      * (`pathToSparqlQueryOutput`)
      */
     class SparqlWrapper {
@@ -63,7 +63,7 @@ namespace olu::sparql {
          *
          * @return The response from the SPARQL endpoint.
          */
-        boost::property_tree::ptree runQuery();
+        std::string runQuery();
 
         /**
          * Sends a POST request with the encoded prefixes and the update query as body to the SPARQL

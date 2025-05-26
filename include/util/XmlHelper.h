@@ -1,4 +1,4 @@
-// Copyright 2025, University of Freiburg
+// Copyright 2024, University of Freiburg
 // Authors: Nicolas von Trott <nicolasvontrott@gmail.com>.
 
 // This file is part of osm-live-updates.
@@ -16,18 +16,34 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#ifndef OSMOBJECT_H
-#define OSMOBJECT_H
+#ifndef OSM_LIVE_UPDATES_XMLHELPER_H
+#define OSM_LIVE_UPDATES_XMLHELPER_H
 
-namespace olu::osm {
+#include <string>
+
+namespace olu::util {
 
     /**
-     * Possible types of osm objects in a change file.
+     * Helper class for dealing with XML Files.
      */
-    enum class OsmObject {
-        NODE, WAY, RELATION
+    class XmlHelper {
+    public:
+        /**
+         * @return True, if the given string has an XML encoded character in it
+         */
+        static bool isXmlEncoded(const std::string &input);
+
+        /**
+         * Encodes string for XML format.
+         */
+        static std::string xmlEncode(const std::string &input);
+
+        /**
+         * Decodes string for XML format.
+         */
+        static std::string xmlDecode(const std::string &input);
     };
 
-}
+} // namespace  olu::util
 
-#endif //OSMOBJECT_H
+#endif //OSM_LIVE_UPDATES_XMLHELPER_H

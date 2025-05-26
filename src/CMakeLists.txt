@@ -31,6 +31,7 @@ target_include_directories(olu_library PUBLIC "${CMAKE_CURRENT_LIST_DIR}/../incl
 
 ## This depends on (header only) boost (Boost::boost)
 target_link_libraries(olu_library PRIVATE
+        simdjson
         Boost::boost
         Boost::serialization
         Boost::iostreams

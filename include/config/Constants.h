@@ -23,6 +23,8 @@
 #include <vector>
 #include <sstream>
 
+#include "Config.h"
+
 namespace olu::config::constants {
     // Exception Messages --------------------------------------------------------------------------
     const static inline auto EXCEPTION_MSG_SEQUENCE_NUMBER_IS_INVALID = "Sequence number is invalid.";
@@ -79,9 +81,12 @@ namespace olu::config::constants {
     const static inline std::string XML_TAG_DELETE = "delete";
     const static inline std::string XML_TAG_CREATE = "create";
     const static inline std::string XML_TAG_SPARQL = "sparql";
-    const static inline std::string XML_TAG_RESULTS = "results";
+    const static inline std::string KEY_RESULTS = "results";
+    const static inline std::string KEY_BINDINGS = "bindings";
+    const static inline std::string KEY_VALUE = "value";
+
     const static inline std::string XML_TAG_NAME = "name";
-    const static inline std::string XML_TAG_URI = "uri";
+    const static inline std::string KEY_URI = "uri";
     const static inline std::string XML_TAG_LITERAL = "literal";
     const static inline std::string XML_TAG_BINDING = "binding";
     const static inline std::string XML_TAG_KEY = "k";
@@ -112,8 +117,8 @@ namespace olu::config::constants {
     const static inline std::string XML_PATH_ATTR_KEY = MakeXMLPath({XML_TAG_ATTR, XML_TAG_KEY});
     const static inline std::string XML_PATH_ATTR_VALUE = MakeXMLPath({XML_TAG_ATTR, XML_TAG_VALUE});
     const static inline std::string XML_PATH_ATTR_NAME = MakeXMLPath({XML_TAG_ATTR, XML_TAG_NAME});
-    const static inline std::string XML_PATH_SPARQL_RESULTS = MakeXMLPath({XML_TAG_SPARQL, XML_TAG_RESULTS});
-    const static inline std::string XML_PATH_BINDING_URI = MakeXMLPath({XML_TAG_BINDING, XML_TAG_URI});
+    const static inline std::string XML_PATH_SPARQL_RESULTS = MakeXMLPath({XML_TAG_SPARQL, KEY_RESULTS});
+    const static inline std::string XML_PATH_BINDING_URI = MakeXMLPath({XML_TAG_BINDING, KEY_URI});
 
     // OSM2RDF -------------------------------------------------------------------------------------
     /// Namespaces and prefixes --------------------------------------------------------------------
@@ -211,6 +216,7 @@ namespace olu::config::constants {
     const static inline std::string NAME_TYPE = "type";
     const static inline std::string NAME_KEY = "key";
     const static inline std::string NAME_VALUE = "value";
+    const static inline std::string NAME_URI = "uri";
     const static inline std::string NAME_LOCATION = "location";
     const static inline std::string NAME_TIMESTAMP = "timestamp";
     const static inline std::string NAME_VERSION = "version";
@@ -218,6 +224,8 @@ namespace olu::config::constants {
     const static inline std::string NAME_OSM_NODE_ =  "osm_node_";
     const static inline std::string NAME_NODE =  "node";
     const static inline std::string NAME_NODES =  "nodes";
+    const static inline std::string NAME_WAY =  "way";
+    const static inline std::string NAME_REL =  "rel";
 
     /// Prefixed names -----------------------------------------------------------------------------
     static std::string MakePrefixedName(const std::string &prefix, const std::string &name) {
@@ -320,7 +328,9 @@ namespace olu::config::constants {
     const static inline std::string QUERY_VAR_TIMESTAMP = MakeQueryVar(NAME_TIMESTAMP);
     const static inline std::string QUERY_VAR_VERSION = MakeQueryVar(NAME_VERSION);
     const static inline std::string QUERY_VAR_CHANGESET = MakeQueryVar(NAME_CHANGESET);
-    const static inline std::string QUERY_VAR_NODES = MakeQueryVar(NAME_NODES);
+    const static inline std::string QUERY_VAR_NODE = MakeQueryVar(NAME_NODE);
+    const static inline std::string QUERY_VAR_WAY = MakeQueryVar(NAME_WAY);
+    const static inline std::string QUERY_VAR_REL = MakeQueryVar(NAME_REL);
     const static inline std::string QUERY_VAR_MEMBER = MakeQueryVar(NAME_MEMBER);
     const static inline std::string QUERY_VAR_MEMBER_ID = MakeQueryVar(NAME_MEMBER_ID);
     const static inline std::string QUERY_VAR_MEMBER_ROLE = MakeQueryVar(NAME_MEMBER_ROLE);
@@ -398,6 +408,20 @@ namespace olu::config::constants {
     const static inline std::string BLANK_NODES_OPTION_LONG = "no-blank-nodes";
     const static inline std::string BLANK_NODES_OPTION_HELP =
         "Avoid blank nodes by using a unique identifier for each member";
+
+    const static inline std::string WKT_PRECISION_INFO = "Precision for WKT Points: ";
+    const static inline std::string WKT_PRECISION_OPTION_SHORT = "";
+    const static inline std::string WKT_PRECISION_OPTION_LONG = "wkt-precision";
+    const static inline std::string WKT_PRECISION_OPTION_HELP =
+        "The precision for the WKT representation of the coordinates. Default is "
+        + std::to_string(Config::DEFAULT_WKT_PRECISION) + ".";
+
+    const static inline std::string BATCH_SIZE_INFO = "Number of values per batch:";
+    const static inline std::string BATCH_SIZE_OPTION_SHORT = "";
+    const static inline std::string BATCH_SIZE_OPTION_LONG = "batch-size";
+    const static inline std::string BATCH_SIZE_OPTION_HELP =
+        "The number of values or triples that should be sent in one batch to the SPARQL endpoint. "
+        "Default is " + std::to_string(Config::DEFAULT_BATCH_SIZE) + ".";
 
 } // namespace olu::config::constants
 

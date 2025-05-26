@@ -17,79 +17,83 @@
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "osm/Way.h"
-#include "util/XmlReader.h"
 
 #include <sstream>
 
-namespace olu::osm {
-    void Way::setTimestamp(std::string const &timestamp) {
-        // Ensure the timestamp ends with 'Z' to indicate UTC which is needed for osmium
-        if (timestamp.ends_with("Z")) {
-            this->timestamp = timestamp;
-        } else {
-            this->timestamp = timestamp + "Z";
-        }
+#include "util/XmlHelper.h"
+
+// _________________________________________________________________________________________________
+void olu::osm::Way::setTimestamp(std::string const &timestamp) {
+    // Ensure the timestamp ends with 'Z' to indicate UTC which is needed for osmium
+    if (timestamp.ends_with("Z")) {
+        this->timestamp = timestamp;
+    } else {
+        this->timestamp = timestamp + "Z";
     }
+}
 
-    void Way::setVersion(version_t const &version) {
-        this->version = version;
-    }
+// _________________________________________________________________________________________________
+void olu::osm::Way::setVersion(version_t const &version) {
+    this->version = version;
+}
 
-    void Way::setChangesetId(changeset_id_t const &changeset_id) {
-        this->changeset_id = changeset_id;
-    }
+// _________________________________________________________________________________________________
+void olu::osm::Way::setChangesetId(changeset_id_t const &changeset_id) {
+    this->changeset_id = changeset_id;
+}
 
-    void Way::addMember(id_t nodeId) {
-        members.emplace_back(nodeId);
-    }
+// _________________________________________________________________________________________________
+void olu::osm::Way::addMember(id_t nodeId) {
+    members.emplace_back(nodeId);
+}
 
-    void Way::addTag(const std::string& key, const std::string& value) {
-        tags.emplace_back(key, util::XmlReader::xmlEncode(value));
-    }
+// _________________________________________________________________________________________________
+void olu::osm::Way::addTag(const std::string& key, const std::string& value) {
+    tags.emplace_back(key, util::XmlHelper::xmlEncode(value));
+}
 
-    std::string Way::getXml() const {
-        std::ostringstream oss;
+// _________________________________________________________________________________________________
+std::string olu::osm::Way::getXml() const {
+    std::ostringstream oss;
 
-        oss << "<way id=\"";
-        oss << std::to_string(this->getId());
+    oss << "<way id=\"";
+    oss << std::to_string(this->getId());
+    oss << "\"";
+
+    if (this->version > 0) {
+        oss << " version=\"";
+        oss << this->version;
         oss << "\"";
-
-        if (this->version > 0) {
-            oss << " version=\"";
-            oss << this->version;
-            oss << "\"";
-        }
-
-        if (this->changeset_id > 0) {
-            oss << " changeset=\"";
-            oss << this->changeset_id;
-            oss << "\"";
-        }
-
-        if (!this->timestamp.empty()) {
-            oss << " timestamp=\"";
-            oss << this->timestamp;
-            oss << "\"";
-        }
-
-        oss << ">";
-
-        for (const auto nodeId: this->members) {
-            oss << "<nd ref=\"";
-            oss << std::to_string(nodeId);
-            oss << "\"/>";
-        }
-
-        for (const auto& [key, value] : this->tags) {
-            oss << "<tag k=\"";
-            oss << key;
-            oss << "\" v=\"";
-            oss << value;
-            oss << "\"/>";
-        }
-
-        oss << "</way>";
-        return oss.str();
     }
 
+    if (this->changeset_id > 0) {
+        oss << " changeset=\"";
+        oss << this->changeset_id;
+        oss << "\"";
+    }
+
+    if (!this->timestamp.empty()) {
+        oss << " timestamp=\"";
+        oss << this->timestamp;
+        oss << "\"";
+    }
+
+    oss << ">";
+
+    for (const auto nodeId: this->members) {
+        oss << "<nd ref=\"";
+        oss << std::to_string(nodeId);
+        oss << "\"/>";
+    }
+
+    for (const auto& [key, value] : this->tags) {
+        oss << "<tag k=\"";
+        oss << key;
+        oss << "\" v=\"";
+        oss << value;
+        oss << "\"/>";
+    }
+
+    oss << "</way>";
+    return oss.str();
 }

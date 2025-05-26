@@ -19,21 +19,49 @@
 #ifndef RELATIONMEMBER_H
 #define RELATIONMEMBER_H
 
+#include <string>
+
+#include "osm/OsmObjectType.h"
+#include "osm/OsmObjectHelper.h"
 #include "util/Types.h"
 
-#include <string>
-#include <utility>
-
 namespace olu::osm {
+    /**
+     * Exception that can appear inside the `Node` class.
+     */
+    class RelationMemberException final : public std::exception {
+        std::string message;
 
-    struct RelationMember {
-        int64_t id;
-        std::string osmTag;
+    public:
+        explicit RelationMemberException(const char *msg) : message(msg) { }
+
+        [[nodiscard]] const char *what() const noexcept override {
+            return message.c_str();
+        }
+    };
+
+    class RelationMember {
+    public:
+        id_t id;
+        OsmObjectType type;
         std::string role;
 
-        RelationMember(const int64_t id, std::string osmTag, std::string role) :
-        id(id), osmTag(std::move(osmTag)), role(std::move(role)) {}
+        explicit RelationMember(const id_t &id, const OsmObjectType &memberType,
+                                const std::string &role): id(id), type(memberType),
+                                                   role(role) {}
+
+        explicit RelationMember(const id_t &id, const std::string &memberNamespace,
+                                const std::string &role);
+
+        explicit RelationMember(const std::string &memberUri, const std::string &role);
+
+        explicit RelationMember(const id_t &id, const osmium::item_type &memberType,
+                                const std::string &role);
+
+        static bool areRelMemberEqual(std::vector<RelationMember> member1,
+                                      std::vector<RelationMember> member2);
     };
+
 }
 
 #endif //RELATIONMEMBER_H

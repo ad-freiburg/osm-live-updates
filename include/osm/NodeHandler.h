@@ -20,8 +20,9 @@
 #define NODEHANDLER_H
 
 #include <map>
-#include <osmium/handler.hpp>
 #include <set>
+
+#include "osmium/handler.hpp"
 
 #include "OsmDataFetcher.h"
 
@@ -54,6 +55,12 @@ namespace olu::osm {
                             _modifiedNodesWithChangedLocation.end());
             allNodes.insert(_deletedNodes.begin(), _deletedNodes.end());
             return allNodes;
+        }
+        [[nodiscard]] size_t getNumOfNodes() const {
+            return _createdNodes.size() +
+                   _modifiedNodes.size() +
+                   _modifiedNodesWithChangedLocation.size() +
+                   _deletedNodes.size();
         }
 
         /**
