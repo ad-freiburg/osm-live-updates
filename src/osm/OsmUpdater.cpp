@@ -22,6 +22,7 @@
 #include <iostream>
 #include <filesystem>
 #include <fstream>
+#include <osm/OsmDataFetcherSparql.h>
 
 #include "osmium/visitor.hpp"
 #include "osmium/object_pointer_collection.hpp"
@@ -44,7 +45,8 @@ namespace cnst = olu::config::constants;
 // _________________________________________________________________________________________________
 olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config),
                                                                  _repServer(config),
-                                                                 _odf(config), _latestState({}) {
+                                                                 _odf(std::make_unique<OsmDataFetcherSparql>(OsmDataFetcherSparql(_config))
+), _latestState({}) {
     try {
         std::filesystem::create_directory(cnst::PATH_TO_TEMP_DIR);
         std::filesystem::create_directory(cnst::PATH_TO_CHANGE_FILE_DIR);
@@ -79,7 +81,7 @@ void olu::osm::OsmUpdater::run() {
 
         mergeChangeFiles(_config.changeFileDir);
 
-        auto och{OsmChangeHandler(_config)};
+        auto och{OsmChangeHandler(_config, *_odf)};
         och.run();
     } else {
         std::cout
@@ -118,7 +120,7 @@ void olu::osm::OsmUpdater::run() {
         << " change files..."
         << std::endl;
 
-        auto och{OsmChangeHandler(_config)};
+        auto och{OsmChangeHandler(_config, *_odf)};
         och.run();
 
     }
@@ -139,7 +141,7 @@ int olu::osm::OsmUpdater::decideStartSequenceNumber() {
 
     std::string timestamp;
     if (_config.timestamp.empty()) {
-        timestamp = _odf.fetchLatestTimestampOfAnyNode();
+        timestamp = _odf.get()->fetchLatestTimestampOfAnyNode();
     } else {
         timestamp = _config.timestamp;
     }

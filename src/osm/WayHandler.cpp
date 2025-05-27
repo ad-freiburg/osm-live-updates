@@ -73,7 +73,7 @@ void olu::osm::WayHandler::checkWaysForMemberChange(
             continue;
         }
 
-        const auto &membersEndpoint =  _odf.fetchWaysMembersSorted({wayId});
+        const auto &membersEndpoint =  _odf->fetchWaysMembersSorted({wayId});
         if (membersEndpoint.empty()) {
             _createdWays.insert(wayId);
             continue;

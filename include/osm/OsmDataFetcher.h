@@ -22,18 +22,13 @@
 #include <set>
 #include <string>
 
-#include "simdjson.h"
-
 #include "config/Constants.h"
 #include "osm/Node.h"
 #include "osm/Relation.h"
 #include "osm/Way.h"
-#include "sparql/SparqlWrapper.h"
-#include "sparql/QueryWriter.h"
 #include "util/Types.h"
 
 namespace olu::osm {
-
     /**
      * Exception that can appear inside the `OsmDataFetcher` class.
      */
@@ -48,13 +43,11 @@ namespace olu::osm {
     };
 
     /**
-     * Deals with the retrieval of osm data from the SPARQL endpoint that is needed for the update
-     * process.
+     * Base Class for the retrieval of osm data from the SPARQL endpoint.
      */
     class OsmDataFetcher {
     public:
-        explicit OsmDataFetcher(const config::Config &config)
-            : _config(config), _sparqlWrapper(config), _queryWriter(config), _parser() { }
+        virtual ~OsmDataFetcher() = default;
 
         /**
          * Sends a query to the sparql endpoint to get the location of the nodes with the given ids
@@ -66,32 +59,18 @@ namespace olu::osm {
          * @param nodeIds The ids of the nodes to fetch location for
          * @return A vector containing node objects with the location and id
          */
-        std::vector<Node> fetchNodes(const std::set<id_t> &nodeIds);
-        std::vector<std::pair<id_t, osmium::Location>> fetchNodeLocations(const std::set<id_t> &nodeIds);
-
-        /**
-         * Sends a query to the sparql endpoint to get the location of the nodes with the given ids
-         *
-         * @warning It is not guaranteed that the SPARQL endpoint returns a location for each node
-         * ID. Therefore,
-         * the returned vector can have fewer elements than the given set of node ids
-         *
-         * @param nodeIds The ids of the nodes to fetch location for
-         * @return A vector containing the locations
-         */
-        std::vector<osmium::Location> fetchNodeLocations(const std::vector<id_t> &nodeIds);
+        virtual std::vector<Node> fetchNodes(const std::set<id_t> &nodeIds){return {};}
 
         /**
          * @return A vector containing a pair of the member's uri and role for all members of the
          * given relation.
          */
-        std::vector<Relation>
-        fetchRelations(const std::set<id_t> &relationIds);
+        virtual std::vector<Relation> fetchRelations(const std::set<id_t> &relationIds){return {};}
 
         /**
          * Fetches tags and timestamp for the given relation
          */
-        void fetchRelationInfos(Relation &relation);
+        virtual void fetchRelationInfos(Relation &relation){}
 
         /**
          * Sends a query to the sparql endpoint to get the ids of all nodes that are referenced
@@ -99,12 +78,12 @@ namespace olu::osm {
          *
          * @return The subjects of all members
          */
-        std::vector<Way> fetchWays(const std::set<id_t> &wayIds);
+        virtual std::vector<Way> fetchWays(const std::set<id_t> &wayIds){return {};}
 
         /**
          * Fetches tags and timestamp for the given way
          */
-        void fetchWayInfos(Way &way);
+        virtual void fetchWayInfos(Way &way){}
 
         /**
           * Sends a query to the sparql endpoint to get the ids of all nodes that are referenced
@@ -112,7 +91,7 @@ namespace olu::osm {
           *
           * @return The subjects of all members
           */
-        member_ids_t fetchWaysMembers(const std::set<id_t> &wayIds);
+        virtual member_ids_t fetchWaysMembers(const std::set<id_t> &wayIds){return {};}
 
         /**
           * Sends a query to the sparql endpoint to get the ids of all nodes that are referenced
@@ -120,83 +99,50 @@ namespace olu::osm {
           *
           * @return The subjects of all members
           */
-        std::vector<std::pair<id_t, member_ids_t>>
-        fetchWaysMembersSorted(const std::set<id_t> &wayIds);
+        virtual std::vector<std::pair<id_t, member_ids_t>>
+        fetchWaysMembersSorted(const std::set<id_t> &wayIds){return {};}
 
         /**
           * Sends a query to the sparql endpoint to get the members of the given relations
           *
           * @return The subjects of all members
           */
-        std::vector<std::pair<id_t, std::vector<RelationMember>>>
-        fetchRelsMembersSorted(const std::set<id_t> &relIds);
+        virtual std::vector<std::pair<id_t, std::vector<RelationMember>>>
+        fetchRelsMembersSorted(const std::set<id_t> &relIds){return {};}
 
         /**
          * @return The ids of all nodes and ways that are referenced by the given relations
          */
-        std::pair<std::vector<id_t>, std::vector<id_t>>
-        fetchRelationMembers(const std::set<id_t> &relIds);
+        virtual std::pair<std::vector<id_t>, std::vector<id_t>>
+        fetchRelationMembers(const std::set<id_t> &relIds){return {};}
 
         /**
          * Sends a query to the sparql endpoint to the latest timestamp of any node in the database
          *
          * @return The latest timestamp of any node
          */
-        std::string fetchLatestTimestampOfAnyNode();
+        virtual std::string fetchLatestTimestampOfAnyNode(){return {};}
 
         /**
          * @return The ids of all ways that reference the given nodes.
          */
-        std::vector<id_t> fetchWaysReferencingNodes(const std::set<id_t> &nodeIds);
+        virtual std::vector<id_t> fetchWaysReferencingNodes(const std::set<id_t> &nodeIds){return {};}
 
         /**
          * @return The ids of all relations that reference the given nodes.
          */
-        std::vector<id_t> fetchRelationsReferencingNodes(const std::set<id_t> &nodeIds);
+        virtual std::vector<id_t> fetchRelationsReferencingNodes(const std::set<id_t> &nodeIds){return {};}
 
         /**
          * @return The ids of all relations that reference the given ways.
          */
-        std::vector<id_t> fetchRelationsReferencingWays(const std::set<id_t> &wayIds);
+        virtual std::vector<id_t> fetchRelationsReferencingWays(const std::set<id_t> &wayIds){return {};}
 
         /**
          * @return The ids of all relations that reference the given relations.
          */
-        std::vector<id_t> fetchRelationsReferencingRelations(const std::set<id_t> &relationIds);
-
-    private:
-        config::Config _config;
-        sparql::SparqlWrapper _sparqlWrapper;
-        sparql::QueryWriter _queryWriter;
-        simdjson::ondemand::parser _parser;
-
-        simdjson::padded_string runQuery(const std::string &query,
-                                         const std::vector<std::string> &prefixes);
-
-        /**
-         * Parses the items in a list that is delimited by ";" and applies the given function to
-         * each item in the list.
-         * @tparam T The return type of the function that is applied to each item in the list
-         * @param list The list of items that are delimited by ";"
-         * @param function The function to apply to each item in the list
-         * @return A vector containing the manipulated items of the list.
-         */
-        template <typename T> std::vector<T>
-        parseValueList(const std::string_view &list, std::function<T(std::string)> function);
-
-        /**
-         * Returns the JSON element at "results.bindings" for the given document.
-         */
-        static simdjson::simdjson_result<simdjson::westmere::ondemand::value> getBindings(
-            simdjson::simdjson_result<simdjson::ondemand::document> &doc);
-
-        /**
-         * Returns the string at the "value" element for the given JSON element.
-         */
-        template <typename T> static T getValue(
-            simdjson::simdjson_result<simdjson::westmere::ondemand::value> value);
+        virtual std::vector<id_t> fetchRelationsReferencingRelations(const std::set<id_t> &relationIds){return {};}
     };
-
 } // namespace olu
 
 #endif //OSM_LIVE_UPDATES_OSMDATAFETCHER_H

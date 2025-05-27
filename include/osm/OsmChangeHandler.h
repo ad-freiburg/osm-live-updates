@@ -20,6 +20,7 @@
 #define OSM_LIVE_UPDATES_OSMCHANGEHANDLER_H
 
 #include <set>
+#include <sparql/QueryWriter.h>
 
 #include "osmium/handler.hpp"
 #include "osm2rdf/util/ProgressBar.h"
@@ -45,13 +46,13 @@ namespace olu::osm {
      */
     class OsmChangeHandler: public osmium::handler::Handler {
     public:
-        explicit OsmChangeHandler(const config::Config &config);
+        explicit OsmChangeHandler(const config::Config &config, OsmDataFetcher &odf);
         void run();
     private:
         config::Config _config;
         sparql::SparqlWrapper _sparql;
         sparql::QueryWriter _queryWriter;
-        OsmDataFetcher _odf;
+        OsmDataFetcher* _odf;
 
         /**
          * Osmium handler for the nodes in the change file.

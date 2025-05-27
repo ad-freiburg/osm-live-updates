@@ -29,7 +29,8 @@
 namespace olu::osm {
     class RelationHandler: public osmium::handler::Handler {
     public:
-        explicit RelationHandler(const config::Config &config): _config(config), _odf(config) {}
+        explicit RelationHandler(const config::Config &config,
+                                 OsmDataFetcher &odf): _config(config), _odf(&odf) {}
 
         // Iterator for osmium::apply
         void relation(const osmium::Relation& relation);
@@ -112,7 +113,7 @@ namespace olu::osm {
 
     private:
         config::Config _config;
-        OsmDataFetcher _odf;
+        OsmDataFetcher* _odf;
 
         // Relations that are in a delete-changeset in the change file.
         std::set<id_t> _deletedRelations;

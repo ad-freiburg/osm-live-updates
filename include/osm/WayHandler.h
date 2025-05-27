@@ -30,7 +30,7 @@ namespace olu::osm {
 
     class WayHandler: public osmium::handler::Handler {
     public:
-        explicit WayHandler(const config::Config &config): _config(config), _odf(config) {}
+        explicit WayHandler(const config::Config &config, OsmDataFetcher &odf): _config(config), _odf(&odf) {}
 
         // Iterator for osmium::apply
         void way(const osmium::Way& way);
@@ -87,7 +87,7 @@ namespace olu::osm {
 
     private:
         config::Config _config;
-        OsmDataFetcher _odf;
+        OsmDataFetcher* _odf;
 
         // Ways that are in a delete-changeset in the change file.
         std::set<id_t> _deletedWays;

@@ -35,6 +35,7 @@
 #include "config/Constants.h"
 #include "osm/NodeHandler.h"
 #include "osm/Osm2ttl.h"
+#include "osm/OsmDataFetcherSparql.h"
 #include "sparql/QueryWriter.h"
 #include "util/XmlHelper.h"
 #include "util/TtlHelper.h"
@@ -43,15 +44,15 @@
 namespace cnst = olu::config::constants;
 
 // _________________________________________________________________________________________________
-olu::osm::OsmChangeHandler::OsmChangeHandler(const config::Config &config) :
+olu::osm::OsmChangeHandler::OsmChangeHandler(const config::Config &config, OsmDataFetcher &odf) :
     _config(config),
     _sparql(config),
     _queryWriter(config),
-    _odf(config),
-    _nodeHandler(config),
-    _wayHandler(config),
-    _relationHandler(config),
-    _referencesHandler(_config, _odf, _nodeHandler, _wayHandler, _relationHandler) {
+    _odf(&odf),
+    _nodeHandler(config, odf),
+    _wayHandler(config, odf),
+    _relationHandler(config, odf),
+    _referencesHandler(_config, odf, _nodeHandler, _wayHandler, _relationHandler) {
     createTmpFiles();
 }
 
@@ -203,7 +204,7 @@ void olu::osm::OsmChangeHandler::getIdsOfWaysToUpdateGeo() {
             _nodeHandler.getModifiedNodesWithChangedLocation(),
             _config.batchSize,
             [this](const std::set<id_t> &batch) {
-                for (const auto &wayId: _odf.fetchWaysReferencingNodes(batch)) {
+                for (const auto &wayId: _odf->fetchWaysReferencingNodes(batch)) {
                     if (!_wayHandler.wayInChangeFile(wayId)) {
                         _waysToUpdateGeometry.insert(wayId);
                     }
@@ -220,7 +221,7 @@ void olu::osm::OsmChangeHandler::getIdsOfRelationsToUpdateGeo() {
             _nodeHandler.getModifiedNodesWithChangedLocation(),
             _config.batchSize,
             [this](const std::set<id_t>& batch) {
-                for (const auto &relId: _odf.fetchRelationsReferencingNodes(batch)) {
+                for (const auto &relId: _odf->fetchRelationsReferencingNodes(batch)) {
                     if (!_relationHandler.relationInChangeFile(relId)) {
                         _relationsToUpdateGeometry.insert(relId);
                     }
@@ -240,7 +241,7 @@ void olu::osm::OsmChangeHandler::getIdsOfRelationsToUpdateGeo() {
             updatedWays,
             _config.batchSize,
             [this](const std::set<id_t>& batch) {
-                for (const auto &relId: _odf.fetchRelationsReferencingWays(batch)) {
+                for (const auto &relId: _odf->fetchRelationsReferencingWays(batch)) {
                     if (!_relationHandler.relationInChangeFile(relId)) {
                         _relationsToUpdateGeometry.insert(relId);
                     }
@@ -273,7 +274,7 @@ void olu::osm::OsmChangeHandler::getReferencedRelations() {
                 _relationsToUpdateGeometry,
             _config.batchSize,
             [this](const std::set<id_t>& batch) {
-                for (const auto &relId: _odf.fetchRelationsReferencingRelations(batch)) {
+                for (const auto &relId: _odf->fetchRelationsReferencingRelations(batch)) {
                     if (!_relationsToUpdateGeometry.contains(relId) &&
                         !_relationHandler.getCreatedRelations().contains(relId) &&
                         !_relationHandler.getModifiedAreas().contains(relId)) {
@@ -320,7 +321,7 @@ void olu::osm::OsmChangeHandler::createDummyNodes(osm2rdf::util::ProgressBar &pr
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const& batch) mutable {
             progress.update(counter += batch.size());
-            for (auto const& node: _odf.fetchNodes(batch)) {
+            for (auto const& node: _odf->fetchNodes(batch)) {
                 // Add the dummy node to the buffer if it is not already in the change file
                 if (!_nodeHandler.nodeInChangeFile(node.getId())) {
                     addToTmpFile(node.getXml(), cnst::XML_TAG_NODE);
@@ -345,7 +346,7 @@ void olu::osm::OsmChangeHandler::createDummyWays(osm2rdf::util::ProgressBar &pro
         _config.batchSize,
         [this, progress, &counter](std::set<id_t> const& batch) mutable {
             progress.update(counter += batch.size());
-            for (auto& way: _odf.fetchWays(batch)) {
+            for (auto& way: _odf->fetchWays(batch)) {
                 // The ways for which the geometry does not need to be updated are already in
                 // the tmp file
                 if (_wayHandler.getModifiedWays().contains(way.getId())) {
@@ -353,7 +354,7 @@ void olu::osm::OsmChangeHandler::createDummyWays(osm2rdf::util::ProgressBar &pro
                 }
 
                 if (_waysToUpdateGeometry.contains(way.getId())) {
-                    _odf.fetchWayInfos(way);
+                    _odf->fetchWayInfos(way);
                 }
 
                 // Add the dummy way to the buffer if it is not already in the change file
@@ -381,9 +382,9 @@ void olu::osm::OsmChangeHandler::createDummyRelations(osm2rdf::util::ProgressBar
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const& batch) mutable {
             progress.update(counter += batch.size());
-            for (auto& rel: _odf.fetchRelations(batch)) {
+            for (auto& rel: _odf->fetchRelations(batch)) {
                 if (_relationsToUpdateGeometry.contains(rel.getId())) {
-                    _odf.fetchRelationInfos(rel);
+                    _odf->fetchRelationInfos(rel);
                 }
 
                 // Add the dummy relation to the buffer if it is not already in the change file

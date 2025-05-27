@@ -30,7 +30,7 @@ namespace olu::osm {
 
     class NodeHandler: public osmium::handler::Handler {
     public:
-        explicit NodeHandler(const config::Config &config): _config(config), _odf(config) {}
+        explicit NodeHandler(const config::Config &config, OsmDataFetcher &odf): _config(config), _odf(&odf) {}
 
         // Iterator for osmium::apply
         void node(const osmium::Node& node);
@@ -95,7 +95,7 @@ namespace olu::osm {
 
     private:
         config::Config _config;
-        OsmDataFetcher _odf;
+        OsmDataFetcher* _odf;
 
         // Nodes that are in a delete-changeset in the change file.
         std::set<id_t> _deletedNodes;

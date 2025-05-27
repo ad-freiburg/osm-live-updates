@@ -42,7 +42,7 @@ namespace olu::osm {
     private:
         config::Config _config;
         OsmReplicationServerHelper _repServer;
-        OsmDataFetcher _odf;
+        std::unique_ptr<OsmDataFetcher> _odf;
         OsmDatabaseState _latestState;
 
         /**
