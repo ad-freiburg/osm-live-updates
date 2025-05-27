@@ -61,6 +61,9 @@ struct Config {
     // Specifies whether a progress bar should be shown
     bool showProgress = true;
 
+    // Option that can be used if the SPARQL endpoint is QLever.
+    bool isQLever = false;
+
     // The number of values or triples that should be sent in one batch to the SPARQL endpoint
     size_t batchSize = DEFAULT_BATCH_SIZE;
 
