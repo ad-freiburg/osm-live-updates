@@ -26,22 +26,15 @@
 #include "osm/OsmObjectHelper.h"
 
 // _________________________________________________________________________________________________
-void olu::osm::WayHandler::printWayStatistics() const {
-    std::cout << osm2rdf::util::currentTimeFormatted()
-            << "ways created: " << _createdWays.size()
-            << " modified: " << _modifiedWays.size() + _modifiedWaysWithChangedMembers.size()
-            << " deleted: " << _deletedWays.size()
-            << std::endl;
-}
-
-// _________________________________________________________________________________________________
 void olu::osm::WayHandler::way(const osmium::Way &way) {
     switch (OsmObjectHelper::getChangeAction(way)) {
         case ChangeAction::CREATE:
             _createdWays.insert(way.id());
+            _stats->countCreatedWay();
             break;
         case ChangeAction::DELETE:
             _deletedWays.insert(way.id());
+            _stats->countDeletedWay();
             break;
         case ChangeAction::MODIFY:
             std::vector<id_t> nodeRefs;
@@ -50,6 +43,7 @@ void olu::osm::WayHandler::way(const osmium::Way &way) {
             }
 
             _modifiedWaysBuffer.emplace(way.id(), nodeRefs);
+            _stats->countModifiedWay();
             break;
     }
 }
@@ -76,6 +70,7 @@ void olu::osm::WayHandler::checkWaysForMemberChange(
         const auto &membersEndpoint =  _odf->fetchWaysMembersSorted({wayId});
         if (membersEndpoint.empty()) {
             _createdWays.insert(wayId);
+            _stats->switchModifiedToCreatedWay();
             continue;
         }
 
@@ -84,6 +79,7 @@ void olu::osm::WayHandler::checkWaysForMemberChange(
                 _modifiedWays.insert(wayId);
             } else {
                 _modifiedWaysWithChangedMembers.insert(wayId);
+                _stats->countWayWithMemberChange();
             }
         }
     }

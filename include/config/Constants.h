@@ -431,6 +431,12 @@ namespace olu::config::constants {
     const static inline std::string QLEVER_ENDPOINT_OPTION_HELP =
         "Specify if the SPARQL endpoint is QLever. More metadata will be added to the output.";
 
+    const static inline std::string STATISTICS_INFO = "";
+    const static inline std::string STATISTICS_OPTION_SHORT = "";
+    const static inline std::string STATISTICS_OPTION_LONG = "statistics";
+    const static inline std::string STATISTICS_OPTION_HELP =
+        "Specify if detailed statistics should be added to the output.";
+
 } // namespace olu::config::constants
 
 #endif //OSM_LIVE_UPDATES_CONSTANTS_H

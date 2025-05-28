@@ -116,6 +116,11 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
         constants::QLEVER_ENDPOINT_OPTION_LONG,
         constants::QLEVER_ENDPOINT_OPTION_HELP);
 
+    const auto showStatisticsOp = parser.add<popl::Switch,
+        popl::Attribute::advanced>(
+        constants::STATISTICS_OPTION_SHORT,
+        constants::STATISTICS_OPTION_LONG,
+        constants::STATISTICS_OPTION_HELP);
 
     try {
         parser.parse(argc, argv);
@@ -227,6 +232,10 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
 
         if (isQleverEndpointOp->is_set()) {
             isQLever = true;
+        }
+
+        if (showStatisticsOp->is_set()) {
+            showDetailedStatistics = true;
         }
 
         if (sparqlOutputOp->is_set()) {

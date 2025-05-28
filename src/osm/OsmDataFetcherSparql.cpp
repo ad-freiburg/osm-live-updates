@@ -39,6 +39,8 @@ namespace cnst = olu::config::constants;
 simdjson::padded_string
 olu::osm::OsmDataFetcherSparql::runQuery(const std::string &query,
                                                                const std::vector<std::string> &prefixes) {
+    _stats->countQuery();
+
     _sparqlWrapper.setQuery(query);
     _sparqlWrapper.setPrefixes(prefixes);
     return {_sparqlWrapper.runQuery()};

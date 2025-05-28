@@ -33,9 +33,11 @@ void olu::osm::RelationHandler::relation(const osmium::Relation& relation) {
     switch (OsmObjectHelper::getChangeAction(relation)) {
         case ChangeAction::CREATE:
             _createdRelations.insert(relation.id());
+            _stats->countCreatedRelation();
             break;
         case ChangeAction::DELETE:
             _deletedRelations.insert(relation.id());
+            _stats->countDeletedRelation();
             break;
         case ChangeAction::MODIFY:
             const auto *const typeTag = relation.tags()["type"];
@@ -50,17 +52,8 @@ void olu::osm::RelationHandler::relation(const osmium::Relation& relation) {
             }
 
             _modifiedRelationsBuffer.emplace(relation.id(), members);
+            _stats->countModifiedRelation();
     }
-}
-
-// _________________________________________________________________________________________________
-void olu::osm::RelationHandler::printRelationStatistics() const {
-    std::cout << osm2rdf::util::currentTimeFormatted()
-            << "relations created: " << _createdRelations.size()
-            << " modified: " << _modifiedRelations.size()
-                                + _modifiedRelationsWithChangedMembers.size()
-            << " deleted: " << _deletedRelations.size()
-            << std::endl;
 }
 
 // _________________________________________________________________________________________________
@@ -78,6 +71,7 @@ void olu::osm::RelationHandler::checkRelationsForMemberChange(
         const auto membersEndpoint = _odf->fetchRelsMembersSorted({relId});
         if (membersEndpoint.empty()) {
             _createdRelations.insert(relId);
+            _stats->switchModifiedToCreatedRelation();
             continue;
         }
 
@@ -86,6 +80,7 @@ void olu::osm::RelationHandler::checkRelationsForMemberChange(
                 _modifiedRelations.insert(relId);
             } else {
                 _modifiedRelationsWithChangedMembers.insert(relId);
+                _stats->countRelationWithMemberChange();
             }
         }
     }

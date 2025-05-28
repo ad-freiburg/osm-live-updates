@@ -32,6 +32,7 @@ enum SparqlOutput {
 
 struct Config {
     static constexpr u_int16_t DEFAULT_WKT_PRECISION = 7;
+    static constexpr u_int16_t DEFAULT_PERCENTAGE_PRECISION = 1;
     static constexpr u_int32_t DEFAULT_BATCH_SIZE = 1024;
 
     // The uri of the SPARQL endpoint for queries
@@ -63,6 +64,9 @@ struct Config {
 
     // Option that can be used if the SPARQL endpoint is QLever.
     bool isQLever = false;
+
+    // Option to enable detailed statistics output.
+    bool showDetailedStatistics = false;
 
     // The number of values or triples that should be sent in one batch to the SPARQL endpoint
     size_t batchSize = DEFAULT_BATCH_SIZE;

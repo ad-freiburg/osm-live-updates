@@ -8,6 +8,7 @@
 #include <string>
 
 #include "simdjson.h"
+#include "StatisticsHandler.h"
 
 #include "osm/OsmDataFetcher.h"
 #include "osm/Node.h"
@@ -20,8 +21,9 @@
 namespace olu::osm {
     class OsmDataFetcherQLever final : public OsmDataFetcher {
     public:
-        explicit OsmDataFetcherQLever(const config::Config &config)
-            : _config(config), _sparqlWrapper(config), _queryWriter(config) { }
+        explicit OsmDataFetcherQLever(const config::Config &config, StatisticsHandler &stats)
+            : _config(config), _stats(&stats),  _sparqlWrapper(config),
+              _queryWriter(config) { }
 
         std::vector<Node> fetchNodes(const std::set<id_t> &nodeIds) override;
 
@@ -56,6 +58,7 @@ namespace olu::osm {
         fetchRelationsReferencingRelations(const std::set<id_t> &relationIds) override;
     private:
         config::Config _config;
+        StatisticsHandler* _stats;
         sparql::SparqlWrapper _sparqlWrapper;
         sparql::QueryWriter _queryWriter;
         simdjson::ondemand::parser _parser;

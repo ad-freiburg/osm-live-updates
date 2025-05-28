@@ -41,6 +41,8 @@ namespace cnst = olu::config::constants;
 simdjson::padded_string
 olu::osm::OsmDataFetcherQLever::OsmDataFetcherQLever::runQuery(const std::string &query,
                                                    const std::vector<std::string> &prefixes) {
+    _stats->countQuery();
+
     _sparqlWrapper.setQuery(query);
     _sparqlWrapper.setPrefixes(prefixes);
     return {_sparqlWrapper.runQuery()};
@@ -585,6 +587,10 @@ olu::osm::OsmDataFetcherQLever::forResults(const simdjson::padded_string &respon
 
         func(result.value());
     }
+
+    // for (auto time: doc["time"]) {
+    //     std::cout << time << std::endl;
+    // }
 }
 
 // _________________________________________________________________________________________________

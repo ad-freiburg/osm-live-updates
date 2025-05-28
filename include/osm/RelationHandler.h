@@ -22,6 +22,7 @@
 #include <map>
 #include <set>
 
+#include "StatisticsHandler.h"
 #include "osmium/handler.hpp"
 
 #include "osm/OsmDataFetcher.h"
@@ -29,8 +30,9 @@
 namespace olu::osm {
     class RelationHandler: public osmium::handler::Handler {
     public:
-        explicit RelationHandler(const config::Config &config,
-                                 OsmDataFetcher &odf): _config(config), _odf(&odf) {}
+        explicit RelationHandler(const config::Config &config, OsmDataFetcher &odf,
+                                 StatisticsHandler &stats): _config(config), _odf(&odf),
+                                                            _stats(&stats) {}
 
         // Iterator for osmium::apply
         void relation(const osmium::Relation& relation);
@@ -57,8 +59,6 @@ namespace olu::osm {
                    _modifiedRelationsWithChangedMembers.size() +
                    _deletedRelations.size();
         }
-
-        void printRelationStatistics() const;
 
         /**
          * Checks if the members of the given relations from the change file have changed.
@@ -114,6 +114,7 @@ namespace olu::osm {
     private:
         config::Config _config;
         OsmDataFetcher* _odf;
+        StatisticsHandler* _stats;
 
         // Relations that are in a delete-changeset in the change file.
         std::set<id_t> _deletedRelations;

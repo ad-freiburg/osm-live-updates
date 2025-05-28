@@ -43,19 +43,23 @@
 
 namespace cnst = olu::config::constants;
 
-std::unique_ptr<olu::osm::OsmDataFetcher> createOsmDataFetcher(const olu::config::Config& config) {
+std::unique_ptr<olu::osm::OsmDataFetcher>
+createOsmDataFetcher(const olu::config::Config& config, olu::osm::StatisticsHandler &stats) {
     if (config.isQLever) {
-        return std::make_unique<olu::osm::OsmDataFetcherQLever>(config);
+        return std::make_unique<olu::osm::OsmDataFetcherQLever>(config, stats);
     }
 
-    return std::make_unique<olu::osm::OsmDataFetcherSparql>(config);
+    return std::make_unique<olu::osm::OsmDataFetcherSparql>(config, stats);
 }
 
 // _________________________________________________________________________________________________
 olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config),
                                                                  _repServer(config),
-                                                                 _odf(createOsmDataFetcher(config)),
+                                                                 _stats(config),
+                                                                 _odf(createOsmDataFetcher(config, _stats)),
                                                                  _latestState({}) {
+    _stats.startTime();
+
     try {
         std::filesystem::create_directory(cnst::PATH_TO_TEMP_DIR);
         std::filesystem::create_directory(cnst::PATH_TO_CHANGE_FILE_DIR);
@@ -82,75 +86,71 @@ void olu::osm::OsmUpdater::run() {
     // Handle either local directory with change files or external one depending on the user
     // input
     if (!_config.changeFileDir.empty()) {
-        std::cout
-        << osm2rdf::util::currentTimeFormatted()
-        << "Start handling change files at:  "
-        << _config.changeFileDir
-        << std::endl;
+        _stats.printCurrentStep("Start handling change files at:  " + _config.changeFileDir);
 
+        _stats.startTimeMergingChangeFiles();
         mergeChangeFiles(_config.changeFileDir);
+        _stats.endTimeFetchingChangeFiles();
 
-        auto och{OsmChangeHandler(_config, *_odf)};
+        auto och{OsmChangeHandler(_config, *_odf, _stats)};
         och.run();
     } else {
-        std::cout
-        << osm2rdf::util::currentTimeFormatted()
-        << "Determine sequence number to start with ..."
-        << std::endl;
+        _stats.startTimeDeterminingSequenceNumber();
+        _stats.printCurrentStep("Determine sequence number to start with ...");
 
         _latestState = _repServer.fetchLatestDatabaseState();
         const auto sequenceNumber = decideStartSequenceNumber();
 
-        std::cout
-        << osm2rdf::util::currentTimeFormatted()
-        << "Start sequence number: "
-        << sequenceNumber
-        << " of "
-        << _latestState.sequenceNumber
-        << std::endl;
+        _stats.printCurrentStep("Start sequence number: " + std::to_string(sequenceNumber)
+                                + " of " + std::to_string(_latestState.sequenceNumber));
+
+        _stats.endTimeDeterminingSequenceNumber();
 
         if (sequenceNumber > _latestState.sequenceNumber) {
-            std::cout
-            << osm2rdf::util::currentTimeFormatted()
-            << "Database is already up to date. DONE."
-            << std::endl;
-
+            _stats.printCurrentStep("Database is already up to date. DONE.");
             return;
         }
 
+        _stats.startTimeFetchingChangeFiles();
         fetchChangeFiles(sequenceNumber);
+        _stats.endTimeFetchingChangeFiles();
+
+        _stats.startTimeMergingChangeFiles();
         mergeChangeFiles(cnst::PATH_TO_CHANGE_FILE_DIR);
         clearChangesDir();
+        _stats.endTimeMergingChangeFiles();
 
-        std::cout
-        << osm2rdf::util::currentTimeFormatted()
-        << "Process changes from "
-        << _latestState.sequenceNumber - sequenceNumber + 1
-        << " change files..."
-        << std::endl;
+        _stats.printCurrentStep("Process changes from "
+                                + std::to_string(_latestState.sequenceNumber - sequenceNumber)
+                                + " change files...");
 
-        auto och{OsmChangeHandler(_config, *_odf)};
+        auto och{OsmChangeHandler(_config, *_odf, _stats)};
         och.run();
-
     }
 
     deleteTmpDir();
+    _stats.endTime();
 
-    std::cout
-    << osm2rdf::util::currentTimeFormatted()
-    << "DONE"
-    << std::endl;
+    _stats.printOsmStatistics();
+    _stats.printUpdateStatistics();
+    if (_config.showDetailedStatistics) {
+        _stats.printOsm2RdfStatistics();
+        _stats.printSparqlStatistics();
+    }
+    _stats.printTimingStatistics();
+
+    _stats.printCurrentStep("DONE");
 }
 
 // _________________________________________________________________________________________________
-int olu::osm::OsmUpdater::decideStartSequenceNumber() {
+int olu::osm::OsmUpdater::decideStartSequenceNumber() const {
     if (_config.sequenceNumber > 0) {
         return _config.sequenceNumber;
     }
 
     std::string timestamp;
     if (_config.timestamp.empty()) {
-        timestamp = _odf.get()->fetchLatestTimestampOfAnyNode();
+        timestamp = _odf->fetchLatestTimestampOfAnyNode();
     } else {
         timestamp = _config.timestamp;
     }
@@ -215,10 +215,7 @@ void olu::osm::OsmUpdater::mergeChangeFiles(const std::string &pathToChangeFileD
 
 // _________________________________________________________________________________________________
 void olu::osm::OsmUpdater::fetchChangeFiles(int sequenceNumber) {
-    std::cout
-    << osm2rdf::util::currentTimeFormatted()
-    << "Fetch and merge change files..."
-    << std::endl;
+    _stats.printCurrentStep("Fetch and merge change files...");
 
     osm2rdf::util::ProgressBar downloadProgress(
         _latestState.sequenceNumber + 1 - sequenceNumber, _config.showProgress);
