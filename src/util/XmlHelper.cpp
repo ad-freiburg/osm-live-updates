@@ -18,6 +18,7 @@
 
 #include "util/XmlHelper.h"
 
+#include <iostream>
 #include <string>
 
 #include "boost/regex.hpp"
@@ -97,4 +98,21 @@ std::string olu::util::XmlHelper::xmlDecode(const std::string &input) {
 
     output.append(input, prev_pos, std::string::npos);
     return output;
+}
+
+// _________________________________________________________________________________________________
+std::string olu::util::XmlHelper::parseKeyName(const std::string& uri) {
+    // Remove angle brackets if present
+    std::string clean = uri;
+    if (!clean.empty() && clean.front() == '<' && clean.back() == '>') {
+        clean = clean.substr(1, clean.size() - 2);
+    }
+
+    // Find the last colon (Key:source:population)
+    if (const size_t pos = clean.rfind("Key:"); pos != std::string::npos) {
+        return clean.substr(pos + 4);
+    }
+
+    const std::string msg = "Cannot parse key name from URI: " + uri;
+    throw XmlHelperException(msg.c_str());
 }

@@ -1,4 +1,4 @@
-// Copyright 2024, University of Freiburg
+// Copyright 2025, University of Freiburg
 // Authors: Nicolas von Trott <nicolasvontrott@gmail.com>.
 
 // This file is part of osm-live-updates.
@@ -16,7 +16,7 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "osm/OsmDataFetcher.h"
+#include "osm/OsmDataFetcherSparql.h"
 
 #include <vector>
 #include <iostream>
@@ -37,8 +37,8 @@ namespace cnst = olu::config::constants;
 
 // _________________________________________________________________________________________________
 simdjson::padded_string
-olu::osm::OsmDataFetcher::OsmDataFetcher::runQuery(const std::string &query,
-                                                   const std::vector<std::string> &prefixes) {
+olu::osm::OsmDataFetcherSparql::runQuery(const std::string &query,
+                                                               const std::vector<std::string> &prefixes) {
     _sparqlWrapper.setQuery(query);
     _sparqlWrapper.setPrefixes(prefixes);
     return {_sparqlWrapper.runQuery()};
@@ -46,7 +46,7 @@ olu::osm::OsmDataFetcher::OsmDataFetcher::runQuery(const std::string &query,
 
 // _________________________________________________________________________________________________
 std::vector<olu::osm::Node>
-olu::osm::OsmDataFetcher::OsmDataFetcher::fetchNodes(const std::set<id_t> &nodeIds) {
+olu::osm::OsmDataFetcherSparql::fetchNodes(const std::set<id_t> &nodeIds) {
     const auto response = runQuery(
         _queryWriter.writeQueryForNodeLocations(nodeIds),
         cnst::PREFIXES_FOR_NODE_LOCATION);
@@ -71,7 +71,7 @@ olu::osm::OsmDataFetcher::OsmDataFetcher::fetchNodes(const std::set<id_t> &nodeI
 }
 
 // _________________________________________________________________________________________________
-std::string olu::osm::OsmDataFetcher::OsmDataFetcher::fetchLatestTimestampOfAnyNode() {
+std::string olu::osm::OsmDataFetcherSparql::fetchLatestTimestampOfAnyNode() {
     const auto response = runQuery(
         _queryWriter.writeQueryForLatestNodeTimestamp(),
         cnst::PREFIXES_FOR_LATEST_NODE_TIMESTAMP);
@@ -91,7 +91,7 @@ std::string olu::osm::OsmDataFetcher::OsmDataFetcher::fetchLatestTimestampOfAnyN
 namespace olu::osm {
     // _____________________________________________________________________________________________
     std::vector<Relation>
-    OsmDataFetcher::fetchRelations(const std::set<id_t> &relationIds) {
+    OsmDataFetcherSparql::fetchRelations(const std::set<id_t> &relationIds) {
         const auto response = runQuery(
             _queryWriter.writeQueryForRelations(relationIds),
             cnst::PREFIXES_FOR_RELATION_MEMBERS);
@@ -152,7 +152,7 @@ namespace olu::osm {
     }
 
     // _____________________________________________________________________________________________
-    std::vector<Way> OsmDataFetcher::fetchWays(const std::set<id_t> &wayIds) {
+    std::vector<Way> OsmDataFetcherSparql::fetchWays(const std::set<id_t> &wayIds) {
         auto response = runQuery(
             _queryWriter.writeQueryForWaysMembers(wayIds),
             cnst::PREFIXES_FOR_WAY_MEMBERS);
@@ -191,7 +191,7 @@ namespace olu::osm {
     }
 
     // _____________________________________________________________________________________________
-    void OsmDataFetcher::fetchWayInfos(Way &way) {
+    void OsmDataFetcherSparql::fetchWayInfos(Way &way) {
         const std::string subject = cnst::MakePrefixedName(cnst::NAMESPACE_OSM_WAY,
                                                            std::to_string(way.getId()));
         const auto response = runQuery(
@@ -218,7 +218,7 @@ namespace olu::osm {
     }
 
     // _____________________________________________________________________________________________
-    void OsmDataFetcher::fetchRelationInfos(Relation &relation) {
+    void OsmDataFetcherSparql::fetchRelationInfos(Relation &relation) {
         const std::string subject = cnst::MakePrefixedName(cnst::NAMESPACE_OSM_REL,
                                                            std::to_string(relation.getId()));
         const auto response = runQuery(
@@ -245,7 +245,7 @@ namespace olu::osm {
     }
 
     // _____________________________________________________________________________________________
-    std::vector<id_t> OsmDataFetcher::fetchWaysMembers(const std::set<id_t> &wayIds) {
+    std::vector<id_t> OsmDataFetcherSparql::fetchWaysMembers(const std::set<id_t> &wayIds) {
         const auto response = runQuery(
             _queryWriter.writeQueryForReferencedNodes(wayIds),
             cnst::PREFIXES_FOR_WAY_MEMBERS);
@@ -261,7 +261,7 @@ namespace olu::osm {
 
     // _____________________________________________________________________________________________
     std::vector<std::pair<id_t, member_ids_t>>
-    OsmDataFetcher::fetchWaysMembersSorted(const std::set<id_t> &wayIds) {
+    OsmDataFetcherSparql::fetchWaysMembersSorted(const std::set<id_t> &wayIds) {
         const auto response = runQuery(
             _queryWriter.writeQueryForWaysMembers(wayIds),
             cnst::PREFIXES_FOR_WAY_MEMBERS);
@@ -306,7 +306,7 @@ namespace olu::osm {
 
     // _____________________________________________________________________________________________
     std::vector<std::pair<id_t, std::vector<RelationMember>>>
-    OsmDataFetcher::fetchRelsMembersSorted(const std::set<id_t> &relIds) {
+    OsmDataFetcherSparql::fetchRelsMembersSorted(const std::set<id_t> &relIds) {
         const auto response = runQuery(_queryWriter.writeQueryForRelsMembers(relIds),
                                        cnst::PREFIXES_FOR_RELATION_MEMBERS);
 
@@ -363,7 +363,7 @@ namespace olu::osm {
 
     // _____________________________________________________________________________________________
     std::pair<std::vector<id_t>, std::vector<id_t>>
-    OsmDataFetcher::fetchRelationMembers(const std::set<id_t> &relIds) {
+    OsmDataFetcherSparql::fetchRelationMembers(const std::set<id_t> &relIds) {
         const auto response = runQuery(
             _queryWriter.writeQueryForRelationMemberIds(relIds),
             cnst::PREFIXES_FOR_RELATION_MEMBERS);
@@ -385,7 +385,7 @@ namespace olu::osm {
     }
 
     // _____________________________________________________________________________________________
-    std::vector<id_t> OsmDataFetcher::fetchWaysReferencingNodes(const std::set<id_t> &nodeIds) {
+    std::vector<id_t> OsmDataFetcherSparql::fetchWaysReferencingNodes(const std::set<id_t> &nodeIds) {
         const auto response = runQuery(
             _queryWriter.writeQueryForWaysReferencingNodes(nodeIds),
             cnst::PREFIXES_FOR_WAYS_REFERENCING_NODE);
@@ -401,7 +401,7 @@ namespace olu::osm {
 
     // _____________________________________________________________________________________________
     std::vector<id_t>
-    OsmDataFetcher::fetchRelationsReferencingNodes(const std::set<id_t> &nodeIds) {
+    OsmDataFetcherSparql::fetchRelationsReferencingNodes(const std::set<id_t> &nodeIds) {
         const auto response = runQuery(
             _queryWriter.writeQueryForRelationsReferencingNodes(nodeIds),
             cnst::PREFIXES_FOR_RELATIONS_REFERENCING_NODE);
@@ -416,7 +416,7 @@ namespace olu::osm {
     }
 
     // _____________________________________________________________________________________________
-    std::vector<id_t> OsmDataFetcher::fetchRelationsReferencingWays(const std::set<id_t> &wayIds) {
+    std::vector<id_t> OsmDataFetcherSparql::fetchRelationsReferencingWays(const std::set<id_t> &wayIds) {
         const auto response = runQuery(
             _queryWriter.writeQueryForRelationsReferencingWays(wayIds),
             cnst::PREFIXES_FOR_RELATIONS_REFERENCING_WAY);
@@ -432,7 +432,7 @@ namespace olu::osm {
 
     // _____________________________________________________________________________________________
     std::vector<id_t>
-    OsmDataFetcher::fetchRelationsReferencingRelations(const std::set<id_t> &relationIds) {
+    OsmDataFetcherSparql::fetchRelationsReferencingRelations(const std::set<id_t> &relationIds) {
         const auto response = runQuery(
             _queryWriter.writeQueryForRelationsReferencingRelations(relationIds),
             cnst::PREFIXES_FOR_RELATIONS_REFERENCING_RELATIONS);
@@ -449,7 +449,7 @@ namespace olu::osm {
 
 // _________________________________________________________________________________________________
 template <typename T> std::vector<T>
-olu::osm::OsmDataFetcher::parseValueList(const std::string_view &list,
+olu::osm::OsmDataFetcherSparql::parseValueList(const std::string_view &list,
                                          const std::function<T(std::string)> function) {
     std::vector<T> items;
     std::ispanstream stream(list);
@@ -463,16 +463,16 @@ olu::osm::OsmDataFetcher::parseValueList(const std::string_view &list,
 }
 
 // _________________________________________________________________________________________________
-simdjson::simdjson_result<simdjson::westmere::ondemand::value>
-olu::osm::OsmDataFetcher::getBindings(
+simdjson::simdjson_result<simdjson::ondemand::value>
+olu::osm::OsmDataFetcherSparql::getBindings(
     simdjson::simdjson_result<simdjson::ondemand::document> &doc) {
     return doc[config::constants::KEY_RESULTS][config::constants::KEY_BINDINGS];
 }
 
 // _________________________________________________________________________________________________
 template <typename T> T
-olu::osm::OsmDataFetcher::getValue(
-    simdjson::simdjson_result<simdjson::westmere::ondemand::value> value) {
+olu::osm::OsmDataFetcherSparql::getValue(
+    simdjson::simdjson_result<simdjson::ondemand::value> value) {
     try {
         if constexpr (std::is_same_v<T, std::string_view>) {
             return value[config::constants::KEY_VALUE].get_string();

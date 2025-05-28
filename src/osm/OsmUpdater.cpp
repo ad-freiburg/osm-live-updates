@@ -22,6 +22,7 @@
 #include <iostream>
 #include <filesystem>
 #include <fstream>
+#include <osm/OsmDataFetcherQLever.h>
 #include <osm/OsmDataFetcherSparql.h>
 
 #include "osmium/visitor.hpp"
@@ -42,11 +43,19 @@
 
 namespace cnst = olu::config::constants;
 
+std::unique_ptr<olu::osm::OsmDataFetcher> createOsmDataFetcher(const olu::config::Config& config) {
+    if (config.isQLever) {
+        return std::make_unique<olu::osm::OsmDataFetcherQLever>(config);
+    }
+
+    return std::make_unique<olu::osm::OsmDataFetcherSparql>(config);
+}
+
 // _________________________________________________________________________________________________
 olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config),
                                                                  _repServer(config),
-                                                                 _odf(std::make_unique<OsmDataFetcherSparql>(OsmDataFetcherSparql(_config))
-), _latestState({}) {
+                                                                 _odf(createOsmDataFetcher(config)),
+                                                                 _latestState({}) {
     try {
         std::filesystem::create_directory(cnst::PATH_TO_TEMP_DIR);
         std::filesystem::create_directory(cnst::PATH_TO_CHANGE_FILE_DIR);

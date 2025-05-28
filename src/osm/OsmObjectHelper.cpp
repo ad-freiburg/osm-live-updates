@@ -34,6 +34,16 @@ olu::id_t olu::osm::OsmObjectHelper::parseIdFromUri(const std::string_view &uri)
     std::vector<char> id;
     // Read characters from the end of the uri until the first non digit is reached
     for (auto it = uri.rbegin(); it != uri.rend(); ++it) {
+        // Uris can be inside angle brackets, e.g., <https://www.openstreetmap.org/node/1>
+        if (*it == '>') {
+            continue;
+        }
+
+        // Uris can also be in quotes, e.g., "<https://www.openstreetmap.org/node/1>"
+        if (*it == '\"') {
+            continue;
+        }
+
         if (std::isdigit(*it)) {
             id.push_back(*it);
         } else {

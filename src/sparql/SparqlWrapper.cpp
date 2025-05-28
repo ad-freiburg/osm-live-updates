@@ -43,11 +43,18 @@ void olu::sparql::SparqlWrapper::setPrefixes(const std::vector<std::string> &pre
 }
 
 // _________________________________________________________________________________________________
-std::string olu::sparql::SparqlWrapper::send(const std::string& acceptValue, const bool isUpdate) {
+std::string olu::sparql::SparqlWrapper::send(const bool isUpdate) {
     if (_config.sparqlOutput == config::SparqlOutput::DEBUG_FILE ||
         (_config.sparqlOutput == config::SparqlOutput::FILE && isUpdate)) {
         writeQueryToFileOutput();
     }
+
+    // Set the accept-value depending on whether we are using QLever or not.
+    // QLever endpoints will return metadata with the results, while SPARQL results will only
+    // include the actual data.
+    const auto acceptValue = _config.isQLever
+                                 ? cnst::HTML_VALUE_ACCEPT_QLEVER_RESULT_JSON
+                                 : cnst::HTML_VALUE_ACCEPT_SPARQL_RESULT_JSON;
 
     // Format and encode query
     const std::string query = _prefixes + _query;
@@ -85,12 +92,12 @@ std::string olu::sparql::SparqlWrapper::send(const std::string& acceptValue, con
 
 // _________________________________________________________________________________________________
 void olu::sparql::SparqlWrapper::runUpdate() {
-    send(cnst::HTML_VALUE_ACCEPT_SPARQL_RESULT_JSON, true);
+    send(true);
 }
 
 // _________________________________________________________________________________________________
 std::string olu::sparql::SparqlWrapper::runQuery() {
-    const auto response = send(cnst::HTML_VALUE_ACCEPT_SPARQL_RESULT_JSON, false);
+    const auto response = send(false);
 
     if (response.empty()) {
         throw SparqlWrapperException("Empty response from SPARQL endpoint");
