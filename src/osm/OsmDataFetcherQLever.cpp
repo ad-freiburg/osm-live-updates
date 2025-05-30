@@ -260,7 +260,7 @@ namespace olu::osm {
                     }
                     case 4: {
                         const auto changesetId = getValue<std::string>(result.value());
-                        way.setChangesetId(util::XmlHelper::parseRdfString<int>(changesetId));
+                        way.setChangesetId(OsmObjectHelper::parseIdFromUri(changesetId));
                         break;
                     }
                     default:
@@ -314,7 +314,7 @@ namespace olu::osm {
                     }
                     case 4: {
                         const auto changesetId = getValue<std::string>(result.value());
-                        relation.setChangesetId(util::XmlHelper::parseRdfString<int>(changesetId));
+                        relation.setChangesetId(OsmObjectHelper::parseIdFromUri(changesetId));
                         break;
                     }
                     default:

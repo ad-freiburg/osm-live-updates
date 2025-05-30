@@ -121,7 +121,7 @@ void olu::osm::OsmUpdater::run() {
         _stats.endTimeMergingChangeFiles();
 
         _stats.printCurrentStep("Process changes from "
-                                + std::to_string(_latestState.sequenceNumber - sequenceNumber)
+                                + std::to_string(_latestState.sequenceNumber - sequenceNumber + 1)
                                 + " change files...");
 
         auto och{OsmChangeHandler(_config, *_odf, _stats)};
