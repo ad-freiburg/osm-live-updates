@@ -33,7 +33,7 @@ enum SparqlOutput {
 struct Config {
     static constexpr u_int16_t DEFAULT_WKT_PRECISION = 7;
     static constexpr u_int16_t DEFAULT_PERCENTAGE_PRECISION = 1;
-    static constexpr u_int32_t DEFAULT_BATCH_SIZE = 1024;
+    static constexpr u_int32_t DEFAULT_BATCH_SIZE = 1 << 19;
 
     // The uri of the SPARQL endpoint for queries
     std::string sparqlEndpointUri;
