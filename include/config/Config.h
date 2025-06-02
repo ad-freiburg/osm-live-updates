@@ -21,6 +21,7 @@
 
 #include <string>
 #include <filesystem>
+#include <thread>
 
 namespace olu::config {
 
@@ -55,6 +56,8 @@ struct Config {
     int sequenceNumber = -1;
     // User specified timestamp from command line
     std::string timestamp;
+
+    int numThreads = std::thread::hardware_concurrency();
 
     // Specifies if osm2rdf should be run with the option to mask blank nodes
     bool noBlankNodes = false;
