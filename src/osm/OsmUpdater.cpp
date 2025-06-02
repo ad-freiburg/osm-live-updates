@@ -22,9 +22,8 @@
 #include <iostream>
 #include <filesystem>
 #include <fstream>
-#include <osm/OsmDataFetcherQLever.h>
-#include <osm/OsmDataFetcherSparql.h>
 
+#include "omp.h"
 #include "osmium/visitor.hpp"
 #include "osmium/object_pointer_collection.hpp"
 #include "osmium/io/file.hpp"
@@ -38,6 +37,8 @@
 #include "osmium/osm/object_comparisons.hpp"
 
 #include "osm/OsmChangeHandler.h"
+#include "osm/OsmDataFetcherQLever.h"
+#include "osm/OsmDataFetcherSparql.h"
 #include "config/Constants.h"
 #include "osm2rdf/util/Time.h"
 
@@ -59,6 +60,10 @@ olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config)
                                                                  _odf(createOsmDataFetcher(config, _stats)),
                                                                  _latestState({}) {
     _stats.startTime();
+
+#if defined(_OPENMP)
+    omp_set_num_threads(config.numThreads);
+#endif
 
     try {
         std::filesystem::create_directory(cnst::PATH_TO_TEMP_DIR);
@@ -222,12 +227,14 @@ void olu::osm::OsmUpdater::fetchChangeFiles(int sequenceNumber) {
     size_t counter = 0;
     downloadProgress.update(counter);
 
-    while (sequenceNumber <= _latestState.sequenceNumber) {
-        auto pathToOsmChangeFile = _repServer.fetchChangeFile(sequenceNumber);
-        downloadProgress.update(counter++);
-        sequenceNumber++;
+#pragma omp parallel for
+    for (int i = sequenceNumber; i <= _latestState.sequenceNumber; i++) {
+        auto pathToOsmChangeFile = _repServer.fetchChangeFile(i);
+#pragma omp critical
+        {
+            downloadProgress.update(counter++);
+        }
     }
-
     downloadProgress.done();
 }
 
