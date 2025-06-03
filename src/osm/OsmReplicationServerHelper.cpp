@@ -31,7 +31,7 @@
 
 namespace cnst = olu::config::constants;
 
-inline constexpr int BATCH_SIZE = 100;
+inline constexpr int BATCH_SIZE = 10;
 
 // _________________________________________________________________________________________________
 olu::osm::OsmDatabaseState
