@@ -62,6 +62,11 @@ namespace olu::config::constants {
     const static inline std::string PATH_TO_OSM2RDF_INFO_OUTPUT_FILE_DEBUG = "osm2rdf_info" + TEXT_FILE_EXTENSION;
     const static inline std::string PATH_TO_STATE_FILE = "state" + TEXT_FILE_EXTENSION;
 
+    // LOG -----------------------------------------------------------------------------------------
+    const static inline std::string LOG_WARNING = "WARNING:";
+    const static inline std::string LOG_ERROR = "ERROR:";
+    const static inline std::string LOG_INFO = "INFO:";
+
     // XML -----------------------------------------------------------------------------------------
     const static inline std::string XML_TAG_ATTR = "<xmlattr>";
     const static inline std::string XML_TAG_NODE = "node";
@@ -88,6 +93,10 @@ namespace olu::config::constants {
     const static inline std::string KEY_QLEVER_TIME = "time";
     const static inline std::string KEY_QLEVER_TOTAL = "total";
     const static inline std::string KEY_QLEVER_COMPUTE_RESULT = "computeResult";
+    const static inline std::string KEY_QLEVER_DELTA_TRIPLES = "delta-triples";
+    const static inline std::string KEY_QLEVER_DIFFERENCE = "difference";
+    const static inline std::string KEY_QLEVER_DELETED = "deleted";
+    const static inline std::string KEY_QLEVER_INSERTED = "inserted";
     const static inline std::string KEY_VALUE = "value";
 
     const static inline std::string XML_TAG_NAME = "name";

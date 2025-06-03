@@ -62,7 +62,7 @@ void olu::osm::OsmDataFetcherQLever::runQuery(const std::string &query,
             }
         }
         if (key == cnst::KEY_QLEVER_TIME) {
-            _stats->logQleverTimingInfoQuery(field.value().get_object());
+            _stats->logQleverQueryInfo(field.value().get_object());
         }
     }
 }

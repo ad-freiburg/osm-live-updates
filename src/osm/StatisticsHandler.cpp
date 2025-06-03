@@ -25,6 +25,8 @@
 
 static inline constexpr std::string_view prefix = "                          ";
 
+namespace cnst = olu::config::constants;
+
 // _________________________________________________________________________________________________
 void olu::osm::StatisticsHandler::printCurrentStep(const std::string &stepDescription) const {
     std::cout << util::currentTimeFormatted()
@@ -147,6 +149,15 @@ void olu::osm::StatisticsHandler::printSparqlStatistics() const {
     if (_config.isQLever) {
         std::cout << prefix << "QLever response time: " << _qleverResponseTimeMs << " ms, "
                   << "QLever update time: " << _qleverUpdateTimeMs << " ms" << std::endl;
+
+        std::cout << prefix << "Inserted: " << _qleverInsertedTriplesCount << " and deleted "
+           << _qleverDeletedTriplesCount << " triples at QLever endpoint" << std::endl;
+
+        if (_qleverInsertedTriplesCount != _numOfTriplesToInsert) {
+            std::cout << prefix << cnst::LOG_WARNING << "The number of triples inserted at the end "
+                                                        "point is not equal to the number of triples"
+                                                        " that need to be inserted." << std::endl;
+        }
     }
 }
 
@@ -278,19 +289,64 @@ void olu::osm::StatisticsHandler::countQleverUpdateTime(const std::string_view &
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::StatisticsHandler::logQleverTimingInfoQuery(simdjson::ondemand::object timeResult) {
-    for (auto field: timeResult) {
-        if (field.key() == config::constants::KEY_QLEVER_COMPUTE_RESULT) {
+void olu::osm::StatisticsHandler::logQleverQueryInfo(simdjson::ondemand::object qleverResponse) {
+    for (auto field: qleverResponse) {
+        if (field.key() == cnst::KEY_QLEVER_COMPUTE_RESULT) {
             countQleverResponseTime(field.value().value().get_string());
         }
     }
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::StatisticsHandler::logQleverTimingInfoUpdate(simdjson::ondemand::object timeResult) {
-    for (auto field: timeResult) {
-        if (field.key() == config::constants::KEY_QLEVER_TOTAL) {
-            countQleverUpdateTime(field.value().value().get_string());
+void olu::osm::StatisticsHandler::logQLeverUpdateInfo(const simdjson::padded_string &qleverResponse) {
+    for (auto doc = _parser.iterate(qleverResponse);
+         auto field: doc.get_object()) {
+        if (field.error()) {
+            std::cerr << field.error() << std::endl;
+            throw StatisticsHandlerException("Error while parsing QLever update response.");
+        }
+
+        const std::string_view key = field.escaped_key();
+        if (key == cnst::KEY_QLEVER_DELTA_TRIPLES) {
+            for (auto deltaField: field.value().get_object()) {
+                if (deltaField.error()) {
+                    std::cerr << deltaField.error() << std::endl;
+                    throw StatisticsHandlerException("Error while parsing QLever delta-field "
+                                                     "response.");
+                }
+
+                if (deltaField.key() == cnst::KEY_QLEVER_DIFFERENCE) {
+                    for (auto diffField: deltaField.value().get_object()) {
+                        if (diffField.error()) {
+                            std::cerr << diffField.error() << std::endl;
+                            throw StatisticsHandlerException("Error while parsing QLever "
+                                                             "differences-field response.");
+                        }
+
+                        if (diffField.key() == cnst::KEY_QLEVER_DELETED) {
+                            _qleverDeletedTriplesCount += diffField.value().get_int64().value();
+                        }
+
+                        if (diffField.key() == cnst::KEY_QLEVER_INSERTED) {
+                            _qleverInsertedTriplesCount += diffField.value().get_int64().value();
+                        }
+                    }
+                }
+            }
+        }
+
+        if ( key == cnst::KEY_QLEVER_TIME) {
+            for (auto timeField: field.value().get_object()) {
+                if (timeField.error()) {
+                    std::cerr << timeField.error() << std::endl;
+                    throw StatisticsHandlerException("Error while parsing QLever time-field "
+                                                     "response.");
+                }
+
+                if (timeField.key() == cnst::KEY_QLEVER_TOTAL) {
+                    countQleverUpdateTime(timeField.value().value().get_string());
+                }
+            }
         }
     }
 }

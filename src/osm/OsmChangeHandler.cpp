@@ -431,17 +431,7 @@ void olu::osm::OsmChangeHandler::runUpdateQuery(const std::string &query,
     if (_config.isQLever) {
         // Update responses are in "[]" so remove them before parsing
         response = response.substr(1, response.size() - 2);
-        for (auto doc = _parser.iterate(response);
-             auto field: doc.get_object()) {
-            if (field.error()) {
-                std::cerr << field.error() << std::endl;
-                throw OsmDataFetcherException("Error while parsing QLever update response.");
-            }
-
-            if (const std::string_view key = field.escaped_key(); key == cnst::KEY_QLEVER_TIME) {
-                _stats->logQleverTimingInfoUpdate(field.value().get_object());
-            }
-        }
+        _stats->logQLeverUpdateInfo(response);
     }
 }
 

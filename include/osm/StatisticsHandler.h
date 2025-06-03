@@ -166,10 +166,11 @@ namespace olu::osm {
         void countUpdateQuery() { ++_updateQueriesCount; }
         void countTriple() { ++_numOfConvertedTriples; }
 
-        void logQleverTimingInfoQuery(simdjson::ondemand::object timeResult);
-        void logQleverTimingInfoUpdate(simdjson::ondemand::object timeResult);
+        void logQleverQueryInfo(simdjson::ondemand::object qleverResponse);
+        void logQLeverUpdateInfo(const simdjson::padded_string &qleverResponse);
     private:
         config::Config _config;
+        simdjson::ondemand::parser _parser;
 
         size_t _numOfCreatedNodes = 0;
         size_t _numOfModifiedNodes = 0;
@@ -203,6 +204,8 @@ namespace olu::osm {
 
         size_t _qleverResponseTimeMs = 0;
         size_t _qleverUpdateTimeMs = 0;
+        size_t _qleverInsertedTriplesCount = 0;
+        size_t _qleverDeletedTriplesCount = 0;
 
         time_point_t _startTime;
         time_point_t _endTime;
@@ -263,6 +266,20 @@ namespace olu::osm {
 
         void countQleverResponseTime(const std::string_view &timeInMs);
         void countQleverUpdateTime(const std::string_view &timeInMs);
+    };
+
+    /**
+     * Exception that can appear inside the `StatisticsHandler` class.
+     */
+    class StatisticsHandlerException final : public std::exception {
+        std::string message;
+
+    public:
+        explicit StatisticsHandlerException(const char *msg) : message(msg) { }
+
+        [[nodiscard]] const char *what() const noexcept override {
+            return message.c_str();
+        }
     };
 }
 

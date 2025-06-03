@@ -21,7 +21,6 @@
 
 #include <set>
 
-#include "simdjson.h"
 #include "osmium/handler.hpp"
 #include "osm2rdf/util/ProgressBar.h"
 
@@ -57,7 +56,6 @@ namespace olu::osm {
         sparql::QueryWriter _queryWriter;
         OsmDataFetcher* _odf;
         StatisticsHandler* _stats;
-        simdjson::ondemand::parser _parser;
 
         /**
          * Osmium handler for the nodes in the change file.
