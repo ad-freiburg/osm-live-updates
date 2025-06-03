@@ -20,9 +20,8 @@
 #define OSM_LIVE_UPDATES_OSMCHANGEHANDLER_H
 
 #include <set>
-#include <sparql/QueryWriter.h>
 
-#include "StatisticsHandler.h"
+#include "simdjson.h"
 #include "osmium/handler.hpp"
 #include "osm2rdf/util/ProgressBar.h"
 
@@ -33,6 +32,8 @@
 #include "osm/RelationHandler.h"
 #include "osm/WayHandler.h"
 #include "sparql/SparqlWrapper.h"
+#include "sparql/QueryWriter.h"
+#include "osm/StatisticsHandler.h"
 
 namespace olu::osm {
     /**
@@ -56,6 +57,7 @@ namespace olu::osm {
         sparql::QueryWriter _queryWriter;
         OsmDataFetcher* _odf;
         StatisticsHandler* _stats;
+        simdjson::ondemand::parser _parser;
 
         /**
          * Osmium handler for the nodes in the change file.

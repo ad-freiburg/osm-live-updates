@@ -63,8 +63,9 @@ namespace olu::osm {
         sparql::QueryWriter _queryWriter;
         simdjson::ondemand::parser _parser;
 
-        simdjson::padded_string runQuery(const std::string &query,
-                                         const std::vector<std::string> &prefixes);
+        void runQuery(const std::string &query,
+                      const std::vector<std::string> &prefixes,
+                      std::function<void(simdjson::ondemand::value)> resultFunc);
 
         /**
          * Parses the items in a list that is delimited by ";" and applies the given function to

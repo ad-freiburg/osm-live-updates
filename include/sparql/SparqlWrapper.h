@@ -71,7 +71,7 @@ namespace olu::sparql {
          *
          * @return The response from the SPARQL endpoint.
          */
-        void runUpdate();
+        std::string runUpdate();
     private:
         config::Config _config;
         std::string _query;

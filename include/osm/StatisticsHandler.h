@@ -19,7 +19,11 @@
 #ifndef STATISTICSHANDLER_H
 #define STATISTICSHANDLER_H
 
+#include <string>
 #include <cstddef>
+
+#include "simdjson.h"
+
 #include <config/Config.h>
 #include <util/Types.h>
 
@@ -161,8 +165,9 @@ namespace olu::osm {
         void countQuery() { ++_queriesCount; }
         void countUpdateQuery() { ++_updateQueriesCount; }
         void countTriple() { ++_numOfConvertedTriples; }
-        void countQleverResponseTime(const size_t timeInMs) { _qleverResponseTimeMs += timeInMs; }
-        void countQleverUpdateTime(const size_t timeInMs) {  _qleverUpdateTimeMs += timeInMs; }
+
+        void logQleverTimingInfoQuery(simdjson::ondemand::object timeResult);
+        void logQleverTimingInfoUpdate(simdjson::ondemand::object timeResult);
     private:
         config::Config _config;
 
@@ -255,6 +260,9 @@ namespace olu::osm {
             return static_cast<double>(part) /
                    static_cast<double>(getTimeInMSTotal()) * 100.0;
         }
+
+        void countQleverResponseTime(const std::string_view &timeInMs);
+        void countQleverUpdateTime(const std::string_view &timeInMs);
     };
 }
 

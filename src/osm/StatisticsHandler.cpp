@@ -21,6 +21,8 @@
 #include <iostream>
 #include <util/Time.h>
 
+#include "config/Constants.h"
+
 static inline constexpr std::string_view prefix = "                          ";
 
 // _________________________________________________________________________________________________
@@ -261,4 +263,34 @@ void olu::osm::StatisticsHandler::printTimingStatistics() const {
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
+}
+
+// _________________________________________________________________________________________________
+void olu::osm::StatisticsHandler::countQleverResponseTime(const std::string_view &timeInMs) {
+    const auto timeString = timeInMs.substr(0, timeInMs.size() - 2); // Remove trailing "ms"
+    _qleverResponseTimeMs += std::stoi(std::string(timeString));
+}
+
+// _________________________________________________________________________________________________
+void olu::osm::StatisticsHandler::countQleverUpdateTime(const std::string_view &timeInMs) {
+    const auto timeString = timeInMs.substr(0, timeInMs.size() - 2); // Remove trailing "ms"
+    _qleverUpdateTimeMs += std::stoi(std::string(timeString));
+}
+
+// _________________________________________________________________________________________________
+void olu::osm::StatisticsHandler::logQleverTimingInfoQuery(simdjson::ondemand::object timeResult) {
+    for (auto field: timeResult) {
+        if (field.key() == config::constants::KEY_QLEVER_COMPUTE_RESULT) {
+            countQleverResponseTime(field.value().value().get_string());
+        }
+    }
+}
+
+// _________________________________________________________________________________________________
+void olu::osm::StatisticsHandler::logQleverTimingInfoUpdate(simdjson::ondemand::object timeResult) {
+    for (auto field: timeResult) {
+        if (field.key() == config::constants::KEY_QLEVER_TOTAL) {
+            countQleverUpdateTime(field.value().value().get_string());
+        }
+    }
 }

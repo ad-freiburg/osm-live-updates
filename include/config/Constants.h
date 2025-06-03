@@ -85,6 +85,9 @@ namespace olu::config::constants {
     const static inline std::string KEY_BINDINGS = "bindings";
     const static inline std::string KEY_QLEVER_SELECTED = "selected";
     const static inline std::string KEY_QLEVER_RESULTS = "res";
+    const static inline std::string KEY_QLEVER_TIME = "time";
+    const static inline std::string KEY_QLEVER_TOTAL = "total";
+    const static inline std::string KEY_QLEVER_COMPUTE_RESULT = "computeResult";
     const static inline std::string KEY_VALUE = "value";
 
     const static inline std::string XML_TAG_NAME = "name";
