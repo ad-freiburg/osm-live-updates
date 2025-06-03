@@ -34,7 +34,7 @@ namespace olu::osm {
                                    WayHandler &wayHandler,
                                    RelationHandler &relationHandler):
             _config(config),
-            _odf(odf),
+            _odf(&odf),
             _nodeHandler(nodeHandler),
             _wayHandler(wayHandler),
             _relationHandler(relationHandler) {}
@@ -72,7 +72,7 @@ namespace olu::osm {
 
     private:
         config::Config& _config;
-        OsmDataFetcher& _odf;
+        OsmDataFetcher* _odf;
         NodeHandler& _nodeHandler;
         WayHandler& _wayHandler;
         RelationHandler& _relationHandler;

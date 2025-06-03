@@ -22,6 +22,7 @@
 #include <map>
 #include <set>
 
+#include "StatisticsHandler.h"
 #include "osmium/handler.hpp"
 
 #include "osm/OsmDataFetcher.h"
@@ -30,7 +31,9 @@ namespace olu::osm {
 
     class WayHandler: public osmium::handler::Handler {
     public:
-        explicit WayHandler(const config::Config &config): _config(config), _odf(config) {}
+        explicit WayHandler(const config::Config &config, OsmDataFetcher &odf,
+                            StatisticsHandler &stats): _config(config), _odf(&odf),
+                                                       _stats(&stats) { }
 
         // Iterator for osmium::apply
         void way(const osmium::Way& way);
@@ -48,8 +51,6 @@ namespace olu::osm {
                    _modifiedWaysWithChangedMembers.size() +
                    _deletedWays.size();
         }
-
-        void printWayStatistics() const;
 
         /**
          * Checks if the members of the given ways from the change file have changed. If so, the
@@ -87,7 +88,8 @@ namespace olu::osm {
 
     private:
         config::Config _config;
-        OsmDataFetcher _odf;
+        OsmDataFetcher* _odf;
+        StatisticsHandler* _stats;
 
         // Ways that are in a delete-changeset in the change file.
         std::set<id_t> _deletedWays;

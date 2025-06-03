@@ -34,10 +34,10 @@ namespace olu::config::constants {
     const static inline std::string HTML_VALUE_CONTENT_TYPE = "application/x-www-form-urlencoded";
 
     const static inline std::string HTML_KEY_ACCEPT = "Accept";
-    const static inline std::string HTML_VALUE_ACCEPT_SPARQL_RESULT_XML =
-            "application/sparql-results+xml";
     const static inline std::string HTML_VALUE_ACCEPT_SPARQL_RESULT_JSON =
             "application/sparql-results+json";
+    const static inline std::string HTML_VALUE_ACCEPT_QLEVER_RESULT_JSON =
+            "application/qlever-results+json";
 
     // File extensions -----------------------------------------------------------------------------
     const static inline std::string OSM_CHANGE_FILE_EXTENSION = ".osc";
@@ -62,6 +62,11 @@ namespace olu::config::constants {
     const static inline std::string PATH_TO_OSM2RDF_INFO_OUTPUT_FILE_DEBUG = "osm2rdf_info" + TEXT_FILE_EXTENSION;
     const static inline std::string PATH_TO_STATE_FILE = "state" + TEXT_FILE_EXTENSION;
 
+    // LOG -----------------------------------------------------------------------------------------
+    const static inline std::string LOG_WARNING = "WARNING:";
+    const static inline std::string LOG_ERROR = "ERROR:";
+    const static inline std::string LOG_INFO = "INFO:";
+
     // XML -----------------------------------------------------------------------------------------
     const static inline std::string XML_TAG_ATTR = "<xmlattr>";
     const static inline std::string XML_TAG_NODE = "node";
@@ -83,6 +88,15 @@ namespace olu::config::constants {
     const static inline std::string XML_TAG_SPARQL = "sparql";
     const static inline std::string KEY_RESULTS = "results";
     const static inline std::string KEY_BINDINGS = "bindings";
+    const static inline std::string KEY_QLEVER_SELECTED = "selected";
+    const static inline std::string KEY_QLEVER_RESULTS = "res";
+    const static inline std::string KEY_QLEVER_TIME = "time";
+    const static inline std::string KEY_QLEVER_TOTAL = "total";
+    const static inline std::string KEY_QLEVER_COMPUTE_RESULT = "computeResult";
+    const static inline std::string KEY_QLEVER_DELTA_TRIPLES = "delta-triples";
+    const static inline std::string KEY_QLEVER_DIFFERENCE = "difference";
+    const static inline std::string KEY_QLEVER_DELETED = "deleted";
+    const static inline std::string KEY_QLEVER_INSERTED = "inserted";
     const static inline std::string KEY_VALUE = "value";
 
     const static inline std::string XML_TAG_NAME = "name";
@@ -422,6 +436,18 @@ namespace olu::config::constants {
     const static inline std::string BATCH_SIZE_OPTION_HELP =
         "The number of values or triples that should be sent in one batch to the SPARQL endpoint. "
         "Default is " + std::to_string(Config::DEFAULT_BATCH_SIZE) + ".";
+
+    const static inline std::string QLEVER_ENDPOINT_INFO = "Working with a QLever endpoint";
+    const static inline std::string QLEVER_ENDPOINT_OPTION_SHORT = "";
+    const static inline std::string QLEVER_ENDPOINT_OPTION_LONG = "qlever";
+    const static inline std::string QLEVER_ENDPOINT_OPTION_HELP =
+        "Specify if the SPARQL endpoint is QLever. More metadata will be added to the output.";
+
+    const static inline std::string STATISTICS_INFO = "";
+    const static inline std::string STATISTICS_OPTION_SHORT = "";
+    const static inline std::string STATISTICS_OPTION_LONG = "statistics";
+    const static inline std::string STATISTICS_OPTION_HELP =
+        "Specify if detailed statistics should be added to the output.";
 
 } // namespace olu::config::constants
 

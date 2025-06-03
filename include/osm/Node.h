@@ -45,6 +45,13 @@ namespace olu::osm {
     protected:
         id_t id;
         osmium::Location loc;
+
+        /**
+         * Parses a WKT point string with prefix
+         * ("\"POINT(1.622847 42.525981)\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>")
+         * and returns the POINT part.
+         */
+        static std::string parseWktPoint(const std::string& wktPoint);
     };
 
     /**

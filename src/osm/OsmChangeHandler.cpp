@@ -35,6 +35,7 @@
 #include "config/Constants.h"
 #include "osm/NodeHandler.h"
 #include "osm/Osm2ttl.h"
+#include "osm/OsmDataFetcherSparql.h"
 #include "sparql/QueryWriter.h"
 #include "util/XmlHelper.h"
 #include "util/TtlHelper.h"
@@ -43,20 +44,23 @@
 namespace cnst = olu::config::constants;
 
 // _________________________________________________________________________________________________
-olu::osm::OsmChangeHandler::OsmChangeHandler(const config::Config &config) :
+olu::osm::OsmChangeHandler::OsmChangeHandler(const config::Config &config, OsmDataFetcher &odf,
+                                             StatisticsHandler &stats) :
     _config(config),
     _sparql(config),
     _queryWriter(config),
-    _odf(config),
-    _nodeHandler(config),
-    _wayHandler(config),
-    _relationHandler(config),
-    _referencesHandler(_config, _odf, _nodeHandler, _wayHandler, _relationHandler) {
+    _odf(&odf),
+    _stats(&stats),
+    _nodeHandler(config, odf, stats),
+    _wayHandler(config, odf, stats),
+    _relationHandler(config, odf, stats),
+    _referencesHandler(_config, odf, _nodeHandler, _wayHandler, _relationHandler) {
     createTmpFiles();
 }
 
 // _________________________________________________________________________________________________
 void olu::osm::OsmChangeHandler::run() {
+    _stats->startTimeProcessingChangeFiles();
     osmium::io::Reader nodeReader{cnst::PATH_TO_CHANGE_FILE,
         osmium::osm_entity_bits::node,
         osmium::io::read_meta::no};
@@ -68,7 +72,9 @@ void olu::osm::OsmChangeHandler::run() {
     // Check for modified nodes if the location has changed.
     // If so, the node is added to the _modifiedNodesWithChangedLocation set, otherwise to the
     // _modifiedNodes set
+    _stats->startTimeCheckingNodeLocations();
     _nodeHandler.checkNodesForLocationChange();
+    _stats->endTimeCheckingNodeLocations();
     nodeReader.close();
 
     osmium::io::Reader wayReader{ cnst::PATH_TO_CHANGE_FILE,
@@ -78,7 +84,9 @@ void olu::osm::OsmChangeHandler::run() {
     // Check for modified ways if the members have changed.
     // If so, the way is added to the _modifiedWaysWithChangedMembers set, otherwise to the
     // _modifiedWays set
+    _stats->startTimeCheckingWayMembers();
     _wayHandler.checkWaysForMemberChange(_nodeHandler.getModifiedNodesWithChangedLocation());
+    _stats->endTimeCheckingWayMembers();
     wayReader.close();
 
     osmium::io::Reader relationReader{ cnst::PATH_TO_CHANGE_FILE,
@@ -88,32 +96,32 @@ void olu::osm::OsmChangeHandler::run() {
     // Check for modified relations if the members have changed.
     // If so, the relation is added to the _modifiedRelationsWithChangedMembers set, otherwise
     // to the _modifiedRelations set
+    _stats->startTimeCheckingRelationMembers();
     _relationHandler.checkRelationsForMemberChange(
         _nodeHandler.getModifiedNodesWithChangedLocation(),
         _wayHandler.getModifiedWaysWithChangedMembers());
+    _stats->endTimeCheckingRelationMembers();
     relationReader.close();
 
     if (_nodeHandler.empty() && _wayHandler.empty() && _relationHandler.empty()) {
         throw OsmChangeHandlerException("Change file is empty.");
     }
 
-    std::cout
-    << osm2rdf::util::currentTimeFormatted()
-    << "Fetch IDs of objects that need to be updated..."
-    << std::endl;
+    _stats->endTimeProcessingChangeFiles();
+    _stats->printCurrentStep("Fetch IDs of objects that need to be updated...");
     // Fetch the ids of all ways and relations that need to be updated, meaning they reference an
     // OSM object that changed their geometry because of elements in the change file.
+    _stats->startTimeFetchingObjectsToUpdateGeo();
     getIdsOfWaysToUpdateGeo();
     getIdsOfRelationsToUpdateGeo();
+    _stats->endTimeFetchingObjectsToUpdateGeo();
 
-    std::cout
-    << osm2rdf::util::currentTimeFormatted()
-    << "Fetch references..."
-    << std::endl;
+    _stats->printCurrentStep("Fetch references...");
     // Loop over the ways and relations a second time to store the ids of the referenced
     // elements.
     // We will need to retrieve them later from the endpoint (if they are not already
     // in the change file) for osm2rdf to calculate the geometries.
+    _stats->startTimeFetchingReferences();
     osmium::io::Reader referencesReader{ cnst::PATH_TO_CHANGE_FILE,
         osmium::osm_entity_bits::way | osmium::osm_entity_bits::relation,
         osmium::io::read_meta::no};
@@ -131,14 +139,19 @@ void olu::osm::OsmChangeHandler::run() {
     std::set wayIds(_referencesHandler.getReferencedWays());
     wayIds.insert(_waysToUpdateGeometry.begin(), _waysToUpdateGeometry.end());
     _referencesHandler.getReferencesForWays(wayIds);
+    _stats->endTimeFetchingReferences();
 
     // Create the dummy objects for the nodes, ways and relations that are referenced by
     // elements in the change file,
     // as well as the ways and relations for which the geometry needs to be updated.
+    _stats->startTimeCreatingDummys();
     createDummyElements();
+    _stats->endTimeCreatingDummys();
 
     try {
+        _stats->startTimeOsm2RdfConversion();
         Osm2ttl(_config).convert();
+        _stats->endTimeOsm2RdfConversion();
     } catch (std::exception &e) {
         std::cerr << e.what() << std::endl;
         throw OsmChangeHandlerException("Exception while trying to convert osm element to"
@@ -146,16 +159,13 @@ void olu::osm::OsmChangeHandler::run() {
     }
 
     // Delete and insert elements from database
+    _stats->startTimeDeletingTriples();
     deleteTriplesFromDatabase();
+    _stats->endTimeDeletingTriples();
+
+    _stats->startTimeInsertingTriples();
     insertTriplesToDatabase();
-
-    _nodeHandler.printNodeStatistics();
-    _wayHandler.printWayStatistics();
-    _relationHandler.printRelationStatistics();
-
-    std::cout << osm2rdf::util::currentTimeFormatted() << "updated geometries for "
-        << _waysToUpdateGeometry.size() << " ways and " << _relationsToUpdateGeometry.size()
-        << " relations" << std::endl;
+    _stats->endTimeInsertingTriples();
 }
 
 // _________________________________________________________________________________________________
@@ -203,9 +213,10 @@ void olu::osm::OsmChangeHandler::getIdsOfWaysToUpdateGeo() {
             _nodeHandler.getModifiedNodesWithChangedLocation(),
             _config.batchSize,
             [this](const std::set<id_t> &batch) {
-                for (const auto &wayId: _odf.fetchWaysReferencingNodes(batch)) {
+                for (const auto &wayId: _odf->fetchWaysReferencingNodes(batch)) {
                     if (!_wayHandler.wayInChangeFile(wayId)) {
                         _waysToUpdateGeometry.insert(wayId);
+                        _stats->countWayToUpdateGeometry();
                     }
                 }
             });
@@ -220,9 +231,10 @@ void olu::osm::OsmChangeHandler::getIdsOfRelationsToUpdateGeo() {
             _nodeHandler.getModifiedNodesWithChangedLocation(),
             _config.batchSize,
             [this](const std::set<id_t>& batch) {
-                for (const auto &relId: _odf.fetchRelationsReferencingNodes(batch)) {
+                for (const auto &relId: _odf->fetchRelationsReferencingNodes(batch)) {
                     if (!_relationHandler.relationInChangeFile(relId)) {
                         _relationsToUpdateGeometry.insert(relId);
+                        _stats->countRelationToUpdateGeometry();
                     }
                 }
             });
@@ -240,9 +252,11 @@ void olu::osm::OsmChangeHandler::getIdsOfRelationsToUpdateGeo() {
             updatedWays,
             _config.batchSize,
             [this](const std::set<id_t>& batch) {
-                for (const auto &relId: _odf.fetchRelationsReferencingWays(batch)) {
-                    if (!_relationHandler.relationInChangeFile(relId)) {
+                for (const auto &relId: _odf->fetchRelationsReferencingWays(batch)) {
+                    if (!_relationHandler.relationInChangeFile(relId) &&
+                        !_relationsToUpdateGeometry.contains(relId)) {
                         _relationsToUpdateGeometry.insert(relId);
+                        _stats->countRelationToUpdateGeometry();
                     }
                 }
             });
@@ -273,7 +287,7 @@ void olu::osm::OsmChangeHandler::getReferencedRelations() {
                 _relationsToUpdateGeometry,
             _config.batchSize,
             [this](const std::set<id_t>& batch) {
-                for (const auto &relId: _odf.fetchRelationsReferencingRelations(batch)) {
+                for (const auto &relId: _odf->fetchRelationsReferencingRelations(batch)) {
                     if (!_relationsToUpdateGeometry.contains(relId) &&
                         !_relationHandler.getCreatedRelations().contains(relId) &&
                         !_relationHandler.getModifiedAreas().contains(relId)) {
@@ -296,10 +310,7 @@ void olu::osm::OsmChangeHandler::createDummyElements() {
         return;
     }
 
-    std::cout
-    << osm2rdf::util::currentTimeFormatted()
-    << "Create referenced objects..."
-    << std::endl;
+    _stats->printCurrentStep("Create referenced objects...");
     osm2rdf::util::ProgressBar createProgress(count, _config.showProgress);
     size_t counter = 0;
     createProgress.update(counter);
@@ -320,10 +331,11 @@ void olu::osm::OsmChangeHandler::createDummyNodes(osm2rdf::util::ProgressBar &pr
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const& batch) mutable {
             progress.update(counter += batch.size());
-            for (auto const& node: _odf.fetchNodes(batch)) {
+            for (auto const& node: _odf->fetchNodes(batch)) {
                 // Add the dummy node to the buffer if it is not already in the change file
                 if (!_nodeHandler.nodeInChangeFile(node.getId())) {
                     addToTmpFile(node.getXml(), cnst::XML_TAG_NODE);
+                    _stats->countDummyNode();
                 }
             }
         });
@@ -345,7 +357,7 @@ void olu::osm::OsmChangeHandler::createDummyWays(osm2rdf::util::ProgressBar &pro
         _config.batchSize,
         [this, progress, &counter](std::set<id_t> const& batch) mutable {
             progress.update(counter += batch.size());
-            for (auto& way: _odf.fetchWays(batch)) {
+            for (auto& way: _odf->fetchWays(batch)) {
                 // The ways for which the geometry does not need to be updated are already in
                 // the tmp file
                 if (_wayHandler.getModifiedWays().contains(way.getId())) {
@@ -353,12 +365,13 @@ void olu::osm::OsmChangeHandler::createDummyWays(osm2rdf::util::ProgressBar &pro
                 }
 
                 if (_waysToUpdateGeometry.contains(way.getId())) {
-                    _odf.fetchWayInfos(way);
+                    _odf->fetchWayInfos(way);
                 }
 
                 // Add the dummy way to the buffer if it is not already in the change file
                 if (!_wayHandler.wayInChangeFile(way.getId())) {
                     addToTmpFile(way.getXml(), cnst::XML_TAG_WAY);
+                    _stats->countDummyWay();
                 }
             }
         });
@@ -381,14 +394,15 @@ void olu::osm::OsmChangeHandler::createDummyRelations(osm2rdf::util::ProgressBar
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const& batch) mutable {
             progress.update(counter += batch.size());
-            for (auto& rel: _odf.fetchRelations(batch)) {
+            for (auto& rel: _odf->fetchRelations(batch)) {
                 if (_relationsToUpdateGeometry.contains(rel.getId())) {
-                    _odf.fetchRelationInfos(rel);
+                    _odf->fetchRelationInfos(rel);
                 }
 
                 // Add the dummy relation to the buffer if it is not already in the change file
                 if (!_relationHandler.relationInChangeFile(rel.getId())) {
                     addToTmpFile(rel.getXml(), cnst::XML_TAG_REL);
+                    _stats->countDummyRelation();
                 }
             }
         });
@@ -399,16 +413,25 @@ void olu::osm::OsmChangeHandler::createDummyRelations(osm2rdf::util::ProgressBar
 // _________________________________________________________________________________________________
 void olu::osm::OsmChangeHandler::runUpdateQuery(const std::string &query,
                                                 const std::vector<std::string> &prefixes) {
+    _stats->countUpdateQuery();
     _sparql.setQuery(query);
     _sparql.setPrefixes(prefixes);
+
+    std::string response;
     try {
-        _sparql.runUpdate();
+        response = _sparql.runUpdate();
     } catch (std::exception &e) {
         std::cerr << e.what() << std::endl;
         const std::string msg = "Exception while trying to run sparql update query: "
                                 + query.substr(0, std::min<int>(query.size(), 100))
                                 + " ...";
         throw OsmChangeHandlerException(msg.c_str());
+    }
+
+    if (_config.isQLever) {
+        // Update responses are in "[]" so remove them before parsing
+        response = response.substr(1, response.size() - 2);
+        _stats->logQLeverUpdateInfo(response);
     }
 }
 
@@ -534,17 +557,11 @@ void olu::osm::OsmChangeHandler::deleteTriplesFromDatabase() {
         + _relationsToUpdateGeometry.size();
 
     if (count == 0) {
-        std::cout
-        << osm2rdf::util::currentTimeFormatted()
-        << "No elements to delete..."
-        << std::endl;
+        _stats->printCurrentStep("No elements to delete...");
         return;
     }
 
-    std::cout
-    << osm2rdf::util::currentTimeFormatted()
-    << "Deleting elements from database..."
-    << std::endl;
+    _stats->printCurrentStep("Deleting elements from database...");
     osm2rdf::util::ProgressBar deleteProgress(count, _config.showProgress);
     size_t counter = 0;
     deleteProgress.update(counter);
@@ -563,20 +580,16 @@ void olu::osm::OsmChangeHandler::deleteTriplesFromDatabase() {
 
 // _________________________________________________________________________________________________
 void olu::osm::OsmChangeHandler::insertTriplesToDatabase() {
+    _stats->startTimeFilteringTriples();
     auto triples = filterRelevantTriples();
+    _stats->endTimeFilteringTriples();
 
     if (triples.empty()) {
-        std::cout
-        << osm2rdf::util::currentTimeFormatted()
-        << "No triples to insert into database..."
-        << std::endl;
+        _stats->printCurrentStep("No triples to insert into database...");
         return;
     }
 
-    std::cout
-    << osm2rdf::util::currentTimeFormatted()
-    << "Inserting triples into database..."
-    << std::endl;
+    _stats->printCurrentStep("Inserting triples into database...");
     osm2rdf::util::ProgressBar insertProgress(triples.size(), _config.showProgress);
     size_t counter = 0;
     insertProgress.update(counter);
@@ -671,6 +684,7 @@ std::vector<olu::triple_t> olu::osm::OsmChangeHandler::filterRelevantTriples() c
     while (std::getline(osm2rdfOutput, line)) {
         // Filer out prefixes at the start of the document
         if (line.starts_with("@")) { continue; }
+        _stats->countTriple();
 
         auto triple = util::TtlHelper::parseTriple(line);
         const auto& [subject, predicate, object] = triple;
@@ -700,6 +714,7 @@ std::vector<olu::triple_t> olu::osm::OsmChangeHandler::filterRelevantTriples() c
     }
 
     osm2rdfOutput.close();
+    _stats->setNumberOfTriplesToInsert(relevantTriples.size());
     return relevantTriples;
 }
 

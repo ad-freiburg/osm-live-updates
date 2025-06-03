@@ -110,6 +110,18 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
         constants::BATCH_SIZE_OPTION_LONG,
         constants::BATCH_SIZE_OPTION_HELP);
 
+    const auto isQleverEndpointOp = parser.add<popl::Switch,
+        popl::Attribute::advanced>(
+        constants::QLEVER_ENDPOINT_OPTION_SHORT,
+        constants::QLEVER_ENDPOINT_OPTION_LONG,
+        constants::QLEVER_ENDPOINT_OPTION_HELP);
+
+    const auto showStatisticsOp = parser.add<popl::Switch,
+        popl::Attribute::advanced>(
+        constants::STATISTICS_OPTION_SHORT,
+        constants::STATISTICS_OPTION_LONG,
+        constants::STATISTICS_OPTION_HELP);
+
     try {
         parser.parse(argc, argv);
 
@@ -218,6 +230,14 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
             batchSize = batchSizeOp->value();
         }
 
+        if (isQleverEndpointOp->is_set()) {
+            isQLever = true;
+        }
+
+        if (showStatisticsOp->is_set()) {
+            showDetailedStatistics = true;
+        }
+
         if (sparqlOutputOp->is_set()) {
             sparqlOutputFile = sparqlOutputOp->value();
             sparqlOutput = sparqlOutputFormatOp->is_set() ? DEBUG_FILE : FILE;
@@ -269,6 +289,14 @@ std::string olu::config::Config::getInfo(const std::string_view prefix) const {
     << " "
     << sparqlEndpointUri
     << std::endl;
+
+    if (isQLever) {
+        oss
+        << osm2rdf::util::currentTimeFormatted()
+        << prefix
+        << constants::QLEVER_ENDPOINT_INFO
+        << std::endl;
+    }
 
     if (!graphUri.empty()) {
         oss

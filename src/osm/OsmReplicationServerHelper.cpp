@@ -22,6 +22,7 @@
 #include <iostream>
 #include <fstream>
 
+#include "omp.h"
 #include "boost/regex.hpp"
 
 #include "config/Constants.h"
@@ -29,6 +30,8 @@
 #include "util/HttpRequest.h"
 
 namespace cnst = olu::config::constants;
+
+inline constexpr int BATCH_SIZE = 10;
 
 // _________________________________________________________________________________________________
 olu::osm::OsmDatabaseState
@@ -110,29 +113,65 @@ olu::osm::OsmDatabaseState
 olu::osm::OsmReplicationServerHelper::fetchDatabaseStateForTimestamp(
     const std::string& timeStamp) const {
     // We start with the latest state file on the replication server
-    OsmDatabaseState state = fetchLatestDatabaseState();
-    while (true) {
-        // We have found a state file at which we have to start if the timestamp from the state
-        // file is further in the past than the latest timestamp from the sparql endpoint.
-        // (We can lexicographically compare timestamps because they are ISO-formatted
-        // "YYYY-MM-DDTHH:MM:SS")
-        if (state.timeStamp <= timeStamp) {
-            return state;
+    OsmDatabaseState latestState = fetchLatestDatabaseState();
+    // We have found a state file at which we have to start if the timestamp from the state
+    // file is further in the past than the latest timestamp from the sparql endpoint.
+    // (We can lexicographically compare timestamps because they are ISO-formatted
+    // "YYYY-MM-DDTHH:MM:SS")
+    if (latestState.timeStamp <= timeStamp) {
+        return latestState;
+    }
+
+    // Fetch database states in batches of BATCH_SIZE until we find a state file that has a matching
+    // timestamp.
+    auto toSeqNum = latestState.sequenceNumber;
+    while (toSeqNum > 0) {
+        const auto fromSeqNum = std::max(toSeqNum - BATCH_SIZE, 0);
+
+        for (auto databaseStates = fetchDatabaseStatesForSequenceNumbers(fromSeqNum, toSeqNum);
+             auto fetchedState : databaseStates) {
+            if (fetchedState.timeStamp <= timeStamp) {
+                return fetchedState;
+            }
         }
 
-        auto sequenceNumber = state.sequenceNumber;
-        sequenceNumber--;
+        toSeqNum = std::max(fromSeqNum, 0);
+    }
 
+    const std::string msg = "Could not find matching database state for timestamp: " + timeStamp;
+    throw OsmReplicationServerHelperException(msg.c_str());
+}
+
+// _________________________________________________________________________________________________
+std::vector<olu::osm::OsmDatabaseState>
+olu::osm::OsmReplicationServerHelper::fetchDatabaseStatesForSequenceNumbers(const int fromSeqNum,
+    const int toSeqNum) const {
+    std::vector<OsmDatabaseState> states;
+#pragma omp parallel for
+    for (int seqNum = fromSeqNum; seqNum <= toSeqNum; seqNum++) {
+        OsmDatabaseState state;
         try {
-            // Try the next older database state next
-            state = fetchDatabaseStateForSeqNumber(sequenceNumber);
+            state = fetchDatabaseStateForSeqNumber(seqNum);
         } catch (std::exception &e) {
             std::cerr << e.what() << std::endl;
-            const std::string msg = "Exception while trying to determine database state "
-                                    "for timestamp: " + timeStamp;
+            const std::string msg = "Exception while trying to fetch state file for sequence "
+                                    "number: " + std::to_string(seqNum);
             throw OsmReplicationServerHelperException(msg.c_str());
         }
+
+#pragma omp critical
+        {
+            states.push_back(state);
+        }
     }
+
+    // Since we fetched the states in parallel, we have to sort them by sequence number to make sure
+    // they are in the correct order.
+    std::ranges::sort(states, [](const OsmDatabaseState& a, const OsmDatabaseState& b) {
+        return a.sequenceNumber > b.sequenceNumber;
+    });
+
+    return states;
 }
 
 // _________________________________________________________________________________________________

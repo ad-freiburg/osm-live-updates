@@ -67,7 +67,7 @@ void olu::osm::ReferencesHandler::getReferencesForRelations(const std::set<id_t>
                 relationIds,
                 _config.batchSize,
                 [this](const std::set<id_t>& batch) {
-                auto [nodeIds, wayIds] = _odf.fetchRelationMembers(batch);
+                auto [nodeIds, wayIds] = _odf->fetchRelationMembers(batch);
                 for (const auto &wayId: wayIds) {
                     _referencedWays.insert(wayId);
                 }
@@ -85,7 +85,7 @@ void olu::osm::ReferencesHandler::getReferencesForWays(const std::set<id_t> &way
         wayIds,
         _config.batchSize,
         [this](const std::set<id_t>& batch) {
-            for (const auto &nodeId: _odf.fetchWaysMembers(batch)) {
+            for (const auto &nodeId: _odf->fetchWaysMembers(batch)) {
                 _referencedNodes.insert(nodeId);
             }
         });

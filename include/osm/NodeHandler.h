@@ -25,12 +25,15 @@
 #include "osmium/handler.hpp"
 
 #include "OsmDataFetcher.h"
+#include "StatisticsHandler.h"
 
 namespace olu::osm {
 
     class NodeHandler: public osmium::handler::Handler {
     public:
-        explicit NodeHandler(const config::Config &config): _config(config), _odf(config) {}
+        explicit NodeHandler(const config::Config &config, OsmDataFetcher &odf,
+                             StatisticsHandler &stats): _config(config), _odf(&odf),
+                                                        _stats(&stats) { }
 
         // Iterator for osmium::apply
         void node(const osmium::Node& node);
@@ -64,11 +67,6 @@ namespace olu::osm {
         }
 
         /**
-         * Prints the number of created, modified and deleted nodes to the console.
-         */
-        void printNodeStatistics() const;
-
-        /**
          * @return True if the change file contains no nodes.
          */
         bool empty() const {
@@ -95,7 +93,8 @@ namespace olu::osm {
 
     private:
         config::Config _config;
-        OsmDataFetcher _odf;
+        OsmDataFetcher* _odf;
+        StatisticsHandler* _stats;
 
         // Nodes that are in a delete-changeset in the change file.
         std::set<id_t> _deletedNodes;

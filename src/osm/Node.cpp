@@ -36,8 +36,15 @@ olu::osm::Node::Node(const id_t id, const wktPoint_t& locationAsWkt) {
     this->id = id;
 
     try {
-        const auto point = util::geo::pointFromWKT<double>(locationAsWkt);
-        this->loc = osmium::Location( point.getX(), point.getY() );
+        // Location can be given as a WKT point, e.g., "POINT(13.5690032 42.7957187)"
+        // or with a prefix "\"POINT(1.622847 42.525981)\"^^<http://www.opengis.net/ont/geosparql#wktLiteral>"
+        if (locationAsWkt.starts_with("P")) {
+            const auto point = util::geo::pointFromWKT<double>(locationAsWkt);
+            this->loc = osmium::Location( point.getX(), point.getY() );
+        } else {
+            const auto point = util::geo::pointFromWKT<double>(parseWktPoint(locationAsWkt));
+            this->loc = osmium::Location( point.getX(), point.getY() );
+        }
     } catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
         const std::string message = "Location can not be inferred from WKT point: "
@@ -54,4 +61,10 @@ std::string olu::osm::Node::getXml() const {
         << "\" lon=\"" << this->loc.lon() << "\"/>";
 
     return oss.str();
+}
+
+// _________________________________________________________________________________________________
+std::string olu::osm::Node::parseWktPoint(const std::string &wktPoint) {
+    auto string = wktPoint.substr(1, wktPoint.find('^') - 2);
+    return string;
 }

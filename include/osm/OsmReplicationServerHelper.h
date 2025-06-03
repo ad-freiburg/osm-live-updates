@@ -20,6 +20,7 @@
 #define OSMREPLICATIONSERVERHELPER_H
 
 #include <string>
+#include <vector>
 
 #include "config/Config.h"
 #include "osm/OsmDatabaseState.h"
@@ -88,6 +89,18 @@ namespace olu::osm {
          * @return The database state described by the state file
          */
         static OsmDatabaseState extractStateFromStateFile(const std::string& stateFile);
+
+        /**
+         * Fetches the state files for the sequence numbers between `fromSeqNum` and `toSeqNum`
+         * from the server and returns a vector with the extracted database states.
+         *
+         * @param fromSeqNum Sequence number to start fetching from
+         * @param toSeqNum Sequence number to stop fetching at
+         * @return A vector containing the database states for the sequence numbers between
+         * `fromSeqNum` and `toSeqNum` sorted by sequence number in descending order.
+         */
+        std::vector<OsmDatabaseState>
+        fetchDatabaseStatesForSequenceNumbers(int fromSeqNum, int toSeqNum) const;
     };
 
     /**

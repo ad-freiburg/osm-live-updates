@@ -21,6 +21,7 @@
 
 #include <string>
 #include <filesystem>
+#include <thread>
 
 namespace olu::config {
 
@@ -32,7 +33,8 @@ enum SparqlOutput {
 
 struct Config {
     static constexpr u_int16_t DEFAULT_WKT_PRECISION = 7;
-    static constexpr u_int32_t DEFAULT_BATCH_SIZE = 1024;
+    static constexpr u_int16_t DEFAULT_PERCENTAGE_PRECISION = 1;
+    static constexpr u_int32_t DEFAULT_BATCH_SIZE = 1 << 19;
 
     // The uri of the SPARQL endpoint for queries
     std::string sparqlEndpointUri;
@@ -55,11 +57,19 @@ struct Config {
     // User specified timestamp from command line
     std::string timestamp;
 
+    int numThreads = std::thread::hardware_concurrency();
+
     // Specifies if osm2rdf should be run with the option to mask blank nodes
     bool noBlankNodes = false;
 
     // Specifies whether a progress bar should be shown
     bool showProgress = true;
+
+    // Option that can be used if the SPARQL endpoint is QLever.
+    bool isQLever = false;
+
+    // Option to enable detailed statistics output.
+    bool showDetailedStatistics = false;
 
     // The number of values or triples that should be sent in one batch to the SPARQL endpoint
     size_t batchSize = DEFAULT_BATCH_SIZE;

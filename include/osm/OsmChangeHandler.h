@@ -31,6 +31,8 @@
 #include "osm/RelationHandler.h"
 #include "osm/WayHandler.h"
 #include "sparql/SparqlWrapper.h"
+#include "sparql/QueryWriter.h"
+#include "osm/StatisticsHandler.h"
 
 namespace olu::osm {
     /**
@@ -45,13 +47,15 @@ namespace olu::osm {
      */
     class OsmChangeHandler: public osmium::handler::Handler {
     public:
-        explicit OsmChangeHandler(const config::Config &config);
+        explicit OsmChangeHandler(const config::Config &config, OsmDataFetcher &odf,
+                                  StatisticsHandler &stats);
         void run();
     private:
         config::Config _config;
         sparql::SparqlWrapper _sparql;
         sparql::QueryWriter _queryWriter;
-        OsmDataFetcher _odf;
+        OsmDataFetcher* _odf;
+        StatisticsHandler* _stats;
 
         /**
          * Osmium handler for the nodes in the change file.

@@ -33,23 +33,17 @@ void olu::osm::NodeHandler::node(const osmium::Node& node) {
     switch (OsmObjectHelper::getChangeAction(node)) {
         case ChangeAction::CREATE:
             _createdNodes.insert(node.id());
+            _stats->countCreatedNode();
             break;
         case ChangeAction::MODIFY:
             _modifiedNodesBuffer.emplace(node.id(), node.location());
+            _stats->countModifiedNode();
             break;
         case ChangeAction::DELETE:
             _deletedNodes.insert(node.id());
+            _stats->countDeletedNode();
             break;
     }
-}
-
-// _________________________________________________________________________________________________
-void olu::osm::NodeHandler::printNodeStatistics() const {
-    std::cout << osm2rdf::util::currentTimeFormatted()
-    << "nodes created: " << _createdNodes.size()
-    << " modified: " << _modifiedNodes.size() + _modifiedNodesWithChangedLocation.size()
-    << " deleted: " << _deletedNodes.size()
-    << std::endl;
 }
 
 // _________________________________________________________________________________________________
@@ -62,7 +56,7 @@ void olu::osm::NodeHandler::checkNodesForLocationChange() {
         nodeIds,
         _config.batchSize,
         [this, &remoteNodes](std::set<id_t> const& batch) mutable {
-            for (const auto& node : _odf.fetchNodes(batch)) {
+            for (const auto& node : _odf->fetchNodes(batch)) {
                 remoteNodes.emplace(node.getId(), node.getLocation());
             }
     });
@@ -73,12 +67,14 @@ void olu::osm::NodeHandler::checkNodesForLocationChange() {
                 _modifiedNodes.insert(localId);
             } else {
                 _modifiedNodesWithChangedLocation.insert(localId);
+                _stats->countNodeWithLocationChange();
             }
         } else {
             // If we cannot find the node location on the endpoint, we assume that the node has
             // to be created. (See OsmObjectHelper::getChangeAction for an explanation why this
             // could happen even if the node is in a modify-changeset)
             _createdNodes.insert(localId);
+            _stats->switchModifiedToCreatedNode();
         }
     }
 
