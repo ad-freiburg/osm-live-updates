@@ -76,18 +76,6 @@ namespace olu::osm {
             return std::chrono::duration_cast<std::chrono::milliseconds>(_endTimeCheckingNodeLocations - _startTimeCheckingNodeLocations).count();
         }
 
-        void startTimeCheckingWayMembers() { _startTimeCheckingWayMembers = std::chrono::system_clock::now(); }
-        void endTimeCheckingWayMembers() { _endTimeCheckingWayMembers = std::chrono::system_clock::now(); }
-        long getTimeInMSCheckingWayMembers() const {
-            return std::chrono::duration_cast<std::chrono::milliseconds>(_endTimeCheckingWayMembers - _startTimeCheckingWayMembers).count();
-        }
-
-        void startTimeCheckingRelationMembers() { _startTimeCheckingRelationMembers = std::chrono::system_clock::now(); }
-        void endTimeCheckingRelationMembers() { _endTimeCheckingRelationMembers = std::chrono::system_clock::now(); }
-        long getTimeInMSCheckingRelationMembers() const {
-            return std::chrono::duration_cast<std::chrono::milliseconds>(_endTimeCheckingRelationMembers - _startTimeCheckingRelationMembers).count();
-        }
-
         void startTimeFetchingObjectsToUpdateGeo() { _startTimeFetchingObjectsToUpdateGeo = std::chrono::system_clock::now(); }
         void endTimeFetchingObjectsToUpdateGeo() { _endTimeFetchingObjectsToUpdateGeo = std::chrono::system_clock::now(); }
         long getTimeInMSFetchingObjectsToUpdateGeo() const {
@@ -224,12 +212,6 @@ namespace olu::osm {
 
         time_point_t _startTimeCheckingNodeLocations;
         time_point_t _endTimeCheckingNodeLocations;
-
-        time_point_t _startTimeCheckingWayMembers;
-        time_point_t _endTimeCheckingWayMembers;
-
-        time_point_t _startTimeCheckingRelationMembers;
-        time_point_t _endTimeCheckingRelationMembers;
 
         time_point_t _startTimeFetchingObjectsToUpdateGeo;
         time_point_t _endTimeFetchingObjectsToUpdateGeo;

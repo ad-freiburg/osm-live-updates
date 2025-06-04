@@ -19,7 +19,6 @@
 #ifndef WAYHANDLER_H
 #define WAYHANDLER_H
 
-#include <map>
 #include <set>
 
 #include "StatisticsHandler.h"
@@ -42,24 +41,11 @@ namespace olu::osm {
         [[nodiscard]] std::set<id_t> getModifiedWays() const { return _modifiedWays; }
         [[nodiscard]] std::set<id_t> getDeletedWays() const { return _deletedWays; }
 
-        [[nodiscard]] std::set<id_t> getModifiedWaysWithChangedMembers() const {
-            return _modifiedWaysWithChangedMembers; }
-
         [[nodiscard]] size_t getNumOfWays() const {
             return _createdWays.size() +
                    _modifiedWays.size() +
-                   _modifiedWaysWithChangedMembers.size() +
                    _deletedWays.size();
         }
-
-        /**
-         * Checks if the members of the given ways from the change file have changed. If so, the
-         * way is added to the _modifiedWaysWithChangedMembers set, otherwise to the
-         * _modifiedWays set
-         *
-         * @param modifiedNodesWithChangedLocation The ids of modified nodes with a changed location
-         */
-        void checkWaysForMemberChange(const std::set<id_t> &modifiedNodesWithChangedLocation);
 
         /**
          * @return True if the change file contains no ways.
@@ -67,7 +53,6 @@ namespace olu::osm {
         bool empty() const {
             return _createdWays.empty() &&
                    _modifiedWays.empty() &&
-                   _modifiedWaysWithChangedMembers.empty() &&
                    _deletedWays.empty();
         }
 
@@ -81,7 +66,6 @@ namespace olu::osm {
          */
         [[nodiscard]] bool wayInChangeFile(const id_t &wayId) const {
             return _modifiedWays.contains(wayId) ||
-                   _modifiedWaysWithChangedMembers.contains(wayId) ||
                    _createdWays.contains(wayId) ||
                    _deletedWays.contains(wayId);
         }
@@ -95,13 +79,8 @@ namespace olu::osm {
         std::set<id_t> _deletedWays;
         // Ways that are in a create-changeset in the change file.
         std::set<id_t> _createdWays;
-
-        // Buffer to store the members of the ways that are in a modify-changeset in the change file.
-        std::map<id_t, member_ids_t> _modifiedWaysBuffer;
         // Ways that are in a modify-changeset in the change file and not have a changed member list
         std::set<id_t> _modifiedWays;
-        // Ways that are in a modify-changeset in the change file and have a changed member list.
-        std::set<id_t> _modifiedWaysWithChangedMembers;
     };
 
 }

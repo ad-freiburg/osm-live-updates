@@ -212,20 +212,6 @@ void olu::osm::StatisticsHandler::printTimingStatistics() const {
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
 
-    partTime = getTimeInMSCheckingWayMembers();
-    std::cout << prefix << "Checking ways for member change took "
-            << partTime
-            << " ms. ("
-            << calculatePercentageOfTotalTime(partTime) << "% of total time)"
-            << std::endl;
-
-    partTime = getTimeInMSCheckingRelationMembers();
-    std::cout << prefix << "Checking relations for member change took "
-            << partTime
-            << " ms. ("
-            << calculatePercentageOfTotalTime(partTime) << "% of total time)"
-            << std::endl;
-
     partTime = getTimeInMSFetchingObjectsToUpdateGeo();
     std::cout << prefix << "Fetching objects to update geometry for took "
             << partTime

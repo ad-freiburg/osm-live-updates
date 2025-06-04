@@ -18,10 +18,7 @@
 
 #include "osm/WayHandler.h"
 
-#include <iostream>
-
 #include "osmium/osm/way.hpp"
-#include "osm2rdf/util/Time.h"
 
 #include "osm/OsmObjectHelper.h"
 
@@ -37,52 +34,8 @@ void olu::osm::WayHandler::way(const osmium::Way &way) {
             _stats->countDeletedWay();
             break;
         case ChangeAction::MODIFY:
-            std::vector<id_t> nodeRefs;
-            for (const auto &nodeRef: way.nodes()) {
-                nodeRefs.push_back(nodeRef.ref());
-            }
-
-            _modifiedWaysBuffer.emplace(way.id(), nodeRefs);
+            _modifiedWays.insert(way.id());
             _stats->countModifiedWay();
             break;
     }
-}
-
-// _________________________________________________________________________________________________
-void olu::osm::WayHandler::checkWaysForMemberChange(
-    const std::set<id_t> &modifiedNodesWithChangedLocation) {
-    for (const auto &[wayId, nodeRefs] : _modifiedWaysBuffer) {
-        // We have to check if a node reference of the way has its location changed, and if so,
-        // the ways geometry has to be updated nevertheless
-        bool hasModifiedNode = false;
-        for (const auto &nodeId : nodeRefs) {
-            if (modifiedNodesWithChangedLocation.contains(nodeId)) {
-                _modifiedWaysWithChangedMembers.insert(wayId);
-                hasModifiedNode = true;
-                break;
-            }
-        }
-
-        if (hasModifiedNode) {
-            continue;
-        }
-
-        const auto &membersEndpoint =  _odf->fetchWaysMembersSorted({wayId});
-        if (membersEndpoint.empty()) {
-            _createdWays.insert(wayId);
-            _stats->switchModifiedToCreatedWay();
-            continue;
-        }
-
-        for (const auto &[wayId, nodeRefsEndpoint]: membersEndpoint) {
-            if (OsmObjectHelper::areWayMemberEqual(nodeRefs, nodeRefsEndpoint)) {
-                _modifiedWays.insert(wayId);
-            } else {
-                _modifiedWaysWithChangedMembers.insert(wayId);
-                _stats->countWayWithMemberChange();
-            }
-        }
-    }
-
-    _modifiedWaysBuffer.clear();
 }

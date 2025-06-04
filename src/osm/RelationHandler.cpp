@@ -46,78 +46,7 @@ void olu::osm::RelationHandler::relation(const osmium::Relation& relation) {
                 _modifiedAreas.insert(relation.id());
             }
 
-            std::vector<RelationMember> members;
-            for (const auto &member: relation.members()) {
-                members.emplace_back(member.ref(), member.type(),member.role());
-            }
-
-            _modifiedRelationsBuffer.emplace(relation.id(), members);
+            _modifiedRelations.insert(relation.id());
             _stats->countModifiedRelation();
     }
-}
-
-// _________________________________________________________________________________________________
-void olu::osm::RelationHandler::checkRelationsForMemberChange(
-    const std::set<id_t> &modifiedNodesWithChangedLocation,
-    const std::set<id_t> &modifiedWaysWithChangedMembers) {
-
-    for (const auto &[relId, relMembers] : _modifiedRelationsBuffer) {
-        if (memberWasModifiedInChangeFile(relId, relMembers,
-                                          modifiedNodesWithChangedLocation,
-                                          modifiedWaysWithChangedMembers)) {
-            continue;
-        }
-
-        const auto membersEndpoint = _odf->fetchRelsMembersSorted({relId});
-        if (membersEndpoint.empty()) {
-            _createdRelations.insert(relId);
-            _stats->switchModifiedToCreatedRelation();
-            continue;
-        }
-
-        for (const auto &[relId, memberEndpoint]: membersEndpoint) {
-            if (RelationMember::areRelMemberEqual(relMembers, memberEndpoint)) {
-                _modifiedRelations.insert(relId);
-            } else {
-                _modifiedRelationsWithChangedMembers.insert(relId);
-                _stats->countRelationWithMemberChange();
-            }
-        }
-    }
-}
-
-// _________________________________________________________________________________________________
-bool olu::osm::RelationHandler::memberWasModifiedInChangeFile(
-    const id_t &relationId,
-    const std::vector<RelationMember> &members,
-    const std::set<id_t> &modifiedNodesWithChangedLocation,
-    const std::set<id_t> &modifiedWaysWithChangedMembers) {
-
-    bool hasModifiedMember = false;
-    for (const auto &member : members) {
-        if (member.type == OsmObjectType::NODE) {
-            if (modifiedNodesWithChangedLocation.contains(member.id)) {
-                _modifiedRelationsWithChangedMembers.insert(relationId);
-                hasModifiedMember = true;
-                break;
-            }
-        } else if (member.type == OsmObjectType::WAY) {
-            if (modifiedWaysWithChangedMembers.contains(member.id)) {
-                _modifiedRelationsWithChangedMembers.insert(relationId);
-                hasModifiedMember = true;
-                break;
-            }
-        } else if (member.type == OsmObjectType::RELATION) {
-            // At the moment, all relations that have a relation as member are handled
-            // as if their geometry has changed.
-            // This is not ideal, but to be sure that the geometry hasn't changed,
-            // we would have to check for all members that are relations if their geometry has
-            // changed, but this is not known at this point.
-            _modifiedRelationsWithChangedMembers.insert(relationId);
-            hasModifiedMember = true;
-            break;
-        }
-    }
-
-    return hasModifiedMember;
 }

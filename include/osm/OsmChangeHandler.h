@@ -175,12 +175,6 @@ namespace olu::osm {
         void deleteWaysFromDatabase(osm2rdf::util::ProgressBar &progress, size_t &counter);
 
         /**
-         * Send SPARQL queries to delete meta-data and key-value triples that belong to the ways
-         * that did not change their geometry
-         */
-        void deleteWaysMetaDataAndTags(osm2rdf::util::ProgressBar &progress, size_t &counter);
-
-        /**
          * Send SPARQL queries to delete geometry triples that belong to the ways for which only the
          * geometry changed
          */
@@ -193,17 +187,10 @@ namespace olu::osm {
         void deleteRelationsFromDatabase(osm2rdf::util::ProgressBar &progress, size_t &counter);
 
         /**
-         * Send SPARQL queries to delete meta-data and key-value triples that belong to the
-         * relations that did not change their member and therefore their geometry
-         */
-        void deleteRelationsMetaDataAndTags(osm2rdf::util::ProgressBar &progress, size_t &counter);
-
-        /**
          * Send SPARQL queries to delete geometry triples that belong to the ways for which only the
          * geometry changed
          */
         void deleteRelationsGeometry(osm2rdf::util::ProgressBar &progress, size_t &counter);
-
 
         /**
          * Send SPARQL queries to insert all relevant triples

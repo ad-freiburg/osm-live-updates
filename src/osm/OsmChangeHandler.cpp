@@ -61,13 +61,14 @@ olu::osm::OsmChangeHandler::OsmChangeHandler(const config::Config &config, OsmDa
 // _________________________________________________________________________________________________
 void olu::osm::OsmChangeHandler::run() {
     _stats->startTimeProcessingChangeFiles();
-    osmium::io::Reader nodeReader{cnst::PATH_TO_CHANGE_FILE,
-        osmium::osm_entity_bits::node,
-        osmium::io::read_meta::no};
+
     // Loop over the osm objects in the change file one time and store each objects id in the
     // corresponding set
     // (_createdNodes/Ways/Relations, _modifiedNodes/Ways/Relations,
     // _deletedNodes/Ways/Relations).
+    osmium::io::Reader nodeReader{cnst::PATH_TO_CHANGE_FILE,
+        osmium::osm_entity_bits::node,
+        osmium::io::read_meta::no};
     osmium::apply(nodeReader, _nodeHandler);
     // Check for modified nodes if the location has changed.
     // If so, the node is added to the _modifiedNodesWithChangedLocation set, otherwise to the
@@ -84,23 +85,12 @@ void olu::osm::OsmChangeHandler::run() {
     // Check for modified ways if the members have changed.
     // If so, the way is added to the _modifiedWaysWithChangedMembers set, otherwise to the
     // _modifiedWays set
-    _stats->startTimeCheckingWayMembers();
-    _wayHandler.checkWaysForMemberChange(_nodeHandler.getModifiedNodesWithChangedLocation());
-    _stats->endTimeCheckingWayMembers();
     wayReader.close();
 
     osmium::io::Reader relationReader{ cnst::PATH_TO_CHANGE_FILE,
         osmium::osm_entity_bits::relation,
         osmium::io::read_meta::no};
     osmium::apply(relationReader, _relationHandler);
-    // Check for modified relations if the members have changed.
-    // If so, the relation is added to the _modifiedRelationsWithChangedMembers set, otherwise
-    // to the _modifiedRelations set
-    _stats->startTimeCheckingRelationMembers();
-    _relationHandler.checkRelationsForMemberChange(
-        _nodeHandler.getModifiedNodesWithChangedLocation(),
-        _wayHandler.getModifiedWaysWithChangedMembers());
-    _stats->endTimeCheckingRelationMembers();
     relationReader.close();
 
     if (_nodeHandler.empty() && _wayHandler.empty() && _relationHandler.empty()) {
@@ -242,7 +232,7 @@ void olu::osm::OsmChangeHandler::getIdsOfRelationsToUpdateGeo() {
 
     // Get ids of relations that reference a way with changed geometry
     std::set<id_t> updatedWays;
-    for (const auto &wayId: _wayHandler.getModifiedWaysWithChangedMembers()) {
+    for (const auto &wayId: _wayHandler.getModifiedWays()) {
         updatedWays.insert(wayId);
     }
     updatedWays.insert(_waysToUpdateGeometry.begin(), _waysToUpdateGeometry.end());
@@ -455,7 +445,7 @@ void olu::osm::OsmChangeHandler::deleteWaysFromDatabase(osm2rdf::util::ProgressB
     for (const auto &wayId: _wayHandler.getDeletedWays()) {
         waysToDelete.insert(wayId);
     }
-    for (const auto &wayId: _wayHandler.getModifiedWaysWithChangedMembers()) {
+    for (const auto &wayId: _wayHandler.getModifiedWays()) {
         waysToDelete.insert(wayId);
     }
     for (const auto &wayId: _wayHandler.getCreatedWays()) {
@@ -468,32 +458,6 @@ void olu::osm::OsmChangeHandler::deleteWaysFromDatabase(osm2rdf::util::ProgressB
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
             runUpdateQuery(_queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_WAY),
                            cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
-            progress.update(counter += batch.size());
-        });
-}
-
-// _________________________________________________________________________________________________
-void olu::osm::OsmChangeHandler::deleteWaysMetaDataAndTags(osm2rdf::util::ProgressBar &progress,
-                                                           size_t &counter) {
-    util::BatchHelper::doInBatches(
-        _wayHandler.getModifiedWays(),
-        _config.batchSize,
-        [this, &counter, progress](std::set<id_t> const &batch) mutable {
-            runUpdateQuery(_queryWriter.writeDeleteQueryForMetaAndTags(batch, cnst::NAMESPACE_OSM_WAY),
-                           cnst::PREFIXES_FOR_WAY_DELETE_META_AND_TAGS_QUERY);
-            progress.update(counter += batch.size());
-        });
-}
-
-// _________________________________________________________________________________________________
-void olu::osm::OsmChangeHandler::deleteRelationsMetaDataAndTags(osm2rdf::util::ProgressBar &progress,
-                                                                size_t &counter) {
-    util::BatchHelper::doInBatches(
-        _relationHandler.getModifiedRelations(),
-        _config.batchSize,
-        [this, &counter, progress](std::set<id_t> const &batch) mutable {
-            runUpdateQuery(_queryWriter.writeDeleteQueryForMetaAndTags(batch, cnst::NAMESPACE_OSM_REL),
-                           cnst::PREFIXES_FOR_RELATION_DELETE_META_AND_TAGS_QUERY);
             progress.update(counter += batch.size());
         });
 }
@@ -515,14 +479,14 @@ void olu::osm::OsmChangeHandler::deleteWaysGeometry(osm2rdf::util::ProgressBar &
 void olu::osm::OsmChangeHandler::deleteRelationsFromDatabase(osm2rdf::util::ProgressBar &progress,
                                                              size_t &counter) {
     std::set<id_t> relationsToDelete;
-    for (const auto &wayId: _relationHandler.getDeletedRelations()) {
-        relationsToDelete.insert(wayId);
+    for (const auto &relationId: _relationHandler.getDeletedRelations()) {
+        relationsToDelete.insert(relationId);
     }
-    for (const auto &wayId: _relationHandler.getModifiedRelationsWithChangedMembers()) {
-        relationsToDelete.insert(wayId);
+    for (const auto &relationId: _relationHandler.getModifiedRelations()) {
+        relationsToDelete.insert(relationId);
     }
-    for (const auto &wayId: _relationHandler.getCreatedRelations()) {
-        relationsToDelete.insert(wayId);
+    for (const auto &relationId: _relationHandler.getCreatedRelations()) {
+        relationsToDelete.insert(relationId);
     }
 
     util::BatchHelper::doInBatches(
@@ -568,10 +532,8 @@ void olu::osm::OsmChangeHandler::deleteTriplesFromDatabase() {
 
     deleteNodesFromDatabase(deleteProgress, counter);
     deleteWaysFromDatabase(deleteProgress, counter);
-    deleteWaysMetaDataAndTags(deleteProgress,counter);
     deleteWaysGeometry(deleteProgress, counter);
     deleteRelationsFromDatabase(deleteProgress, counter);
-    deleteRelationsMetaDataAndTags(deleteProgress,counter);
     deleteRelationsGeometry(deleteProgress, counter);
 
     deleteProgress.done();
@@ -660,7 +622,7 @@ std::vector<olu::triple_t> olu::osm::OsmChangeHandler::filterRelevantTriples() c
     for (const auto &wayId: _wayHandler.getCreatedWays()) {
         waysToInsert.insert(wayId);
     }
-    for (const auto &wayId: _wayHandler.getModifiedWaysWithChangedMembers()) {
+    for (const auto &wayId: _wayHandler.getModifiedWays()) {
         waysToInsert.insert(wayId);
     }
 
@@ -668,7 +630,7 @@ std::vector<olu::triple_t> olu::osm::OsmChangeHandler::filterRelevantTriples() c
     for (const auto &relId: _relationHandler.getCreatedRelations()) {
         relationsToInsert.insert(relId);
     }
-    for (const auto &relId: _relationHandler.getModifiedRelationsWithChangedMembers()) {
+    for (const auto &relId: _relationHandler.getModifiedRelations()) {
         relationsToInsert.insert(relId);
     }
 
@@ -754,14 +716,6 @@ void olu::osm::OsmChangeHandler::filterWayTriple(const triple_t &wayTriple,
         }
     }
 
-    // We only update the triples for the metadata and tags of the ways that are in the
-    // modifiedWays set.
-    if (_wayHandler.getModifiedWays().contains(wayId)) {
-        if (util::TtlHelper::isMetadataOrTagPredicate(predicate, OsmObjectType::WAY)) {
-            relevantTriples.emplace_back(subject, predicate, util::XmlHelper::xmlDecode(object));
-        }
-    }
-
     // We only update the triples that describe the geometry of the ways that are in the
     // _waysToUpdateGeometry set.
     if (_waysToUpdateGeometry.contains(wayId)) {
@@ -792,14 +746,6 @@ void olu::osm::OsmChangeHandler::filterRelationTriple(const triple_t &relationTr
         // the member)
         if (util::TtlHelper::hasRelevantObject(predicate, OsmObjectType::RELATION)) {
             currentLink = object;
-        }
-    }
-
-    // We only update the triples for the metadata and tags of the relations that are
-    // in the modifiedRelations set.
-    if (_relationHandler.getModifiedRelations().contains(relId)) {
-        if (util::TtlHelper::isMetadataOrTagPredicate(predicate, OsmObjectType::RELATION)) {
-            relevantTriples.emplace_back(subject, predicate, util::XmlHelper::xmlDecode(object));
         }
     }
 
