@@ -62,11 +62,6 @@ namespace olu::config::constants {
     const static inline std::string PATH_TO_OSM2RDF_INFO_OUTPUT_FILE_DEBUG = "osm2rdf_info" + TEXT_FILE_EXTENSION;
     const static inline std::string PATH_TO_STATE_FILE = "state" + TEXT_FILE_EXTENSION;
 
-    // LOG -----------------------------------------------------------------------------------------
-    const static inline std::string LOG_WARNING = "WARNING:";
-    const static inline std::string LOG_ERROR = "ERROR:";
-    const static inline std::string LOG_INFO = "INFO:";
-
     // XML -----------------------------------------------------------------------------------------
     const static inline std::string XML_TAG_ATTR = "<xmlattr>";
     const static inline std::string XML_TAG_NODE = "node";
@@ -354,8 +349,6 @@ namespace olu::config::constants {
     const static inline std::string QUERY_VAR_MEMBER_POSS = MakeQueryVar(NAME_MEMBER_POSS);
 
     // Options and output --------------------------------------------------------------------------
-    const static inline std::string HEADER = "Configuration for OLU:";
-
     const static inline std::string HELP_OPTION_SHORT = "h";
     const static inline std::string HELP_OPTION_LONG = "help";
     const static inline std::string HELP_OPTION_HELP = "Display help information.";

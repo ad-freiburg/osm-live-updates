@@ -1,4 +1,4 @@
-// Copyright 2024, University of Freiburg
+// Copyright 2025, University of Freiburg
 // Authors: Nicolas von Trott <nicolasvontrott@gmail.com>.
 
 // This file is part of osm-live-updates.
@@ -16,26 +16,29 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "osm/Osm2ttl.h"
-#include "osm/OsmDataFetcher.h"
-#include "osm/OsmUpdater.h"
-#include "config/ExitCode.h"
+#ifndef LOGGER_H
+#define LOGGER_H
 
-#include <fstream>
+#include <array>
 #include <iostream>
 
-int main(int argc, char** argv) {
-    auto config((olu::config::Config()));
-    config.fromArgs(argc, argv);
-    config.printInfo();
+namespace olu::util {
+    static inline constexpr std::array<std::string_view, 5> LOG_TYPE_DESC =
+        {"CONFIG", "DEBUG ", "INFO ", "WARNING", "ERROR"};
 
-    try {
-        auto osmUpdater = olu::osm::OsmUpdater(config);
-        osmUpdater.run();
-    } catch (const std::exception& e) {
-        std::cerr << e.what() << std::endl;
-        std::exit(olu::config::ExitCode::EXCEPTION);
-    }
+    enum class LogEvent {
+        CONFIG = 0,
+        DEBUG = 1,
+        INFO = 2,
+        WARNING = 3,
+        ERROR = 4
+    };
 
-    std::exit(olu::config::ExitCode::SUCCESS);
+    class Logger {
+    public:
+        static void log(const LogEvent &eventType, const std::string_view &description,
+                        const bool &writeToStdStream = true);
+    };
 }
+
+#endif //LOGGER_H

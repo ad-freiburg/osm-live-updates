@@ -19,9 +19,10 @@
 #include "osm/StatisticsHandler.h"
 
 #include <iostream>
-#include <util/Time.h>
 
 #include "config/Constants.h"
+#include "util/Logger.h"
+#include "util/Time.h"
 
 static inline constexpr std::string_view prefix = "                          ";
 
@@ -154,9 +155,10 @@ void olu::osm::StatisticsHandler::printSparqlStatistics() const {
            << _qleverDeletedTriplesCount << " triples at QLever endpoint" << std::endl;
 
         if (_qleverInsertedTriplesCount != _numOfTriplesToInsert) {
-            std::cout << prefix << cnst::LOG_WARNING << "The number of triples inserted at the end "
-                                                        "point is not equal to the number of triples"
-                                                        " that need to be inserted." << std::endl;
+            util::Logger::log(util::LogEvent::WARNING, "The number of triples inserted"
+                              " at the end point is not equal to the"
+                              " number of triples that need to be"
+                              " inserted.");
         }
     }
 }

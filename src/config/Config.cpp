@@ -22,12 +22,12 @@
 #include <string>
 
 #include "popl.hpp"
-#include "osm2rdf/util/Time.h"
 
 #include "config/Constants.h"
 #include "config/ExitCode.h"
 #include "util/HttpRequest.h"
 #include "util/URLHelper.h"
+#include "util/Logger.h"
 
 // _________________________________________________________________________________________________
 void olu::config::Config::fromArgs(const int argc, char **argv) {
@@ -137,43 +137,56 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
         }
 
         if (!parser.unknown_options().empty()) {
-            std::cerr << "Unknown argument(s) specified:\n";
+            std::stringstream errorDescription;
+            errorDescription << "Unknown argument(s) specified:\n";
             for (const auto& option : parser.unknown_options()) {
-                std::cerr << option << "\n";
+                errorDescription << option << "\n";
             }
-            std::cerr << "\n" << parser.help() << "\n";
+            errorDescription << "\n" << parser.help() << "\n";
+
+            util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
             exit(UNKNOWN_ARGUMENT);
         }
 
         // Handle sparql endpoint uri
         if (parser.non_option_args().size() != 1) {
-            std::cerr << "No SPARQL endpoint URI specified!\n" << parser.help() << "\n";
+            std::stringstream errorDescription;
+            errorDescription << "No SPARQL endpoint URI specified!\n" << parser.help() << "\n";
+            util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
             exit(ENDPOINT_URI_MISSING);
         }
         sparqlEndpointUri = parser.non_option_args()[0];
         if (!util::URLHelper::isValidUri(sparqlEndpointUri)) {
-            std::cerr << "SPARQL endpoint URI is not valid: " << sparqlEndpointUri << "\n"
-                      << parser.help() << "\n";
+            std::stringstream errorDescription;
+            errorDescription << "SPARQL endpoint URI is not valid: " << sparqlEndpointUri << "\n"
+                             << parser.help() << "\n";
+            util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
+
             exit(ENDPOINT_URI_INVALID);
         }
 
         if (pathToOsmChangeFileInputDirOp->is_set() == osmChangeFileServerUriOp->is_set()) {
-            std::cerr << "You have to EITHER provide the path to an directory with the change files "
-                         "you want to process (--input) or the URI to an server where the osm change "
-                         "files are located (--file-server)" << std::endl;
+            std::stringstream errorDescription;
+            errorDescription << "You have to EITHER provide the path to an directory with the "
+                                "change files you want to process (--input) or the URI to an server"
+                                " where the osm change files are located (--file-server)"
+                             << std::endl;
+            util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
             exit(INCORRECT_ARGUMENTS);
         }
 
         if (pathToOsmChangeFileInputDirOp->is_set()) {
             changeFileDir = pathToOsmChangeFileInputDirOp->value();
             if (!std::filesystem::exists(changeFileDir)) {
-                std::cerr << "Input does not exist: " << changeFileDir << "\n"
-                          << parser.help() << "\n";
+                std::stringstream errorDescription;
+                errorDescription << "Input does not exist: " << changeFileDir << std::endl;
+                util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
                 exit(INPUT_NOT_EXISTS);
             }
             if (!std::filesystem::is_directory(changeFileDir)) {
-                std::cerr << "Input is not a directory: " << changeFileDir << "\n"
-                          << parser.help() << "\n";
+                std::stringstream errorDescription;
+                errorDescription << "Input is not a directory: " << changeFileDir << std::endl;
+                util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
                 exit(INPUT_IS_NOT_DIRECTORY);
             }
         }
@@ -181,8 +194,10 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
         if (osmChangeFileServerUriOp->is_set()) {
             changeFileDirUri = osmChangeFileServerUriOp->value();
             if (!util::URLHelper::isValidUri(changeFileDirUri)) {
-                std::cerr << "URI for OsmChange file server is not valid: " << changeFileDirUri << "\n"
-                          << parser.help() << "\n";
+                std::stringstream errorDescription;
+                errorDescription << "URI for OsmChange file server is not valid: "
+                                 << changeFileDirUri << std::endl;
+                util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
                 exit(ENDPOINT_URI_INVALID);
             }
         }
@@ -190,8 +205,9 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
         if (sparqlGraphUriOp->is_set()) {
             graphUri = sparqlGraphUriOp->value();
             if (!util::URLHelper::isValidUri(graphUri)) {
-                std::cerr << "URI for SPARQL graph is not valid: " << graphUri << "\n"
-                          << parser.help() << "\n";
+                std::stringstream errorDescription;
+                errorDescription << "URI for SPARQL graph is not valid: " << graphUri << std::endl;
+                util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
                 exit(GRAPH_URI_INVALID);
             }
         }
@@ -205,9 +221,10 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
         if (sparqlUpdateUri->is_set()) {
             sparqlEndpointUriForUpdates = sparqlUpdateUri->value();
             if (!util::URLHelper::isValidUri(sparqlEndpointUriForUpdates)) {
-                std::cerr << "URI for SPARQL updates is not valid: "
-                    << sparqlEndpointUriForUpdates << "\n"
-                    << parser.help() << "\n";
+                std::stringstream errorDescription;
+                errorDescription << "URI for SPARQL updates is not valid: "
+                                 << sparqlEndpointUriForUpdates << std::endl;
+                util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
                 exit(ENDPOINT_UPDATE_URI_INVALID);
             }
         } else {
@@ -245,16 +262,17 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
             sparqlOutput = ENDPOINT;
         }
     } catch (const popl::invalid_option& e) {
-        std::cerr << "Invalid Option Exception: " << e.what() << "\n";
-        std::cerr << "error:  ";
+        std::stringstream errorDescription;
+        errorDescription << "Invalid Option Exception: " << e.what() << "\n";
+        errorDescription << "error:  ";
         if (e.error() == popl::invalid_option::Error::missing_argument) {
-            std::cerr << "missing_argument\n";
+            errorDescription << "missing_argument\n";
         } else if (e.error() == popl::invalid_option::Error::invalid_argument) {
-            std::cerr << "invalid_argument\n";
+            errorDescription << "invalid_argument\n";
         } else if (e.error() == popl::invalid_option::Error::too_many_arguments) {
-            std::cerr << "too_many_arguments\n";
+            errorDescription << "too_many_arguments\n";
         } else if (e.error() == popl::invalid_option::Error::missing_option) {
-            std::cerr << "missing_option\n";
+            errorDescription << "missing_option\n";
         }
 
         if (e.error() == popl::invalid_option::Error::missing_option) {
@@ -263,118 +281,63 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
             if (option_name.empty()) {
                 option_name = e.option()->name(popl::OptionName::long_name, true);
             }
-            std::cerr << "option: " << option_name << "\n";
+            errorDescription << "option: " << option_name << "\n";
         } else {
-            std::cerr << "option: " << e.option()->name(e.what_name()) << "\n";
-            std::cerr << "value:  " << e.value() << "\n";
+            errorDescription << "option: " << e.option()->name(e.what_name()) << "\n";
+            errorDescription << "value:  " << e.value() << "\n";
         }
 
+        util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
         exit(FAILURE);
     }
 }
 
-std::string olu::config::Config::getInfo(const std::string_view prefix) const {
-    std::ostringstream oss;
-
-    oss
-    << osm2rdf::util::currentTimeFormatted()
-    << prefix
-    << constants::HEADER
-    << std::endl;
-
-    oss
-    << osm2rdf::util::currentTimeFormatted()
-    << prefix
-    << constants::SPARQL_ENDPOINT_URI_INFO
-    << " "
-    << sparqlEndpointUri
-    << std::endl;
+void olu::config::Config::printInfo() const {
+    util::Logger::log(util::LogEvent::CONFIG,
+                      constants::SPARQL_ENDPOINT_URI_INFO + " " + sparqlEndpointUri);
 
     if (isQLever) {
-        oss
-        << osm2rdf::util::currentTimeFormatted()
-        << prefix
-        << constants::QLEVER_ENDPOINT_INFO
-        << std::endl;
+        util::Logger::log(util::LogEvent::CONFIG, constants::QLEVER_ENDPOINT_INFO);
     }
 
     if (!graphUri.empty()) {
-        oss
-        << osm2rdf::util::currentTimeFormatted()
-        << prefix
-        << constants::SPARQL_GRAPH_URI_INFO
-        << " "
-        << graphUri
-        << std::endl;
+        util::Logger::log(util::LogEvent::CONFIG,
+                          constants::SPARQL_GRAPH_URI_INFO + " " + graphUri);
     }
 
     if (!changeFileDir.empty()) {
-        oss
-        << osm2rdf::util::currentTimeFormatted()
-        << prefix
-        << constants::PATH_TO_INPUT_INFO
-        << " "
-        << changeFileDir
-        << std::endl;
+        util::Logger::log(util::LogEvent::CONFIG,
+                          constants::PATH_TO_INPUT_INFO + " " + changeFileDir);
     } else {
         if (!changeFileDirUri.empty()) {
-            oss
-            << osm2rdf::util::currentTimeFormatted()
-            << prefix
-            << constants::OSM_CHANGE_FILE_DIRECTORY_URI_INFO
-            << " "
-            << changeFileDirUri
-            << std::endl;
+            util::Logger::log(util::LogEvent::CONFIG,
+                              constants::OSM_CHANGE_FILE_DIRECTORY_URI_INFO + " " +
+                              changeFileDirUri);
         }
 
         if (sequenceNumber > 0) {
-            oss
-            << osm2rdf::util::currentTimeFormatted()
-            << prefix
-            << constants::SEQUENCE_NUMBER_INFO
-            << " "
-            << sequenceNumber
-            << std::endl;
+            util::Logger::log(util::LogEvent::CONFIG,
+                              constants::SEQUENCE_NUMBER_INFO + " " + std::to_string(
+                                  sequenceNumber));
         } else if (!timestamp.empty()) {
-            oss
-            << osm2rdf::util::currentTimeFormatted()
-            << prefix
-            << constants::TIME_STAMP_INFO
-            << " "
-            << timestamp
-            << std::endl;
+            util::Logger::log(util::LogEvent::CONFIG,
+                              constants::TIME_STAMP_INFO + " " + timestamp);
         }
     }
 
     if (noBlankNodes) {
-        oss
-        << osm2rdf::util::currentTimeFormatted()
-        << prefix
-        << constants::BLANK_NODES_INFO
-        << std::endl;
+        util::Logger::log(util::LogEvent::CONFIG, constants::BLANK_NODES_INFO);
     }
 
     if (wktPrecision != DEFAULT_WKT_PRECISION) {
-        oss
-        << osm2rdf::util::currentTimeFormatted()
-        << prefix
-        << constants::WKT_PRECISION_INFO
-        << " "
-        << std::to_string(wktPrecision)
-        << std::endl;
+        util::Logger::log(util::LogEvent::CONFIG,
+                          constants::WKT_PRECISION_INFO + " " + std::to_string(wktPrecision));
     }
 
     if (batchSize != DEFAULT_BATCH_SIZE) {
-        oss
-        << osm2rdf::util::currentTimeFormatted()
-        << prefix
-        << constants::BATCH_SIZE_INFO
-        << " "
-        << std::to_string(batchSize)
-        << std::endl;
+        util::Logger::log(util::LogEvent::CONFIG,
+                          constants::BATCH_SIZE_INFO + " " + std::to_string(batchSize));
     }
-
-    return oss.str();
 }
 
 
