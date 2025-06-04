@@ -319,14 +319,11 @@ void olu::osm::OsmChangeHandler::createDummyNodes(osm2rdf::util::ProgressBar &pr
     util::BatchHelper::doInBatches(
         _referencesHandler.getReferencedNodes(),
         _config.batchSize,
-        [this, &counter, progress](std::set<id_t> const& batch) mutable {
-            progress.update(counter += batch.size());
+        [this, &counter, &progress](std::set<id_t> const& batch) {
             for (auto const& node: _odf->fetchNodes(batch)) {
-                // Add the dummy node to the buffer if it is not already in the change file
-                if (!_nodeHandler.nodeInChangeFile(node.getId())) {
-                    addToTmpFile(node.getXml(), cnst::XML_TAG_NODE);
-                    _stats->countDummyNode();
-                }
+                addToTmpFile(node.getXml(), cnst::XML_TAG_NODE);
+                progress.update(++counter);
+                _stats->countDummyNode();
             }
         });
 
@@ -346,23 +343,10 @@ void olu::osm::OsmChangeHandler::createDummyWays(osm2rdf::util::ProgressBar &pro
         wayIds,
         _config.batchSize,
         [this, progress, &counter](std::set<id_t> const& batch) mutable {
-            progress.update(counter += batch.size());
             for (auto& way: _odf->fetchWays(batch)) {
-                // The ways for which the geometry does not need to be updated are already in
-                // the tmp file
-                if (_wayHandler.getModifiedWays().contains(way.getId())) {
-                    continue;
-                }
-
-                if (_waysToUpdateGeometry.contains(way.getId())) {
-                    _odf->fetchWayInfos(way);
-                }
-
-                // Add the dummy way to the buffer if it is not already in the change file
-                if (!_wayHandler.wayInChangeFile(way.getId())) {
-                    addToTmpFile(way.getXml(), cnst::XML_TAG_WAY);
-                    _stats->countDummyWay();
-                }
+                addToTmpFile(way.getXml(), cnst::XML_TAG_WAY);
+                progress.update(++counter);
+                _stats->countDummyWay();
             }
         });
 
@@ -376,24 +360,16 @@ void olu::osm::OsmChangeHandler::createDummyRelations(osm2rdf::util::ProgressBar
     for (const auto &relId: _referencesHandler.getReferencedRelations()) {
         relations.insert(relId);
     }
-    relations.insert(_relationsToUpdateGeometry.begin(),
-        _relationsToUpdateGeometry.end());
+    relations.insert(_relationsToUpdateGeometry.begin(), _relationsToUpdateGeometry.end());
 
     util::BatchHelper::doInBatches(
         relations,
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const& batch) mutable {
-            progress.update(counter += batch.size());
             for (auto& rel: _odf->fetchRelations(batch)) {
-                if (_relationsToUpdateGeometry.contains(rel.getId())) {
-                    _odf->fetchRelationInfos(rel);
-                }
-
-                // Add the dummy relation to the buffer if it is not already in the change file
-                if (!_relationHandler.relationInChangeFile(rel.getId())) {
-                    addToTmpFile(rel.getXml(), cnst::XML_TAG_REL);
-                    _stats->countDummyRelation();
-                }
+                addToTmpFile(rel.getXml(), cnst::XML_TAG_REL);
+                progress.update(++counter);
+                _stats->countDummyRelation();
             }
         });
 
