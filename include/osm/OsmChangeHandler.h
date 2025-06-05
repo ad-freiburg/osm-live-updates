@@ -118,39 +118,24 @@ namespace olu::osm {
         static void finalizeTmpFile(const std::string& filepath) ;
 
         /**
-         * Writes the given osm element to its corresponding temporary file
-         */
-        static void addToTmpFile(const std::string& element, const std::string& elementTag) ;
-
-
-        /**
-         * Creates dummy elements for nodes, ways and relations, while showing a progress bar on
-         * std::cout
-         */
-        void createDummyElements();
-
-        /**
          * Creates dummy nodes for the referenced nodes that are not in the change file. The dummy
          * nodes contain the node id and the location which is used for the nodes that are
          * referenced in ways and writes them to a temporary file
          */
-        void createDummyNodes(
-        );
+        void createDummyNodes();
 
         /**
          * Creates dummy ways for the referenced ways that are not in the change file and writes
          * them to a temporary file The dummy ways only contain the referenced nodes
          */
-        void createDummyWays(
-        );
+        void createDummyWays();
 
         /**
          * Creates dummy relations for the referenced relations that are not in the change file and
          * writes them to a temporary file.
          * The dummy relation only contains the members of that relation
          */
-        void createDummyRelations(
-        );
+        void createDummyRelations();
 
         /**
          * Send a SPARQL update query to the endpoint

@@ -55,7 +55,7 @@ olu::osm::OsmChangeHandler::OsmChangeHandler(const config::Config &config, OsmDa
     _nodeHandler(config, odf, stats),
     _wayHandler(config, odf, stats),
     _relationHandler(config, odf, stats),
-    _referencesHandler(_config, stats, odf, _nodeHandler, _wayHandler, _relationHandler) {
+    _referencesHandler(_config, odf, _nodeHandler, _wayHandler, _relationHandler) {
     createTmpFiles();
 }
 
@@ -192,23 +192,6 @@ void olu::osm::OsmChangeHandler::finalizeTmpFile(const std::string& filepath) {
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::OsmChangeHandler::addToTmpFile(const std::string& element,
-                                              const std::string& elementTag) {
-    std::ofstream outputFile;
-    if (elementTag == cnst::XML_TAG_NODE) {
-        outputFile.open (cnst::PATH_TO_NODE_FILE, std::ios::app);
-    } else if (elementTag == cnst::XML_TAG_WAY) {
-        outputFile.open (cnst::PATH_TO_WAY_FILE, std::ios::app);
-    } else if (elementTag == cnst::XML_TAG_REL) {
-        outputFile.open (cnst::PATH_TO_RELATION_FILE, std::ios::app);
-    }
-
-    outputFile << element << std::endl;
-
-    outputFile.close();
-}
-
-// _________________________________________________________________________________________________
 void olu::osm::OsmChangeHandler::getIdsOfWaysToUpdateGeo() {
     if (!_nodeHandler.getModifiedNodesWithChangedLocation().empty()) {
         util::BatchHelper::doInBatches(
@@ -308,20 +291,24 @@ void olu::osm::OsmChangeHandler::createDummyNodes() {
     size_t counter = 0;
     nodeProgress.update(counter);
 
+    std::ofstream outputFile;
+    outputFile.open (cnst::PATH_TO_NODE_FILE, std::ios::app);
+
     util::BatchHelper::doInBatches(
         _referencesHandler.getReferencedNodes(),
         _config.batchSize,
-        [this, &counter, &nodeProgress](std::set<id_t> const& batch) {
+        [this, &counter, &nodeProgress, &outputFile](std::set<id_t> const& batch) {
             for (auto const& node: _odf->fetchNodes(batch)) {
-                addToTmpFile(node.getXml(), cnst::XML_TAG_NODE);
+                outputFile << node.getXml() << std::endl;
 
                 ++counter;
-                if (counter % 10 == 0) {
+                if (counter % 100 == 0) {
                     nodeProgress.update(counter);
                 }
             }
         });
 
+    outputFile.close();
     nodeProgress.done();
 
     finalizeTmpFile(cnst::PATH_TO_NODE_FILE);
@@ -339,20 +326,25 @@ void olu::osm::OsmChangeHandler::createDummyWays() {
     osm2rdf::util::ProgressBar wayProgress(wayIds.size(), wayIds.size() > 100);
     size_t counter = 0;
     wayProgress.update(counter);
+
+    std::ofstream outputFile;
+    outputFile.open (cnst::PATH_TO_WAY_FILE, std::ios::app);
+
     util::BatchHelper::doInBatches(
         wayIds,
         _config.batchSize,
-        [this, wayProgress, &counter](std::set<id_t> const& batch) mutable {
+        [this, wayProgress, &counter, &outputFile](std::set<id_t> const& batch) mutable {
             for (auto& way: _odf->fetchWays(batch)) {
-                addToTmpFile(way.getXml(), cnst::XML_TAG_WAY);
+                outputFile << way.getXml() << std::endl;
 
                 ++counter;
-                if (counter % 10 == 0) {
+                if (counter % 100 == 0) {
                     wayProgress.update(counter);
                 }
             }
         });
 
+    outputFile.close();
     wayProgress.done();
 
     finalizeTmpFile(cnst::PATH_TO_WAY_FILE);
@@ -371,20 +363,24 @@ void olu::osm::OsmChangeHandler::createDummyRelations() {
     size_t counter = 0;
     relProgress.update(counter);
 
+    std::ofstream outputFile;
+    outputFile.open (cnst::PATH_TO_RELATION_FILE, std::ios::app);
+
     util::BatchHelper::doInBatches(
         relations,
         _config.batchSize,
-        [this, &counter, relProgress](std::set<id_t> const& batch) mutable {
+        [this, &counter, relProgress, &outputFile](std::set<id_t> const& batch) mutable {
             for (auto& rel: _odf->fetchRelations(batch)) {
-                addToTmpFile(rel.getXml(), cnst::XML_TAG_REL);
+                outputFile << rel.getXml() << std::endl;
 
                 ++counter;
-                if (counter % 10 == 0) {
+                if (counter % 100 == 0) {
                     relProgress.update(counter);
                 }
             }
         });
 
+    outputFile.close();
     relProgress.done();
 
     finalizeTmpFile(cnst::PATH_TO_RELATION_FILE);
