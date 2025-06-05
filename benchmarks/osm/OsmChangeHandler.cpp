@@ -29,11 +29,11 @@ static void Handle_Change_Delete_Node(benchmark::State& state) {
     auto config((olu::config::Config()));
     config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
 
-    auto och = olu::osm::OsmChangeHandler(config);
-
-    for (auto _ : state) {
-        och.run();
-    }
+    // auto och = olu::osm::OsmChangeHandler(config);
+    //
+    // for (auto _ : state) {
+    //     och.run();
+    // }
 }
 BENCHMARK(Handle_Change_Delete_Node);
 
@@ -44,11 +44,11 @@ static void Handle_Change_Insert_Node(benchmark::State& state) {
     auto config((olu::config::Config()));
     config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
 
-    auto och = olu::osm::OsmChangeHandler(config);
-
-    for (auto _ : state) {
-        och.run();
-    }
+    // auto och = olu::osm::OsmChangeHandler(config);
+    //
+    // for (auto _ : state) {
+    //     och.run();
+    // }
 }
 BENCHMARK(Handle_Change_Insert_Node);
 
@@ -59,10 +59,10 @@ static void Handle_Change_Modify_Node(benchmark::State& state) {
     auto config((olu::config::Config()));
     config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
 
-    auto och = olu::osm::OsmChangeHandler(config);
-
-    for (auto _ : state) {
-        och.run();
-    }
+    // auto och = olu::osm::OsmChangeHandler(config);
+    //
+    // for (auto _ : state) {
+    //     och.run();
+    // }
 }
 BENCHMARK(Handle_Change_Modify_Node);
