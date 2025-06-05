@@ -186,7 +186,7 @@ void olu::osm::OsmUpdater::mergeChangeFiles(const std::string &pathToChangeFileD
     }
 
     util::Logger::log(util::LogEvent::INFO,
-                      "Merge and sort " + std::to_string(inputs.size()) + " change files...");
+                      "Merge and sort change files...");
     if (inputs.empty()) {
         throw OsmUpdaterException("No input files found");
     }
