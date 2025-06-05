@@ -42,6 +42,8 @@
 #include "util/TtlHelper.h"
 #include "util/BatchHelper.h"
 
+static inline constexpr size_t size_t PROGRESS_BAR_BATCH_SIZE = 1000;
+
 namespace cnst = olu::config::constants;
 
 // _________________________________________________________________________________________________
@@ -288,7 +290,7 @@ void olu::osm::OsmChangeHandler::getReferencedRelations() {
 void olu::osm::OsmChangeHandler::createDummyNodes() {
     _stats->setNodeReferenceCount(_referencesHandler.getReferencedNodes().size());
     osm2rdf::util::ProgressBar nodeProgress(_stats->getNumOfDummyNodes(),
-                                            _stats->getNumOfDummyNodes() > 100);
+                                            _stats->getNumOfDummyNodes() > PROGRESS_BAR_BATCH_SIZE);
     size_t counter = 0;
     nodeProgress.update(counter);
 
@@ -303,7 +305,7 @@ void olu::osm::OsmChangeHandler::createDummyNodes() {
                 outputFile << node.getXml() << std::endl;
 
                 ++counter;
-                if (counter % 100 == 0) {
+                if (counter % PROGRESS_BAR_BATCH_SIZE == 0) {
                     nodeProgress.update(counter);
                 }
             }
@@ -324,7 +326,7 @@ void olu::osm::OsmChangeHandler::createDummyWays() {
     wayIds.insert(_waysToUpdateGeometry.begin(), _waysToUpdateGeometry.end());
     _stats->setWayReferenceCount(wayIds.size());
 
-    osm2rdf::util::ProgressBar wayProgress(wayIds.size(), wayIds.size() > 100);
+    osm2rdf::util::ProgressBar wayProgress(wayIds.size(), wayIds.size() > PROGRESS_BAR_BATCH_SIZE);
     size_t counter = 0;
     wayProgress.update(counter);
 
@@ -339,7 +341,7 @@ void olu::osm::OsmChangeHandler::createDummyWays() {
                 outputFile << way.getXml() << std::endl;
 
                 ++counter;
-                if (counter % 100 == 0) {
+                if (counter % PROGRESS_BAR_BATCH_SIZE == 0) {
                     wayProgress.update(counter);
                 }
             }
@@ -360,7 +362,7 @@ void olu::osm::OsmChangeHandler::createDummyRelations() {
     relations.insert(_relationsToUpdateGeometry.begin(), _relationsToUpdateGeometry.end());
 
     _stats->setRelationReferenceCount(relations.size());
-    osm2rdf::util::ProgressBar relProgress(relations.size(), relations.size() > 100);
+    osm2rdf::util::ProgressBar relProgress(relations.size(), relations.size() > PROGRESS_BAR_BATCH_SIZE);
     size_t counter = 0;
     relProgress.update(counter);
 
@@ -375,7 +377,7 @@ void olu::osm::OsmChangeHandler::createDummyRelations() {
                 outputFile << rel.getXml() << std::endl;
 
                 ++counter;
-                if (counter % 100 == 0) {
+                if (counter % PROGRESS_BAR_BATCH_SIZE == 0) {
                     relProgress.update(counter);
                 }
             }
