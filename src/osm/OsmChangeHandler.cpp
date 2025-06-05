@@ -151,6 +151,7 @@ void olu::osm::OsmChangeHandler::run() {
     _stats->endTimeCreatingDummyRelations();
 
     try {
+        util::Logger::log(util::LogEvent::INFO, "Convert osm data to triples...");
         _stats->startTimeOsm2RdfConversion();
         Osm2ttl(_config).convert();
         _stats->endTimeOsm2RdfConversion();
@@ -404,7 +405,7 @@ void olu::osm::OsmChangeHandler::runUpdateQuery(const std::string &query,
         throw OsmChangeHandlerException(msg.c_str());
     }
 
-    if (_config.isQLever) {
+    if (_config.sparqlOutput == config::SparqlOutput::ENDPOINT && _config.isQLever) {
         // Update responses are in "[]" so remove them before parsing
         response = response.substr(1, response.size() - 2);
         _stats->logQLeverUpdateInfo(response);
