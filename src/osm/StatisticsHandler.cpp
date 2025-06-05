@@ -38,9 +38,27 @@ void olu::osm::StatisticsHandler::printCurrentStep(const std::string &stepDescri
 // _________________________________________________________________________________________________
 void olu::osm::StatisticsHandler::printOsmStatistics() const {
     printCurrentStep("OSM Statistics:");
+    if (_config.changeFileDir.empty()) {
+        std::cout << prefix << "Started update process at database state: "
+                  << olu::osm::to_string(_startDatabaseState)
+                  << std::endl;
+
+        std::cout << prefix << "Ended update process at database state: "
+                  << olu::osm::to_string(_latestDatabaseState)
+                  << std::endl;
+
+        std::cout << prefix << "Handled "
+                  << std::to_string(getNumOfChangeFiles())
+                  << " change files in total."
+                  << std::endl;
+    } else {
+        std::cout << prefix << "Handled change files at: "
+                  << _config.changeFileDir
+                  << std::endl;
+    }
 
     if (numOfNodes() == 0) {
-        std::cout << prefix << "0 nodes in change file." << std::endl;
+        std::cout << prefix << "0 nodes in change files." << std::endl;
     } else {
         std::cout << prefix << "Nodes created: " << _numOfCreatedNodes
                   << ", modified: " << _numOfModifiedNodes
@@ -49,7 +67,7 @@ void olu::osm::StatisticsHandler::printOsmStatistics() const {
     }
 
     if (numOfWays() == 0) {
-        std::cout << prefix << "0 ways in change file." << std::endl;
+        std::cout << prefix << "0 ways in change files." << std::endl;
     } else {
         std::cout << prefix << "Ways created: " << _numOfCreatedWays
                   << ", modified: " << _numOfModifiedWays
@@ -58,7 +76,7 @@ void olu::osm::StatisticsHandler::printOsmStatistics() const {
     }
 
     if (numOfRelations() == 0) {
-        std::cout << prefix << "0 relations in change file." << std::endl;
+        std::cout << prefix << "0 relations in change files." << std::endl;
     } else {
         std::cout << prefix << "Relations created: " << _numOfCreatedRelations
                   << ", modified: " << _numOfModifiedRelations

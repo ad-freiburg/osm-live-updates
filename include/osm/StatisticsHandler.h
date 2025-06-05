@@ -27,6 +27,8 @@
 #include <config/Config.h>
 #include <util/Types.h>
 
+#include "OsmDatabaseState.h"
+
 namespace olu::osm {
     class StatisticsHandler {
     public:
@@ -118,6 +120,14 @@ namespace olu::osm {
             return std::chrono::duration_cast<std::chrono::milliseconds>(_endTimeInsertingTriples - _startTimeInsertingTriples).count();
         }
 
+        void setStartDatabaseState(const OsmDatabaseState &state) { _startDatabaseState = state; }
+        void setLatestDatabaseState(const OsmDatabaseState &state) { _latestDatabaseState = state; }
+        OsmDatabaseState getStartDatabaseState() const { return _startDatabaseState; }
+        OsmDatabaseState getLatestDatabaseState() const { return _latestDatabaseState; }
+        size_t getNumOfChangeFiles() const {
+            return _latestDatabaseState.sequenceNumber - _startDatabaseState.sequenceNumber + 1;
+        }
+
         void setNumberOfNodesWithLocationChange(const size_t num) { _numOfNodesWithLocationChange = num; }
         void setNumberOfWaysWithMemberChange(const size_t num) { _numOfWaysWithMemberChange = num; }
         void setNumberOfRelationsWithMemberChange(const size_t num) { _numOfRelationsWithMemberChange = num; }
@@ -159,6 +169,9 @@ namespace olu::osm {
     private:
         config::Config _config;
         simdjson::ondemand::parser _parser;
+
+        OsmDatabaseState _latestDatabaseState;
+        OsmDatabaseState _startDatabaseState;
 
         size_t _numOfCreatedNodes = 0;
         size_t _numOfModifiedNodes = 0;
