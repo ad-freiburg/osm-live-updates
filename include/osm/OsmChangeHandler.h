@@ -134,15 +134,15 @@ namespace olu::osm {
          * nodes contain the node id and the location which is used for the nodes that are
          * referenced in ways and writes them to a temporary file
          */
-        void createDummyNodes(osm2rdf::util::ProgressBar &progress,
-                              size_t &counter);
+        void createDummyNodes(
+        );
 
         /**
          * Creates dummy ways for the referenced ways that are not in the change file and writes
          * them to a temporary file The dummy ways only contain the referenced nodes
          */
-        void createDummyWays(osm2rdf::util::ProgressBar &progress,
-                             size_t &counter);
+        void createDummyWays(
+        );
 
         /**
          * Creates dummy relations for the referenced relations that are not in the change file and
@@ -150,7 +150,7 @@ namespace olu::osm {
          * The dummy relation only contains the members of that relation
          */
         void createDummyRelations(
-            osm2rdf::util::ProgressBar &progress, size_t &counter);
+        );
 
         /**
          * Send a SPARQL update query to the endpoint

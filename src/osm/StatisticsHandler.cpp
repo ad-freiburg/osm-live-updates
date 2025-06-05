@@ -100,26 +100,6 @@ void olu::osm::StatisticsHandler::printUpdateStatistics() const {
                       << "%)"
                       << std::endl;
         }
-
-        if (_numOfWaysWithMemberChange == 0) {
-            std::cout << prefix << "No ways with member change." << std::endl;
-        } else {
-            std::cout << prefix << _numOfWaysWithMemberChange
-                      << " modified ways have changed a member ("
-                      << calculatePercentage(_numOfModifiedWays, _numOfWaysWithMemberChange)
-                      << "%)"
-                      << std::endl;
-        }
-
-        if (_numOfRelationsWithMemberChange == 0) {
-            std::cout << prefix << "No Relations with member change." << std::endl;
-        } else {
-            std::cout << prefix << _numOfRelationsWithMemberChange
-                      << " of modified relations have changed a member ("
-                      << calculatePercentage(_numOfModifiedRelations, _numOfRelationsWithMemberChange)
-                      << "%)"
-                      << std::endl;
-        }
     }
 
     if (_numOfRelationsToUpdateGeometry == 0 && _numOfWaysToUpdateGeometry == 0) {
@@ -132,13 +112,13 @@ void olu::osm::StatisticsHandler::printUpdateStatistics() const {
     }
 
     if (_config.showDetailedStatistics) {
-        if (_numOfDummyNodes == 0 && _numOfDummyWays == 0 && _numOfDummyRelations == 0) {
+        if (getNumOfDummyNodes() == 0 && getNumOfDummyWays() == 0 && getNumOfDummyRelations() == 0) {
             std::cout << prefix << "No references to nodes, ways or relations needed." << std::endl;
         } else {
-            std::cout << prefix << "Created dummys for "
-                      << _numOfDummyNodes << " nodes, "
-                      << _numOfDummyWays << " ways, "
-                      << _numOfDummyRelations << " relations"
+            std::cout << prefix << "Created objects from SPARQL endpoint for "
+                      << getNumOfDummyNodes() << " nodes, "
+                      << getNumOfDummyWays() << " ways, "
+                      << getNumOfDummyRelations() << " relations"
                       << std::endl;
         }
     }
@@ -246,8 +226,22 @@ void olu::osm::StatisticsHandler::printTimingStatistics() const {
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
 
-    partTime = getTimeInMSCreatingDummys();
-    std::cout << prefix << "Creating dummy objects took "
+    partTime = getTimeInMSCreatingDummyNodes();
+    std::cout << prefix << "Creating referenced node objects took "
+            << partTime
+            << " ms. ("
+            << calculatePercentageOfTotalTime(partTime) << "% of total time)"
+            << std::endl;
+
+    partTime = getTimeInMSCreatingDummyWays();
+    std::cout << prefix << "Creating referenced way objects took "
+            << partTime
+            << " ms. ("
+            << calculatePercentageOfTotalTime(partTime) << "% of total time)"
+            << std::endl;
+
+    partTime = getTimeInMSCreatingDummyRelations();
+    std::cout << prefix << "Creating referenced relation objects took "
             << partTime
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"

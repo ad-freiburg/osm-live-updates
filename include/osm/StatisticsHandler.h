@@ -90,10 +90,22 @@ namespace olu::osm {
             return std::chrono::duration_cast<std::chrono::milliseconds>(_endTimeFetchingReferences - _startTimeFetchingReferences).count();
         }
 
-        void startTimeCreatingDummys() { _startTimeCreatingDummys = std::chrono::system_clock::now(); }
-        void endTimeCreatingDummys() { _endTimeCreatingDummys = std::chrono::system_clock::now(); }
-        long getTimeInMSCreatingDummys() const {
-            return std::chrono::duration_cast<std::chrono::milliseconds>(_endTimeCreatingDummys - _startTimeCreatingDummys).count();
+        void startTimeCreatingDummyNodes() { _startTimeCreatingDummyNodes = std::chrono::system_clock::now(); }
+        void endTimeCreatingDummyNodes() { _endTimeCreatingDummyNodes = std::chrono::system_clock::now(); }
+        long getTimeInMSCreatingDummyNodes() const {
+            return std::chrono::duration_cast<std::chrono::milliseconds>(_endTimeCreatingDummyNodes - _startTimeCreatingDummyNodes).count();
+        }
+
+        void startTimeCreatingDummyWays() { _startTimeCreatingDummyWays = std::chrono::system_clock::now(); }
+        void endTimeCreatingDummyWays() { _endTimeCreatingDummyWays = std::chrono::system_clock::now(); }
+        long getTimeInMSCreatingDummyWays() const {
+            return std::chrono::duration_cast<std::chrono::milliseconds>(_endTimeCreatingDummyWays - _startTimeCreatingDummyWays).count();
+        }
+
+        void startTimeCreatingDummyRelations() { _startTimeCreatingDummyRelations = std::chrono::system_clock::now(); }
+        void endTimeCreatingDummyRelations() { _endTimeCreatingDummyRelations = std::chrono::system_clock::now(); }
+        long getTimeInMSCreatingDummyRelations() const {
+            return std::chrono::duration_cast<std::chrono::milliseconds>(_endTimeCreatingDummyRelations - _startTimeCreatingDummyRelations).count();
         }
 
         void startTimeOsm2RdfConversion() { _startTimeOsm2RdfConversion = std::chrono::system_clock::now(); }
@@ -128,9 +140,15 @@ namespace olu::osm {
             return _latestDatabaseState.sequenceNumber - _startDatabaseState.sequenceNumber + 1;
         }
 
+        size_t getNumOfDummyNodes() const { return _numOfReferencesToNodes; }
+        size_t getNumOfDummyWays() const {
+            return _numOfReferencesToWays + _numOfWaysToUpdateGeometry;
+        }
+        size_t getNumOfDummyRelations() const {
+            return _numOfReferencesToRelations + _numOfRelationsToUpdateGeometry;
+        }
+
         void setNumberOfNodesWithLocationChange(const size_t num) { _numOfNodesWithLocationChange = num; }
-        void setNumberOfWaysWithMemberChange(const size_t num) { _numOfWaysWithMemberChange = num; }
-        void setNumberOfRelationsWithMemberChange(const size_t num) { _numOfRelationsWithMemberChange = num; }
         void setNumberOfWaysToUpdateGeometry(const size_t num) { _numOfWaysToUpdateGeometry = num; }
         void setNumberOfRelationsToUpdateGeometry(const size_t num) { _numOfRelationsToUpdateGeometry = num; }
         void setNumberOfTriplesToInsert(const size_t num) { _numOfTriplesToInsert = num; }
@@ -145,20 +163,18 @@ namespace olu::osm {
         void countModifiedWay() { ++_numOfModifiedWays; }
         void countDeletedWay() { ++_numOfDeletedWays; }
         void switchModifiedToCreatedWay() { ++_numOfCreatedWays; --_numOfModifiedWays; }
-        void countWayWithMemberChange() { ++_numOfWaysWithMemberChange; }
 
         void countCreatedRelation() { ++_numOfCreatedRelations; }
         void countModifiedRelation() { ++_numOfModifiedRelations; }
         void countDeletedRelation() { ++_numOfDeletedRelations; }
         void switchModifiedToCreatedRelation() { ++_numOfCreatedRelations; --_numOfModifiedRelations; }
-        void countRelationWithMemberChange() { ++_numOfRelationsWithMemberChange; }
 
         void countWayToUpdateGeometry() { ++_numOfWaysToUpdateGeometry; }
         void countRelationToUpdateGeometry() { ++_numOfRelationsToUpdateGeometry; }
 
-        void countDummyNode() { ++_numOfDummyNodes; }
-        void countDummyWay() { ++_numOfDummyWays; }
-        void countDummyRelation() { ++_numOfDummyRelations; }
+        void setNodeReferenceCount(const size_t &count) { _numOfReferencesToNodes = count; }
+        void setWayReferenceCount(const size_t &count) { _numOfReferencesToWays = count; }
+        void setRelationReferenceCount(const size_t &count) { _numOfReferencesToRelations = count; }
 
         void countQuery() { ++_queriesCount; }
         void countUpdateQuery() { ++_updateQueriesCount; }
@@ -178,24 +194,27 @@ namespace olu::osm {
         size_t _numOfDeletedNodes = 0;
         size_t numOfNodes() const {return _numOfCreatedNodes + _numOfModifiedNodes + _numOfDeletedNodes;}
         size_t _numOfNodesWithLocationChange = 0;
+        // Nodes that are referenced by elements in the change file and elements for which the
+        // geometry needs to be updated, that are not already in the change file.
+        size_t _numOfReferencesToNodes = 0;
 
         size_t _numOfCreatedWays = 0;
         size_t _numOfModifiedWays = 0;
         size_t _numOfDeletedWays = 0;
         size_t numOfWays() const { return _numOfCreatedWays + _numOfModifiedWays + _numOfDeletedWays; }
-        size_t _numOfWaysWithMemberChange = 0;
         size_t _numOfWaysToUpdateGeometry = 0;
+        // Ways that are referenced by elements in the change file and elements for which the
+        // geometry needs to be updated, that are not already in the change file.
+        size_t _numOfReferencesToWays = 0;
 
         size_t _numOfCreatedRelations = 0;
         size_t _numOfModifiedRelations = 0;
         size_t _numOfDeletedRelations = 0;
         size_t numOfRelations() const { return _numOfCreatedRelations + _numOfModifiedRelations + _numOfDeletedRelations; }
-        size_t _numOfRelationsWithMemberChange = 0;
         size_t _numOfRelationsToUpdateGeometry = 0;
-
-        size_t _numOfDummyNodes = 0;
-        size_t _numOfDummyWays  = 0;
-        size_t _numOfDummyRelations = 0;
+        // Relations that are referenced by elements in the change file and elements for which the
+        // geometry needs to be updated, that are not already in the change file.
+        size_t _numOfReferencesToRelations = 0;
 
         size_t _numOfConvertedTriples = 0;
         size_t _numOfTriplesToInsert = 0;
@@ -232,8 +251,12 @@ namespace olu::osm {
         time_point_t _startTimeFetchingReferences;
         time_point_t _endTimeFetchingReferences;
 
-        time_point_t _startTimeCreatingDummys;
-        time_point_t _endTimeCreatingDummys;
+        time_point_t _startTimeCreatingDummyNodes;
+        time_point_t _endTimeCreatingDummyNodes;
+        time_point_t _startTimeCreatingDummyWays;
+        time_point_t _endTimeCreatingDummyWays;
+        time_point_t _startTimeCreatingDummyRelations;
+        time_point_t _endTimeCreatingDummyRelations;
 
         time_point_t _startTimeOsm2RdfConversion;
         time_point_t _endTimeOsm2RdfConversion;

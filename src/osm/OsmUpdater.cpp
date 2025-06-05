@@ -115,10 +115,6 @@ void olu::osm::OsmUpdater::run() {
         clearChangesDir();
         _stats.endTimeMergingChangeFiles();
 
-        _stats.printCurrentStep("Process changes from "
-                                + std::to_string(_stats.getNumOfChangeFiles())
-                                + " change files...");
-
         auto och{OsmChangeHandler(_config, *_odf, _stats)};
         och.run();
     }
@@ -134,7 +130,7 @@ void olu::osm::OsmUpdater::run() {
     }
     _stats.printTimingStatistics();
 
-    _stats.printCurrentStep("DONE");
+    util::Logger::log(util::LogEvent::INFO, "DONE");
 }
 
 // _________________________________________________________________________________________________
