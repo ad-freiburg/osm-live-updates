@@ -28,6 +28,19 @@ namespace olu::osm {
         int sequenceNumber;
     };
 
+    inline std::string to_string(const OsmDatabaseState& state) {
+        if (state.timeStamp.empty()) {
+            return "(Sequence number: " + std::to_string(state.sequenceNumber) + ")";
+        }
+
+        std::string timestampFormatted = state.timeStamp;
+        std::erase_if(timestampFormatted, [](const char c) {
+            return c == '\\';
+        });
+        return "(Sequence number: " + std::to_string(state.sequenceNumber)
+               + ", Timestamp: " + timestampFormatted + ")";
+    }
+
 } // namespace olu::osm
 
 #endif //OSM_LIVE_UPDATES_OSMDATABASESTATE_H
