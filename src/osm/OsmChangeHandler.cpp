@@ -42,7 +42,7 @@
 #include "util/TtlHelper.h"
 #include "util/BatchHelper.h"
 
-static inline constexpr size_t size_t PROGRESS_BAR_BATCH_SIZE = 1000;
+static inline constexpr size_t PROGRESS_BAR_BATCH_SIZE = 1000;
 
 namespace cnst = olu::config::constants;
 
