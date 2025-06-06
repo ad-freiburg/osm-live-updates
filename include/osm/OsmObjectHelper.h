@@ -43,13 +43,27 @@ namespace olu::osm {
          */
         static id_t parseIdFromUri(const std::string_view &uri);
 
-        static OsmObjectType parseOsmTypeFromUri(const std::string& uri);
+        /**
+         * Parses the osm object type from an uri like "https://www.openstreetmap.org/node/1" or
+         * "https://www.openstreetmap.org/way/1".
+         *
+         * The uri has to start with an osm object namespace
+         * (NAMESPACE_IRI_OSM_NODE, NAMESPACE_IRI_OSM_WAY, or NAMESPACE_IRI_OSM_RELATION).
+         *
+         * @param uri The uri to extract the osm object type from.
+         * @return The extracted osm object type as an OsmObjectType enum value.
+         */
+        static OsmObjectType parseOsmTypeFromUri(const std::string_view& uri);
 
         /**
-         * Returns true if the two lists of way members are equal.
-         * This is the case if the members in both lists are exactly the same and in the same order
+         * Parses a WKT point string and returns the latitude and longitude as a pair.
+         * The WKT point string should be in the format "POINT(lon lat)".
+         * The longitude and latitude will not be cast to double, but returned as string.
+         *
+         * @param wktPoint The WKT point string to parse.
+         * @return A pair containing the longitude and latitude as string.
          */
-        static bool areWayMemberEqual(member_ids_t member1, member_ids_t member2);
+        static lon_lat_t parseLonLatFromWktPoint(const std::string_view &wktPoint);
 
         /**
          * To check whether an object has been created or modified, we check if the version is

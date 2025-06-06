@@ -18,7 +18,6 @@
 
 #include "osm/OsmObjectHelper.h"
 
-#include <iostream>
 #include <string>
 
 #include "osmium/osm/object.hpp"
@@ -29,39 +28,52 @@
 
 namespace cnst = olu::config::constants;
 
+constexpr std::string_view WHITESPACE = " \t\n\r\f\v";
+
 // _________________________________________________________________________________________________
 olu::id_t olu::osm::OsmObjectHelper::parseIdFromUri(const std::string_view &uri) {
-    std::vector<char> id;
-    // Read characters from the end of the uri until the first non digit is reached
-    for (auto it = uri.rbegin(); it != uri.rend(); ++it) {
-        // Uris can be inside angle brackets, e.g., <https://www.openstreetmap.org/node/1>
-        if (*it == '>') {
-            continue;
-        }
-
-        // Uris can also be in quotes, e.g., "<https://www.openstreetmap.org/node/1>"
-        if (*it == '\"') {
-            continue;
-        }
-
-        if (std::isdigit(*it)) {
-            id.push_back(*it);
-        } else {
-            break;
-        }
+    if (uri.empty()) {
+        throw OsmObjectHelperException("Can not parse id from empty uri.");
     }
 
-    try {
-        return std::stoll(std::string(id.rbegin(), id.rend()));
-    } catch (const std::exception &e) {
-        std::cerr << e.what() << std::endl;
-        const std::string msg = "Cant extract id from uri: " + std::string(uri);
+    // Scan from the end, skipping '>' and '"' (because they can be part of the uri formatting)
+    // and collecting digits
+    size_t i = uri.size();
+    while (i > 0 && (uri[i - 1] == '>' || uri[i - 1] == '\"')) {
+        --i;
+    }
+
+    const size_t end = i;
+    while (i > 0 && std::isdigit(uri[i - 1])) {
+        --i;
+    }
+
+    if (end == i) {
+        const std::string msg = "Can not parse id from uri: " + std::string(uri);
         throw OsmObjectHelperException(msg.c_str());
     }
+
+    id_t result = 0;
+    const auto idString = uri.substr(i, end - i);
+
+    if (auto [_, ec] = std::from_chars(idString.data(), idString.data() + idString.size(), result);
+        ec == std::errc()) {
+        return result;
+    }
+
+    const std::string msg = "Can not convert id: " + std::string(idString) + " from uri: "
+                            + std::string(uri) + " to long type.";
+    throw OsmObjectHelperException(msg.c_str());
 }
 
 //__________________________________________________________________________________________________
-olu::osm::OsmObjectType olu::osm::OsmObjectHelper::parseOsmTypeFromUri(const std::string& uri) {
+olu::osm::OsmObjectType
+olu::osm::OsmObjectHelper::parseOsmTypeFromUri(const std::string_view &uri) {
+    if (uri.empty()) {
+        const std::string msg = "Cannot parse type from empty uri.";
+        throw OsmObjectHelperException(msg.c_str());
+    }
+
     if (uri.starts_with(cnst::NAMESPACE_IRI_OSM_NODE)) {
         return OsmObjectType::NODE;
     }
@@ -74,15 +86,56 @@ olu::osm::OsmObjectType olu::osm::OsmObjectHelper::parseOsmTypeFromUri(const std
         return OsmObjectType::RELATION;
     }
 
-    const std::string msg = "Cant extract osm type from uri: " + uri;
+    const std::string msg = "Cant extract osm type from uri: " + std::string(uri);
     throw OsmObjectHelperException(msg.c_str());
 }
 
 // _________________________________________________________________________________________________
-bool olu::osm::OsmObjectHelper::areWayMemberEqual(member_ids_t member1, member_ids_t member2) {
-    return member1.size() == member2.size() &&
-           std::equal(member1.begin(), member1.end(), member2.begin());
-}
+olu::lon_lat_t
+olu::osm::OsmObjectHelper::parseLonLatFromWktPoint(const std::string_view &wktPoint) {
+    if (wktPoint.empty()) {
+        const std::string msg = "Cannot parse type from empty WKT point.";
+        throw OsmObjectHelperException(msg.c_str());
+    }
+
+    // Find position of brackets
+    const auto start = wktPoint.find('(');
+    const auto end = wktPoint.find(')');
+    if (start == std::string_view::npos || end == std::string_view::npos) {
+        const std::string msg = "WKT point is not correctly formatted: " + std::string(wktPoint);
+        throw OsmObjectHelperException(msg.c_str());
+    }
+
+    // Extract the coordinates from the WKT point string
+    const std::string_view coords_view = wktPoint.substr(start + 1, end - start - 1);
+
+    // Find the end of the longitude part (the first whitespace).
+    const auto lon_end = coords_view.find_first_of(WHITESPACE);
+    if (lon_end == std::string_view::npos) {
+        const std::string msg = "Cannot parse lon/lat from WKT point (no separator found): "
+                                + std::string(wktPoint);
+        throw OsmObjectHelperException(msg.c_str());
+    }
+
+    // Find the start of the latitude part (the first non-whitespace after the longitude).
+    const auto lat_start = coords_view.find_first_not_of(WHITESPACE, lon_end);
+    if (lat_start == std::string_view::npos) {
+        const std::string msg = "Cannot parse lat from WKT point (missing second coordinate): "
+                                + std::string(wktPoint);
+        throw OsmObjectHelperException(msg.c_str());
+    }
+
+    // Extract the longitude and latitude as string_views.
+    const std::string_view lon_sv = coords_view.substr(0, lon_end);
+    const std::string_view lat_sv = coords_view.substr(lat_start);
+
+    if (lon_sv.empty() || lat_sv.empty()) {
+        const std::string msg = "Cannot parse lat from WKT point (coordinate is empty): "
+                                + std::string(wktPoint);
+        throw OsmObjectHelperException(msg.c_str());
+    }
+
+    return {std::string(lon_sv), std::string(lat_sv)};}
 
 // _________________________________________________________________________________________________
 olu::osm::ChangeAction
@@ -91,5 +144,3 @@ olu::osm::OsmObjectHelper::getChangeAction(const osmium::OSMObject &osmObject) {
     if (osmObject.version() == 1) { return ChangeAction::CREATE; }
     return ChangeAction::MODIFY;
 }
-
-
