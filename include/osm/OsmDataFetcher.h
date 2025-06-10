@@ -62,10 +62,34 @@ namespace olu::osm {
         virtual std::vector<Node> fetchNodes(const std::set<id_t> &nodeIds){return {};}
 
         /**
+         * Fetches the locations for the given node ids and writes the nodes to a file in the osm
+         * XML format.
+         *
+         * @param filePath The path to the file where the nodes should be written
+         * @param nodeIds The ids of the nodes to fetch
+         */
+        virtual void
+        fetchAndWriteNodesToFile(const std::string &filePath, const std::set<id_t> &nodeIds){}
+
+        /**
          * @return A vector containing a pair of the member's uri and role for all members of the
          * given relation.
          */
-        virtual std::vector<Relation> fetchRelations(const std::set<id_t> &relationIds){return {};}
+        virtual std::vector<Relation>
+        fetchRelations(const std::set<id_t> &relationIds){return {};}
+
+        /**
+         * Fetches the members for the given relations and writes the relation to a file in the osm
+         * XML format.
+         *
+         * @param filePath The path to the file where the relations should be written
+         * @param relationIds The ids of the relations to fetch
+         * @return The number of relations that were written to the file, e.g., the number of
+         * relations for which the SPARQL endpoint returned the members.
+         */
+        virtual size_t
+        fetchAndWriteRelationsToFile(const std::string &filePath,
+                                     const std::set<id_t> &relationIds) { return {}; }
 
         /**
          * Fetches tags and timestamp for the given relation
@@ -79,6 +103,19 @@ namespace olu::osm {
          * @return The subjects of all members
          */
         virtual std::vector<Way> fetchWays(const std::set<id_t> &wayIds){return {};}
+
+        /**
+         * Fetches the members for the given ways and writes the way to a file in the osm
+         * XML format.
+         *
+         * @param filePath The path to the file where the ways should be written
+         * @param wayIds The ids of the ways to fetch
+         * @return The number of ways that were written to the file, e.g., the number of ways for
+         * which the SPARQL endpoint returned the members.
+         */
+        virtual size_t
+        fetchAndWriteWaysToFile(const std::string &filePath,
+                                const std::set<id_t> &wayIds){return{};}
 
         /**
          * Fetches tags and timestamp for the given way
