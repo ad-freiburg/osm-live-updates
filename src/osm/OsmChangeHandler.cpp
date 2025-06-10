@@ -289,30 +289,13 @@ void olu::osm::OsmChangeHandler::getReferencedRelations() {
 // _________________________________________________________________________________________________
 void olu::osm::OsmChangeHandler::createDummyNodes() {
     _stats->setNodeReferenceCount(_referencesHandler.getReferencedNodes().size());
-    osm2rdf::util::ProgressBar nodeProgress(_stats->getNumOfDummyNodes(),
-                                            _stats->getNumOfDummyNodes() > PROGRESS_BAR_BATCH_SIZE);
-    size_t counter = 0;
-    nodeProgress.update(counter);
 
-    std::ofstream outputFile;
-    outputFile.open (cnst::PATH_TO_NODE_FILE, std::ios::app);
-
-    util::BatchHelper::doInBatches(
+    util::BatchHelper::doInBatchesWithProgressBar(
         _referencesHandler.getReferencedNodes(),
         _config.batchSize,
-        [this, &counter, &nodeProgress, &outputFile](std::set<id_t> const& batch) {
-            for (auto const& node: _odf->fetchNodes(batch)) {
-                outputFile << node.getXml() << std::endl;
-
-                ++counter;
-                if (counter % PROGRESS_BAR_BATCH_SIZE == 0) {
-                    nodeProgress.update(counter);
-                }
-            }
+        [this](std::set<id_t> const& batch) {
+            _odf->fetchAndWriteNodesToFile(cnst::PATH_TO_NODE_FILE, batch);
         });
-
-    outputFile.close();
-    nodeProgress.done();
 
     finalizeTmpFile(cnst::PATH_TO_NODE_FILE);
 }
@@ -324,31 +307,19 @@ void olu::osm::OsmChangeHandler::createDummyWays() {
         wayIds.insert(wayId);
     }
     wayIds.insert(_waysToUpdateGeometry.begin(), _waysToUpdateGeometry.end());
-    _stats->setWayReferenceCount(wayIds.size());
 
-    osm2rdf::util::ProgressBar wayProgress(wayIds.size(), wayIds.size() > PROGRESS_BAR_BATCH_SIZE);
-    size_t counter = 0;
-    wayProgress.update(counter);
-
-    std::ofstream outputFile;
-    outputFile.open (cnst::PATH_TO_WAY_FILE, std::ios::app);
-
-    util::BatchHelper::doInBatches(
+    size_t countWayReferences = 0;
+    util::BatchHelper::doInBatchesWithProgressBar(
         wayIds,
         _config.batchSize,
-        [this, wayProgress, &counter, &outputFile](std::set<id_t> const& batch) mutable {
-            for (auto& way: _odf->fetchWays(batch)) {
-                outputFile << way.getXml() << std::endl;
-
-                ++counter;
-                if (counter % PROGRESS_BAR_BATCH_SIZE == 0) {
-                    wayProgress.update(counter);
-                }
-            }
+        [this, &countWayReferences](std::set<id_t> const& batch) mutable {
+            countWayReferences += _odf->fetchAndWriteWaysToFile(cnst::PATH_TO_WAY_FILE, batch);
         });
 
-    outputFile.close();
-    wayProgress.done();
+    // We need to save the number of created way references here, because some of the referenced
+    // ways might not be on the SPARQL endpoint.
+    // This can happen if the way is located outside the geometrical bounds of this endpoint.
+    _stats->setWayReferenceCount(countWayReferences);
 
     finalizeTmpFile(cnst::PATH_TO_WAY_FILE);
 }
@@ -361,30 +332,18 @@ void olu::osm::OsmChangeHandler::createDummyRelations() {
     }
     relations.insert(_relationsToUpdateGeometry.begin(), _relationsToUpdateGeometry.end());
 
-    _stats->setRelationReferenceCount(relations.size());
-    osm2rdf::util::ProgressBar relProgress(relations.size(), relations.size() > PROGRESS_BAR_BATCH_SIZE);
-    size_t counter = 0;
-    relProgress.update(counter);
-
-    std::ofstream outputFile;
-    outputFile.open (cnst::PATH_TO_RELATION_FILE, std::ios::app);
-
-    util::BatchHelper::doInBatches(
+    size_t countRelationReferences = 0;
+    util::BatchHelper::doInBatchesWithProgressBar(
         relations,
         _config.batchSize,
-        [this, &counter, relProgress, &outputFile](std::set<id_t> const& batch) mutable {
-            for (auto& rel: _odf->fetchRelations(batch)) {
-                outputFile << rel.getXml() << std::endl;
-
-                ++counter;
-                if (counter % PROGRESS_BAR_BATCH_SIZE == 0) {
-                    relProgress.update(counter);
-                }
-            }
+        [this, &countRelationReferences](std::set<id_t> const& batch) mutable {
+            countRelationReferences += _odf->fetchAndWriteRelationsToFile(cnst::PATH_TO_RELATION_FILE, batch);
         });
 
-    outputFile.close();
-    relProgress.done();
+    // We need to save the number of created relation references here,
+    // because some of the referenced relations might not be on the SPARQL endpoint.
+    // This can happen if the relation is located outside the geometrical bounds of this endpoint.
+    _stats->setRelationReferenceCount(countRelationReferences);
 
     finalizeTmpFile(cnst::PATH_TO_RELATION_FILE);
 }

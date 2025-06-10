@@ -22,6 +22,8 @@
 #include <set>
 #include <functional>
 
+#include "osm2rdf/util/ProgressBar.h"
+
 #include "util/Types.h"
 
 namespace olu::util {
@@ -41,6 +43,31 @@ namespace olu::util {
             for (const auto &vectorBatch: vectorBatches) {
                 func(vectorBatch);
             }
+        }
+
+        static void doInBatchesWithProgressBar(const std::set<id_t>& set,
+                         const size_t elementsPerBatch,
+                         const std::function<void(std::set<id_t>)> &func) {
+            std::vector vector(set.begin(), set.end());
+            std::vector<std::set<id_t> > vectorBatches;
+
+            osm2rdf::util::ProgressBar progress(set.size(),
+                                                vectorBatches.size() > 1);
+            size_t counter = 0;
+            progress.update(counter);
+
+            for (auto it = vector.cbegin(), e = vector.cend(); it != vector.cend(); it = e) {
+                e = it + std::min<std::size_t>(vector.end() - it, elementsPerBatch);
+                vectorBatches.emplace_back(it, e);
+            }
+
+            for (const auto &vectorBatch: vectorBatches) {
+                func(vectorBatch);
+                counter += elementsPerBatch;
+                progress.update(counter);
+            }
+
+            progress.done();
         }
     };
 
