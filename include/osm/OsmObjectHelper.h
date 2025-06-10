@@ -21,6 +21,7 @@
 
 #include <string>
 
+#include "RelationMember.h"
 #include "osmium/osm/object.hpp"
 
 #include "osm/OsmObjectType.h"
@@ -64,6 +65,43 @@ namespace olu::osm {
          * @return A pair containing the longitude and latitude as string.
          */
         static lon_lat_t parseLonLatFromWktPoint(const std::string_view &wktPoint);
+
+        /**
+         * Parses a member list from strings containing URIs and positions.
+         * The URIs are expected to be in the format (separated by semicolons):
+         * "https://www.openstreetmap.org/node/1;https://www.openstreetmap.org/way/1;
+         *  https://www.openstreetmap.org/relation/1;...".
+         * The positions are expected to be in the format "0;1;2;...".
+         *
+         * The returned members will be sorted by their positions.
+         *
+         * @param uriList A string containing the URIs of the members.
+         * @param positionList A string containing the positions of the members.
+         * @return A vector of pairs, where each pair contains the osm object type and its id,
+         * sorted by the positions.
+         */
+        static member_ids_t parseWayMemberList(const std::string_view &uriList,
+                                               const std::string_view &positionList);
+
+        /**
+         * Parses a member list from stringx containing URIs, positions and roles.
+         * The URIs are expected to be in the format (separated by semicolons):
+         * "https://www.openstreetmap.org/node/1;https://www.openstreetmap.org/way/1;
+         *  https://www.openstreetmap.org/relation/1;...".
+         * The positions are expected to be in the format "0;1;2;...".
+         * The roles are expected to be in the format "role1;role2;role3;...".
+         *
+         * The returned members will be sorted by their positions.
+         *
+         * @param uriList A string containing the URIs of the members.
+         * @param rolesList A string containing the roles of the members.
+         * @param positionList A string containing the positions of the members.
+         * @return A sorted vector of 'RelationMember' objects, where each object contains the osm
+         * object type, its id, and role.
+         */
+        static relation_members_t parseRelationMemberList(const std::string_view &uriList,
+                                                          const std::string_view &rolesList,
+                                                          const std::string_view &positionList);
 
         /**
          * To check whether an object has been created or modified, we check if the version is

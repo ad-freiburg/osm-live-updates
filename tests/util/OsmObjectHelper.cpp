@@ -215,6 +215,231 @@ TEST(OsmObjectHelper, parseLonLatFromWktPointInvalid) {
 }
 
 // _________________________________________________________________________________________________
+TEST(OsmObjectHelper, parseWayMemberList) {
+    {
+        constexpr std::string_view uriList = "https://www.openstreetmap.org/node/1;"
+                                             "https://www.openstreetmap.org/way/2;"
+                                             "https://www.openstreetmap.org/relation/3";
+        constexpr std::string_view positionList = "0;1;2";
+
+        const auto memberList = olu::osm::OsmObjectHelper::parseWayMemberList(uriList, positionList);
+
+        ASSERT_EQ(memberList.size(), 3);
+        EXPECT_EQ(memberList[0], 1);
+        EXPECT_EQ(memberList[1], 2);
+        EXPECT_EQ(memberList[2], 3);
+    }
+    {
+        constexpr std::string_view uriList = "https://www.openstreetmap.org/node/4;"
+                                             "https://www.openstreetmap.org/way/5";
+        constexpr std::string_view positionList = "1;0";
+
+        const auto memberList = olu::osm::OsmObjectHelper::parseWayMemberList(uriList, positionList);
+
+        ASSERT_EQ(memberList.size(), 2);
+        EXPECT_EQ(memberList[0], 5);
+        EXPECT_EQ(memberList[1], 4);
+    }
+    {
+        constexpr std::string_view uriList = "https://www.openstreetmap.org/node/4";
+        constexpr std::string_view positionList = "1";
+
+        const auto memberList = olu::osm::OsmObjectHelper::parseWayMemberList(uriList, positionList);
+
+        ASSERT_EQ(memberList.size(), 1);
+        EXPECT_EQ(memberList[0], 4);
+    }
+}
+
+// _________________________________________________________________________________________________
+TEST(OsmObjectHelper, parseWayMemberListInvalid) {
+    // Empty URI list
+    {
+        constexpr std::string_view uriList = "";
+        std::string_view positionList = "0;1;2";
+
+        EXPECT_THROW(olu::osm::OsmObjectHelper::parseWayMemberList(uriList, positionList),
+                     olu::osm::OsmObjectHelperException);
+    }
+    // Empty position list
+    {
+        constexpr std::string_view uriList = "https://www.openstreetmap.org/node/1;"
+                                             "https://www.openstreetmap.org/way/2;"
+                                             "https://www.openstreetmap.org/relation/3";
+        std::string_view positionList = "";
+
+        EXPECT_THROW(olu::osm::OsmObjectHelper::parseWayMemberList(uriList, positionList),
+                     olu::osm::OsmObjectHelperException);
+    }
+    // Missing uri in the uri list
+    {
+        constexpr std::string_view uriList = "https://www.openstreetmap.org/node/1;"
+                                             ";"
+                                             "https://www.openstreetmap.org/relation/3";
+        constexpr std::string_view positionList = "0;1;2";
+
+        EXPECT_THROW(olu::osm::OsmObjectHelper::parseWayMemberList(uriList, positionList),
+                     olu::osm::OsmObjectHelperException);
+    }
+    // Missing position in the position list
+    {
+        constexpr std::string_view uriList = "https://www.openstreetmap.org/node/1;"
+                                             "https://www.openstreetmap.org/way/2;"
+                                             "https://www.openstreetmap.org/relation/3";
+        constexpr std::string_view positionList = "0;1;";
+
+        EXPECT_THROW(olu::osm::OsmObjectHelper::parseWayMemberList(uriList, positionList),
+                     olu::osm::OsmObjectHelperException);
+    }
+}
+
+// _________________________________________________________________________________________________
+TEST(OsmObjectHelper, parseRelationMemberList) {
+    {
+        constexpr std::string_view uriList = "https://www.openstreetmap.org/node/1;"
+                                             "https://www.openstreetmap.org/way/2;"
+                                             "https://www.openstreetmap.org/relation/3";
+        constexpr std::string_view rolesList = "role1;role2;role3";
+        constexpr std::string_view positionList = "0;1;2";
+
+        const auto memberList = olu::osm::OsmObjectHelper::parseRelationMemberList(uriList, rolesList, positionList);
+
+        ASSERT_EQ(memberList.size(), 3);
+        EXPECT_EQ(memberList[0].id, 1);
+        EXPECT_EQ(memberList[0].type, olu::osm::OsmObjectType::NODE);
+        EXPECT_EQ(memberList[0].role, "role1");
+
+        EXPECT_EQ(memberList[1].id, 2);
+        EXPECT_EQ(memberList[1].type, olu::osm::OsmObjectType::WAY);
+        EXPECT_EQ(memberList[1].role, "role2");
+
+        EXPECT_EQ(memberList[2].id, 3);
+        EXPECT_EQ(memberList[2].type, olu::osm::OsmObjectType::RELATION);
+        EXPECT_EQ(memberList[2].role, "role3");
+    }
+    {
+        constexpr std::string_view uriList = "https://www.openstreetmap.org/node/4;"
+                                             "https://www.openstreetmap.org/way/5";
+        constexpr std::string_view rolesList = "roleA;roleB";
+        constexpr std::string_view positionList = "1;0";
+
+        const auto memberList = olu::osm::OsmObjectHelper::parseRelationMemberList(uriList, rolesList, positionList);
+
+        ASSERT_EQ(memberList.size(), 2);
+        EXPECT_EQ(memberList[0].id, 5);
+        EXPECT_EQ(memberList[0].type, olu::osm::OsmObjectType::WAY);
+        EXPECT_EQ(memberList[0].role, "roleB");
+
+        EXPECT_EQ(memberList[1].id, 4);
+        EXPECT_EQ(memberList[1].type, olu::osm::OsmObjectType::NODE);
+        EXPECT_EQ(memberList[1].role, "roleA");
+    }
+    {
+        constexpr std::string_view uriList = "https://www.openstreetmap.org/node/6";
+        constexpr std::string_view rolesList = "roleC";
+        constexpr std::string_view positionList = "0";
+
+        const auto memberList = olu::osm::OsmObjectHelper::parseRelationMemberList(uriList, rolesList, positionList);
+
+        ASSERT_EQ(memberList.size(), 1);
+        EXPECT_EQ(memberList[0].id, 6);
+        EXPECT_EQ(memberList[0].type, olu::osm::OsmObjectType::NODE);
+        EXPECT_EQ(memberList[0].role, "roleC");
+    }
+    // Test with more members that are not ordered
+    {
+        constexpr std::string_view uriList = "https://www.openstreetmap.org/node/7;"
+                                             "https://www.openstreetmap.org/way/8;"
+                                             "https://www.openstreetmap.org/relation/9";
+        constexpr std::string_view rolesList = "roleX;roleY;roleZ";
+        constexpr std::string_view positionList = "2;0;1";
+
+        const auto memberList = olu::osm::OsmObjectHelper::parseRelationMemberList(uriList, rolesList, positionList);
+
+        ASSERT_EQ(memberList.size(), 3);
+        EXPECT_EQ(memberList[0].id, 8);
+        EXPECT_EQ(memberList[0].type, olu::osm::OsmObjectType::WAY);
+        EXPECT_EQ(memberList[0].role, "roleY");
+
+        EXPECT_EQ(memberList[1].id, 9);
+        EXPECT_EQ(memberList[1].type, olu::osm::OsmObjectType::RELATION);
+        EXPECT_EQ(memberList[1].role, "roleZ");
+
+        EXPECT_EQ(memberList[2].id, 7);
+        EXPECT_EQ(memberList[2].type, olu::osm::OsmObjectType::NODE);
+        EXPECT_EQ(memberList[2].role, "roleX");
+    }
+}
+
+// _________________________________________________________________________________________________
+TEST(OsmObjectHelper, parseRelationMemberListInvalid) {
+    // Empty URI list
+    {
+        constexpr std::string_view uriList = "";
+        constexpr std::string_view rolesList = "role1;role2;role3";
+        constexpr std::string_view positionList = "0;1;2";
+
+        EXPECT_THROW(olu::osm::OsmObjectHelper::parseRelationMemberList(uriList, rolesList, positionList),
+                     olu::osm::OsmObjectHelperException);
+    }
+    // Empty roles list
+    {
+        constexpr std::string_view uriList = "https://www.openstreetmap.org/node/1;"
+                                             "https://www.openstreetmap.org/way/2;"
+                                             "https://www.openstreetmap.org/relation/3";
+        constexpr std::string_view rolesList = "";
+        constexpr std::string_view positionList = "0;1;2";
+
+        EXPECT_THROW(olu::osm::OsmObjectHelper::parseRelationMemberList(uriList, rolesList, positionList),
+                     olu::osm::OsmObjectHelperException);
+    }
+    // Empty position list
+    {
+        constexpr std::string_view uriList = "https://www.openstreetmap.org/node/1;"
+                                             "https://www.openstreetmap.org/way/2;"
+                                             "https://www.openstreetmap.org/relation/3";
+        constexpr std::string_view rolesList = "role1;role2;role3";
+        constexpr std::string_view positionList = "";
+
+        EXPECT_THROW(olu::osm::OsmObjectHelper::parseRelationMemberList(uriList, rolesList, positionList),
+                     olu::osm::OsmObjectHelperException);
+    }
+    // Missing uri in the uri list
+    {
+        constexpr std::string_view uriList = "https://www.openstreetmap.org/node/1;"
+                                             ";"
+                                             "https://www.openstreetmap.org/relation/3";
+        constexpr std::string_view rolesList = "role1;role2;role3";
+        constexpr std::string_view positionList = "0;1;2";
+
+        EXPECT_THROW(olu::osm::OsmObjectHelper::parseRelationMemberList(uriList, rolesList, positionList),
+                     olu::osm::OsmObjectHelperException);
+    }
+    // Missing role in the roles list
+    {
+        constexpr std::string_view uriList = "https://www.openstreetmap.org/node/1;"
+                                             "https://www.openstreetmap.org/way/2;"
+                                             "https://www.openstreetmap.org/relation/3";
+        constexpr std::string_view rolesList = "role1;role2;";
+        constexpr std::string_view positionList = "0;1;2";
+
+        EXPECT_THROW(olu::osm::OsmObjectHelper::parseRelationMemberList(uriList, rolesList, positionList),
+                     olu::osm::OsmObjectHelperException);
+    }
+    // Missing position in the position list
+    {
+        constexpr std::string_view uriList = "https://www.openstreetmap.org/node/1;"
+                                             "https://www.openstreetmap.org/way/2;"
+                                             "https://www.openstreetmap.org/relation/3";
+        constexpr std::string_view rolesList = "role1;role2;role3";
+        constexpr std::string_view positionList = "0;1;";
+
+        EXPECT_THROW(olu::osm::OsmObjectHelper::parseRelationMemberList(uriList, rolesList, positionList),
+                     olu::osm::OsmObjectHelperException);
+    }
+}
+
+// _________________________________________________________________________________________________
 TEST(OsmObjectHelper, getChangeAction) {
     {
         osmium::memory::Buffer buffer{1024 * 10};
