@@ -99,7 +99,7 @@ void olu::osm::OsmChangeHandler::run() {
     }
 
     _stats->endTimeProcessingChangeFiles();
-    util::Logger::log(util::LogEvent::INFO, "Fetch ways and relations to update geometry...");
+    util::Logger::log(util::LogEvent::INFO, "Fetching ways and relations to update geometry...");
     // Fetch the ids of all ways and relations that need to be updated, meaning they reference an
     // OSM object that changed their geometry because of elements in the change file.
     _stats->startTimeFetchingObjectsToUpdateGeo();
@@ -112,7 +112,7 @@ void olu::osm::OsmChangeHandler::run() {
     // We will need to retrieve them later from the endpoint (if they are not already
     // in the change file) for osm2rdf to calculate the geometries.
     _stats->startTimeFetchingReferences();
-    util::Logger::log(util::LogEvent::INFO, "Read and fetch references...");
+    util::Logger::log(util::LogEvent::INFO, "Reading and fetching references...");
     osmium::io::Reader referencesReader{ cnst::PATH_TO_CHANGE_FILE,
         osmium::osm_entity_bits::way | osmium::osm_entity_bits::relation,
         osmium::io::read_meta::no};
@@ -136,16 +136,16 @@ void olu::osm::OsmChangeHandler::run() {
     // elements in the change file,
     // as well as the ways and relations for which the geometry needs to be updated.
     _stats->startTimeCreatingDummyNodes();
-    util::Logger::log(util::LogEvent::INFO, "Create objects for referenced nodes...");
+    util::Logger::log(util::LogEvent::INFO, "Creating objects for referenced nodes...");
     createDummyNodes();
     _stats->endTimeCreatingDummyNodes();
 
-    util::Logger::log(util::LogEvent::INFO, "Create objects for referenced ways...");
+    util::Logger::log(util::LogEvent::INFO, "Creating objects for referenced ways...");
     _stats->startTimeCreatingDummyWays();
     createDummyWays();
     _stats->endTimeCreatingDummyWays();
 
-    util::Logger::log(util::LogEvent::INFO, "Create objects for referenced relations...");
+    util::Logger::log(util::LogEvent::INFO, "Creating objects for referenced relations...");
     _stats->startTimeCreatingDummyRelations();
     createDummyRelations();
     _stats->endTimeCreatingDummyRelations();
@@ -156,7 +156,7 @@ void olu::osm::OsmChangeHandler::run() {
     _stats->endTimeMergingAndSortingDummyFiles();
 
     try {
-        util::Logger::log(util::LogEvent::INFO, "Convert osm data to triples...");
+        util::Logger::log(util::LogEvent::INFO, "Converting osm data to triples...");
         _stats->startTimeOsm2RdfConversion();
         Osm2ttl(_config).convert();
         _stats->endTimeOsm2RdfConversion();
@@ -527,7 +527,7 @@ void olu::osm::OsmChangeHandler::deleteTriplesFromDatabase() {
 // _________________________________________________________________________________________________
 void olu::osm::OsmChangeHandler::insertTriplesToDatabase() {
     _stats->startTimeFilteringTriples();
-    util::Logger::log(util::LogEvent::INFO, "Filter converted triples...");
+    util::Logger::log(util::LogEvent::INFO, "Filtering converted triples...");
     auto triples = filterRelevantTriples();
     _stats->endTimeFilteringTriples();
 

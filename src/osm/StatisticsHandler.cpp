@@ -268,15 +268,15 @@ void olu::osm::StatisticsHandler::printTimingStatistics() const {
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
 
-    partTime = getTimeInMSInsertingTriples();
-    std::cout << prefix << "Inserting triples took "
+    partTime = getTimeInMSFilteringTriples();
+    std::cout << prefix << "Filtering the triples took "
             << partTime
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
 
-    partTime = getTimeInMSFilteringTriples();
-    std::cout << prefix << "Filtering the triples took "
+    partTime = getTimeInMSInsertingTriples();
+    std::cout << prefix << "Inserting triples took "
             << partTime
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"

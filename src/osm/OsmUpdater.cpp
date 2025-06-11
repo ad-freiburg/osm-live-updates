@@ -97,7 +97,7 @@ void olu::osm::OsmUpdater::run() {
 
         _stats.startTimeMergingChangeFiles();
         mergeChangeFiles(_config.changeFileDir);
-        _stats.endTimeFetchingChangeFiles();
+        _stats.endTimeMergingChangeFiles();
 
         auto och{OsmChangeHandler(_config, *_odf, _stats)};
         och.run();
@@ -105,7 +105,6 @@ void olu::osm::OsmUpdater::run() {
         _stats.startTimeDeterminingSequenceNumber();
         decideStartSequenceNumber();
         _stats.endTimeDeterminingSequenceNumber();
-
 
         _stats.startTimeFetchingChangeFiles();
         fetchChangeFiles();
@@ -187,7 +186,7 @@ void olu::osm::OsmUpdater::mergeChangeFiles(const std::string &pathToChangeFileD
     }
 
     util::Logger::log(util::LogEvent::INFO,
-                      "Merge and sort change files...");
+                      "Merging and sorting change files...");
     if (inputs.empty()) {
         throw OsmUpdaterException("No input files found");
     }
@@ -195,8 +194,8 @@ void olu::osm::OsmUpdater::mergeChangeFiles(const std::string &pathToChangeFileD
     osmium::io::Writer writer{cnst::PATH_TO_CHANGE_FILE, osmium::io::overwrite::allow};
     const auto out = make_output_iterator(writer);
 
-    osm2rdf::util::ProgressBar readProgress(_stats.getNumOfChangeFiles(),
-                                           _stats.getNumOfChangeFiles() > 1);
+    osm2rdf::util::ProgressBar readProgress(inputs.size(),
+                                           inputs.size() > 1);
     size_t counter = 0;
     readProgress.update(counter);
 
