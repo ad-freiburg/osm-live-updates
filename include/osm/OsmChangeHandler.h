@@ -113,8 +113,31 @@ namespace olu::osm {
          */
         void getReferencedRelations();
 
-        static void createTmpFiles() ;
+        /**
+         * Returns the path to a temporary file that is used to store the dummy nodes.
+         *
+         * The files are located in the temporary directory defined in the config file.
+         *
+         * @param osmType The type of the osm object (node, way, relation)
+         * @param index The index of the temporary file, used to distinguish between multiple files
+         * @return A string containing the path to the temporary file.
+         */
+        static std::string getPathToTempFile(const OsmObjectType &osmType, const size_t &index);
+
+        /**
+         * Initializes a temporary XML file for writing the dummy nodes, ways or relations, with
+         * an OSM header tag.
+         *
+         * @param filepath The path to the temporary file
+         */
         static void initTmpFile(const std::string& filepath) ;
+
+        /**
+         * Finalizes a temporary XML file for writing the dummy nodes, ways or relations, by closing
+         * the OSM outer tag.
+         *
+         * @param filepath The path to the temporary file
+         */
         static void finalizeTmpFile(const std::string& filepath) ;
 
         /**
@@ -136,6 +159,13 @@ namespace olu::osm {
          * The dummy relation only contains the members of that relation
          */
         void createDummyRelations();
+
+        /**
+         * Merges the temporary files that contain the change files, dummy nodes, ways and relations
+         * and sorts them by type and id.
+         * The result is written to a new file which is used as input for osm2rdf.
+         */
+        static void mergeAndSortDummyFiles();
 
         /**
          * Send a SPARQL update query to the endpoint

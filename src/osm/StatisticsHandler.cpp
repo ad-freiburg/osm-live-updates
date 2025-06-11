@@ -247,6 +247,13 @@ void olu::osm::StatisticsHandler::printTimingStatistics() const {
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
 
+    partTime = getTimeInMSMergingAndSortingDummyFiles();
+    std::cout << prefix << "Merging and sorting dummy files took "
+            << partTime
+            << " ms. ("
+            << calculatePercentageOfTotalTime(partTime) << "% of total time)"
+            << std::endl;
+
     partTime = getTimeInMSOsm2RdfConversion();
     std::cout << prefix << "Osm2rdf conversion took "
             << partTime

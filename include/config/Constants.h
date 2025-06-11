@@ -48,14 +48,12 @@ namespace olu::config::constants {
 
     // Directory paths -----------------------------------------------------------------------------
     const static inline std::string PATH_TO_TEMP_DIR = "tmp/";
+    const static inline std::string PATH_TO_DUMMY_DIR = PATH_TO_TEMP_DIR  + "dummy/";
     const static inline std::string PATH_TO_CHANGE_FILE_DIR = PATH_TO_TEMP_DIR + "changes/";
     const static inline std::string PATH_TO_SCRATCH_DIRECTORY = "osm2rdfScratch/";
 
     // File paths ----------------------------------------------------------------------------------
     const static inline std::string PATH_TO_CHANGE_FILE = PATH_TO_TEMP_DIR + "changes" + OSM_CHANGE_FILE_EXTENSION + GZIP_EXTENSION;
-    const static inline std::string PATH_TO_NODE_FILE = PATH_TO_TEMP_DIR + "nodes" + OSM_EXTENSION;
-    const static inline std::string PATH_TO_WAY_FILE = PATH_TO_TEMP_DIR + "ways" + OSM_EXTENSION;
-    const static inline std::string PATH_TO_RELATION_FILE = PATH_TO_TEMP_DIR + "relations" + OSM_EXTENSION;
     const static inline std::string PATH_TO_INPUT_FILE = PATH_TO_TEMP_DIR + "input" + OSM_EXTENSION;
     const static inline std::string PATH_TO_OUTPUT_FILE = PATH_TO_TEMP_DIR + "output" + TURTLE_FILE_EXTENSION;
     const static inline std::string PATH_TO_OSM2RDF_INFO_OUTPUT_FILE = PATH_TO_TEMP_DIR + "osm2rdf_info" + TEXT_FILE_EXTENSION;

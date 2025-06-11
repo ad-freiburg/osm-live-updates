@@ -47,7 +47,7 @@ namespace olu::util {
 
         static void doInBatchesWithProgressBar(const std::set<id_t>& set,
                          const size_t elementsPerBatch,
-                         const std::function<void(std::set<id_t>)> &func) {
+                         const std::function<void(std::set<id_t>, size_t)> &func) {
             std::vector vector(set.begin(), set.end());
             std::vector<std::set<id_t> > vectorBatches;
 
@@ -61,8 +61,9 @@ namespace olu::util {
                 vectorBatches.emplace_back(it, e);
             }
 
+            size_t batchNumber = 0;
             for (const auto &vectorBatch: vectorBatches) {
-                func(vectorBatch);
+                func(vectorBatch, batchNumber++);
                 counter += elementsPerBatch;
                 progress.update(counter);
             }

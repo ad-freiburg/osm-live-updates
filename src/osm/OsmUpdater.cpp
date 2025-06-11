@@ -68,6 +68,7 @@ olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config)
     try {
         std::filesystem::create_directory(cnst::PATH_TO_TEMP_DIR);
         std::filesystem::create_directory(cnst::PATH_TO_CHANGE_FILE_DIR);
+        std::filesystem::create_directory(cnst::PATH_TO_DUMMY_DIR);
     } catch (const std::exception &e) {
         util::Logger::log(util::LogEvent::ERROR, e.what());
         throw OsmUpdaterException("Failed to create temporary directories");

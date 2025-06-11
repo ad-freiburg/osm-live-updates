@@ -35,7 +35,6 @@ namespace olu::osm {
 
         template <typename T>
         static void run(const osm2rdf::config::Config& config);
-        static void writeToInputFile();
     };
 
 } // namespace olu::osm

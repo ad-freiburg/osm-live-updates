@@ -108,6 +108,12 @@ namespace olu::osm {
             return std::chrono::duration_cast<std::chrono::milliseconds>(_endTimeCreatingDummyRelations - _startTimeCreatingDummyRelations).count();
         }
 
+        void startTimeMergingAndSortingDummyFiles() { _startTimeMergingAndSortingDummyFiles = std::chrono::system_clock::now(); }
+        void endTimeMergingAndSortingDummyFiles() { _endTimeMergingAndSortingDummyFiles = std::chrono::system_clock::now(); }
+        long getTimeInMSMergingAndSortingDummyFiles() const {
+            return std::chrono::duration_cast<std::chrono::milliseconds>(_endTimeMergingAndSortingDummyFiles - _startTimeMergingAndSortingDummyFiles).count();
+        }
+
         void startTimeOsm2RdfConversion() { _startTimeOsm2RdfConversion = std::chrono::system_clock::now(); }
         void endTimeOsm2RdfConversion() { _endTimeOsm2RdfConversion = std::chrono::system_clock::now(); }
         long getTimeInMSOsm2RdfConversion() const {
@@ -257,6 +263,9 @@ namespace olu::osm {
         time_point_t _endTimeCreatingDummyWays;
         time_point_t _startTimeCreatingDummyRelations;
         time_point_t _endTimeCreatingDummyRelations;
+
+        time_point_t _startTimeMergingAndSortingDummyFiles;
+        time_point_t _endTimeMergingAndSortingDummyFiles;
 
         time_point_t _startTimeOsm2RdfConversion;
         time_point_t _endTimeOsm2RdfConversion;

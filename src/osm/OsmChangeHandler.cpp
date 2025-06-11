@@ -57,9 +57,7 @@ olu::osm::OsmChangeHandler::OsmChangeHandler(const config::Config &config, OsmDa
     _nodeHandler(config, odf, stats),
     _wayHandler(config, odf, stats),
     _relationHandler(config, odf, stats),
-    _referencesHandler(_config, odf, _nodeHandler, _wayHandler, _relationHandler) {
-    createTmpFiles();
-}
+    _referencesHandler(_config, odf, _nodeHandler, _wayHandler, _relationHandler) { }
 
 // _________________________________________________________________________________________________
 void olu::osm::OsmChangeHandler::run() {
@@ -152,6 +150,11 @@ void olu::osm::OsmChangeHandler::run() {
     createDummyRelations();
     _stats->endTimeCreatingDummyRelations();
 
+    util::Logger::log(util::LogEvent::INFO, "Merging and sorting dummy objects...");
+    _stats->startTimeMergingAndSortingDummyFiles();
+    mergeAndSortDummyFiles();
+    _stats->endTimeMergingAndSortingDummyFiles();
+
     try {
         util::Logger::log(util::LogEvent::INFO, "Convert osm data to triples...");
         _stats->startTimeOsm2RdfConversion();
@@ -174,10 +177,23 @@ void olu::osm::OsmChangeHandler::run() {
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::OsmChangeHandler::createTmpFiles() {
-    initTmpFile(cnst::PATH_TO_NODE_FILE);
-    initTmpFile(cnst::PATH_TO_WAY_FILE);
-    initTmpFile(cnst::PATH_TO_RELATION_FILE);
+std::string olu::osm::OsmChangeHandler::getPathToTempFile(const OsmObjectType &osmType,
+                                                          const size_t &index) {
+    auto filePath = cnst::PATH_TO_DUMMY_DIR;
+    switch (osmType) {
+        case OsmObjectType::NODE:
+            filePath += cnst::XML_TAG_NODE;
+            break;
+        case OsmObjectType::WAY:
+            filePath += cnst::XML_TAG_WAY;
+            break;
+        case OsmObjectType::RELATION:
+            filePath += cnst::XML_TAG_REL;
+            break;
+    }
+
+    filePath += "_" + std::to_string(index) + cnst::OSM_EXTENSION;
+    return filePath;
 }
 
 // _________________________________________________________________________________________________
@@ -293,11 +309,12 @@ void olu::osm::OsmChangeHandler::createDummyNodes() {
     util::BatchHelper::doInBatchesWithProgressBar(
         _referencesHandler.getReferencedNodes(),
         _config.batchSize,
-        [this](std::set<id_t> const& batch) {
-            _odf->fetchAndWriteNodesToFile(cnst::PATH_TO_NODE_FILE, batch);
+        [this](std::set<id_t> const& batch, int const &batchNumber) {
+            const auto filePath = getPathToTempFile(OsmObjectType::NODE, batchNumber);
+            initTmpFile(filePath);
+            _odf->fetchAndWriteNodesToFile(filePath, batch);
+            finalizeTmpFile(filePath);
         });
-
-    finalizeTmpFile(cnst::PATH_TO_NODE_FILE);
 }
 
 // _________________________________________________________________________________________________
@@ -312,16 +329,17 @@ void olu::osm::OsmChangeHandler::createDummyWays() {
     util::BatchHelper::doInBatchesWithProgressBar(
         wayIds,
         _config.batchSize,
-        [this, &countWayReferences](std::set<id_t> const& batch) mutable {
-            countWayReferences += _odf->fetchAndWriteWaysToFile(cnst::PATH_TO_WAY_FILE, batch);
+        [this, &countWayReferences](std::set<id_t> const& batch, int const &batchNumber) mutable {
+            const auto filePath = getPathToTempFile(OsmObjectType::WAY, batchNumber);
+            initTmpFile(filePath);
+            countWayReferences += _odf->fetchAndWriteWaysToFile(filePath, batch);
+            finalizeTmpFile(filePath);
         });
 
     // We need to save the number of created way references here, because some of the referenced
     // ways might not be on the SPARQL endpoint.
     // This can happen if the way is located outside the geometrical bounds of this endpoint.
     _stats->setWayReferenceCount(countWayReferences);
-
-    finalizeTmpFile(cnst::PATH_TO_WAY_FILE);
 }
 
 // _________________________________________________________________________________________________
@@ -336,16 +354,34 @@ void olu::osm::OsmChangeHandler::createDummyRelations() {
     util::BatchHelper::doInBatchesWithProgressBar(
         relations,
         _config.batchSize,
-        [this, &countRelationReferences](std::set<id_t> const& batch) mutable {
-            countRelationReferences += _odf->fetchAndWriteRelationsToFile(cnst::PATH_TO_RELATION_FILE, batch);
+        [this, &countRelationReferences](std::set<id_t> const& batch, int const &batchNumber) mutable {
+            const auto filePath = getPathToTempFile(OsmObjectType::RELATION, batchNumber);
+            initTmpFile(filePath);
+            countRelationReferences += _odf->fetchAndWriteRelationsToFile(filePath, batch);
+            finalizeTmpFile(filePath);
         });
 
     // We need to save the number of created relation references here,
     // because some of the referenced relations might not be on the SPARQL endpoint.
     // This can happen if the relation is located outside the geometrical bounds of this endpoint.
     _stats->setRelationReferenceCount(countRelationReferences);
+}
 
-    finalizeTmpFile(cnst::PATH_TO_RELATION_FILE);
+// _________________________________________________________________________________________________
+void olu::osm::OsmChangeHandler::mergeAndSortDummyFiles() {
+    std::string command = "osmium sort " + cnst::PATH_TO_CHANGE_FILE + " ";
+    for (const auto &file : std::filesystem::directory_iterator(cnst::PATH_TO_DUMMY_DIR)) {
+        if (file.is_regular_file()) {
+            command += file.path().string() + " ";
+        }
+    }
+    command += " -o " + cnst::PATH_TO_INPUT_FILE + " --overwrite > /dev/null";
+
+    if (const int res = system(command.c_str()); res != 0) {
+        const std::string msg = "Error while sorting osm files with error code: "
+                                + std::to_string(res);
+        throw OsmChangeHandlerException(msg.c_str());
+    }
 }
 
 // _________________________________________________________________________________________________
