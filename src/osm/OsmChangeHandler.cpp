@@ -21,7 +21,11 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <iosfwd>
+#include <iosfwd>
 #include <set>
+#include <vector>
+#include <vector>
 #include <util/Logger.h>
 
 #include "osmium/visitor.hpp"
@@ -171,8 +175,13 @@ void olu::osm::OsmChangeHandler::run() {
     deleteTriplesFromDatabase();
     _stats->endTimeDeletingTriples();
 
+    util::Logger::log(util::LogEvent::INFO, "Filtering converted triples...");
+    _stats->startTimeFilteringTriples();
+    const auto triples = filterRelevantTriples();
+    _stats->endTimeFilteringTriples();
+
     _stats->startTimeInsertingTriples();
-    insertTriplesToDatabase();
+    insertTriplesToDatabase(triples);
     _stats->endTimeInsertingTriples();
 }
 
@@ -525,12 +534,7 @@ void olu::osm::OsmChangeHandler::deleteTriplesFromDatabase() {
 
 
 // _________________________________________________________________________________________________
-void olu::osm::OsmChangeHandler::insertTriplesToDatabase() {
-    _stats->startTimeFilteringTriples();
-    util::Logger::log(util::LogEvent::INFO, "Filtering converted triples...");
-    auto triples = filterRelevantTriples();
-    _stats->endTimeFilteringTriples();
-
+void olu::osm::OsmChangeHandler::insertTriplesToDatabase(const std::vector<triple_t> & triples) {
     if (triples.empty()) {
         util::Logger::log(util::LogEvent::INFO,"No triples to insert into database...");
         return;
@@ -544,36 +548,32 @@ void olu::osm::OsmChangeHandler::insertTriplesToDatabase() {
     std::vector<std::string> tripleBatch;
     for (size_t i = 0; i < triples.size(); ++i) {
         auto [s, p, o] = triples[i];
-        std::ostringstream triple;
+        std::string triple;
         if (o.starts_with("_")) {
-            triple << s;
-            triple << " ";
-            triple << p;
-            triple << "[ ";
+            triple += s;
+            triple += " ";
+            triple += p;
+            triple += "[ ";
 
             while (true) {
                 i++;
                 if (auto [next_s, next_p, next_o] = triples[i]; next_s.starts_with("_")) {
-                    triple << next_p;
-                    triple << " ";
-                    triple << next_o;
-                    triple << "; ";
+                    triple += next_p;
+                    triple += " ";
+                    triple += next_o;
+                    triple += "; ";
                 } else {
                     i--;
                     break;
                 }
             }
 
-            triple << " ]";
+            triple += " ]";
         } else {
-            triple << s;
-            triple << " ";
-            triple << p;
-            triple << " ";
-            triple << o;
+            triple += util::TtlHelper::getTripleString(std::move<triple_t>({s, p, o}));
         }
 
-        tripleBatch.emplace_back(triple.str());
+        tripleBatch.emplace_back(triple);
 
         if (tripleBatch.size() == _config.batchSize || i == triples.size() - 1) {
             runUpdateQuery(_queryWriter.writeInsertQuery(tripleBatch), cnst::DEFAULT_PREFIXES);

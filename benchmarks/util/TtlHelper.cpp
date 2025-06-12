@@ -32,6 +32,18 @@ static void Parse_Triple(benchmark::State& state) {
 BENCHMARK(Parse_Triple);
 
 // ---------------------------------------------------------------------------
+static void Get_Triple_String(benchmark::State& state) {
+    std::string subject = "osmnode:1";
+    std::string predicate = "osmkey:tower:construction";
+    std::string object = "lattice";
+
+    for (auto _ : state) {
+        auto components = olu::util::TtlHelper::getTripleString(std::move<olu::triple_t>({subject, predicate, object}));
+    }
+}
+BENCHMARK(Get_Triple_String);
+
+// ---------------------------------------------------------------------------
 static void Get_Id_From_Node_Subject(benchmark::State& state) {
     const std::string subject = "osmnode:1";
 
@@ -40,6 +52,7 @@ static void Get_Id_From_Node_Subject(benchmark::State& state) {
     }
 }
 BENCHMARK(Get_Id_From_Node_Subject);
+
 // ---------------------------------------------------------------------------
 static void Get_Id_From_Way_Subject(benchmark::State& state) {
     const std::string subject = "osmway:1";
@@ -49,6 +62,7 @@ static void Get_Id_From_Way_Subject(benchmark::State& state) {
     }
 }
 BENCHMARK(Get_Id_From_Way_Subject);
+
 // ---------------------------------------------------------------------------
 static void Get_Id_From_Relation_Subject(benchmark::State& state) {
     const std::string subject = "osmrel:1";
