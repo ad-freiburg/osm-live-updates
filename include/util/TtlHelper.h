@@ -31,7 +31,7 @@ namespace olu::util {
          * "subject predicate object ."
          */
         static std::string getTripleString(const triple_t& triple) {
-            return std::get<0>(triple) + " " + std::get<1>(triple) + " " + std::get<2>(triple) + " .";
+            return std::get<0>(triple) + " " + std::get<1>(triple) + " " + std::get<2>(triple);
         }
 
         /**
