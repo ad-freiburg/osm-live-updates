@@ -22,6 +22,10 @@
 #include <iostream>
 #include <string>
 
+#include "osm/RelationMember.h"
+
+#include "Types.h"
+
 namespace olu::util {
     /**
      * Exception that can appear inside the `XmlHelper` class.
@@ -42,6 +46,49 @@ namespace olu::util {
      */
     class XmlHelper {
     public:
+        /**
+         * Creates a dummy XML node with the given id and location.
+         * The XML element will look like:
+         * <node id="123456789" lat="42.7957187" lon="13.5690032"/>
+         *
+         * @param nodeId The id of the node.
+         * @param lonLat The longitude and latitude of the node.
+         * @return A string containing the XML representation of the node.
+         */
+        static std::string getNodeDummy(const id_t &nodeId, const lon_lat_t &lonLat);
+
+        /**
+         * Creates a dummy XML way with the given id and member ids.
+         * The XML element will look like:
+         * <way id="123456789">
+         *   <nd ref="123456789"/>
+         *   <nd ref="987654321"/>
+         * </way>
+         *
+         * @param wayId The id of the way.
+         * @param memberIds The ids of the nodes that are part of the way.
+         * @return A string containing the XML representation of the way.
+         */
+        static std::string getWayDummy(const id_t &wayId, const member_ids_t &memberIds);
+
+        /**
+         * Creates a dummy XML relation with the given id, type and members.
+         * The XML element will look like:
+         * <relation id="123456789">
+         *   <member type="node" ref="123456789" role="outer"/>
+         *   <member type="way" ref="987654321" role=""/>
+         *   <tag k="type" v="relation_type"/>
+         * </relation>
+         *
+         * @param relationId The id of the relation.
+         * @param relationType The type of the relation.
+         * @param members The members of the relation.
+         * @return A string containing the XML representation of the relation.
+         */
+        static std::string getRelationDummy(const id_t &relationId,
+                                            const std::string_view &relationType,
+                                            const osm::relation_members_t &members);
+
         /**
          * @return True, if the given string has an XML encoded character in it
          */

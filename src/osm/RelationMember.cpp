@@ -21,6 +21,7 @@
 #include <iostream>
 
 #include "config/Constants.h"
+#include "osm/OsmObjectHelper.h"
 
 namespace cnst = olu::config::constants;
 

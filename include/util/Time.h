@@ -25,9 +25,6 @@
 #include <string>
 
 namespace olu::util {
-
-inline const char* formattedTimeSpacer = "                          ";
-
     // Return current time formatted as string.
     // https://github.com/ad-freiburg/osm2rdf/blob/master/include/osm2rdf/util/Time.h
     inline std::string currentTimeFormatted() {

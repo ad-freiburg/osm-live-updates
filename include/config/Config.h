@@ -85,7 +85,7 @@ struct Config {
     std::filesystem::path sparqlOutputFile;
 
     // Generate the information string containing the current settings.
-    [[nodiscard]] std::string getInfo(std::string_view prefix) const;
+    void printInfo() const;
 
     // Parse provided commandline arguments into config object.
     void fromArgs(int argc, char** argv);

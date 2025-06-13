@@ -21,7 +21,6 @@
 
 #include "config/Config.h"
 #include "osm/StatisticsHandler.h"
-#include "osm/OsmDatabaseState.h"
 #include "osm/OsmDataFetcher.h"
 #include "osm/OsmReplicationServerHelper.h"
 
@@ -42,10 +41,9 @@ namespace olu::osm {
         void run();
     private:
         config::Config _config;
-        OsmReplicationServerHelper _repServer;
         StatisticsHandler _stats;
+        OsmReplicationServerHelper _repServer;
         std::unique_ptr<OsmDataFetcher> _odf;
-        OsmDatabaseState _latestState;
 
         /**
          * Decides which sequence number to start from.
@@ -63,18 +61,18 @@ namespace olu::osm {
          *
          * @return The sequence number to start from
          */
-        [[nodiscard]] int decideStartSequenceNumber() const;
+        void decideStartSequenceNumber();
 
         /**
         * Download all change files from the given sequence number to the `latest` one, and store
         * them in the /changes directory.
         */
-        void fetchChangeFiles(int sequenceNumber);
+        void fetchChangeFiles();
 
         /**
         * Uses osmium to merge all change files in the /changes directory into a single one.
         */
-        static void mergeChangeFiles(const std::string &pathToChangeFileDir);
+        void mergeChangeFiles(const std::string &pathToChangeFileDir);
 
         /**
         * Delete all files in the /changes dir

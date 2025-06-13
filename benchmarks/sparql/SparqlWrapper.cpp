@@ -27,11 +27,11 @@ namespace cnst = olu::config::constants;
 // ---------------------------------------------------------------------------
 static void Set_Prefixes(benchmark::State& state) {
     auto config((olu::config::Config()));
-    auto sparqlWrapper = olu::sparql::SparqlWrapper(config);
+    // auto sparqlWrapper = olu::sparql::SparqlWrapper(config);
 
-    for (auto _ : state) {
-        sparqlWrapper.setPrefixes(olu::config::constants::PREFIXES_FOR_WAY_DELETE_QUERY);
-    }
+    // for (auto _ : state) {
+    //     sparqlWrapper.setPrefixes(olu::config::constants::PREFIXES_FOR_WAY_DELETE_QUERY);
+    // }
 }
 BENCHMARK(Set_Prefixes);
 
@@ -40,16 +40,16 @@ static void Run_Query_For_Node_Location(benchmark::State& state) {
     auto config((olu::config::Config()));
     config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
 
-    auto sparqlWrapper = olu::sparql::SparqlWrapper(config);
-    olu::sparql::QueryWriter qw{config};
-    std::string query = qw.writeQueryForNodeLocations({1});
-
-    for (auto _ : state) {
-        sparqlWrapper.setQuery(query);
-        sparqlWrapper.setPrefixes(olu::config::constants::PREFIXES_FOR_NODE_LOCATION);
-
-        auto response = sparqlWrapper.runQuery();
-    }
+    // auto sparqlWrapper = olu::sparql::SparqlWrapper(config);
+    // olu::sparql::QueryWriter qw{config};
+    // std::string query = qw.writeQueryForNodeLocations({1});
+    //
+    // for (auto _ : state) {
+    //     sparqlWrapper.setQuery(query);
+    //     sparqlWrapper.setPrefixes(olu::config::constants::PREFIXES_FOR_NODE_LOCATION);
+    //
+    //     auto response = sparqlWrapper.runQuery();
+    // }
 }
 BENCHMARK(Run_Query_For_Node_Location);
 
@@ -74,10 +74,10 @@ BENCHMARK(Run_Query_For_Node_Location);
 static void Clear_Cache(benchmark::State& state) {
     auto config((olu::config::Config()));
     config.sparqlEndpointUri = "http://host.docker.internal:7007/osm-planet/";
-
-    for (auto _ : state) {
-        auto sparqlWrapper = olu::sparql::SparqlWrapper(config);
-        sparqlWrapper.clearCache();
-    }
+    //
+    // for (auto _ : state) {
+    //     auto sparqlWrapper = olu::sparql::SparqlWrapper(config);
+    //     sparqlWrapper.clearCache();
+    // }
 }
 BENCHMARK(Clear_Cache);

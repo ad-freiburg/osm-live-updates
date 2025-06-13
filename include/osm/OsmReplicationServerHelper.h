@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 
+#include "StatisticsHandler.h"
 #include "config/Config.h"
 #include "osm/OsmDatabaseState.h"
 
@@ -32,7 +33,9 @@ namespace olu::osm {
      */
     class OsmReplicationServerHelper {
     public:
-        explicit OsmReplicationServerHelper(config::Config config): _config(std::move(config)) { }
+        explicit OsmReplicationServerHelper(config::Config config,
+                                            StatisticsHandler &stats): _config(std::move(config)),
+                                                                       _stats(&stats) { }
 
         /**
          * Fetches the database state (sequence number and timestamp) for the given sequence number
@@ -58,7 +61,7 @@ namespace olu::osm {
          * @param sequenceNumber The sequence number to fetch the change file for
          * @return The path to the location of the fetched .osm Change file
          */
-        std::string fetchChangeFile(int &sequenceNumber) ;
+        void fetchChangeFile(int &sequenceNumber) ;
 
         /**
          * Fetches the 'nearest' database state for the given timestamp from the server, meaning the
@@ -67,10 +70,10 @@ namespace olu::osm {
          * @param timeStamp Timestamp to fetch the `nearest` database state for
          * @return The 'nearest' database state for the given timestamp
          */
-        [[nodiscard]] OsmDatabaseState
-        fetchDatabaseStateForTimestamp(const std::string& timeStamp) const;
+        void fetchDatabaseStateForTimestamp(const std::string &timeStamp) const;
     private:
         config::Config _config;
+        StatisticsHandler* _stats;
 
         /**
          * Sends a HTTP request to the replication server and tries to extract a data base state

@@ -33,6 +33,7 @@ namespace olu {
     typedef std::vector<id_t> member_ids_t;
 
     typedef std::string wktPoint_t;
+    typedef std::pair<std::string, std::string> lon_lat_t;
 
     typedef std::tuple<std::string, std::string, std::string> triple_t;
     typedef std::pair<std::string, std::string> key_value_t;

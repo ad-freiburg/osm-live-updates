@@ -21,6 +21,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <util/Logger.h>
 
 #include "omp.h"
 #include "boost/regex.hpp"
@@ -73,7 +74,7 @@ olu::osm::OsmDatabaseState olu::osm::OsmReplicationServerHelper::fetchLatestData
 }
 
 // _________________________________________________________________________________________________
-std::string olu::osm::OsmReplicationServerHelper::fetchChangeFile(int &sequenceNumber) {
+void olu::osm::OsmReplicationServerHelper::fetchChangeFile(int &sequenceNumber) {
     std::string diffFilename = util::URLHelper::formatSequenceNumberForUrl(sequenceNumber)
                                + cnst::OSM_CHANGE_FILE_EXTENSION
                                + cnst::GZIP_EXTENSION;
@@ -104,24 +105,27 @@ std::string olu::osm::OsmReplicationServerHelper::fetchChangeFile(int &sequenceN
     outputFile.open(fileName);
     outputFile << response;
     outputFile.close();
-
-    return fileName;
 }
 
 // _________________________________________________________________________________________________
-olu::osm::OsmDatabaseState
+void
 olu::osm::OsmReplicationServerHelper::fetchDatabaseStateForTimestamp(
-    const std::string& timeStamp) const {
+    const std::string &timeStamp) const {
     // We start with the latest state file on the replication server
-    OsmDatabaseState latestState = fetchLatestDatabaseState();
+    const OsmDatabaseState latestState = fetchLatestDatabaseState();
+    _stats->setLatestDatabaseState(latestState);
+
     // We have found a state file at which we have to start if the timestamp from the state
     // file is further in the past than the latest timestamp from the sparql endpoint.
     // (We can lexicographically compare timestamps because they are ISO-formatted
     // "YYYY-MM-DDTHH:MM:SS")
     if (latestState.timeStamp <= timeStamp) {
-        return latestState;
+        util::Logger::log(util::LogEvent::INFO, "Database is already up to date. DONE.");
+        throw OsmReplicationServerHelperException("Database is already up to date.");
     }
 
+    util::Logger::log(util::LogEvent::INFO,
+                      "Find matching database state on replication server...");
     // Fetch database states in batches of BATCH_SIZE until we find a state file that has a matching
     // timestamp.
     auto toSeqNum = latestState.sequenceNumber;
@@ -131,7 +135,14 @@ olu::osm::OsmReplicationServerHelper::fetchDatabaseStateForTimestamp(
         for (auto databaseStates = fetchDatabaseStatesForSequenceNumbers(fromSeqNum, toSeqNum);
              auto fetchedState : databaseStates) {
             if (fetchedState.timeStamp <= timeStamp) {
-                return fetchedState;
+                _stats->setStartDatabaseState(fetchedState);
+                util::Logger::log(util::LogEvent::INFO,
+                                  "Matching database state on replication server is: "
+                                  + olu::osm::to_string(fetchedState));
+                util::Logger::log(util::LogEvent::INFO,
+                                  "Latest database state on replication server is: "
+                                  + olu::osm::to_string(latestState));
+                return;
             }
         }
 

@@ -27,6 +27,14 @@ namespace olu::util {
         static triple_t parseTriple(const std::string& tripleString);
 
         /**
+         * Returns the triple as a string in the format:
+         * "subject predicate object ."
+         */
+        static std::string getTripleString(const triple_t& triple) {
+            return std::get<0>(triple) + " " + std::get<1>(triple) + " " + std::get<2>(triple) + " .";
+        }
+
+        /**
          * Parses the id from a prefixed name like "osmnode:1" or "osm2rdfgeom:osm_way_centroid_1".
          * The prefixed has to end with the id number. There is again no validation of the input,
          * so make sure it is in the correct format.

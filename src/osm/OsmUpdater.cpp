@@ -40,7 +40,7 @@
 #include "osm/OsmDataFetcherQLever.h"
 #include "osm/OsmDataFetcherSparql.h"
 #include "config/Constants.h"
-#include "osm2rdf/util/Time.h"
+#include "util/Logger.h"
 
 namespace cnst = olu::config::constants;
 
@@ -55,10 +55,10 @@ createOsmDataFetcher(const olu::config::Config& config, olu::osm::StatisticsHand
 
 // _________________________________________________________________________________________________
 olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config),
-                                                                 _repServer(config),
                                                                  _stats(config),
-                                                                 _odf(createOsmDataFetcher(config, _stats)),
-                                                                 _latestState({}) {
+                                                                 _repServer(config, _stats),
+                                                                 _odf(createOsmDataFetcher(
+                                                                     config, _stats)) {
     _stats.startTime();
 
 #if defined(_OPENMP)
@@ -68,8 +68,9 @@ olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config)
     try {
         std::filesystem::create_directory(cnst::PATH_TO_TEMP_DIR);
         std::filesystem::create_directory(cnst::PATH_TO_CHANGE_FILE_DIR);
+        std::filesystem::create_directory(cnst::PATH_TO_DUMMY_DIR);
     } catch (const std::exception &e) {
-        std::cerr << e.what() << std::endl;
+        util::Logger::log(util::LogEvent::ERROR, e.what());
         throw OsmUpdaterException("Failed to create temporary directories");
     }
 
@@ -80,7 +81,7 @@ olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config)
                 std::ofstream::out | std::ios_base::trunc);
             outputFile.close();
         } catch (const std::exception &e) {
-            std::cerr << e.what() << std::endl;
+            util::Logger::log(util::LogEvent::ERROR, e.what());
             throw OsmUpdaterException("Failed to clear sparql output file");
         }
     }
@@ -91,43 +92,28 @@ void olu::osm::OsmUpdater::run() {
     // Handle either local directory with change files or external one depending on the user
     // input
     if (!_config.changeFileDir.empty()) {
-        _stats.printCurrentStep("Start handling change files at:  " + _config.changeFileDir);
+        util::Logger::log(util::LogEvent::INFO,
+                          "Start handling change files at:  " + _config.changeFileDir);
 
         _stats.startTimeMergingChangeFiles();
         mergeChangeFiles(_config.changeFileDir);
-        _stats.endTimeFetchingChangeFiles();
+        _stats.endTimeMergingChangeFiles();
 
         auto och{OsmChangeHandler(_config, *_odf, _stats)};
         och.run();
     } else {
         _stats.startTimeDeterminingSequenceNumber();
-        _stats.printCurrentStep("Determine sequence number to start with ...");
-
-        _latestState = _repServer.fetchLatestDatabaseState();
-        const auto sequenceNumber = decideStartSequenceNumber();
-
-        _stats.printCurrentStep("Start sequence number: " + std::to_string(sequenceNumber)
-                                + " of " + std::to_string(_latestState.sequenceNumber));
-
+        decideStartSequenceNumber();
         _stats.endTimeDeterminingSequenceNumber();
 
-        if (sequenceNumber > _latestState.sequenceNumber) {
-            _stats.printCurrentStep("Database is already up to date. DONE.");
-            return;
-        }
-
         _stats.startTimeFetchingChangeFiles();
-        fetchChangeFiles(sequenceNumber);
+        fetchChangeFiles();
         _stats.endTimeFetchingChangeFiles();
 
         _stats.startTimeMergingChangeFiles();
         mergeChangeFiles(cnst::PATH_TO_CHANGE_FILE_DIR);
         clearChangesDir();
         _stats.endTimeMergingChangeFiles();
-
-        _stats.printCurrentStep("Process changes from "
-                                + std::to_string(_latestState.sequenceNumber - sequenceNumber + 1)
-                                + " change files...");
 
         auto och{OsmChangeHandler(_config, *_odf, _stats)};
         och.run();
@@ -144,24 +130,29 @@ void olu::osm::OsmUpdater::run() {
     }
     _stats.printTimingStatistics();
 
-    _stats.printCurrentStep("DONE");
+    util::Logger::log(util::LogEvent::INFO, "DONE");
 }
 
 // _________________________________________________________________________________________________
-int olu::osm::OsmUpdater::decideStartSequenceNumber() const {
+void olu::osm::OsmUpdater::decideStartSequenceNumber() {
     if (_config.sequenceNumber > 0) {
-        return _config.sequenceNumber;
+        _stats.setStartDatabaseState({"", _config.sequenceNumber,});
     }
 
     std::string timestamp;
     if (_config.timestamp.empty()) {
+        util::Logger::log(util::LogEvent::INFO,
+                          "Fetch latest node-timestamp on SPARQL endpoint...");
         timestamp = _odf->fetchLatestTimestampOfAnyNode();
+        util::Logger::log(util::LogEvent::INFO,
+                          "Latest node-timestamp on SPARQL endpoint is: " + timestamp);
     } else {
         timestamp = _config.timestamp;
+        util::Logger::log(util::LogEvent::INFO,
+                          "Start from user specified timestamp: " + timestamp);
     }
 
-    auto [_, sequenceNumber] = _repServer.fetchDatabaseStateForTimestamp(timestamp);
-    return sequenceNumber;
+    _repServer.fetchDatabaseStateForTimestamp(timestamp);
 }
 
 // We need to create a new ordering because we have to take the deleted status into account for
@@ -194,6 +185,8 @@ void olu::osm::OsmUpdater::mergeChangeFiles(const std::string &pathToChangeFileD
         }
     }
 
+    util::Logger::log(util::LogEvent::INFO,
+                      "Merging and sorting change files...");
     if (inputs.empty()) {
         throw OsmUpdaterException("No input files found");
     }
@@ -201,16 +194,24 @@ void olu::osm::OsmUpdater::mergeChangeFiles(const std::string &pathToChangeFileD
     osmium::io::Writer writer{cnst::PATH_TO_CHANGE_FILE, osmium::io::overwrite::allow};
     const auto out = make_output_iterator(writer);
 
+    osm2rdf::util::ProgressBar readProgress(inputs.size(),
+                                           inputs.size() > 1);
+    size_t counter = 0;
+    readProgress.update(counter);
+
     std::vector<osmium::memory::Buffer> changes;
     osmium::ObjectPointerCollection objects;
     for (const osmium::io::File& change_file : inputs) {
         osmium::io::Reader reader{change_file, osmium::osm_entity_bits::object};
         while (osmium::memory::Buffer buffer = reader.read()) {
             apply(buffer, objects);
+            // We need to keep the buffer in storage
             changes.push_back(std::move(buffer));
         }
         reader.close();
+        readProgress.update(++counter);
     }
+    readProgress.done();
 
     objects.sort(object_order_type_id_reverse_version_delete());
 
@@ -219,17 +220,18 @@ void olu::osm::OsmUpdater::mergeChangeFiles(const std::string &pathToChangeFileD
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::OsmUpdater::fetchChangeFiles(int sequenceNumber) {
-    _stats.printCurrentStep("Fetch and merge change files...");
+void olu::osm::OsmUpdater::fetchChangeFiles() {
+    util::Logger::log(util::LogEvent::INFO, "Fetching " +
+        std::to_string(_stats.getNumOfChangeFiles()) + " change files from replication server...");
 
-    osm2rdf::util::ProgressBar downloadProgress(
-        _latestState.sequenceNumber + 1 - sequenceNumber, _config.showProgress);
+    osm2rdf::util::ProgressBar downloadProgress(_stats.getNumOfChangeFiles(),
+                                                _stats.getNumOfChangeFiles() > 1);
     size_t counter = 0;
     downloadProgress.update(counter);
-
 #pragma omp parallel for
-    for (int i = sequenceNumber; i <= _latestState.sequenceNumber; i++) {
-        auto pathToOsmChangeFile = _repServer.fetchChangeFile(i);
+    for (int currentSeqNum = _stats.getStartDatabaseState().sequenceNumber;
+         currentSeqNum <= _stats.getLatestDatabaseState().sequenceNumber; currentSeqNum++) {
+        _repServer.fetchChangeFile(currentSeqNum);
 #pragma omp critical
         {
             downloadProgress.update(counter++);
@@ -246,7 +248,7 @@ void olu::osm::OsmUpdater::clearChangesDir() {
             remove_all(entry.path());
         }
     } catch (const std::filesystem::filesystem_error& e) {
-        std::cerr << e.what() << std::endl;
+        util::Logger::log(util::LogEvent::ERROR, e.what());
         throw OsmUpdaterException("Error while removing changes directory.");
     }
 }
@@ -255,10 +257,10 @@ void olu::osm::OsmUpdater::clearChangesDir() {
 void olu::osm::OsmUpdater::deleteTmpDir() {
     try {
         for (const auto& entry : std::filesystem::directory_iterator(cnst::PATH_TO_TEMP_DIR)) {
-                remove_all(entry.path());
-            }
+            remove_all(entry.path());
+        }
     } catch (const std::filesystem::filesystem_error& e) {
-        std::cerr << e.what() << std::endl;
+        util::Logger::log(util::LogEvent::ERROR, e.what());
         throw OsmUpdaterException("Error while removing temporary files.");
     }
 }
