@@ -24,58 +24,73 @@
 
 namespace constants = olu::config::constants;
 
-namespace olu::util {
-
 // _________________________________________________________________________________________________
-TEST(URLHelper, formatSequenceNumber) {
-    {
+TEST(URLHelper, formatSequenceNumber) { {
         int seqNumber = 6177383;
-        std::string formattedSeqNumber = URLHelper::formatSequenceNumberForUrl(seqNumber);
+        std::string formattedSeqNumber =
+                olu::util::URLHelper::formatSequenceNumberForUrl(seqNumber);
         ASSERT_EQ(formattedSeqNumber, "006/177/383");
-    }
-    {
+    } {
         int seqNumber = 116177383;
-        std::string formattedSeqNumber = URLHelper::formatSequenceNumberForUrl(seqNumber);
+        std::string formattedSeqNumber =
+                olu::util::URLHelper::formatSequenceNumberForUrl(seqNumber);
         ASSERT_EQ(formattedSeqNumber, "116/177/383");
-    }
-    {
+    } {
         EXPECT_THROW({
-             try {
-                 int seqNumber = 1234567890;
-                 std::string formattedSeqNumber = URLHelper::formatSequenceNumberForUrl(seqNumber);
-             } catch(const std::invalid_argument& e) {
-                 EXPECT_STREQ(constants::EXCEPTION_MSG_SEQUENCE_NUMBER_IS_INVALID, e.what());
-                 throw;
-             }}, std::invalid_argument);
-    }
-    {
+                     try {
+                     int seqNumber = 1234567890;
+                     std::string formattedSeqNumber = olu::util::URLHelper::
+                     formatSequenceNumberForUrl(seqNumber);
+                     } catch(const std::invalid_argument& e) {
+                     EXPECT_STREQ(constants::EXCEPTION_MSG_SEQUENCE_NUMBER_IS_INVALID, e.what());
+                     throw;
+                     }}, std::invalid_argument);
+    } {
         EXPECT_THROW({
-             try {
-                 int seqNumber = -1    ;
-                 std::string formattedSeqNumber = URLHelper::formatSequenceNumberForUrl(seqNumber);
-             } catch(const std::invalid_argument& e) {
-                 EXPECT_STREQ(constants::EXCEPTION_MSG_SEQUENCE_NUMBER_IS_INVALID, e.what());
-                 throw;
-             }}, std::invalid_argument);
+                     try {
+                     int seqNumber = -1 ;
+                     std::string formattedSeqNumber = olu::util::URLHelper::
+                     formatSequenceNumberForUrl(seqNumber);
+                     } catch(const std::invalid_argument& e) {
+                     EXPECT_STREQ(constants::EXCEPTION_MSG_SEQUENCE_NUMBER_IS_INVALID, e.what());
+                     throw;
+                     }}, std::invalid_argument);
     }
 }
 
 // _________________________________________________________________________________________________
-TEST(URLHelper, buildUrl) {
-    {
+TEST(URLHelper, buildUrl) { {
         std::vector<std::string> pathSegments;
         pathSegments.emplace_back("https://www.openstreetmap.org/api/0.6/node");
         pathSegments.emplace_back("state.txt");
-        std::string url = URLHelper::buildUrl(pathSegments);
+        const std::string url = olu::util::URLHelper::buildUrl(pathSegments);
         ASSERT_EQ(url, "https://www.openstreetmap.org/api/0.6/node/state.txt");
-    }
-    {
-        std::vector<std::string> pathSegments;
-        std::string url = URLHelper::buildUrl(pathSegments);
+    } {
+        const std::vector<std::string> pathSegments;
+        const std::string url = olu::util::URLHelper::buildUrl(pathSegments);
         ASSERT_EQ(url, "");
     }
 }
-
-
-} // namespace olu::util
-
+// _________________________________________________________________________________________________
+TEST(URLHelper, encodeForUrlQuery) {
+    {
+        const std::string input = "https://www.openstreetmap.org/api/0.6/node/123456789";
+        const std::string encoded = olu::util::URLHelper::encodeForUrlQuery(input);
+        ASSERT_EQ(encoded, "https%3A%2F%2Fwww.openstreetmap.org%2Fapi%2F0.6%2Fnode%2F123456789");
+    }
+    {
+        const std::string input = "Hello World!";
+        const std::string encoded = olu::util::URLHelper::encodeForUrlQuery(input);
+        ASSERT_EQ(encoded, "Hello%20World%21");
+    }
+    {
+        const std::string input = "Special characters: & ? = #";
+        const std::string encoded = olu::util::URLHelper::encodeForUrlQuery(input);
+        ASSERT_EQ(encoded, "Special%20characters%3A%20%26%20%3F%20%3D%20%23");
+    }
+    {
+        const std::string input = "";
+        const std::string encoded = olu::util::URLHelper::encodeForUrlQuery(input);
+        ASSERT_EQ(encoded, "");
+    }
+}

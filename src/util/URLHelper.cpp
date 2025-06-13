@@ -19,8 +19,6 @@
 #include "util/URLHelper.h"
 
 #include <stdexcept>
-#include <iostream>
-#include <iomanip>
 
 #include "boost/regex.hpp"
 
@@ -75,21 +73,25 @@ std::string olu::util::URLHelper::formatSequenceNumberForUrl(const int &sequence
 
 // _________________________________________________________________________________________________
 std::string olu::util::URLHelper::encodeForUrlQuery(const std::string &value) {
-    std::ostringstream escaped;
-    escaped.fill('0');
-    escaped << std::hex;
+    std::string escaped;
+    // Reserve enough space for worst case (each char is encoded)
+    escaped.reserve(value.size() * 3);
 
-    for (const char c : value) {
-        // Keep alphanumeric characters and other allowed characters
-        if (isalnum(c) != 0 || c == '-' || c == '_' || c == '.' || c == '~') {
-            escaped << c;
-            continue;
-        }
-        // Any other characters are percent-encoded
-        escaped << '%' << std::setw(2) << static_cast<int>(static_cast<unsigned char>(c));
+    for (const unsigned char c : value) {
+        if ((c >= 'a' && c <= 'z') ||
+            (c >= 'A' && c <= 'Z') ||
+            (c >= '0' && c <= '9') ||
+            c == '-' || c == '_' || c == '.' || c == '~') {
+            escaped += c;
+            } else {
+                static constexpr char hex[] = "0123456789ABCDEF";
+                escaped += '%';
+                escaped += hex[c >> 4];
+                escaped += hex[c & 0xF];
+            }
     }
 
-    return escaped.str();
+    return escaped;
 }
 
 // _________________________________________________________________________________________________
