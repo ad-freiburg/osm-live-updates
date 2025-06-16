@@ -170,7 +170,8 @@ namespace olu::osm {
         /**
          * Send a SPARQL update query to the endpoint
          */
-        void runUpdateQuery(const std::string& query, const std::vector<std::string> &prefixes);
+        void runUpdateQuery(const sparql::UpdateOperation & updateOp, const std::string& query,
+                            const std::vector<std::string> &prefixes);
 
         /**
          * Delete all relevant triples from the database, while showing a progress bar on std::cout

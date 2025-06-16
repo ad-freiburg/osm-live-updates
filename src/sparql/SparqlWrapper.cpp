@@ -91,7 +91,7 @@ std::string olu::sparql::SparqlWrapper::send(const bool isUpdate) {
 }
 
 // _________________________________________________________________________________________________
-std::string olu::sparql::SparqlWrapper::runUpdate() {
+std::string olu::sparql::SparqlWrapper::runUpdate(const UpdateOperation &updateOp) {
     return send(true);
 }
 

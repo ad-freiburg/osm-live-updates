@@ -141,22 +141,33 @@ void olu::osm::StatisticsHandler::printOsm2RdfStatistics() const {
 void olu::osm::StatisticsHandler::printSparqlStatistics() const {
     printCurrentStep("SPARQL Statistics:");
 
-    std::cout << prefix << _queriesCount << " SPARQL queries and "
-          << _updateQueriesCount << " update queries were send to the endpoint."
-          << std::endl;
+    std::cout << prefix
+          << _queriesCount << " queries, "
+          << _deleteOpCount << " delete and "
+          << _insertOpCount << " insert operations were ";
+    if ( _config.sparqlOutputFile.empty()) {
+        std::cout << "send to the endpoint." << std::endl;
+    } else {
+        std::cout << "written to the output file at path " << _config.sparqlOutputFile << std::endl;
+    }
 
     if (_config.isQLever) {
-        std::cout << prefix << "QLever response time: " << _qleverResponseTimeMs << " ms, "
-                  << "QLever update time: " << _qleverUpdateTimeMs << " ms" << std::endl;
+        std::cout << prefix << "QLever response time: " << _qleverResponseTimeMs << " ms";
 
-        std::cout << prefix << "Inserted: " << _qleverInsertedTriplesCount << " and deleted "
-           << _qleverDeletedTriplesCount << " triples at QLever endpoint" << std::endl;
+        if (_config.sparqlOutput == config::SparqlOutput::ENDPOINT) {
+            std::cout << ", QLever update time: " << _qleverUpdateTimeMs << " ms" << std::endl;
 
-        if (_qleverInsertedTriplesCount != _numOfTriplesToInsert) {
-            util::Logger::log(util::LogEvent::WARNING, "The number of triples inserted"
-                              " at the end point is not equal to the"
-                              " number of triples that need to be"
-                              " inserted.");
+            std::cout << prefix << "Inserted: " << _qleverInsertedTriplesCount << " and deleted "
+                      << _qleverDeletedTriplesCount << " triples at QLever endpoint" << std::endl;
+
+            if (_qleverInsertedTriplesCount != _numOfTriplesToInsert) {
+                util::Logger::log(util::LogEvent::WARNING, "The number of triples inserted"
+                                  " at the end point is not equal to the"
+                                  " number of triples that need to be"
+                                  " inserted.");
+            }
+        } else {
+            std::cout << std::endl;
         }
     }
 }

@@ -183,7 +183,8 @@ namespace olu::osm {
         void setRelationReferenceCount(const size_t &count) { _numOfReferencesToRelations = count; }
 
         void countQuery() { ++_queriesCount; }
-        void countUpdateQuery() { ++_updateQueriesCount; }
+        void countDeleteOp() { ++_deleteOpCount; }
+        void countInsertOp() { ++_insertOpCount; }
         void countTriple() { ++_numOfConvertedTriples; }
 
         void logQleverQueryInfo(simdjson::ondemand::object qleverResponse);
@@ -226,7 +227,9 @@ namespace olu::osm {
         size_t _numOfTriplesToInsert = 0;
 
         size_t _queriesCount = 0;
-        size_t _updateQueriesCount = 0;
+        size_t _deleteOpCount = 0;
+        size_t _insertOpCount = 0;
+        size_t _updateOpCount = _deleteOpCount + _insertOpCount;
 
         size_t _qleverResponseTimeMs = 0;
         size_t _qleverUpdateTimeMs = 0;

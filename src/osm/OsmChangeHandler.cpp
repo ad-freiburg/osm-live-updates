@@ -394,15 +394,24 @@ void olu::osm::OsmChangeHandler::mergeAndSortDummyFiles() {
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::OsmChangeHandler::runUpdateQuery(const std::string &query,
+void olu::osm::OsmChangeHandler::runUpdateQuery(const sparql::UpdateOperation & updateOp,
+                                                const std::string &query,
                                                 const std::vector<std::string> &prefixes) {
-    _stats->countUpdateQuery();
+    switch (updateOp) {
+        case sparql::UpdateOperation::INSERT:
+            _stats->countInsertOp();
+            break;
+        case sparql::UpdateOperation::DELETE:
+            _stats->countDeleteOp();
+            break;
+    }
+
     _sparql.setQuery(query);
     _sparql.setPrefixes(prefixes);
 
     std::string response;
     try {
-        response = _sparql.runUpdate();
+        response = _sparql.runUpdate(updateOp);
     } catch (std::exception &e) {
         util::Logger::log(util::LogEvent::ERROR, e.what());
         const std::string msg = "Exception while trying to run sparql update query: "
@@ -425,7 +434,8 @@ void olu::osm::OsmChangeHandler::deleteNodesFromDatabase(osm2rdf::util::Progress
         _nodeHandler.getAllNodes(),
         _config.batchSize,
         [this, progress, &counter](std::set<id_t> const &batch) mutable {
-            runUpdateQuery(_queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_NODE),
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_NODE),
                            cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
             progress.update(counter += batch.size());
         });
@@ -449,7 +459,8 @@ void olu::osm::OsmChangeHandler::deleteWaysFromDatabase(osm2rdf::util::ProgressB
         waysToDelete,
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
-            runUpdateQuery(_queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_WAY),
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_WAY),
                            cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
             progress.update(counter += batch.size());
         });
@@ -462,7 +473,8 @@ void olu::osm::OsmChangeHandler::deleteWaysGeometry(osm2rdf::util::ProgressBar &
         _waysToUpdateGeometry,
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
-            runUpdateQuery(_queryWriter.writeDeleteQueryForGeometry(batch, cnst::NAMESPACE_OSM_WAY),
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteQueryForGeometry(batch, cnst::NAMESPACE_OSM_WAY),
                            cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
             progress.update(counter += batch.size());
         });
@@ -486,7 +498,8 @@ void olu::osm::OsmChangeHandler::deleteRelationsFromDatabase(osm2rdf::util::Prog
         relationsToDelete,
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
-            runUpdateQuery(_queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_REL),
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_REL),
                            cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
             progress.update(counter += batch.size());
         });
@@ -499,7 +512,8 @@ void olu::osm::OsmChangeHandler::deleteRelationsGeometry(osm2rdf::util::Progress
         _relationsToUpdateGeometry,
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
-            runUpdateQuery(_queryWriter.writeDeleteQueryForGeometry(batch, cnst::NAMESPACE_OSM_REL),
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteQueryForGeometry(batch, cnst::NAMESPACE_OSM_REL),
                            cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
             progress.update(counter += batch.size());
         });
@@ -576,7 +590,9 @@ void olu::osm::OsmChangeHandler::insertTriplesToDatabase(const std::vector<tripl
         tripleBatch.emplace_back(triple);
 
         if (tripleBatch.size() == _config.batchSize || i == triples.size() - 1) {
-            runUpdateQuery(_queryWriter.writeInsertQuery(tripleBatch), cnst::DEFAULT_PREFIXES);
+            runUpdateQuery(sparql::UpdateOperation::INSERT,
+                           _queryWriter.writeInsertQuery(tripleBatch),
+                           cnst::DEFAULT_PREFIXES);
             tripleBatch.clear();
 
             if (i == triples.size() - 1) {
