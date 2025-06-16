@@ -39,6 +39,18 @@ namespace olu::util {
         static void log(const LogEvent &eventType, const std::string_view &description,
                         const bool &writeToStdStream = true);
     };
+
+    // _________________________________________________________________________________________________
+    // Source: https://github.com/ad-freiburg/qlever/blob/master/src/util/Log.h
+    // Helper class to get thousandth separators in a locale
+    class CommaNumPunct : public std::numpunct<char> {
+    protected:
+        virtual char do_thousands_sep() const { return ','; }
+
+        virtual std::string do_grouping() const { return "\03"; }
+    };
+
+    const static std::locale commaLocale(std::locale(), new CommaNumPunct());
 }
 
 #endif //LOGGER_H

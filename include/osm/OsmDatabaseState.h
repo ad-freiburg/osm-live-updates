@@ -21,6 +21,8 @@
 
 #include <string>
 
+#include "util/Logger.h"
+
 namespace olu::osm {
 
     struct OsmDatabaseState {
@@ -28,18 +30,24 @@ namespace olu::osm {
         int sequenceNumber;
     };
 
-    inline std::string to_string(const OsmDatabaseState& state) {
-        if (state.timeStamp.empty()) {
-            return "(Sequence number: " + std::to_string(state.sequenceNumber) + ")";
-        }
+inline std::string to_string(const OsmDatabaseState& state) {
+    std::ostringstream oss;
+    oss.imbue(util::commaLocale);
 
-        std::string timestampFormatted = state.timeStamp;
-        std::erase_if(timestampFormatted, [](const char c) {
-            return c == '\\';
-        });
-        return "(Sequence number: " + std::to_string(state.sequenceNumber)
-               + ", Timestamp: " + timestampFormatted + ")";
+    if (state.timeStamp.empty()) {
+        oss << "(Sequence number: " << state.sequenceNumber << ")";
+        return oss.str();
     }
+
+    std::string timestampFormatted = state.timeStamp;
+    std::erase_if(timestampFormatted, [](const char c) {
+        return c == '\\';
+    });
+
+    oss << "(Sequence number: " << state.sequenceNumber
+        << ", Timestamp: " << timestampFormatted << ")";
+    return oss.str();
+}
 
 } // namespace olu::osm
 
