@@ -29,18 +29,20 @@ namespace cnst = olu::config::constants;
 // _________________________________________________________________________________________________
 std::string
 olu::sparql::QueryWriter::writeInsertQuery(const std::vector<std::string>& triples) const {
-    std::ostringstream tripleClause;
-    for (const auto & element : triples) {
-        tripleClause << element;
-        tripleClause << " . ";
+    std::string tripleClause;
+
+    size_t totalSize = 0;
+    for (const auto& element : triples) {
+        totalSize += element.size() + 3;
+    }
+    tripleClause.reserve(totalSize);
+
+    for (const auto& element : triples) {
+        tripleClause += element;
+        tripleClause += " . ";
     }
 
-    std::ostringstream oss;
-    oss << "INSERT DATA ";
-    oss << "{ ";
-    oss << wrapWithGraphOptional(tripleClause.str());
-    oss << "}";
-    return oss.str();
+    return tripleClause;
 }
 
 // _________________________________________________________________________________________________
@@ -325,17 +327,22 @@ std::string olu::sparql::QueryWriter::getValuesClause(const std::string &osmTag,
 std::string olu::sparql::QueryWriter::getValuesClause(const std::string &osmTag,
                                                       const std::string &delimiter,
                                                       const std::set<id_t> &objectIds) {
-    std::ostringstream oss;
-    oss << "VALUES " + cnst::QUERY_VAR_VAL +" { ";
-    for (const auto & objectId : objectIds) {
-        oss << osmTag;
-        oss << delimiter;
-        oss << std::to_string(objectId);
-        oss << " ";
-    }
-    oss << "} ";
+    std::string valueClause = "VALUES " + cnst::QUERY_VAR_VAL + " {";
+    constexpr int MAX_CHARS_PER_OBJECT_ID = 20;
+    valueClause.reserve(valueClause.size() +
+        (osmTag.size() + delimiter.size() + MAX_CHARS_PER_OBJECT_ID  + 1) * objectIds.size() + 2);
+    for (const auto& objectId : objectIds) {
+        valueClause += osmTag;
+        valueClause += delimiter;
 
-    return  oss.str();
+        char buffer[MAX_CHARS_PER_OBJECT_ID];
+        auto [ptr, ec] = std::to_chars(buffer, buffer + sizeof(buffer), objectId);
+        valueClause.append(buffer, ptr);
+
+        valueClause += " ";
+    }
+    valueClause += "} ";
+    return valueClause;
 }
 
 // _________________________________________________________________________________________________

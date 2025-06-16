@@ -87,7 +87,9 @@ namespace olu::sparql {
         /**
          * Sends a HTTP request to the sparql endpoint.
          */
-        std::string send(bool isUpdate);
+        std::string sendQuery();
+
+        std::string sendUpdate(const UpdateOperation &updateOp);
     };
 
     /**
