@@ -16,37 +16,29 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#include "osm/RelationHandler.h"
+#include "util/Logger.h"
 
 #include <iostream>
-
-#include "osmium/osm/relation.hpp"
-#include "osm2rdf/util/Time.h"
+#include <utility>
+#include <util/Time.h>
 
 #include "config/Constants.h"
-#include "osm/OsmObjectHelper.h"
+
+static inline constexpr std::string_view prefix = "                          ";
 
 namespace cnst = olu::config::constants;
 
 // _________________________________________________________________________________________________
-void olu::osm::RelationHandler::relation(const osmium::Relation& relation) {
-    switch (OsmObjectHelper::getChangeAction(relation)) {
-        case ChangeAction::CREATE:
-            _createdRelations.insert(relation.id());
-            _stats->countCreatedRelation();
-            break;
-        case ChangeAction::DELETE:
-            _deletedRelations.insert(relation.id());
-            _stats->countDeletedRelation();
-            break;
-        case ChangeAction::MODIFY:
-            const auto *const typeTag = relation.tags()["type"];
-            if (typeTag != nullptr && (strcmp(typeTag, "multipolygon") == 0 ||
-                                       strcmp(typeTag, "boundary") == 0)) {
-                _modifiedAreas.insert(relation.id());
-            }
-
-            _modifiedRelations.insert(relation.id());
-            _stats->countModifiedRelation();
+void olu::util::Logger::log(const LogEvent &eventType, const std::string_view &description,
+                            const bool &writeToStdStream) {
+    if (writeToStdStream) {
+        auto& outStream = (eventType == LogEvent::ERROR) ? std::cerr : std::cout;
+        outStream.imbue(commaLocale);
+        outStream << currentTimeFormatted()
+                  << "- "
+                  << LOG_TYPE_DESC[std::to_underlying(eventType)]
+                  << ": "
+                  << description
+                  << std::endl;
     }
 }

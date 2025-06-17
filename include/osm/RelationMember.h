@@ -21,8 +21,9 @@
 
 #include <string>
 
+#include "osmium/osm/item_type.hpp"
+
 #include "osm/OsmObjectType.h"
-#include "osm/OsmObjectHelper.h"
 #include "util/Types.h"
 
 namespace olu::osm {
@@ -50,6 +51,10 @@ namespace olu::osm {
                                 const std::string &role): id(id), type(memberType),
                                                    role(role) {}
 
+        explicit RelationMember(const id_t &id, const OsmObjectType &memberType,
+                                const std::string_view &role): id(id), type(memberType),
+                                           role(role) {}
+
         explicit RelationMember(const id_t &id, const std::string &memberNamespace,
                                 const std::string &role);
 
@@ -62,6 +67,7 @@ namespace olu::osm {
                                       std::vector<RelationMember> member2);
     };
 
+    typedef std::vector<RelationMember> relation_members_t;
 }
 
 #endif //RELATIONMEMBER_H

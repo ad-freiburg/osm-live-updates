@@ -27,7 +27,7 @@
 int main(int argc, char** argv) {
     auto config((olu::config::Config()));
     config.fromArgs(argc, argv);
-    std::cerr << config.getInfo("--- ") << std::endl;
+    config.printInfo();
 
     try {
         auto osmUpdater = olu::osm::OsmUpdater(config);

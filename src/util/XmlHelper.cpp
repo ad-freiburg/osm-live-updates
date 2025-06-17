@@ -18,7 +18,6 @@
 
 #include "util/XmlHelper.h"
 
-#include <iostream>
 #include <string>
 
 #include "boost/regex.hpp"
@@ -26,6 +25,79 @@
 #include "config/Constants.h"
 
 namespace cnst = olu::config::constants;
+
+// _______________________________________________________________________________________________
+std::string olu::util::XmlHelper::getNodeDummy(const id_t &nodeId, const lon_lat_t &lonLat) {
+    std::string result;
+    result.reserve(64);
+    result.append("<node id=\"")
+          .append(std::to_string(nodeId))
+          .append("\" lat=\"")
+          .append(lonLat.second)
+          .append("\" lon=\"")
+          .append(lonLat.first)
+          .append("\"/>");
+    return result;
+}
+
+// _______________________________________________________________________________________________
+std::string olu::util::XmlHelper::getWayDummy(const id_t &wayId, const member_ids_t &memberIds) {
+    std::string result;
+    result.reserve(30 + 24 * memberIds.size());
+    result.append("<way id=\"")
+          .append(std::to_string(wayId))
+          .append("\">");
+
+    for (const auto nodeId : memberIds) {
+        result.append("<nd ref=\"")
+              .append(std::to_string(nodeId))
+              .append("\"/>");
+    }
+
+    result.append("</way>");
+
+    return result;
+}
+
+// _________________________________________________________________________________________________
+std::string olu::util::XmlHelper::getRelationDummy(const id_t &relationId,
+                                                   const std::string_view &relationType,
+                                                   const osm::relation_members_t &members) {
+    std::string result;
+    result.reserve(64 + relationType.size() + members.size() * 64);
+    result.append("<relation id=\"")
+          .append(std::to_string(relationId))
+          .append("\">");
+
+    for (const auto &[id, type, role] : members) {
+        result.append("<member type=\"");
+
+        switch (type) {
+            case osm::OsmObjectType::NODE:
+                result.append(config::constants::XML_TAG_NODE);
+                break;
+            case osm::OsmObjectType::WAY:
+                result.append(config::constants::XML_TAG_WAY);
+                break;
+            case osm::OsmObjectType::RELATION:
+                result.append(config::constants::XML_TAG_REL);
+                break;
+        }
+
+        result.append("\" ref=\"")
+              .append(std::to_string(id))
+              .append("\" role=\"")
+              .append(role)
+              .append("\"/>");
+    }
+
+    result.append("<tag k=\"type\" v=\"")
+          .append(relationType)
+          .append("\"/>")
+          .append("</relation>");
+
+return result;
+}
 
 // _________________________________________________________________________________________________
 bool olu::util::XmlHelper::isXmlEncoded(const std::string &input) {

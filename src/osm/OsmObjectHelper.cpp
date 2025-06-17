@@ -22,6 +22,7 @@
 #include <string>
 
 #include "osmium/osm/object.hpp"
+#include <boost/tokenizer.hpp>
 
 #include "config/Constants.h"
 #include "osm/ChangeAction.h"
@@ -29,39 +30,51 @@
 
 namespace cnst = olu::config::constants;
 
+constexpr std::string_view WHITESPACE = " \t\n\r\f\v";
+
 // _________________________________________________________________________________________________
 olu::id_t olu::osm::OsmObjectHelper::parseIdFromUri(const std::string_view &uri) {
-    std::vector<char> id;
-    // Read characters from the end of the uri until the first non digit is reached
-    for (auto it = uri.rbegin(); it != uri.rend(); ++it) {
-        // Uris can be inside angle brackets, e.g., <https://www.openstreetmap.org/node/1>
-        if (*it == '>') {
-            continue;
-        }
-
-        // Uris can also be in quotes, e.g., "<https://www.openstreetmap.org/node/1>"
-        if (*it == '\"') {
-            continue;
-        }
-
-        if (std::isdigit(*it)) {
-            id.push_back(*it);
-        } else {
-            break;
-        }
+    if (uri.empty()) {
+        throw OsmObjectHelperException("Can not parse id from empty uri.");
     }
 
-    try {
-        return std::stoll(std::string(id.rbegin(), id.rend()));
-    } catch (const std::exception &e) {
-        std::cerr << e.what() << std::endl;
-        const std::string msg = "Cant extract id from uri: " + std::string(uri);
+    // Scan from the end, skipping '>' and '"' (because they can be part of the uri formatting)
+    // and collecting digits
+    size_t i = uri.size();
+    while (i > 0 && (uri[i - 1] == '>' || uri[i - 1] == '\"')) {
+        --i;
+    }
+
+    const size_t end = i;
+    while (i > 0 && std::isdigit(uri[i - 1])) {
+        --i;
+    }
+
+    if (end == i) {
+        const std::string msg = "Can not parse id from uri: " + std::string(uri);
         throw OsmObjectHelperException(msg.c_str());
     }
+
+    id_t result = 0;
+    const auto idString = uri.substr(i, end - i);
+    auto [_, ec] = std::from_chars(idString.data(), idString.data() + idString.size(), result);
+    if (ec == std::errc()) {
+        return result;
+    }
+
+    const std::string msg = "Can not convert id: " + std::string(idString) + " from uri: "
+                            + std::string(uri) + " to long type.";
+    throw OsmObjectHelperException(msg.c_str());
 }
 
 //__________________________________________________________________________________________________
-olu::osm::OsmObjectType olu::osm::OsmObjectHelper::parseOsmTypeFromUri(const std::string& uri) {
+olu::osm::OsmObjectType
+olu::osm::OsmObjectHelper::parseOsmTypeFromUri(const std::string_view &uri) {
+    if (uri.empty()) {
+        const std::string msg = "Cannot parse type from empty uri.";
+        throw OsmObjectHelperException(msg.c_str());
+    }
+
     if (uri.starts_with(cnst::NAMESPACE_IRI_OSM_NODE)) {
         return OsmObjectType::NODE;
     }
@@ -74,14 +87,195 @@ olu::osm::OsmObjectType olu::osm::OsmObjectHelper::parseOsmTypeFromUri(const std
         return OsmObjectType::RELATION;
     }
 
-    const std::string msg = "Cant extract osm type from uri: " + uri;
+    const std::string msg = "Cant extract osm type from uri: " + std::string(uri);
     throw OsmObjectHelperException(msg.c_str());
 }
 
 // _________________________________________________________________________________________________
-bool olu::osm::OsmObjectHelper::areWayMemberEqual(member_ids_t member1, member_ids_t member2) {
-    return member1.size() == member2.size() &&
-           std::equal(member1.begin(), member1.end(), member2.begin());
+olu::lon_lat_t
+olu::osm::OsmObjectHelper::parseLonLatFromWktPoint(const std::string_view &wktPoint) {
+    if (wktPoint.empty()) {
+        const std::string msg = "Cannot parse type from empty WKT point.";
+        throw OsmObjectHelperException(msg.c_str());
+    }
+
+    // Find position of brackets
+    const auto start = wktPoint.find('(');
+    const auto end = wktPoint.find(')');
+    if (start == std::string_view::npos || end == std::string_view::npos) {
+        const std::string msg = "WKT point is not correctly formatted: " + std::string(wktPoint);
+        throw OsmObjectHelperException(msg.c_str());
+    }
+
+    // Extract the coordinates from the WKT point string
+    const std::string_view coordsView = wktPoint.substr(start + 1, end - start - 1);
+
+    // Find the end of the longitude part (the first whitespace).
+    const auto lonEnd = coordsView.find_first_of(WHITESPACE);
+    if (lonEnd == std::string_view::npos) {
+        const std::string msg = "Cannot parse lon/lat from WKT point (no separator found): "
+                                + std::string(wktPoint);
+        throw OsmObjectHelperException(msg.c_str());
+    }
+
+    // Find the start of the latitude part (the first non-whitespace after the longitude).
+    const auto latStart = coordsView.find_first_not_of(WHITESPACE, lonEnd);
+    if (latStart == std::string_view::npos) {
+        const std::string msg = "Cannot parse lat from WKT point (missing second coordinate): "
+                                + std::string(wktPoint);
+        throw OsmObjectHelperException(msg.c_str());
+    }
+
+    // Extract the longitude and latitude as string_views.
+    const std::string_view lonView = coordsView.substr(0, lonEnd);
+    const std::string_view latView = coordsView.substr(latStart);
+
+    if (lonView.empty() || latView.empty()) {
+        const std::string msg = "Cannot parse lat from WKT point (coordinate is empty): "
+                                + std::string(wktPoint);
+        throw OsmObjectHelperException(msg.c_str());
+    }
+
+    return {std::string(lonView), std::string(latView)};}
+
+// _________________________________________________________________________________________________
+// Temporary struct to hold way member information for sorting
+struct WayMemberInfo {
+    int position;
+    std::string_view uriView;
+
+    // Make it comparable for sorting
+    auto operator<=>(const WayMemberInfo&) const = default;
+};
+
+// _________________________________________________________________________________________________
+olu::member_ids_t
+olu::osm::OsmObjectHelper::parseWayMemberList(const std::string_view &uriList,
+                                              const std::string_view &positionList) {
+    if (uriList.empty() || positionList.empty()) {
+        throw OsmObjectHelperException("Cannot parse way member list from empty strings.");
+    }
+
+    std::vector<WayMemberInfo> tempMembers;
+    tempMembers.reserve(std::ranges::count(uriList, ';') + 1);
+
+    size_t uriPos = 0;
+    size_t posPos = 0;
+    while (uriPos < uriList.size()) {
+        const auto nextUriDelim = uriList.find(';', uriPos);
+        const auto nextPosDelim = positionList.find(';', posPos);
+
+        const auto uriToken = uriList.substr(uriPos, nextUriDelim - uriPos);
+        const auto posToken = positionList.substr(posPos, nextPosDelim - posPos);
+
+        if (uriToken.empty() || posToken.empty()) {
+            throw OsmObjectHelperException("Invalid uri or position list,"
+                                           " when parsing way member list.");
+        }
+
+        int currentPos;
+        auto [ptr, ec] = std::from_chars(posToken.data(),
+                                                        posToken.data() + posToken.size(),
+                                                        currentPos);
+        if (ec != std::errc()) {
+            throw OsmObjectHelperException("Invalid character in position list,"
+                                           " when parsing way member list.");
+        }
+
+        tempMembers.emplace_back(currentPos, uriToken);
+
+        // Break if we've processed the last token.
+        if (nextUriDelim == std::string_view::npos) break;
+
+        uriPos = nextUriDelim + 1;
+        posPos = nextPosDelim + 1;
+    }
+
+    // sort the members by their position
+    std::ranges::sort(tempMembers, {}, &WayMemberInfo::position);
+
+    member_ids_t members;
+    members.reserve(tempMembers.size());
+
+    for (const auto&[position, uri_view] : tempMembers) {
+        members.emplace_back(parseIdFromUri(uri_view));
+    }
+
+    return members;
+}
+
+// _________________________________________________________________________________________________
+// Temporary struct to hold relation member information for sorting
+struct RelationMemberInfo {
+    int position;
+    std::string_view uriView;
+    std::string_view role;
+
+    // Make it comparable for sorting
+    auto operator<=>(const RelationMemberInfo&) const = default;
+};
+
+// _________________________________________________________________________________________________
+olu::osm::relation_members_t
+olu::osm::OsmObjectHelper::parseRelationMemberList(const std::string_view &uriList,
+                                                   const std::string_view &rolesList,
+                                                   const std::string_view &positionList) {
+    if (uriList.empty() || rolesList.empty() || positionList.empty()) {
+        throw OsmObjectHelperException("Cannot parse way member list from empty strings.");
+    }
+
+    std::vector<RelationMemberInfo> tempMembers;
+    tempMembers.reserve(std::ranges::count(uriList, ';') + 1);
+
+    size_t uriPos = 0;
+    size_t rolePos = 0;
+    size_t posPos = 0;
+    while (uriPos < uriList.size()) {
+        const auto nextUriDelim = uriList.find(';', uriPos);
+        const auto nextRoleDelim = rolesList.find(';', rolePos);
+        const auto nextPosDelim = positionList.find(';', posPos);
+
+        const auto uriToken = uriList.substr(uriPos, nextUriDelim - uriPos);
+        const auto roleToken = rolesList.substr(rolePos, nextRoleDelim - rolePos);
+        const auto posToken = positionList.substr(posPos, nextPosDelim - posPos);
+
+        if (uriToken.empty() || roleToken.empty() || posToken.empty()) {
+            throw OsmObjectHelperException("Invalid uri or position list,"
+                                           " when parsing way member list.");
+        }
+
+        int currentPos;
+        auto [ptr, ec] = std::from_chars(posToken.data(),
+                                                        posToken.data() + posToken.size(),
+                                                        currentPos);
+        if (ec != std::errc()) {
+            throw OsmObjectHelperException("Invalid character in position list,"
+                                           " when parsing way member list.");
+        }
+
+        tempMembers.emplace_back(currentPos, uriToken, roleToken);
+
+        // Break if we've processed the last token.
+        if (nextUriDelim == std::string_view::npos) break;
+
+        uriPos = nextUriDelim + 1;
+        rolePos = nextRoleDelim + 1;
+        posPos = nextPosDelim + 1;
+    }
+
+    // sort the members by their position
+    std::ranges::sort(tempMembers, {}, &RelationMemberInfo::position);
+
+    relation_members_t members;
+    members.reserve(tempMembers.size());
+
+    for (const auto&[position, uri_view, role_view] : tempMembers) {
+        const auto memberId = parseIdFromUri(uri_view);
+        const auto memberType = parseOsmTypeFromUri(uri_view);
+        members.emplace_back(memberId, memberType, role_view);
+    }
+
+    return members;
 }
 
 // _________________________________________________________________________________________________
@@ -91,5 +285,3 @@ olu::osm::OsmObjectHelper::getChangeAction(const osmium::OSMObject &osmObject) {
     if (osmObject.version() == 1) { return ChangeAction::CREATE; }
     return ChangeAction::MODIFY;
 }
-
-

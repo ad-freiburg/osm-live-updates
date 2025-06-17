@@ -69,10 +69,14 @@ void olu::osm::ReferencesHandler::getReferencesForRelations(const std::set<id_t>
                 [this](const std::set<id_t>& batch) {
                 auto [nodeIds, wayIds] = _odf->fetchRelationMembers(batch);
                 for (const auto &wayId: wayIds) {
-                    _referencedWays.insert(wayId);
+                    if (!_wayHandler.wayInChangeFile(wayId)) {
+                        _referencedWays.insert(wayId);
+                    }
                 }
                 for (const auto &nodeId: nodeIds) {
-                    _referencedNodes.insert(nodeId);
+                    if (!_nodeHandler.nodeInChangeFile(nodeId)) {
+                        _referencedNodes.insert(nodeId);
+                    }
                 }
             });
     }
@@ -86,7 +90,9 @@ void olu::osm::ReferencesHandler::getReferencesForWays(const std::set<id_t> &way
         _config.batchSize,
         [this](const std::set<id_t>& batch) {
             for (const auto &nodeId: _odf->fetchWaysMembers(batch)) {
-                _referencedNodes.insert(nodeId);
+                if (!_nodeHandler.nodeInChangeFile(nodeId)) {
+                    _referencedNodes.insert(nodeId);
+                }
             }
         });
     }

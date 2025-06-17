@@ -24,6 +24,7 @@
 #include <map>
 #include <strstream>
 #include <spanstream>
+#include <util/XmlHelper.h>
 
 #include "simdjson.h"
 
@@ -73,6 +74,39 @@ olu::osm::OsmDataFetcherSparql::fetchNodes(const std::set<id_t> &nodeIds) {
 }
 
 // _________________________________________________________________________________________________
+void olu::osm::OsmDataFetcherSparql::fetchAndWriteNodesToFile(const std::string &filePath,
+                                                              const std::set<id_t> &nodeIds) {
+    const auto response = runQuery(
+        _queryWriter.writeQueryForNodeLocations(nodeIds),
+        cnst::PREFIXES_FOR_NODE_LOCATION);
+
+    std::ofstream outputFile;
+    outputFile.open (filePath, std::ios::app);
+    outputFile.precision(config::Config::DEFAULT_WKT_PRECISION);
+    outputFile << std::fixed;
+
+    size_t returnedNodeCount = 0;
+    for (auto doc = _parser.iterate(response); auto binding : getBindings(doc)) {
+        returnedNodeCount++;
+        auto nodeUri = getValue<std::string_view>(binding[cnst::NAME_VALUE]);
+        auto nodeLocationAsWkt = getValue<std::string_view>(binding[cnst::NAME_LOCATION]);
+        const auto nodeId = OsmObjectHelper::parseIdFromUri(nodeUri);
+        const auto nodeLocation = OsmObjectHelper::parseLonLatFromWktPoint(nodeLocationAsWkt);
+
+        outputFile << util::XmlHelper::getNodeDummy(nodeId, nodeLocation) << std::endl;
+    }
+
+    outputFile.close();
+
+    if (returnedNodeCount > nodeIds.size()) {
+        std::cerr << "The SPARQL endpoint returned " << std::to_string(returnedNodeCount)
+                << " locations, for " << std::to_string(nodeIds.size())
+                << " nodes." << std::endl;
+        throw OsmDataFetcherException("Exception while trying to fetch nodes locations");
+    }
+}
+
+// _________________________________________________________________________________________________
 std::string olu::osm::OsmDataFetcherSparql::fetchLatestTimestampOfAnyNode() {
     const auto response = runQuery(
         _queryWriter.writeQueryForLatestNodeTimestamp(),
@@ -112,37 +146,12 @@ olu::osm::OsmDataFetcherSparql::fetchRelations(const std::set<id_t> &relationIds
 
         // Extract members for the relation
         auto memberUriList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_IDS]);
-        std::ispanstream uriStream(memberUriList);
         auto memberRolesList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_ROLES]);
-        std::ispanstream rolesStream(memberRolesList);
         auto memberPosList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_POSS]);
-        std::ispanstream posStream(memberPosList);
 
-        std::string memberUri;
-        std::string memberRole;
-        std::string memberPositionString;
-        std::map<int, RelationMember> members;
-        while (std::getline(uriStream, memberUri, ';')) {
-            if (memberUri.empty()) {
-                throw OsmDataFetcherException("Cannot parse member uri");
-            }
-
-            std::getline(rolesStream, memberRole, ';');
-            std::getline(posStream, memberPositionString, ';');
-
-            int memberPosition;
-            try {
-                memberPosition = std::stoi(memberPositionString);
-            } catch (std::exception &e) {
-                std::cerr << e.what() << std::endl;
-                const std::string msg = "Cannot parse member position: " + memberPositionString;
-                throw OsmDataFetcherException(msg.c_str());
-            }
-
-            members.emplace(memberPosition, RelationMember(memberUri, memberRole));
-        }
-
-        for (const auto &member : members | std::views::values) {
+        const auto members = OsmObjectHelper::parseRelationMemberList(memberUriList, memberRolesList,
+                                                                                      memberPosList);
+        for (const auto &member : members) {
             relation.addMember(member);
         }
 
@@ -150,6 +159,40 @@ olu::osm::OsmDataFetcherSparql::fetchRelations(const std::set<id_t> &relationIds
     }
 
     return relations;
+}
+
+// _________________________________________________________________________________________________
+size_t
+olu::osm::OsmDataFetcherSparql::fetchAndWriteRelationsToFile(const std::string &filePath,
+                                                             const std::set<id_t> &relationIds) {
+    const auto response = runQuery(
+        _queryWriter.writeQueryForRelations(relationIds),
+        cnst::PREFIXES_FOR_RELATION_MEMBERS);
+
+    std::ofstream outputFile;
+    outputFile.open (filePath, std::ios::app);
+
+    size_t returnedRelationsCount = 0;
+    for (auto doc = _parser.iterate(response); auto binding : getBindings(doc)) {
+
+        // Set id and type of the relation
+        auto relationUri = getValue<std::string_view>(binding[cnst::NAME_VALUE]);
+        auto relationId = OsmObjectHelper::parseIdFromUri(relationUri);
+        auto relationType = getValue<std::string>(binding[cnst::NAME_TYPE]);
+
+        // Extract members for the relation
+        auto memberUriList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_IDS]);
+        auto memberRolesList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_ROLES]);
+        auto memberPosList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_POSS]);
+        const auto members = OsmObjectHelper::parseRelationMemberList(
+                memberUriList, memberRolesList, memberPosList);
+
+        // Write relation to file
+        outputFile << util::XmlHelper::getRelationDummy(relationId, relationType, members)
+                   << std::endl;
+    }
+
+    return returnedRelationsCount;
 }
 
 // _________________________________________________________________________________________________
@@ -166,23 +209,12 @@ olu::osm::OsmDataFetcherSparql::fetchWays(const std::set<id_t> &wayIds) {
         auto wayUri = getValue<std::string_view>(binding[cnst::NAME_VALUE]);
         Way way(OsmObjectHelper::parseIdFromUri(wayUri));
 
-        std::ispanstream uriStream(
-            getValue<std::string_view>(binding[cnst::NAME_MEMBER_IDS]));
-        std::ispanstream posStream(
-            getValue<std::string_view>(binding[cnst::NAME_MEMBER_POSS]));
+        auto memberUriList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_IDS]);
+        auto memberPosList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_POSS]);
 
-        std::string uri;
-        std::string position;
-        std::map<int, id_t> members;
-        while (std::getline(uriStream, uri, ';')) {
-            if (uri.empty()) { continue; }
-
-            std::getline(posStream, position, ';');
-            id_t memberId = OsmObjectHelper::parseIdFromUri(uri);
-            members.emplace(std::stoi(position), memberId);
-        }
-
-        for (const auto &member : members | std::views::values) {
+        // Extract way infos from response
+        const auto members = OsmObjectHelper::parseWayMemberList(memberUriList, memberPosList);
+        for (const auto &member : members) {
             way.addMember(member);
         }
 
@@ -190,6 +222,35 @@ olu::osm::OsmDataFetcherSparql::fetchWays(const std::set<id_t> &wayIds) {
     }
 
     return ways;
+}
+
+// _________________________________________________________________________________________________
+size_t olu::osm::OsmDataFetcherSparql::fetchAndWriteWaysToFile(const std::string &filePath,
+                                                               const std::set<id_t> &wayIds) {
+    auto response = runQuery(
+            _queryWriter.writeQueryForWaysMembers(wayIds),
+            cnst::PREFIXES_FOR_WAY_MEMBERS);
+
+    std::ofstream outputFile;
+    outputFile.open (filePath, std::ios::app);
+
+    size_t returnedWayCount = 0;
+    for (auto doc = _parser.iterate(response); auto binding : getBindings(doc)) {
+        returnedWayCount++;
+
+        auto wayUri = getValue<std::string_view>(binding[cnst::NAME_VALUE]);
+        auto memberUriList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_IDS]);
+        auto memberPosList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_POSS]);
+
+        // Extract way infos from response
+        const auto wayId = OsmObjectHelper::parseIdFromUri(wayUri);
+        auto members = OsmObjectHelper::parseWayMemberList(memberUriList, memberPosList);
+
+        // Write way to file
+        outputFile << util::XmlHelper::getWayDummy(wayId, members) << std::endl;
+    }
+
+    return returnedWayCount;
 }
 
 // _________________________________________________________________________________________________

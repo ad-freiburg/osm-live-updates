@@ -40,8 +40,6 @@ olu::osm::Osm2ttl::Osm2ttl(const config::Config& config) : _config(config) {}
 
 // _________________________________________________________________________________________________
 void olu::osm::Osm2ttl::convert() const {
-    writeToInputFile();
-
     // Create a directory for scratch, if not already existent
     if (!std::filesystem::exists(cnst::PATH_TO_SCRATCH_DIRECTORY)) {
         std::filesystem::create_directories(cnst::PATH_TO_SCRATCH_DIRECTORY);
@@ -104,26 +102,6 @@ void olu::osm::Osm2ttl::convert() const {
                   << std::endl;
         std::cerr << e.what() << std::endl;
         std::exit(osm2rdf::config::ExitCode::EXCEPTION);
-    }
-}
-
-// _________________________________________________________________________________________________
-void olu::osm::Osm2ttl::writeToInputFile() {
-    const std::string command = "osmium sort " + cnst::PATH_TO_CHANGE_FILE + " " +
-                                                 cnst::PATH_TO_NODE_FILE + " " +
-                                                 cnst::PATH_TO_WAY_FILE + " " +
-                                                 cnst::PATH_TO_RELATION_FILE +
-                                " -o " + cnst::PATH_TO_INPUT_FILE + " --overwrite > /dev/null";
-
-    const int res = system(command.c_str());
-
-    if (res == -1) {
-        throw std::runtime_error("Error while sorting osm files.");
-    }
-
-    if (res != 0) {
-        throw std::runtime_error(
-            "Error while sorting osm files with error code: " + std::to_string(res));
     }
 }
 

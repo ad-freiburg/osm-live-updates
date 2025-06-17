@@ -100,13 +100,7 @@ std::string olu::util::HttpRequest::perform() {
             std::cerr << "POST failed with reason " << reason << std::endl;
             std::cerr << "HTTP Code: " << http_code << std::endl;
             std::cerr << "URL: " << _url << std::endl;
-            std::cerr << "Body: see Log at log.txt" << std::endl;
             std::cerr << "Response: " << response << std::endl;
-
-            std::ofstream outputFile;
-            outputFile.open ("log.txt", std::ios_base::app);
-            outputFile << _body << std::endl;
-            outputFile.close();
         } else if (_method == GET) {
             std::cerr << "GET failed with reason " << reason << std::endl;
             std::cerr << "HTTP Code: " << http_code << std::endl;

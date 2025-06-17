@@ -113,49 +113,65 @@ namespace olu::osm {
          */
         void getReferencedRelations();
 
-        static void createTmpFiles() ;
+        /**
+         * Returns the path to a temporary file that is used to store the dummy nodes.
+         *
+         * The files are located in the temporary directory defined in the config file.
+         *
+         * @param osmType The type of the osm object (node, way, relation)
+         * @param index The index of the temporary file, used to distinguish between multiple files
+         * @return A string containing the path to the temporary file.
+         */
+        static std::string getPathToTempFile(const OsmObjectType &osmType, const size_t &index);
+
+        /**
+         * Initializes a temporary XML file for writing the dummy nodes, ways or relations, with
+         * an OSM header tag.
+         *
+         * @param filepath The path to the temporary file
+         */
         static void initTmpFile(const std::string& filepath) ;
+
+        /**
+         * Finalizes a temporary XML file for writing the dummy nodes, ways or relations, by closing
+         * the OSM outer tag.
+         *
+         * @param filepath The path to the temporary file
+         */
         static void finalizeTmpFile(const std::string& filepath) ;
-
-        /**
-         * Writes the given osm element to its corresponding temporary file
-         */
-        static void addToTmpFile(const std::string& element, const std::string& elementTag) ;
-
-
-        /**
-         * Creates dummy elements for nodes, ways and relations, while showing a progress bar on
-         * std::cout
-         */
-        void createDummyElements();
 
         /**
          * Creates dummy nodes for the referenced nodes that are not in the change file. The dummy
          * nodes contain the node id and the location which is used for the nodes that are
          * referenced in ways and writes them to a temporary file
          */
-        void createDummyNodes(osm2rdf::util::ProgressBar &progress,
-                              size_t &counter);
+        void createDummyNodes();
 
         /**
          * Creates dummy ways for the referenced ways that are not in the change file and writes
          * them to a temporary file The dummy ways only contain the referenced nodes
          */
-        void createDummyWays(osm2rdf::util::ProgressBar &progress,
-                             size_t &counter);
+        void createDummyWays();
 
         /**
          * Creates dummy relations for the referenced relations that are not in the change file and
          * writes them to a temporary file.
          * The dummy relation only contains the members of that relation
          */
-        void createDummyRelations(
-            osm2rdf::util::ProgressBar &progress, size_t &counter);
+        void createDummyRelations();
+
+        /**
+         * Merges the temporary files that contain the change files, dummy nodes, ways and relations
+         * and sorts them by type and id.
+         * The result is written to a new file which is used as input for osm2rdf.
+         */
+        static void mergeAndSortDummyFiles();
 
         /**
          * Send a SPARQL update query to the endpoint
          */
-        void runUpdateQuery(const std::string& query, const std::vector<std::string> &prefixes);
+        void runUpdateQuery(const sparql::UpdateOperation & updateOp, const std::string& query,
+                            const std::vector<std::string> &prefixes);
 
         /**
          * Delete all relevant triples from the database, while showing a progress bar on std::cout
@@ -175,12 +191,6 @@ namespace olu::osm {
         void deleteWaysFromDatabase(osm2rdf::util::ProgressBar &progress, size_t &counter);
 
         /**
-         * Send SPARQL queries to delete meta-data and key-value triples that belong to the ways
-         * that did not change their geometry
-         */
-        void deleteWaysMetaDataAndTags(osm2rdf::util::ProgressBar &progress, size_t &counter);
-
-        /**
          * Send SPARQL queries to delete geometry triples that belong to the ways for which only the
          * geometry changed
          */
@@ -193,22 +203,15 @@ namespace olu::osm {
         void deleteRelationsFromDatabase(osm2rdf::util::ProgressBar &progress, size_t &counter);
 
         /**
-         * Send SPARQL queries to delete meta-data and key-value triples that belong to the
-         * relations that did not change their member and therefore their geometry
-         */
-        void deleteRelationsMetaDataAndTags(osm2rdf::util::ProgressBar &progress, size_t &counter);
-
-        /**
          * Send SPARQL queries to delete geometry triples that belong to the ways for which only the
          * geometry changed
          */
         void deleteRelationsGeometry(osm2rdf::util::ProgressBar &progress, size_t &counter);
 
-
         /**
          * Send SPARQL queries to insert all relevant triples
          */
-        void insertTriplesToDatabase();
+        void insertTriplesToDatabase(const std::vector<triple_t> &triples);
 
         /**
          * Filters the triples that where generated by osm2rdf. Relevant triples are triples for osm

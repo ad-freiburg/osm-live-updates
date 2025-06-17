@@ -21,7 +21,12 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <iosfwd>
+#include <iosfwd>
 #include <set>
+#include <vector>
+#include <vector>
+#include <util/Logger.h>
 
 #include "osmium/visitor.hpp"
 #include "osmium/builder/osm_object_builder.hpp"
@@ -41,6 +46,8 @@
 #include "util/TtlHelper.h"
 #include "util/BatchHelper.h"
 
+static inline constexpr size_t PROGRESS_BAR_BATCH_SIZE = 1000;
+
 namespace cnst = olu::config::constants;
 
 // _________________________________________________________________________________________________
@@ -54,20 +61,19 @@ olu::osm::OsmChangeHandler::OsmChangeHandler(const config::Config &config, OsmDa
     _nodeHandler(config, odf, stats),
     _wayHandler(config, odf, stats),
     _relationHandler(config, odf, stats),
-    _referencesHandler(_config, odf, _nodeHandler, _wayHandler, _relationHandler) {
-    createTmpFiles();
-}
+    _referencesHandler(_config, odf, _nodeHandler, _wayHandler, _relationHandler) { }
 
 // _________________________________________________________________________________________________
 void olu::osm::OsmChangeHandler::run() {
     _stats->startTimeProcessingChangeFiles();
-    osmium::io::Reader nodeReader{cnst::PATH_TO_CHANGE_FILE,
-        osmium::osm_entity_bits::node,
-        osmium::io::read_meta::no};
+    util::Logger::log(util::LogEvent::INFO, "Reading elements from change files...");
     // Loop over the osm objects in the change file one time and store each objects id in the
     // corresponding set
     // (_createdNodes/Ways/Relations, _modifiedNodes/Ways/Relations,
     // _deletedNodes/Ways/Relations).
+    osmium::io::Reader nodeReader{cnst::PATH_TO_CHANGE_FILE,
+        osmium::osm_entity_bits::node,
+        osmium::io::read_meta::no};
     osmium::apply(nodeReader, _nodeHandler);
     // Check for modified nodes if the location has changed.
     // If so, the node is added to the _modifiedNodesWithChangedLocation set, otherwise to the
@@ -84,23 +90,12 @@ void olu::osm::OsmChangeHandler::run() {
     // Check for modified ways if the members have changed.
     // If so, the way is added to the _modifiedWaysWithChangedMembers set, otherwise to the
     // _modifiedWays set
-    _stats->startTimeCheckingWayMembers();
-    _wayHandler.checkWaysForMemberChange(_nodeHandler.getModifiedNodesWithChangedLocation());
-    _stats->endTimeCheckingWayMembers();
     wayReader.close();
 
     osmium::io::Reader relationReader{ cnst::PATH_TO_CHANGE_FILE,
         osmium::osm_entity_bits::relation,
         osmium::io::read_meta::no};
     osmium::apply(relationReader, _relationHandler);
-    // Check for modified relations if the members have changed.
-    // If so, the relation is added to the _modifiedRelationsWithChangedMembers set, otherwise
-    // to the _modifiedRelations set
-    _stats->startTimeCheckingRelationMembers();
-    _relationHandler.checkRelationsForMemberChange(
-        _nodeHandler.getModifiedNodesWithChangedLocation(),
-        _wayHandler.getModifiedWaysWithChangedMembers());
-    _stats->endTimeCheckingRelationMembers();
     relationReader.close();
 
     if (_nodeHandler.empty() && _wayHandler.empty() && _relationHandler.empty()) {
@@ -108,7 +103,7 @@ void olu::osm::OsmChangeHandler::run() {
     }
 
     _stats->endTimeProcessingChangeFiles();
-    _stats->printCurrentStep("Fetch IDs of objects that need to be updated...");
+    util::Logger::log(util::LogEvent::INFO, "Fetching ways and relations to update geometry...");
     // Fetch the ids of all ways and relations that need to be updated, meaning they reference an
     // OSM object that changed their geometry because of elements in the change file.
     _stats->startTimeFetchingObjectsToUpdateGeo();
@@ -116,12 +111,12 @@ void olu::osm::OsmChangeHandler::run() {
     getIdsOfRelationsToUpdateGeo();
     _stats->endTimeFetchingObjectsToUpdateGeo();
 
-    _stats->printCurrentStep("Fetch references...");
     // Loop over the ways and relations a second time to store the ids of the referenced
     // elements.
     // We will need to retrieve them later from the endpoint (if they are not already
     // in the change file) for osm2rdf to calculate the geometries.
     _stats->startTimeFetchingReferences();
+    util::Logger::log(util::LogEvent::INFO, "Reading and fetching references...");
     osmium::io::Reader referencesReader{ cnst::PATH_TO_CHANGE_FILE,
         osmium::osm_entity_bits::way | osmium::osm_entity_bits::relation,
         osmium::io::read_meta::no};
@@ -144,16 +139,33 @@ void olu::osm::OsmChangeHandler::run() {
     // Create the dummy objects for the nodes, ways and relations that are referenced by
     // elements in the change file,
     // as well as the ways and relations for which the geometry needs to be updated.
-    _stats->startTimeCreatingDummys();
-    createDummyElements();
-    _stats->endTimeCreatingDummys();
+    _stats->startTimeCreatingDummyNodes();
+    util::Logger::log(util::LogEvent::INFO, "Creating objects for referenced nodes...");
+    createDummyNodes();
+    _stats->endTimeCreatingDummyNodes();
+
+    util::Logger::log(util::LogEvent::INFO, "Creating objects for referenced ways...");
+    _stats->startTimeCreatingDummyWays();
+    createDummyWays();
+    _stats->endTimeCreatingDummyWays();
+
+    util::Logger::log(util::LogEvent::INFO, "Creating objects for referenced relations...");
+    _stats->startTimeCreatingDummyRelations();
+    createDummyRelations();
+    _stats->endTimeCreatingDummyRelations();
+
+    util::Logger::log(util::LogEvent::INFO, "Merging and sorting dummy objects...");
+    _stats->startTimeMergingAndSortingDummyFiles();
+    mergeAndSortDummyFiles();
+    _stats->endTimeMergingAndSortingDummyFiles();
 
     try {
+        util::Logger::log(util::LogEvent::INFO, "Converting osm data to triples...");
         _stats->startTimeOsm2RdfConversion();
         Osm2ttl(_config).convert();
         _stats->endTimeOsm2RdfConversion();
     } catch (std::exception &e) {
-        std::cerr << e.what() << std::endl;
+        util::Logger::log(util::LogEvent::ERROR, e.what());
         throw OsmChangeHandlerException("Exception while trying to convert osm element to"
                                         " ttl");
     }
@@ -163,16 +175,34 @@ void olu::osm::OsmChangeHandler::run() {
     deleteTriplesFromDatabase();
     _stats->endTimeDeletingTriples();
 
+    util::Logger::log(util::LogEvent::INFO, "Filtering converted triples...");
+    _stats->startTimeFilteringTriples();
+    const auto triples = filterRelevantTriples();
+    _stats->endTimeFilteringTriples();
+
     _stats->startTimeInsertingTriples();
-    insertTriplesToDatabase();
+    insertTriplesToDatabase(triples);
     _stats->endTimeInsertingTriples();
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::OsmChangeHandler::createTmpFiles() {
-    initTmpFile(cnst::PATH_TO_NODE_FILE);
-    initTmpFile(cnst::PATH_TO_WAY_FILE);
-    initTmpFile(cnst::PATH_TO_RELATION_FILE);
+std::string olu::osm::OsmChangeHandler::getPathToTempFile(const OsmObjectType &osmType,
+                                                          const size_t &index) {
+    auto filePath = cnst::PATH_TO_DUMMY_DIR;
+    switch (osmType) {
+        case OsmObjectType::NODE:
+            filePath += cnst::XML_TAG_NODE;
+            break;
+        case OsmObjectType::WAY:
+            filePath += cnst::XML_TAG_WAY;
+            break;
+        case OsmObjectType::RELATION:
+            filePath += cnst::XML_TAG_REL;
+            break;
+    }
+
+    filePath += "_" + std::to_string(index) + cnst::OSM_EXTENSION;
+    return filePath;
 }
 
 // _________________________________________________________________________________________________
@@ -187,23 +217,6 @@ void olu::osm::OsmChangeHandler::finalizeTmpFile(const std::string& filepath) {
     std::ofstream file(filepath, std::ios::app);
     file << "</osm>" << std::endl;
     file.close();
-}
-
-// _________________________________________________________________________________________________
-void olu::osm::OsmChangeHandler::addToTmpFile(const std::string& element,
-                                              const std::string& elementTag) {
-    std::ofstream outputFile;
-    if (elementTag == cnst::XML_TAG_NODE) {
-        outputFile.open (cnst::PATH_TO_NODE_FILE, std::ios::app);
-    } else if (elementTag == cnst::XML_TAG_WAY) {
-        outputFile.open (cnst::PATH_TO_WAY_FILE, std::ios::app);
-    } else if (elementTag == cnst::XML_TAG_REL) {
-        outputFile.open (cnst::PATH_TO_RELATION_FILE, std::ios::app);
-    }
-
-    outputFile << element << std::endl;
-
-    outputFile.close();
 }
 
 // _________________________________________________________________________________________________
@@ -242,7 +255,7 @@ void olu::osm::OsmChangeHandler::getIdsOfRelationsToUpdateGeo() {
 
     // Get ids of relations that reference a way with changed geometry
     std::set<id_t> updatedWays;
-    for (const auto &wayId: _wayHandler.getModifiedWaysWithChangedMembers()) {
+    for (const auto &wayId: _wayHandler.getModifiedWays()) {
         updatedWays.insert(wayId);
     }
     updatedWays.insert(_waysToUpdateGeometry.begin(), _waysToUpdateGeometry.end());
@@ -299,136 +312,115 @@ void olu::osm::OsmChangeHandler::getReferencedRelations() {
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::OsmChangeHandler::createDummyElements() {
-    const std::size_t count = _referencesHandler.getReferencedNodes().size()
-        + _referencesHandler.getReferencedWays().size()
-        + _waysToUpdateGeometry.size()
-        + _referencesHandler.getReferencedRelations().size()
-        + _relationsToUpdateGeometry.size();
+void olu::osm::OsmChangeHandler::createDummyNodes() {
+    _stats->setNodeReferenceCount(_referencesHandler.getReferencedNodes().size());
 
-    if (count == 0) {
-        return;
-    }
-
-    _stats->printCurrentStep("Create referenced objects...");
-    osm2rdf::util::ProgressBar createProgress(count, _config.showProgress);
-    size_t counter = 0;
-    createProgress.update(counter);
-
-    createDummyNodes(createProgress, counter);
-    createDummyWays(createProgress, counter);
-    createDummyRelations(createProgress, counter);
-
-    createProgress.done();
-}
-
-
-// _________________________________________________________________________________________________
-void olu::osm::OsmChangeHandler::createDummyNodes(osm2rdf::util::ProgressBar &progress,
-                                                  size_t &counter) {
-    util::BatchHelper::doInBatches(
+    util::BatchHelper::doInBatchesWithProgressBar(
         _referencesHandler.getReferencedNodes(),
         _config.batchSize,
-        [this, &counter, progress](std::set<id_t> const& batch) mutable {
-            progress.update(counter += batch.size());
-            for (auto const& node: _odf->fetchNodes(batch)) {
-                // Add the dummy node to the buffer if it is not already in the change file
-                if (!_nodeHandler.nodeInChangeFile(node.getId())) {
-                    addToTmpFile(node.getXml(), cnst::XML_TAG_NODE);
-                    _stats->countDummyNode();
-                }
-            }
+        [this](std::set<id_t> const& batch, int const &batchNumber) {
+            const auto filePath = getPathToTempFile(OsmObjectType::NODE, batchNumber);
+            initTmpFile(filePath);
+            _odf->fetchAndWriteNodesToFile(filePath, batch);
+            finalizeTmpFile(filePath);
         });
-
-    finalizeTmpFile(cnst::PATH_TO_NODE_FILE);
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::OsmChangeHandler::createDummyWays(osm2rdf::util::ProgressBar &progress,
-                                                 size_t &counter) {
+void olu::osm::OsmChangeHandler::createDummyWays() {
     std::set<id_t> wayIds;
     for (const auto &wayId: _referencesHandler.getReferencedWays()) {
         wayIds.insert(wayId);
     }
     wayIds.insert(_waysToUpdateGeometry.begin(), _waysToUpdateGeometry.end());
 
-    util::BatchHelper::doInBatches(
+    size_t countWayReferences = 0;
+    util::BatchHelper::doInBatchesWithProgressBar(
         wayIds,
         _config.batchSize,
-        [this, progress, &counter](std::set<id_t> const& batch) mutable {
-            progress.update(counter += batch.size());
-            for (auto& way: _odf->fetchWays(batch)) {
-                // The ways for which the geometry does not need to be updated are already in
-                // the tmp file
-                if (_wayHandler.getModifiedWays().contains(way.getId())) {
-                    continue;
-                }
-
-                if (_waysToUpdateGeometry.contains(way.getId())) {
-                    _odf->fetchWayInfos(way);
-                }
-
-                // Add the dummy way to the buffer if it is not already in the change file
-                if (!_wayHandler.wayInChangeFile(way.getId())) {
-                    addToTmpFile(way.getXml(), cnst::XML_TAG_WAY);
-                    _stats->countDummyWay();
-                }
-            }
+        [this, &countWayReferences](std::set<id_t> const& batch, int const &batchNumber) mutable {
+            const auto filePath = getPathToTempFile(OsmObjectType::WAY, batchNumber);
+            initTmpFile(filePath);
+            countWayReferences += _odf->fetchAndWriteWaysToFile(filePath, batch);
+            finalizeTmpFile(filePath);
         });
 
-    finalizeTmpFile(cnst::PATH_TO_WAY_FILE);
+    // We need to save the number of created way references here, because some of the referenced
+    // ways might not be on the SPARQL endpoint.
+    // This can happen if the way is located outside the geometrical bounds of this endpoint.
+    _stats->setWayReferenceCount(countWayReferences);
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::OsmChangeHandler::createDummyRelations(osm2rdf::util::ProgressBar &progress,
-                                                      size_t &counter) {
+void olu::osm::OsmChangeHandler::createDummyRelations() {
     std::set<id_t> relations;
     for (const auto &relId: _referencesHandler.getReferencedRelations()) {
         relations.insert(relId);
     }
-    relations.insert(_relationsToUpdateGeometry.begin(),
-        _relationsToUpdateGeometry.end());
+    relations.insert(_relationsToUpdateGeometry.begin(), _relationsToUpdateGeometry.end());
 
-    util::BatchHelper::doInBatches(
+    size_t countRelationReferences = 0;
+    util::BatchHelper::doInBatchesWithProgressBar(
         relations,
         _config.batchSize,
-        [this, &counter, progress](std::set<id_t> const& batch) mutable {
-            progress.update(counter += batch.size());
-            for (auto& rel: _odf->fetchRelations(batch)) {
-                if (_relationsToUpdateGeometry.contains(rel.getId())) {
-                    _odf->fetchRelationInfos(rel);
-                }
-
-                // Add the dummy relation to the buffer if it is not already in the change file
-                if (!_relationHandler.relationInChangeFile(rel.getId())) {
-                    addToTmpFile(rel.getXml(), cnst::XML_TAG_REL);
-                    _stats->countDummyRelation();
-                }
-            }
+        [this, &countRelationReferences](std::set<id_t> const& batch, int const &batchNumber) mutable {
+            const auto filePath = getPathToTempFile(OsmObjectType::RELATION, batchNumber);
+            initTmpFile(filePath);
+            countRelationReferences += _odf->fetchAndWriteRelationsToFile(filePath, batch);
+            finalizeTmpFile(filePath);
         });
 
-    finalizeTmpFile(cnst::PATH_TO_RELATION_FILE);
+    // We need to save the number of created relation references here,
+    // because some of the referenced relations might not be on the SPARQL endpoint.
+    // This can happen if the relation is located outside the geometrical bounds of this endpoint.
+    _stats->setRelationReferenceCount(countRelationReferences);
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::OsmChangeHandler::runUpdateQuery(const std::string &query,
+void olu::osm::OsmChangeHandler::mergeAndSortDummyFiles() {
+    std::string command = "osmium sort " + cnst::PATH_TO_CHANGE_FILE + " ";
+    for (const auto &file : std::filesystem::directory_iterator(cnst::PATH_TO_DUMMY_DIR)) {
+        if (file.is_regular_file()) {
+            command += file.path().string() + " ";
+        }
+    }
+    command += " -o " + cnst::PATH_TO_INPUT_FILE + " --overwrite > /dev/null";
+
+    if (const int res = system(command.c_str()); res != 0) {
+        const std::string msg = "Error while sorting osm files with error code: "
+                                + std::to_string(res);
+        throw OsmChangeHandlerException(msg.c_str());
+    }
+}
+
+// _________________________________________________________________________________________________
+void olu::osm::OsmChangeHandler::runUpdateQuery(const sparql::UpdateOperation & updateOp,
+                                                const std::string &query,
                                                 const std::vector<std::string> &prefixes) {
-    _stats->countUpdateQuery();
+    switch (updateOp) {
+        case sparql::UpdateOperation::INSERT:
+            _stats->countInsertOp();
+            break;
+        case sparql::UpdateOperation::DELETE:
+            _stats->countDeleteOp();
+            break;
+    }
+
     _sparql.setQuery(query);
     _sparql.setPrefixes(prefixes);
 
     std::string response;
     try {
-        response = _sparql.runUpdate();
+        response = _sparql.runUpdate(updateOp);
     } catch (std::exception &e) {
-        std::cerr << e.what() << std::endl;
+        util::Logger::log(util::LogEvent::ERROR, e.what());
         const std::string msg = "Exception while trying to run sparql update query: "
                                 + query.substr(0, std::min<int>(query.size(), 100))
                                 + " ...";
         throw OsmChangeHandlerException(msg.c_str());
     }
 
-    if (_config.isQLever) {
+    if (_config.sparqlOutput == config::SparqlOutput::ENDPOINT && _config.isQLever) {
         // Update responses are in "[]" so remove them before parsing
         response = response.substr(1, response.size() - 2);
         _stats->logQLeverUpdateInfo(response);
@@ -442,7 +434,8 @@ void olu::osm::OsmChangeHandler::deleteNodesFromDatabase(osm2rdf::util::Progress
         _nodeHandler.getAllNodes(),
         _config.batchSize,
         [this, progress, &counter](std::set<id_t> const &batch) mutable {
-            runUpdateQuery(_queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_NODE),
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_NODE),
                            cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
             progress.update(counter += batch.size());
         });
@@ -455,7 +448,7 @@ void olu::osm::OsmChangeHandler::deleteWaysFromDatabase(osm2rdf::util::ProgressB
     for (const auto &wayId: _wayHandler.getDeletedWays()) {
         waysToDelete.insert(wayId);
     }
-    for (const auto &wayId: _wayHandler.getModifiedWaysWithChangedMembers()) {
+    for (const auto &wayId: _wayHandler.getModifiedWays()) {
         waysToDelete.insert(wayId);
     }
     for (const auto &wayId: _wayHandler.getCreatedWays()) {
@@ -466,34 +459,9 @@ void olu::osm::OsmChangeHandler::deleteWaysFromDatabase(osm2rdf::util::ProgressB
         waysToDelete,
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
-            runUpdateQuery(_queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_WAY),
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_WAY),
                            cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
-            progress.update(counter += batch.size());
-        });
-}
-
-// _________________________________________________________________________________________________
-void olu::osm::OsmChangeHandler::deleteWaysMetaDataAndTags(osm2rdf::util::ProgressBar &progress,
-                                                           size_t &counter) {
-    util::BatchHelper::doInBatches(
-        _wayHandler.getModifiedWays(),
-        _config.batchSize,
-        [this, &counter, progress](std::set<id_t> const &batch) mutable {
-            runUpdateQuery(_queryWriter.writeDeleteQueryForMetaAndTags(batch, cnst::NAMESPACE_OSM_WAY),
-                           cnst::PREFIXES_FOR_WAY_DELETE_META_AND_TAGS_QUERY);
-            progress.update(counter += batch.size());
-        });
-}
-
-// _________________________________________________________________________________________________
-void olu::osm::OsmChangeHandler::deleteRelationsMetaDataAndTags(osm2rdf::util::ProgressBar &progress,
-                                                                size_t &counter) {
-    util::BatchHelper::doInBatches(
-        _relationHandler.getModifiedRelations(),
-        _config.batchSize,
-        [this, &counter, progress](std::set<id_t> const &batch) mutable {
-            runUpdateQuery(_queryWriter.writeDeleteQueryForMetaAndTags(batch, cnst::NAMESPACE_OSM_REL),
-                           cnst::PREFIXES_FOR_RELATION_DELETE_META_AND_TAGS_QUERY);
             progress.update(counter += batch.size());
         });
 }
@@ -505,7 +473,8 @@ void olu::osm::OsmChangeHandler::deleteWaysGeometry(osm2rdf::util::ProgressBar &
         _waysToUpdateGeometry,
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
-            runUpdateQuery(_queryWriter.writeDeleteQueryForGeometry(batch, cnst::NAMESPACE_OSM_WAY),
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteQueryForGeometry(batch, cnst::NAMESPACE_OSM_WAY),
                            cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
             progress.update(counter += batch.size());
         });
@@ -515,21 +484,22 @@ void olu::osm::OsmChangeHandler::deleteWaysGeometry(osm2rdf::util::ProgressBar &
 void olu::osm::OsmChangeHandler::deleteRelationsFromDatabase(osm2rdf::util::ProgressBar &progress,
                                                              size_t &counter) {
     std::set<id_t> relationsToDelete;
-    for (const auto &wayId: _relationHandler.getDeletedRelations()) {
-        relationsToDelete.insert(wayId);
+    for (const auto &relationId: _relationHandler.getDeletedRelations()) {
+        relationsToDelete.insert(relationId);
     }
-    for (const auto &wayId: _relationHandler.getModifiedRelationsWithChangedMembers()) {
-        relationsToDelete.insert(wayId);
+    for (const auto &relationId: _relationHandler.getModifiedRelations()) {
+        relationsToDelete.insert(relationId);
     }
-    for (const auto &wayId: _relationHandler.getCreatedRelations()) {
-        relationsToDelete.insert(wayId);
+    for (const auto &relationId: _relationHandler.getCreatedRelations()) {
+        relationsToDelete.insert(relationId);
     }
 
     util::BatchHelper::doInBatches(
         relationsToDelete,
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
-            runUpdateQuery(_queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_REL),
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_REL),
                            cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
             progress.update(counter += batch.size());
         });
@@ -542,7 +512,8 @@ void olu::osm::OsmChangeHandler::deleteRelationsGeometry(osm2rdf::util::Progress
         _relationsToUpdateGeometry,
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
-            runUpdateQuery(_queryWriter.writeDeleteQueryForGeometry(batch, cnst::NAMESPACE_OSM_REL),
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteQueryForGeometry(batch, cnst::NAMESPACE_OSM_REL),
                            cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
             progress.update(counter += batch.size());
         });
@@ -557,21 +528,19 @@ void olu::osm::OsmChangeHandler::deleteTriplesFromDatabase() {
         + _relationsToUpdateGeometry.size();
 
     if (count == 0) {
-        _stats->printCurrentStep("No elements to delete...");
+        util::Logger::log(util::LogEvent::INFO,"No elements to delete...");
         return;
     }
 
-    _stats->printCurrentStep("Deleting elements from database...");
+    util::Logger::log(util::LogEvent::INFO,"Deleting elements from database...");
     osm2rdf::util::ProgressBar deleteProgress(count, _config.showProgress);
     size_t counter = 0;
     deleteProgress.update(counter);
 
     deleteNodesFromDatabase(deleteProgress, counter);
     deleteWaysFromDatabase(deleteProgress, counter);
-    deleteWaysMetaDataAndTags(deleteProgress,counter);
     deleteWaysGeometry(deleteProgress, counter);
     deleteRelationsFromDatabase(deleteProgress, counter);
-    deleteRelationsMetaDataAndTags(deleteProgress,counter);
     deleteRelationsGeometry(deleteProgress, counter);
 
     deleteProgress.done();
@@ -579,17 +548,13 @@ void olu::osm::OsmChangeHandler::deleteTriplesFromDatabase() {
 
 
 // _________________________________________________________________________________________________
-void olu::osm::OsmChangeHandler::insertTriplesToDatabase() {
-    _stats->startTimeFilteringTriples();
-    auto triples = filterRelevantTriples();
-    _stats->endTimeFilteringTriples();
-
+void olu::osm::OsmChangeHandler::insertTriplesToDatabase(const std::vector<triple_t> & triples) {
     if (triples.empty()) {
-        _stats->printCurrentStep("No triples to insert into database...");
+        util::Logger::log(util::LogEvent::INFO,"No triples to insert into database...");
         return;
     }
 
-    _stats->printCurrentStep("Inserting triples into database...");
+    util::Logger::log(util::LogEvent::INFO,"Inserting triples into database...");
     osm2rdf::util::ProgressBar insertProgress(triples.size(), _config.showProgress);
     size_t counter = 0;
     insertProgress.update(counter);
@@ -597,39 +562,37 @@ void olu::osm::OsmChangeHandler::insertTriplesToDatabase() {
     std::vector<std::string> tripleBatch;
     for (size_t i = 0; i < triples.size(); ++i) {
         auto [s, p, o] = triples[i];
-        std::ostringstream triple;
+        std::string triple;
         if (o.starts_with("_")) {
-            triple << s;
-            triple << " ";
-            triple << p;
-            triple << "[ ";
+            triple += s;
+            triple += " ";
+            triple += p;
+            triple += "[ ";
 
             while (true) {
                 i++;
                 if (auto [next_s, next_p, next_o] = triples[i]; next_s.starts_with("_")) {
-                    triple << next_p;
-                    triple << " ";
-                    triple << next_o;
-                    triple << "; ";
+                    triple += next_p;
+                    triple += " ";
+                    triple += next_o;
+                    triple += "; ";
                 } else {
                     i--;
                     break;
                 }
             }
 
-            triple << " ]";
+            triple += " ]";
         } else {
-            triple << s;
-            triple << " ";
-            triple << p;
-            triple << " ";
-            triple << o;
+            triple += util::TtlHelper::getTripleString(std::move<triple_t>({s, p, o}));
         }
 
-        tripleBatch.emplace_back(triple.str());
+        tripleBatch.emplace_back(triple);
 
         if (tripleBatch.size() == _config.batchSize || i == triples.size() - 1) {
-            runUpdateQuery(_queryWriter.writeInsertQuery(tripleBatch), cnst::DEFAULT_PREFIXES);
+            runUpdateQuery(sparql::UpdateOperation::INSERT,
+                           _queryWriter.writeInsertQuery(tripleBatch),
+                           cnst::DEFAULT_PREFIXES);
             tripleBatch.clear();
 
             if (i == triples.size() - 1) {
@@ -660,7 +623,7 @@ std::vector<olu::triple_t> olu::osm::OsmChangeHandler::filterRelevantTriples() c
     for (const auto &wayId: _wayHandler.getCreatedWays()) {
         waysToInsert.insert(wayId);
     }
-    for (const auto &wayId: _wayHandler.getModifiedWaysWithChangedMembers()) {
+    for (const auto &wayId: _wayHandler.getModifiedWays()) {
         waysToInsert.insert(wayId);
     }
 
@@ -668,7 +631,7 @@ std::vector<olu::triple_t> olu::osm::OsmChangeHandler::filterRelevantTriples() c
     for (const auto &relId: _relationHandler.getCreatedRelations()) {
         relationsToInsert.insert(relId);
     }
-    for (const auto &relId: _relationHandler.getModifiedRelationsWithChangedMembers()) {
+    for (const auto &relId: _relationHandler.getModifiedRelations()) {
         relationsToInsert.insert(relId);
     }
 
@@ -754,14 +717,6 @@ void olu::osm::OsmChangeHandler::filterWayTriple(const triple_t &wayTriple,
         }
     }
 
-    // We only update the triples for the metadata and tags of the ways that are in the
-    // modifiedWays set.
-    if (_wayHandler.getModifiedWays().contains(wayId)) {
-        if (util::TtlHelper::isMetadataOrTagPredicate(predicate, OsmObjectType::WAY)) {
-            relevantTriples.emplace_back(subject, predicate, util::XmlHelper::xmlDecode(object));
-        }
-    }
-
     // We only update the triples that describe the geometry of the ways that are in the
     // _waysToUpdateGeometry set.
     if (_waysToUpdateGeometry.contains(wayId)) {
@@ -792,14 +747,6 @@ void olu::osm::OsmChangeHandler::filterRelationTriple(const triple_t &relationTr
         // the member)
         if (util::TtlHelper::hasRelevantObject(predicate, OsmObjectType::RELATION)) {
             currentLink = object;
-        }
-    }
-
-    // We only update the triples for the metadata and tags of the relations that are
-    // in the modifiedRelations set.
-    if (_relationHandler.getModifiedRelations().contains(relId)) {
-        if (util::TtlHelper::isMetadataOrTagPredicate(predicate, OsmObjectType::RELATION)) {
-            relevantTriples.emplace_back(subject, predicate, util::XmlHelper::xmlDecode(object));
         }
     }
 

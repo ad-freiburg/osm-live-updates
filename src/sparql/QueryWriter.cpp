@@ -29,18 +29,20 @@ namespace cnst = olu::config::constants;
 // _________________________________________________________________________________________________
 std::string
 olu::sparql::QueryWriter::writeInsertQuery(const std::vector<std::string>& triples) const {
-    std::ostringstream tripleClause;
-    for (const auto & element : triples) {
-        tripleClause << element;
-        tripleClause << " . ";
+    std::string tripleClause;
+
+    size_t totalSize = 0;
+    for (const auto& element : triples) {
+        totalSize += element.size() + 3;
+    }
+    tripleClause.reserve(totalSize);
+
+    for (const auto& element : triples) {
+        tripleClause += element;
+        tripleClause += " . ";
     }
 
-    std::ostringstream oss;
-    oss << "INSERT DATA ";
-    oss << "{ ";
-    oss << wrapWithGraphOptional(tripleClause.str());
-    oss << "}";
-    return oss.str();
+    return tripleClause;
 }
 
 // _________________________________________________________________________________________________
@@ -158,9 +160,9 @@ std::string olu::sparql::QueryWriter::writeQueryForLatestNodeTimestamp() const {
 std::string olu::sparql::QueryWriter::writeQueryForRelations(const std::set<id_t> & relationIds) const {
     std::ostringstream oss;
     oss << "SELECT " + cnst::QUERY_VAR_VAL + " " + cnst::QUERY_VAR_TYPE + " "
-          "(GROUP_CONCAT(" + cnst::QUERY_VAR_MEMBER_ID + "; separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_IDS + ") "
-          "(GROUP_CONCAT(" + cnst::QUERY_VAR_MEMBER_ROLE + "; separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_ROLES + ") "
-          "(GROUP_CONCAT(" + cnst::QUERY_VAR_MEMBER_POS + "; separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_POSS + ") ";
+          "(GROUP_CONCAT(STR(" + cnst::QUERY_VAR_MEMBER_ID + "); separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_IDS + ") "
+          "(GROUP_CONCAT(STR(" + cnst::QUERY_VAR_MEMBER_ROLE + "); separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_ROLES + ") "
+          "(GROUP_CONCAT(STR(" + cnst::QUERY_VAR_MEMBER_POS + "); separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_POSS + ") ";
     oss << getFromClauseOptional();
     oss << "WHERE { ";
     oss << getValuesClause(cnst::NAMESPACE_OSM_REL, relationIds);
@@ -177,14 +179,14 @@ std::string olu::sparql::QueryWriter::writeQueryForRelations(const std::set<id_t
 std::string olu::sparql::QueryWriter::writeQueryForWaysMembers(const std::set<id_t> &wayIds) const {
     std::ostringstream oss;
     oss << "SELECT " + cnst::QUERY_VAR_VAL + " "
-          "(GROUP_CONCAT(?nodeUri; separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_IDS + ") "
-          "(GROUP_CONCAT(?nodePos; separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_POSS + ") ";
+          "(GROUP_CONCAT(STR(" + cnst::QUERY_VAR_MEMBER_ID + "); separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_IDS + ") "
+          "(GROUP_CONCAT(STR(" + cnst::QUERY_VAR_MEMBER_POS + "); separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_POSS + ") ";
     oss << getFromClauseOptional();
     oss << "WHERE { ";
     oss << getValuesClause(cnst::NAMESPACE_OSM_WAY, wayIds);
-    oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_WAY_MEMBER, "?node");
-    oss << getTripleClause("?node", cnst::PREFIXED_WAY_MEMBER_ID, "?nodeUri");
-    oss << getTripleClause("?node", cnst::PREFIXED_WAY_MEMBER_POS, "?nodePos");
+    oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_WAY_MEMBER, cnst::QUERY_VAR_MEMBER);
+    oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_WAY_MEMBER_ID, cnst::QUERY_VAR_MEMBER_ID);
+    oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_WAY_MEMBER_POS, cnst::QUERY_VAR_MEMBER_POS);
     oss << "} GROUP BY " + cnst::QUERY_VAR_VAL;
     return oss.str();
 }
@@ -193,16 +195,16 @@ std::string olu::sparql::QueryWriter::writeQueryForWaysMembers(const std::set<id
 std::string olu::sparql::QueryWriter::writeQueryForRelsMembers(const std::set<id_t> &relIds) const {
     std::ostringstream oss;
     oss << "SELECT " + cnst::QUERY_VAR_VAL + " "
-          "(GROUP_CONCAT(?memberUri; separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_IDS + ") "
-          "(GROUP_CONCAT(?memberPos; separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_POSS + ") "
-          "(GROUP_CONCAT(?memberRole; separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_ROLES + ") ";
+          "(GROUP_CONCAT(STR(" + cnst::QUERY_VAR_MEMBER_ID + "); separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_IDS + ") "
+          "(GROUP_CONCAT(STR(" + cnst::QUERY_VAR_MEMBER_POS + "); separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_POSS + ") "
+          "(GROUP_CONCAT(STR(" + cnst::QUERY_VAR_MEMBER_ROLE + "); separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_ROLES + ") ";
     oss << getFromClauseOptional();
     oss << "WHERE { ";
     oss << getValuesClause(cnst::NAMESPACE_OSM_REL, relIds);
-    oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_REL_MEMBER, "?member");
-    oss << getTripleClause("?member", cnst::PREFIXED_REL_MEMBER_ID, "?memberUri");
-    oss << getTripleClause("?member", cnst::PREFIXED_REL_MEMBER_POS, "?memberPos");
-    oss << getTripleClause("?member", cnst::PREFIXED_REL_MEMBER_ROLE, "?memberRole");
+    oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_REL_MEMBER, cnst::QUERY_VAR_MEMBER);
+    oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_REL_MEMBER_ID, cnst::QUERY_VAR_MEMBER_ID);
+    oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_REL_MEMBER_POS, cnst::QUERY_VAR_MEMBER_POS);
+    oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_REL_MEMBER_ROLE, cnst::QUERY_VAR_MEMBER_ROLE);
     oss << "} GROUP BY " + cnst::QUERY_VAR_VAL;
     return oss.str();
 }
@@ -325,17 +327,22 @@ std::string olu::sparql::QueryWriter::getValuesClause(const std::string &osmTag,
 std::string olu::sparql::QueryWriter::getValuesClause(const std::string &osmTag,
                                                       const std::string &delimiter,
                                                       const std::set<id_t> &objectIds) {
-    std::ostringstream oss;
-    oss << "VALUES " + cnst::QUERY_VAR_VAL +" { ";
-    for (const auto & objectId : objectIds) {
-        oss << osmTag;
-        oss << delimiter;
-        oss << std::to_string(objectId);
-        oss << " ";
-    }
-    oss << "} ";
+    std::string valueClause = "VALUES " + cnst::QUERY_VAR_VAL + " {";
+    constexpr int MAX_CHARS_PER_OBJECT_ID = 20;
+    valueClause.reserve(valueClause.size() +
+        (osmTag.size() + delimiter.size() + MAX_CHARS_PER_OBJECT_ID  + 1) * objectIds.size() + 2);
+    for (const auto& objectId : objectIds) {
+        valueClause += osmTag;
+        valueClause += delimiter;
 
-    return  oss.str();
+        char buffer[MAX_CHARS_PER_OBJECT_ID];
+        auto [ptr, ec] = std::to_chars(buffer, buffer + sizeof(buffer), objectId);
+        valueClause.append(buffer, ptr);
+
+        valueClause += " ";
+    }
+    valueClause += "} ";
+    return valueClause;
 }
 
 // _________________________________________________________________________________________________

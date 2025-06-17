@@ -27,11 +27,17 @@ namespace olu::osm {
 
         std::vector<Node> fetchNodes(const std::set<id_t> &nodeIds) override;
 
+        void fetchAndWriteNodesToFile(const std::string &filePath, const std::set<id_t> &nodeIds) override;
+
         std::vector<Relation> fetchRelations(const std::set<id_t> &relationIds) override;
+
+        size_t fetchAndWriteRelationsToFile(const std::string &filePath, const std::set<id_t> &relationIds) override;
 
         void fetchRelationInfos(Relation &relation) override;
 
         std::vector<Way> fetchWays(const std::set<id_t> &wayIds) override;
+
+        size_t fetchAndWriteWaysToFile(const std::string &filePath, const std::set<id_t> &wayIds) override;
 
         void fetchWayInfos(Way &way) override;
 

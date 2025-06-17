@@ -26,6 +26,11 @@
 
 namespace olu::sparql {
 
+    enum class UpdateOperation {
+        INSERT,
+        DELETE
+    };
+
     /**
      * Wrapper class that handles communication with a SPARQL endpoint.
      * To successfully send a request to the SPARQL endpoint,
@@ -71,7 +76,7 @@ namespace olu::sparql {
          *
          * @return The response from the SPARQL endpoint.
          */
-        std::string runUpdate();
+        std::string runUpdate(const UpdateOperation &updateOp);
     private:
         config::Config _config;
         std::string _query;
@@ -82,7 +87,9 @@ namespace olu::sparql {
         /**
          * Sends a HTTP request to the sparql endpoint.
          */
-        std::string send(bool isUpdate);
+        std::string sendQuery();
+
+        std::string sendUpdate(const UpdateOperation &updateOp);
     };
 
     /**

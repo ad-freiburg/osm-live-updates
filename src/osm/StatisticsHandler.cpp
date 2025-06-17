@@ -19,9 +19,10 @@
 #include "osm/StatisticsHandler.h"
 
 #include <iostream>
-#include <util/Time.h>
 
 #include "config/Constants.h"
+#include "util/Logger.h"
+#include "util/Time.h"
 
 static inline constexpr std::string_view prefix = "                          ";
 
@@ -37,9 +38,27 @@ void olu::osm::StatisticsHandler::printCurrentStep(const std::string &stepDescri
 // _________________________________________________________________________________________________
 void olu::osm::StatisticsHandler::printOsmStatistics() const {
     printCurrentStep("OSM Statistics:");
+    if (_config.changeFileDir.empty()) {
+        std::cout << prefix << "Started update process at database state: "
+                  << olu::osm::to_string(_startDatabaseState)
+                  << std::endl;
+
+        std::cout << prefix << "Ended update process at database state: "
+                  << olu::osm::to_string(_latestDatabaseState)
+                  << std::endl;
+
+        std::cout << prefix << "Handled "
+                  << std::to_string(getNumOfChangeFiles())
+                  << " change files in total."
+                  << std::endl;
+    } else {
+        std::cout << prefix << "Handled change files at: "
+                  << _config.changeFileDir
+                  << std::endl;
+    }
 
     if (numOfNodes() == 0) {
-        std::cout << prefix << "0 nodes in change file." << std::endl;
+        std::cout << prefix << "0 nodes in change files." << std::endl;
     } else {
         std::cout << prefix << "Nodes created: " << _numOfCreatedNodes
                   << ", modified: " << _numOfModifiedNodes
@@ -48,7 +67,7 @@ void olu::osm::StatisticsHandler::printOsmStatistics() const {
     }
 
     if (numOfWays() == 0) {
-        std::cout << prefix << "0 ways in change file." << std::endl;
+        std::cout << prefix << "0 ways in change files." << std::endl;
     } else {
         std::cout << prefix << "Ways created: " << _numOfCreatedWays
                   << ", modified: " << _numOfModifiedWays
@@ -57,7 +76,7 @@ void olu::osm::StatisticsHandler::printOsmStatistics() const {
     }
 
     if (numOfRelations() == 0) {
-        std::cout << prefix << "0 relations in change file." << std::endl;
+        std::cout << prefix << "0 relations in change files." << std::endl;
     } else {
         std::cout << prefix << "Relations created: " << _numOfCreatedRelations
                   << ", modified: " << _numOfModifiedRelations
@@ -81,26 +100,6 @@ void olu::osm::StatisticsHandler::printUpdateStatistics() const {
                       << "%)"
                       << std::endl;
         }
-
-        if (_numOfWaysWithMemberChange == 0) {
-            std::cout << prefix << "No ways with member change." << std::endl;
-        } else {
-            std::cout << prefix << _numOfWaysWithMemberChange
-                      << " modified ways have changed a member ("
-                      << calculatePercentage(_numOfModifiedWays, _numOfWaysWithMemberChange)
-                      << "%)"
-                      << std::endl;
-        }
-
-        if (_numOfRelationsWithMemberChange == 0) {
-            std::cout << prefix << "No Relations with member change." << std::endl;
-        } else {
-            std::cout << prefix << _numOfRelationsWithMemberChange
-                      << " of modified relations have changed a member ("
-                      << calculatePercentage(_numOfModifiedRelations, _numOfRelationsWithMemberChange)
-                      << "%)"
-                      << std::endl;
-        }
     }
 
     if (_numOfRelationsToUpdateGeometry == 0 && _numOfWaysToUpdateGeometry == 0) {
@@ -113,13 +112,13 @@ void olu::osm::StatisticsHandler::printUpdateStatistics() const {
     }
 
     if (_config.showDetailedStatistics) {
-        if (_numOfDummyNodes == 0 && _numOfDummyWays == 0 && _numOfDummyRelations == 0) {
+        if (getNumOfDummyNodes() == 0 && getNumOfDummyWays() == 0 && getNumOfDummyRelations() == 0) {
             std::cout << prefix << "No references to nodes, ways or relations needed." << std::endl;
         } else {
-            std::cout << prefix << "Created dummys for "
-                      << _numOfDummyNodes << " nodes, "
-                      << _numOfDummyWays << " ways, "
-                      << _numOfDummyRelations << " relations"
+            std::cout << prefix << "Created objects from SPARQL endpoint for "
+                      << getNumOfDummyNodes() << " nodes, "
+                      << getNumOfDummyWays() << " ways, "
+                      << getNumOfDummyRelations() << " relations"
                       << std::endl;
         }
     }
@@ -142,21 +141,33 @@ void olu::osm::StatisticsHandler::printOsm2RdfStatistics() const {
 void olu::osm::StatisticsHandler::printSparqlStatistics() const {
     printCurrentStep("SPARQL Statistics:");
 
-    std::cout << prefix << _queriesCount << " SPARQL queries and "
-          << _updateQueriesCount << " update queries were send to the endpoint."
-          << std::endl;
+    std::cout << prefix
+          << _queriesCount << " queries, "
+          << _deleteOpCount << " delete and "
+          << _insertOpCount << " insert operations were ";
+    if ( _config.sparqlOutputFile.empty()) {
+        std::cout << "send to the endpoint." << std::endl;
+    } else {
+        std::cout << "written to the output file at path " << _config.sparqlOutputFile << std::endl;
+    }
 
     if (_config.isQLever) {
-        std::cout << prefix << "QLever response time: " << _qleverResponseTimeMs << " ms, "
-                  << "QLever update time: " << _qleverUpdateTimeMs << " ms" << std::endl;
+        std::cout << prefix << "QLever response time: " << _qleverResponseTimeMs << " ms";
 
-        std::cout << prefix << "Inserted: " << _qleverInsertedTriplesCount << " and deleted "
-           << _qleverDeletedTriplesCount << " triples at QLever endpoint" << std::endl;
+        if (_config.sparqlOutput == config::SparqlOutput::ENDPOINT) {
+            std::cout << ", QLever update time: " << _qleverUpdateTimeMs << " ms" << std::endl;
 
-        if (_qleverInsertedTriplesCount != _numOfTriplesToInsert) {
-            std::cout << prefix << cnst::LOG_WARNING << "The number of triples inserted at the end "
-                                                        "point is not equal to the number of triples"
-                                                        " that need to be inserted." << std::endl;
+            std::cout << prefix << "Inserted: " << _qleverInsertedTriplesCount << " and deleted "
+                      << _qleverDeletedTriplesCount << " triples at QLever endpoint" << std::endl;
+
+            if (_qleverInsertedTriplesCount != _numOfTriplesToInsert) {
+                util::Logger::log(util::LogEvent::WARNING, "The number of triples inserted"
+                                  " at the end point is not equal to the"
+                                  " number of triples that need to be"
+                                  " inserted.");
+            }
+        } else {
+            std::cout << std::endl;
         }
     }
 }
@@ -212,20 +223,6 @@ void olu::osm::StatisticsHandler::printTimingStatistics() const {
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
 
-    partTime = getTimeInMSCheckingWayMembers();
-    std::cout << prefix << "Checking ways for member change took "
-            << partTime
-            << " ms. ("
-            << calculatePercentageOfTotalTime(partTime) << "% of total time)"
-            << std::endl;
-
-    partTime = getTimeInMSCheckingRelationMembers();
-    std::cout << prefix << "Checking relations for member change took "
-            << partTime
-            << " ms. ("
-            << calculatePercentageOfTotalTime(partTime) << "% of total time)"
-            << std::endl;
-
     partTime = getTimeInMSFetchingObjectsToUpdateGeo();
     std::cout << prefix << "Fetching objects to update geometry for took "
             << partTime
@@ -240,8 +237,29 @@ void olu::osm::StatisticsHandler::printTimingStatistics() const {
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
 
-    partTime = getTimeInMSCreatingDummys();
-    std::cout << prefix << "Creating dummy objects took "
+    partTime = getTimeInMSCreatingDummyNodes();
+    std::cout << prefix << "Creating referenced node objects took "
+            << partTime
+            << " ms. ("
+            << calculatePercentageOfTotalTime(partTime) << "% of total time)"
+            << std::endl;
+
+    partTime = getTimeInMSCreatingDummyWays();
+    std::cout << prefix << "Creating referenced way objects took "
+            << partTime
+            << " ms. ("
+            << calculatePercentageOfTotalTime(partTime) << "% of total time)"
+            << std::endl;
+
+    partTime = getTimeInMSCreatingDummyRelations();
+    std::cout << prefix << "Creating referenced relation objects took "
+            << partTime
+            << " ms. ("
+            << calculatePercentageOfTotalTime(partTime) << "% of total time)"
+            << std::endl;
+
+    partTime = getTimeInMSMergingAndSortingDummyFiles();
+    std::cout << prefix << "Merging and sorting dummy files took "
             << partTime
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
@@ -261,15 +279,15 @@ void olu::osm::StatisticsHandler::printTimingStatistics() const {
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
 
-    partTime = getTimeInMSInsertingTriples();
-    std::cout << prefix << "Inserting triples took "
+    partTime = getTimeInMSFilteringTriples();
+    std::cout << prefix << "Filtering the triples took "
             << partTime
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
 
-    partTime = getTimeInMSFilteringTriples();
-    std::cout << prefix << "Filtering the triples took "
+    partTime = getTimeInMSInsertingTriples();
+    std::cout << prefix << "Inserting triples took "
             << partTime
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
