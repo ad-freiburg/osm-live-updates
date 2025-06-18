@@ -25,6 +25,7 @@
 
 #include "util/Types.h"
 #include "config/Config.h"
+#include "ttl/Triple.h"
 
 namespace olu::sparql {
     /**
@@ -44,7 +45,13 @@ namespace olu::sparql {
          * that are linked via another node
          */
         [[nodiscard]] std::string
-        writeDeleteQuery(const std::set<id_t> &ids, const std::string &osmTag) const;
+        writeDeleteOsmObjectQuery(const std::set<id_t> &ids, const std::string &osmTag) const;
+
+        /**
+         * @returns A SPARQL query that deletes the given triple
+         */
+        [[nodiscard]] std::string
+        writeDeleteTripleQuery(ttl::Triple triple) const;
 
         /**
          * @returns A SPARQL query that delete all triples with predicate 'osmmeta:...',
@@ -145,6 +152,8 @@ namespace olu::sparql {
         [[nodiscard]] static std::string getTripleClause(const std::string& subject,
                                                          const std::string& predicate,
                                                          const std::string& object);
+
+        [[nodiscard]] static std::string getTripleClause(const ttl::Triple &triple);
 
         [[nodiscard]] std::string wrapWithGraphOptional(const std::string& clause) const;
         [[nodiscard]] static std::string wrapWithUnion(const std::string& clause);

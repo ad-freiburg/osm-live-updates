@@ -433,7 +433,7 @@ void olu::osm::OsmChangeHandler::deleteNodesFromDatabase(osm2rdf::util::Progress
         _config.batchSize,
         [this, progress, &counter](std::set<id_t> const &batch) mutable {
             runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_NODE),
+                           _queryWriter.writeDeleteOsmObjectQuery(batch, cnst::NAMESPACE_OSM_NODE),
                            cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
             progress.update(counter += batch.size());
         });
@@ -458,7 +458,7 @@ void olu::osm::OsmChangeHandler::deleteWaysFromDatabase(osm2rdf::util::ProgressB
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
             runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_WAY),
+                           _queryWriter.writeDeleteOsmObjectQuery(batch, cnst::NAMESPACE_OSM_WAY),
                            cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
             progress.update(counter += batch.size());
         });
@@ -497,7 +497,7 @@ void olu::osm::OsmChangeHandler::deleteRelationsFromDatabase(osm2rdf::util::Prog
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
             runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteQuery(batch, cnst::NAMESPACE_OSM_REL),
+                           _queryWriter.writeDeleteOsmObjectQuery(batch, cnst::NAMESPACE_OSM_REL),
                            cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
             progress.update(counter += batch.size());
         });

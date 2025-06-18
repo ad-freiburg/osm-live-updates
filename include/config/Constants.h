@@ -237,6 +237,8 @@ namespace olu::config::constants {
     const static inline std::string NAME_REL = "rel";
     const static inline std::string NAME_INFO = "info";
     const static inline std::string NAME_OPTION = "option";
+    const static inline std::string NAME_DATE_MODIFIED = "dateModified";
+    const static inline std::string NAME_UPDATES_COMPLETE_UNTIL = "updatesCompleteUntil";
 
     /// Prefixed names -----------------------------------------------------------------------------
     static std::string MakePrefixedName(const std::string &prefix, const std::string &name) {
@@ -340,6 +342,10 @@ namespace olu::config::constants {
             PREFIX_DECL_OSM2RDF_META
     };
 
+    const static inline std::vector PREFIXES_FOR_METADATA_TRIPLES {
+        PREFIX_DECL_OSM2RDF_META, PREFIX_DECL_XSD
+    };
+
     // Query variables -----------------------------------------------------------------------------
     static std::string MakeQueryVar(const std::string &name) {
             return "?" + name;
@@ -363,7 +369,11 @@ namespace olu::config::constants {
     const static inline std::string QUERY_VAR_MEMBER_POSS = MakeQueryVar(NAME_MEMBER_POSS);
     const static inline std::string QUERY_VAR_OPTION = MakeQueryVar(NAME_OPTION);
 
-    // Options and output --------------------------------------------------------------------------
+    // Triple patterns --------------------------------------------------------------------------
+    const static inline std::string IRI_XSD_DATE_TIME = "<" + NAMESPACE_IRI_XSD + "dateTime>";
+    const static inline std::string IRI_XSD_INT = "<" + NAMESPACE_IRI_XSD + "integer>";
+
+        // Options and output --------------------------------------------------------------------------
     const static inline std::string HELP_OPTION_SHORT = "h";
     const static inline std::string HELP_OPTION_LONG = "help";
     const static inline std::string HELP_OPTION_HELP = "Display help information.";

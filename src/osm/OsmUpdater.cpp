@@ -22,6 +22,7 @@
 #include <iostream>
 #include <filesystem>
 #include <fstream>
+#include <util/Time.h>
 
 #include "omp.h"
 #include "osmium/visitor.hpp"
@@ -41,6 +42,7 @@
 #include "osm/OsmDataFetcherSparql.h"
 #include "osm/Osm2ttl.h"
 #include "config/Constants.h"
+#include "ttl/Triple.h"
 #include "util/Logger.h"
 
 namespace cnst = olu::config::constants;
@@ -59,7 +61,8 @@ olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config)
                                                                  _stats(config),
                                                                  _repServer(config, _stats),
                                                                  _odf(createOsmDataFetcher(
-                                                                     config, _stats)) {
+                                                                     config, _stats)),
+                                                                 _queryWriter(_config) {
     _stats.startTime();
 
 #if defined(_OPENMP)
@@ -78,8 +81,8 @@ olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config)
     if (_config.sparqlOutput != config::ENDPOINT) {
         try {
             std::ofstream outputFile;
-            outputFile.open (_config.sparqlOutputFile,
-                std::ofstream::out | std::ios_base::trunc);
+            outputFile.open(_config.sparqlOutputFile,
+                            std::ofstream::out | std::ios_base::trunc);
             outputFile.close();
         } catch (const std::exception &e) {
             util::Logger::log(util::LogEvent::ERROR, e.what());
@@ -106,6 +109,8 @@ void olu::osm::OsmUpdater::run() {
 
         auto och{OsmChangeHandler(_config, *_odf, _stats)};
         och.run();
+
+        insertMetadataTriples(och);
     } else {
         _stats.startTimeDeterminingSequenceNumber();
         decideStartSequenceNumber();
@@ -122,7 +127,10 @@ void olu::osm::OsmUpdater::run() {
 
         auto och{OsmChangeHandler(_config, *_odf, _stats)};
         och.run();
+
+        insertMetadataTriples(och);
     }
+
 
     deleteTmpDir();
     _stats.endTime();
@@ -287,3 +295,38 @@ void olu::osm::OsmUpdater::checkOsm2RdfVersions() const {
                           " create the dump is the same as the one used in this program.");
     }
 }
+
+// _________________________________________________________________________________________________
+void olu::osm::OsmUpdater::insertMetadataTriples(OsmChangeHandler &och) {
+    // Delete the old updatesCompleteUntil triple if it exists
+    const std::string updatesCompleteUntil = std::to_string(_stats.getLatestDatabaseState().sequenceNumber);
+    ttl::Triple updatesCompleteUntilTriple = {
+        cnst::MakePrefixedName(cnst::NAMESPACE_OSM2RDF_META, cnst::NAME_INFO),
+        cnst::MakePrefixedName(cnst::NAMESPACE_OSM2RDF_META, cnst::NAME_UPDATES_COMPLETE_UNTIL),
+        cnst::QUERY_VAR_VAL
+    };
+
+    const auto deleteQuery = _queryWriter.writeDeleteTripleQuery(updatesCompleteUntilTriple);
+    och.runUpdateQuery(sparql::UpdateOperation::DELETE, deleteQuery, cnst::PREFIXES_FOR_METADATA_TRIPLES);
+
+    // Create a new triple for the updatesCompleteUntil
+    updatesCompleteUntilTriple.object = "\"" + updatesCompleteUntil + "\"^^" + cnst::IRI_XSD_INT;
+
+    // Create a triple for the date modified
+    const std::string dateModified = util::currentIsoTime();
+    const ttl::Triple dateModifiedTriple = {
+        cnst::MakePrefixedName(cnst::NAMESPACE_OSM2RDF_META, cnst::NAME_INFO),
+        cnst::MakePrefixedName(cnst::NAMESPACE_OSM2RDF_META, cnst::NAME_DATE_MODIFIED),
+        "\"" + dateModified + "\"^^" + cnst::IRI_XSD_DATE_TIME
+    };
+
+    // Insert the new metadata triples into the database
+    const auto query = _queryWriter.writeInsertQuery({
+        to_string(dateModifiedTriple),
+        to_string(updatesCompleteUntilTriple)
+    });
+
+    och.runUpdateQuery(sparql::UpdateOperation::INSERT, query,
+                       cnst::PREFIXES_FOR_METADATA_TRIPLES);
+}
+

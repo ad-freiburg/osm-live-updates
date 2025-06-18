@@ -47,7 +47,7 @@ olu::sparql::QueryWriter::writeInsertQuery(const std::vector<std::string>& tripl
 
 // _________________________________________________________________________________________________
 std::string
-olu::sparql::QueryWriter::writeDeleteQuery(const std::set<id_t> &ids,
+olu::sparql::QueryWriter::writeDeleteOsmObjectQuery(const std::set<id_t> &ids,
                                            const std::string &osmTag) const {
     std::string optionalPredicates;
     if (osmTag == cnst::NAMESPACE_OSM_NODE) {
@@ -78,6 +78,15 @@ olu::sparql::QueryWriter::writeDeleteQuery(const std::set<id_t> &ids,
         "FILTER (! STRSTARTS(STR(?p1), STR(" + cnst::NAMESPACE_OGC + ":))) . "
         "OPTIONAL {" + optionalPredicates +
         getTripleClause("?o1", "?pred", "?o2") + "}" );
+    oss << " }";
+    return oss.str();
+}
+
+// _________________________________________________________________________________________________
+std::string olu::sparql::QueryWriter::writeDeleteTripleQuery(ttl::Triple triple) const {
+    std::stringstream oss;
+    oss << "DELETE WHERE { ";
+    oss << wrapWithGraphOptional(getTripleClause(triple));
     oss << " }";
     return oss.str();
 }
@@ -388,4 +397,9 @@ std::string olu::sparql::QueryWriter::getTripleClause(const std::string& subject
                                                       const std::string& predicate,
                                                       const std::string& object) {
     return subject + " " + predicate + " " + object + " . ";
+}
+
+// _________________________________________________________________________________________________
+std::string olu::sparql::QueryWriter::getTripleClause(const ttl::Triple& triple) {
+    return getTripleClause(triple.subject, triple.predicate, triple.object);
 }
