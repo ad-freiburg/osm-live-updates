@@ -27,7 +27,6 @@
 #include "config/Config.h"
 
 namespace olu::sparql {
-
     /**
      *  Convenience class for some functions that return SPARQL queries.
      */
@@ -120,6 +119,16 @@ namespace olu::sparql {
         * @returns A SPARQL query for tags and timestamp of the given subject
         */
         [[nodiscard]] std::string writeQueryForTagsAndMetaInfo(const std::string &subject) const;
+
+        /**
+         * @returns A SPARQL query that returns the OSM2RDF version
+         */
+        [[nodiscard]] std::string writeQueryForOsm2RdfVersion() const;
+
+        /**
+        * @returns A SPARQL query that returns the OSM2RDF options
+        */
+        [[nodiscard]] std::string writeQueryForOsm2RdfOptions() const;
 
         private:
         config::Config _config;

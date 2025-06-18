@@ -39,6 +39,7 @@
 #include "osm/OsmChangeHandler.h"
 #include "osm/OsmDataFetcherQLever.h"
 #include "osm/OsmDataFetcherSparql.h"
+#include "osm/Osm2ttl.h"
 #include "config/Constants.h"
 #include "util/Logger.h"
 
@@ -89,6 +90,10 @@ olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config)
 
 // _________________________________________________________________________________________________
 void olu::osm::OsmUpdater::run() {
+    // Check if the osm2rdf version that was used to create the dump on the SPARQL endpoint is the
+    // same that is used in this program.
+    checkOsm2RdfVersions();
+
     // Handle either local directory with change files or external one depending on the user
     // input
     if (!_config.changeFileDir.empty()) {
@@ -262,5 +267,23 @@ void olu::osm::OsmUpdater::deleteTmpDir() {
     } catch (const std::filesystem::filesystem_error& e) {
         util::Logger::log(util::LogEvent::ERROR, e.what());
         throw OsmUpdaterException("Error while removing temporary files.");
+    }
+}
+
+// _________________________________________________________________________________________________
+void olu::osm::OsmUpdater::checkOsm2RdfVersions() const {
+    try {
+        if (const std::string osm2rdfVersionEndpoint = _odf->fetchOsm2RdfVersion();
+            osm2rdfVersionEndpoint != Osm2ttl::getGitInfo()) {
+            util::Logger::log(util::LogEvent::WARNING, "The osm2rdf version on the SPARQL"
+                                                       " endpoint (" + osm2rdfVersionEndpoint +
+                                                       ") is different from the one used in this "
+                                                       "program (" + Osm2ttl::getGitInfo() + ")");
+        }
+    } catch (const OsmDataFetcherException &e) {
+        util::Logger::log(util::LogEvent::WARNING,
+                          "Could not verify that the osm2rdf version that was on the SPARQL"
+                          " endpoint. Please make sure that the osm2rdf version that was used to"
+                          " create the dump is the same as the one used in this program.");
     }
 }

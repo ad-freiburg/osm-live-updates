@@ -19,6 +19,7 @@
 #ifndef OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 #define OSM_LIVE_UPDATES_OSMDATAFETCHER_H
 
+#include <map>
 #include <set>
 #include <string>
 
@@ -179,6 +180,22 @@ namespace olu::osm {
          * @return The ids of all relations that reference the given relations.
          */
         virtual std::vector<id_t> fetchRelationsReferencingRelations(const std::set<id_t> &relationIds){return {};}
+
+        /**
+        * Fetches the osm2rdf version of the initial dump from the SPARQL endpoint.
+        *
+        * @return The osm2rdf version for the initial dump or an empty string,
+        * if no or multiple versions are found.
+        */
+        virtual std::string fetchOsm2RdfVersion() { return{}; }
+
+        /**
+         * Fetches the osm2rdf-options used to create the initial dump from the SPARQL endpoint.
+         *
+         * @return A map containing the osm2rdf-options, where the key is the option name and the
+         * value is the option value.
+         */
+        virtual std::map<std::string, std::string> fetchOsm2RdfOptions() { return {}; }
     };
 } // namespace olu
 

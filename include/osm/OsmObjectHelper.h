@@ -115,6 +115,17 @@ namespace olu::osm {
          * in the change file
          */
         static ChangeAction getChangeAction(const osmium::OSMObject &osmObject);
+
+        /**
+         * Parses an osm2rdf option from an IRI.
+         *
+         * The option is expected to be in the 'OSM2RDF_META' namespace, e.g.,
+         * "<https://osm2rdf.cs.uni-freiburg.de/rdf/meta#no-area-facts>"
+         *
+         * @param optionIRI The option IRI to parse.
+         * @return The name of the option, e.g., "no-area-facts".
+         */
+        static std::string parseOsm2rdfOptionName(std::string_view optionIRI);
     };
 
     /**

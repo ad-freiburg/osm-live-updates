@@ -161,9 +161,7 @@ void olu::osm::OsmChangeHandler::run() {
 
     try {
         util::Logger::log(util::LogEvent::INFO, "Converting osm data to triples...");
-        _stats->startTimeOsm2RdfConversion();
-        Osm2ttl(_config).convert();
-        _stats->endTimeOsm2RdfConversion();
+        Osm2ttl(_config, _odf, _stats).convert();
     } catch (std::exception &e) {
         util::Logger::log(util::LogEvent::ERROR, e.what());
         throw OsmChangeHandlerException("Exception while trying to convert osm element to"

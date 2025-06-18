@@ -62,6 +62,10 @@ namespace olu::osm {
 
         std::vector<id_t>
         fetchRelationsReferencingRelations(const std::set<id_t> &relationIds) override;
+
+        std::string fetchOsm2RdfVersion() override;
+
+        std::map<std::string, std::string> fetchOsm2RdfOptions() override;
     private:
         config::Config _config;
         StatisticsHandler* _stats;

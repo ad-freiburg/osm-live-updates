@@ -513,6 +513,46 @@ olu::osm::OsmDataFetcherSparql::fetchRelationsReferencingRelations(const std::se
 }
 
 // _________________________________________________________________________________________________
+std::string olu::osm::OsmDataFetcherSparql::fetchOsm2RdfVersion() {
+    const auto response = runQuery(_queryWriter.writeQueryForOsm2RdfVersion(),
+                             cnst::PREFIXES_FOR_OSM2RDF_VERSION);
+
+    std::set<std::string> versions;
+    for (auto doc = _parser.iterate(response); auto binding : getBindings(doc)) {
+         auto version = getValue<std::string>(binding[cnst::NAME_VALUE]);
+         versions.insert(util::XmlHelper::parseRdfString<std::string>(version));
+    }
+
+    if (versions.size() == 0) {
+        throw OsmDataFetcherException("Could not fetch osm2rdf version from SPARQL endpoint.");
+    }
+
+    if (versions.size() > 1) {
+        throw OsmDataFetcherException("SPARQL endpoint returned multiple different osm2rdf"
+                                      " versions.");
+    }
+
+    return *versions.begin();
+}
+
+// _________________________________________________________________________________________________
+std::map<std::string, std::string> olu::osm::OsmDataFetcherSparql::fetchOsm2RdfOptions() {
+    const auto response = runQuery(_queryWriter.writeQueryForOsm2RdfOptions(),
+                            cnst::PREFIXES_FOR_OSM2RDF_OPTIONS);
+
+    std::map<std::string, std::string> options;
+    for (auto doc = _parser.iterate(response); auto binding : getBindings(doc)) {
+        const auto optionIRI =  getValue<std::string_view>(binding[cnst::NAME_OPTION]);
+        const auto optionValue = getValue<std::string>(binding[cnst::NAME_VALUE]);
+
+        options.insert_or_assign(OsmObjectHelper::parseOsm2rdfOptionName(optionIRI),
+                                 util::XmlHelper::parseRdfString<std::string>(optionValue));
+    }
+
+    return options;
+}
+
+// _________________________________________________________________________________________________
 template <typename T> std::vector<T>
 olu::osm::OsmDataFetcherSparql::parseValueList(const std::string_view &list,
                                          const std::function<T(std::string)> function) {

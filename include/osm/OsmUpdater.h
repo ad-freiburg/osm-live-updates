@@ -83,6 +83,12 @@ namespace olu::osm {
         * Delete /tmp dir
         */
         static void deleteTmpDir();
+
+        /**
+         * Compares the version of osm2rdf on the SPARQL endpoint with the one used in this program
+         * and logs a warning if they differ.
+         */
+        void checkOsm2RdfVersions() const;
     };
 
     /**

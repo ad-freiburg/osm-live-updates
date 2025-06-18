@@ -230,11 +230,13 @@ namespace olu::config::constants {
     const static inline std::string NAME_TIMESTAMP = "timestamp";
     const static inline std::string NAME_VERSION = "version";
     const static inline std::string NAME_CHANGESET = "changeset";
-    const static inline std::string NAME_OSM_NODE_ =  "osm_node_";
-    const static inline std::string NAME_NODE =  "node";
-    const static inline std::string NAME_NODES =  "nodes";
-    const static inline std::string NAME_WAY =  "way";
-    const static inline std::string NAME_REL =  "rel";
+    const static inline std::string NAME_OSM_NODE_ = "osm_node_";
+    const static inline std::string NAME_NODE = "node";
+    const static inline std::string NAME_NODES = "nodes";
+    const static inline std::string NAME_WAY = "way";
+    const static inline std::string NAME_REL = "rel";
+    const static inline std::string NAME_INFO = "info";
+    const static inline std::string NAME_OPTION = "option";
 
     /// Prefixed names -----------------------------------------------------------------------------
     static std::string MakePrefixedName(const std::string &prefix, const std::string &name) {
@@ -268,6 +270,10 @@ namespace olu::config::constants {
     const static inline std::string PREFIXED_OSM_META_CHANGESET = MakePrefixedName(NAMESPACE_OSM_META, NAME_CHANGESET);
 
     const static inline std::string PREFIXED_RDF_TYPE = MakePrefixedName(NAMESPACE_RDF, NAME_TYPE);
+
+    const static inline std::string PREFIXED_OSM2RDF_META_OPTION = MakePrefixedName(NAMESPACE_OSM2RDF_META, NAME_OPTION);
+    const static inline std::string PREFIXED_OSM2RDF_META_INFO = MakePrefixedName(NAMESPACE_OSM2RDF_META, NAME_INFO);
+    const static inline std::string PREFIXED_OSM2RDF_META_VERSION = MakePrefixedName(NAMESPACE_OSM2RDF_META, NAME_VERSION);
 
     /// Prefix declarations ------------------------------------------------------------------------
     const static inline std::vector DEFAULT_PREFIXES {
@@ -326,6 +332,14 @@ namespace olu::config::constants {
     const static inline std::vector PREFIXES_FOR_RELATIONS_REFERENCING_RELATIONS {
             PREFIX_DECL_OSM2RDF_MEMBER, PREFIX_DECL_OSM_REL};
 
+    const static inline std::vector PREFIXES_FOR_OSM2RDF_VERSION {
+            PREFIX_DECL_OSM2RDF_META
+    };
+
+    const static inline std::vector PREFIXES_FOR_OSM2RDF_OPTIONS {
+            PREFIX_DECL_OSM2RDF_META
+    };
+
     // Query variables -----------------------------------------------------------------------------
     static std::string MakeQueryVar(const std::string &name) {
             return "?" + name;
@@ -347,6 +361,7 @@ namespace olu::config::constants {
     const static inline std::string QUERY_VAR_MEMBER_IDS = MakeQueryVar(NAME_MEMBER_IDS);
     const static inline std::string QUERY_VAR_MEMBER_ROLES = MakeQueryVar(NAME_MEMBER_ROLES);
     const static inline std::string QUERY_VAR_MEMBER_POSS = MakeQueryVar(NAME_MEMBER_POSS);
+    const static inline std::string QUERY_VAR_OPTION = MakeQueryVar(NAME_OPTION);
 
     // Options and output --------------------------------------------------------------------------
     const static inline std::string HELP_OPTION_SHORT = "h";
