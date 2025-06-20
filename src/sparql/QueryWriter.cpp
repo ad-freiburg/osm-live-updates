@@ -345,6 +345,17 @@ std::string olu::sparql::QueryWriter::writeQueryForOsm2RdfOptions() const {
 }
 
 // _________________________________________________________________________________________________
+std::string olu::sparql::QueryWriter::writeQueryForUpdatesCompleteUntil() const {
+    std::ostringstream oss;
+    oss << "SELECT " + cnst::QUERY_VAR_SEQUENCE_NUMBER + " ";
+    oss << getFromClauseOptional();
+    oss << "WHERE { ";
+    oss << getTripleClause(cnst::PREFIXED_OSM2RDF_META_INFO, cnst::PREFIXED_OSM2RDF_META_UPDATES_COMPLETE_UNTIL, cnst::QUERY_VAR_SEQUENCE_NUMBER);
+    oss << "}";
+    return oss.str();
+}
+
+// _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::getFromClauseOptional() const {
     return  _config.graphUri.empty() ? "" : "FROM <" +_config.graphUri + "> ";
 }

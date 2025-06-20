@@ -137,6 +137,12 @@ namespace olu::sparql {
         */
         [[nodiscard]] std::string writeQueryForOsm2RdfOptions() const;
 
+        /**
+         * @returns A SPARQL query that returns the sequence number for the
+         * 'osm2rdfmeta:updatesCompleteUntil' triple.
+         */
+        [[nodiscard]] std::string writeQueryForUpdatesCompleteUntil() const;
+
         private:
         config::Config _config;
 

@@ -680,6 +680,41 @@ std::map<std::string, std::string> olu::osm::OsmDataFetcherQLever::fetchOsm2RdfO
 }
 
 // _________________________________________________________________________________________________
+int olu::osm::OsmDataFetcherQLever::fetchUpdatesCompleteUntil() {
+    std::set<int> updatesCompleteUntilResponses;
+
+    runQuery(_queryWriter.writeQueryForUpdatesCompleteUntil(),
+             cnst::PREFIXES_FOR_METADATA_TRIPLES,
+             [&updatesCompleteUntilResponses](simdjson::ondemand::value results) {
+                 for (auto result: results) {
+                     try {
+                         auto seqNumResponse = getValue<std::string>(result.value());
+                         int seqNum = util::XmlHelper::parseRdfString<int>(seqNumResponse);
+                         updatesCompleteUntilResponses.insert(seqNum);
+                     } catch (std::exception &e) {
+                         util::Logger::log(util::LogEvent::WARNING,
+                                           "SPARQL endpoint returned invalid sequence number for "
+                                           "'osm2rdfmeta:updatesCompleteUntil' predicate: "
+                                           + std::string(e.what()));
+                     }
+                 }
+             });
+
+    // Return 0 if no updatesCompleteUntil triple is found
+    if (updatesCompleteUntilResponses.empty()) {
+        return 0;
+    }
+
+    if (updatesCompleteUntilResponses.size() > 1) {
+        util::Logger::log(util::LogEvent::WARNING,
+                          "Multiple updatesCompleteUntil triples found in the SPARQL endpoint.");
+        return 0;
+    }
+
+    return *updatesCompleteUntilResponses.begin();
+}
+
+// _________________________________________________________________________________________________
 template<typename T>
 std::vector<T>
 olu::osm::OsmDataFetcherQLever::parseValueList(const std::string_view &list,

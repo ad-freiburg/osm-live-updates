@@ -518,9 +518,10 @@ std::string olu::osm::OsmDataFetcherSparql::fetchOsm2RdfVersion() {
                              cnst::PREFIXES_FOR_OSM2RDF_VERSION);
 
     std::set<std::string> versions;
-    for (auto doc = _parser.iterate(response); auto binding : getBindings(doc)) {
-         auto version = getValue<std::string>(binding[cnst::NAME_VALUE]);
-         versions.insert(util::XmlHelper::parseRdfString<std::string>(version));
+    for (auto doc = _parser.iterate(response);
+        auto binding : getBindings(doc)) {
+        auto version = getValue<std::string>(binding[cnst::NAME_VALUE]);
+        versions.insert(util::XmlHelper::parseRdfString<std::string>(version));
     }
 
     if (versions.size() == 0) {
@@ -541,7 +542,8 @@ std::map<std::string, std::string> olu::osm::OsmDataFetcherSparql::fetchOsm2RdfO
                             cnst::PREFIXES_FOR_OSM2RDF_OPTIONS);
 
     std::map<std::string, std::string> options;
-    for (auto doc = _parser.iterate(response); auto binding : getBindings(doc)) {
+    for (auto doc = _parser.iterate(response);
+        auto binding : getBindings(doc)) {
         const auto optionIRI =  getValue<std::string_view>(binding[cnst::NAME_OPTION]);
         const auto optionValue = getValue<std::string>(binding[cnst::NAME_VALUE]);
 
@@ -550,6 +552,40 @@ std::map<std::string, std::string> olu::osm::OsmDataFetcherSparql::fetchOsm2RdfO
     }
 
     return options;
+}
+
+// _________________________________________________________________________________________________
+int olu::osm::OsmDataFetcherSparql::fetchUpdatesCompleteUntil() {
+    const auto response = runQuery(_queryWriter.writeQueryForUpdatesCompleteUntil(),
+        cnst::PREFIXES_FOR_OSM2RDF_VERSION);
+
+    std::set<int> updatesCompleteUntilResponses;
+
+    for (auto doc = _parser.iterate(response);
+        auto binding : getBindings(doc)) {
+         try {
+            auto seqNum = getValue<int>(binding[cnst::NAME_SEQUENCE_NUMBER]);
+            updatesCompleteUntilResponses.insert(seqNum);
+         } catch (std::exception &e) {
+             util::Logger::log(util::LogEvent::WARNING,
+                               "SPARQL endpoint returned invalid sequence number for "
+                               "'osm2rdfmeta:updatesCompleteUntil' predicate: "
+                               + std::string(e.what()));
+         }
+    }
+
+    // Return 0 if no updatesCompleteUntil triple is found
+    if (updatesCompleteUntilResponses.empty()) {
+        return 0;
+    }
+
+    if (updatesCompleteUntilResponses.size() > 1) {
+        util::Logger::log(util::LogEvent::WARNING,
+                          "Multiple updatesCompleteUntil triples found in the SPARQL endpoint.");
+        return 0;
+    }
+
+    return *updatesCompleteUntilResponses.begin();
 }
 
 // _________________________________________________________________________________________________

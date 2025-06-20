@@ -237,6 +237,7 @@ namespace olu::config::constants {
     const static inline std::string NAME_REL = "rel";
     const static inline std::string NAME_INFO = "info";
     const static inline std::string NAME_OPTION = "option";
+    const static inline std::string NAME_SEQUENCE_NUMBER = "sequenceNumber";
     const static inline std::string NAME_DATE_MODIFIED = "dateModified";
     const static inline std::string NAME_UPDATES_COMPLETE_UNTIL = "updatesCompleteUntil";
 
@@ -276,6 +277,8 @@ namespace olu::config::constants {
     const static inline std::string PREFIXED_OSM2RDF_META_OPTION = MakePrefixedName(NAMESPACE_OSM2RDF_META, NAME_OPTION);
     const static inline std::string PREFIXED_OSM2RDF_META_INFO = MakePrefixedName(NAMESPACE_OSM2RDF_META, NAME_INFO);
     const static inline std::string PREFIXED_OSM2RDF_META_VERSION = MakePrefixedName(NAMESPACE_OSM2RDF_META, NAME_VERSION);
+    const static inline std::string PREFIXED_OSM2RDF_META_UPDATES_COMPLETE_UNTIL = MakePrefixedName(NAMESPACE_OSM2RDF_META, NAME_UPDATES_COMPLETE_UNTIL);
+    const static inline std::string PREFIXED_OSM2RDF_META_DATE_MODIFIED = MakePrefixedName(NAMESPACE_OSM2RDF_META, NAME_DATE_MODIFIED);
 
     /// Prefix declarations ------------------------------------------------------------------------
     const static inline std::vector DEFAULT_PREFIXES {
@@ -368,6 +371,8 @@ namespace olu::config::constants {
     const static inline std::string QUERY_VAR_MEMBER_ROLES = MakeQueryVar(NAME_MEMBER_ROLES);
     const static inline std::string QUERY_VAR_MEMBER_POSS = MakeQueryVar(NAME_MEMBER_POSS);
     const static inline std::string QUERY_VAR_OPTION = MakeQueryVar(NAME_OPTION);
+    const static inline std::string QUERY_VAR_SEQUENCE_NUMBER = MakeQueryVar(NAME_SEQUENCE_NUMBER);
+
 
     // Triple patterns --------------------------------------------------------------------------
     const static inline std::string IRI_XSD_DATE_TIME = "<" + NAMESPACE_IRI_XSD + "dateTime>";

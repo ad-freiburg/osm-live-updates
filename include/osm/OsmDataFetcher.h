@@ -196,6 +196,17 @@ namespace olu::osm {
          * value is the option value.
          */
         virtual std::map<std::string, std::string> fetchOsm2RdfOptions() { return {}; }
+
+
+        /**
+         * Fetches the 'osm2rdfmeta:updatesCompleteUntil' metadata triple from the SPARQL endpoint,
+         * and returns the sequence number until which the updates are complete.
+         *
+         * Returns 0 if the triple is not found or if the sequence number is not a valid integer.
+         *
+         * @return The sequence number until which the updates are complete, or 0 if not found.
+         */
+        virtual int fetchUpdatesCompleteUntil() { return {}; }
     };
 } // namespace olu
 

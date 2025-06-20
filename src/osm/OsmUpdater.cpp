@@ -112,9 +112,26 @@ void olu::osm::OsmUpdater::run() {
 
         insertMetadataTriples(och);
     } else {
+        // Fetch the latest database state from the replication server
+        const OsmDatabaseState latestState = _repServer.fetchLatestDatabaseState();
+        _stats.setLatestDatabaseState(latestState);
+        util::Logger::log(util::LogEvent::INFO,
+                          "Latest database state on replication server is: "
+                           + olu::osm::to_string(latestState));
+
         _stats.startTimeDeterminingSequenceNumber();
         decideStartSequenceNumber();
         _stats.endTimeDeterminingSequenceNumber();
+
+        if (_stats.getStartDatabaseState().sequenceNumber == latestState.sequenceNumber) {
+            util::Logger::log(util::LogEvent::INFO, "Database is already up to date. DONE.");
+            return;
+        }
+
+        if (_stats.getStartDatabaseState().sequenceNumber > latestState.sequenceNumber) {
+            throw OsmUpdaterException("Start sequence number is greater than the latest sequence "
+                                      "number on the replication server.");
+        }
 
         _stats.startTimeFetchingChangeFiles();
         fetchChangeFiles();
@@ -148,23 +165,40 @@ void olu::osm::OsmUpdater::run() {
 
 // _________________________________________________________________________________________________
 void olu::osm::OsmUpdater::decideStartSequenceNumber() {
+    // Check if the user specified a sequence number
     if (_config.sequenceNumber > 0) {
-        _stats.setStartDatabaseState({"", _config.sequenceNumber,});
+        util::Logger::log(util::LogEvent::INFO, "Start from user specified sequence number: " +
+                                                std::to_string(_config.sequenceNumber));
+        _stats.setStartDatabaseState({"", _config.sequenceNumber});
+        return;
     }
 
-    std::string timestamp;
-    if (_config.timestamp.empty()) {
-        util::Logger::log(util::LogEvent::INFO,
-                          "Fetch latest node-timestamp on SPARQL endpoint...");
-        timestamp = _odf->fetchLatestTimestampOfAnyNode();
-        util::Logger::log(util::LogEvent::INFO,
-                          "Latest node-timestamp on SPARQL endpoint is: " + timestamp);
-    } else {
-        timestamp = _config.timestamp;
+    // Check if the user specified a timestamp
+    if (!_config.timestamp.empty()) {
+        const std::string timestamp = _config.timestamp;
         util::Logger::log(util::LogEvent::INFO,
                           "Start from user specified timestamp: " + timestamp);
+
+        _repServer.fetchDatabaseStateForTimestamp(timestamp);
+        return;
     }
 
+    // Check if the SPARQL endpoint was already updated from olu once
+    // and pick up the sequence number
+    if (const auto seqNumFromEndpoint = _odf->fetchUpdatesCompleteUntil(); seqNumFromEndpoint > 0) {
+        util::Logger::log(util::LogEvent::INFO,
+                          "Start from SPARQL endpoint specified sequence number: " +
+                          std::to_string(seqNumFromEndpoint));
+        _stats.setStartDatabaseState({"", seqNumFromEndpoint});
+        return;
+    }
+
+    // Check SPARQL endpoint for the latest node timestamp
+    util::Logger::log(util::LogEvent::INFO,
+                      "Fetch latest node-timestamp on SPARQL endpoint...");
+    const std::string timestamp = _odf->fetchLatestTimestampOfAnyNode();
+    util::Logger::log(util::LogEvent::INFO,
+                      "Latest node-timestamp on SPARQL endpoint is: " + timestamp);
     _repServer.fetchDatabaseStateForTimestamp(timestamp);
 }
 
@@ -301,8 +335,8 @@ void olu::osm::OsmUpdater::insertMetadataTriples(OsmChangeHandler &och) {
     // Delete the old updatesCompleteUntil triple if it exists
     const std::string updatesCompleteUntil = std::to_string(_stats.getLatestDatabaseState().sequenceNumber);
     ttl::Triple updatesCompleteUntilTriple = {
-        cnst::MakePrefixedName(cnst::NAMESPACE_OSM2RDF_META, cnst::NAME_INFO),
-        cnst::MakePrefixedName(cnst::NAMESPACE_OSM2RDF_META, cnst::NAME_UPDATES_COMPLETE_UNTIL),
+        cnst::PREFIXED_OSM2RDF_META_INFO,
+        cnst::PREFIXED_OSM2RDF_META_UPDATES_COMPLETE_UNTIL,
         cnst::QUERY_VAR_VAL
     };
 
@@ -315,8 +349,8 @@ void olu::osm::OsmUpdater::insertMetadataTriples(OsmChangeHandler &och) {
     // Create a triple for the date modified
     const std::string dateModified = util::currentIsoTime();
     const ttl::Triple dateModifiedTriple = {
-        cnst::MakePrefixedName(cnst::NAMESPACE_OSM2RDF_META, cnst::NAME_INFO),
-        cnst::MakePrefixedName(cnst::NAMESPACE_OSM2RDF_META, cnst::NAME_DATE_MODIFIED),
+        cnst::PREFIXED_OSM2RDF_META_INFO,
+        cnst::PREFIXED_OSM2RDF_META_DATE_MODIFIED,
         "\"" + dateModified + "\"^^" + cnst::IRI_XSD_DATE_TIME
     };
 
