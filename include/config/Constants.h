@@ -440,19 +440,6 @@ namespace olu::config::constants {
     const static inline std::string TIME_STAMP_OPTION_HELP =
             "The time stamp to start the update process from.";
 
-    const static inline std::string BLANK_NODES_INFO = "Blank nodes are masked";
-    const static inline std::string BLANK_NODES_OPTION_SHORT = "";
-    const static inline std::string BLANK_NODES_OPTION_LONG = "no-blank-nodes";
-    const static inline std::string BLANK_NODES_OPTION_HELP =
-        "Avoid blank nodes by using a unique identifier for each member";
-
-    const static inline std::string WKT_PRECISION_INFO = "Precision for WKT Points: ";
-    const static inline std::string WKT_PRECISION_OPTION_SHORT = "";
-    const static inline std::string WKT_PRECISION_OPTION_LONG = "wkt-precision";
-    const static inline std::string WKT_PRECISION_OPTION_HELP =
-        "The precision for the WKT representation of the coordinates. Default is "
-        + std::to_string(Config::DEFAULT_WKT_PRECISION) + ".";
-
     const static inline std::string BATCH_SIZE_INFO = "Number of values per batch:";
     const static inline std::string BATCH_SIZE_OPTION_SHORT = "";
     const static inline std::string BATCH_SIZE_OPTION_LONG = "batch-size";
