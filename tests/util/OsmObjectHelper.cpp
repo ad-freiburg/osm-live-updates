@@ -482,3 +482,38 @@ TEST(OsmObjectHelper, getChangeAction) {
         EXPECT_EQ(olu::osm::OsmObjectHelper::getChangeAction(node), olu::osm::ChangeAction::MODIFY);
     }
 }
+
+// _________________________________________________________________________________________________
+TEST(OsmObjectHelper, parseOsm2RdfOption) {
+    {
+        constexpr std::string_view optionIRI = "<https://osm2rdf.cs.uni-freiburg.de/rdf/meta#add-way-metadata>";
+        EXPECT_EQ(olu::osm::OsmObjectHelper::parseOsm2rdfOptionName(optionIRI), "add-way-metadata");
+    }
+    {
+        constexpr std::string_view optionIRI = "https://osm2rdf.cs.uni-freiburg.de/rdf/meta#add-relation-metadata>";
+        EXPECT_EQ(olu::osm::OsmObjectHelper::parseOsm2rdfOptionName(optionIRI), "add-relation-metadata");
+    }
+    {
+        constexpr std::string_view optionIRI = "<https://osm2rdf.cs.uni-freiburg.de/rdf/meta#add-node-metadata";
+        EXPECT_EQ(olu::osm::OsmObjectHelper::parseOsm2rdfOptionName(optionIRI), "add-node-metadata");
+    }
+    {
+        constexpr std::string_view optionIRI = "https://osm2rdf.cs.uni-freiburg.de/rdf/meta#add-node-metadata";
+        EXPECT_EQ(olu::osm::OsmObjectHelper::parseOsm2rdfOptionName(optionIRI), "add-node-metadata");
+    }
+    {
+        constexpr std::string_view optionIRI = "<https://osm2rdf.cs.uni-freiburg.de/rdf/meta#>";
+        EXPECT_THROW(olu::osm::OsmObjectHelper::parseOsm2rdfOptionName(optionIRI),
+                     olu::osm::OsmObjectHelperException);
+    }
+    {
+        constexpr std::string_view optionIRI = "<https://www.openstreetmap.org/node/1>";
+        EXPECT_THROW(olu::osm::OsmObjectHelper::parseOsm2rdfOptionName(optionIRI),
+                     olu::osm::OsmObjectHelperException);
+    }
+    {
+        constexpr std::string_view optionIRI = "";
+        EXPECT_THROW(olu::osm::OsmObjectHelper::parseOsm2rdfOptionName(optionIRI),
+                     olu::osm::OsmObjectHelperException);
+    }
+}

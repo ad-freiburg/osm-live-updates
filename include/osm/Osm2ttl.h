@@ -19,22 +19,36 @@
 #ifndef OSM_LIVE_UPDATES_OSM2TTL_H
 #define OSM_LIVE_UPDATES_OSM2TTL_H
 
+#include "osm2rdf/Version.h"
 #include "osm2rdf/config/Config.h"
+
 #include "config/Config.h"
+#include "osm/OsmDataFetcher.h"
+#include "osm/StatisticsHandler.h"
 
 namespace olu::osm {
 
     class Osm2ttl {
     public:
-        explicit Osm2ttl(const olu::config::Config &config);
+        explicit Osm2ttl(const olu::config::Config &config, OsmDataFetcher *odf,
+                         StatisticsHandler *stats): _config(config), _odf(odf), _stats(stats) {}
 
         // Converts osm data to ttl triplets
         void convert() const;
+
+        static std::string getGitInfo() {
+            return osm2rdf::version::GIT_INFO;
+        }
+
     private:
         olu::config::Config _config;
+        olu::osm::OsmDataFetcher* _odf;
+        olu::osm::StatisticsHandler* _stats;
 
         template <typename T>
         static void run(const osm2rdf::config::Config& config);
+
+        std::vector<std::string> getArgsFromEndpoint() const;
     };
 
 } // namespace olu::osm

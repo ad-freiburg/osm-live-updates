@@ -92,18 +92,6 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
         constants::SEQUENCE_NUMBER_OPTION_LONG,
         constants::SEQUENCE_NUMBER_OPTION_HELP);
 
-    const auto noBlankNodesOp = parser.add<popl::Switch,
-        popl::Attribute::advanced>(
-        constants::BLANK_NODES_OPTION_SHORT,
-        constants::BLANK_NODES_OPTION_LONG,
-        constants::BLANK_NODES_OPTION_HELP);
-
-    const auto wktPrecisionOp = parser.add<popl::Value<u_int16_t>,
-        popl::Attribute::advanced>(
-        constants::WKT_PRECISION_OPTION_SHORT,
-        constants::WKT_PRECISION_OPTION_LONG,
-        constants::WKT_PRECISION_OPTION_HELP);
-
     const auto batchSizeOp = parser.add<popl::Value<u_int32_t>,
         popl::Attribute::advanced>(
         constants::BATCH_SIZE_OPTION_SHORT,
@@ -216,8 +204,6 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
             accessToken = sparqlAccessTokenOp->value();
         }
 
-        noBlankNodes = noBlankNodesOp->is_set();
-
         if (sparqlUpdateUri->is_set()) {
             sparqlEndpointUriForUpdates = sparqlUpdateUri->value();
             if (!util::URLHelper::isValidUri(sparqlEndpointUriForUpdates)) {
@@ -237,10 +223,6 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
 
         if (sequenceNumberOp->is_set()) {
             sequenceNumber = sequenceNumberOp->value();
-        }
-
-        if (wktPrecisionOp->is_set()) {
-            wktPrecision = wktPrecisionOp->value();
         }
 
         if (batchSizeOp->is_set()) {
@@ -323,15 +305,6 @@ void olu::config::Config::printInfo() const {
             util::Logger::log(util::LogEvent::CONFIG,
                               constants::TIME_STAMP_INFO + " " + timestamp);
         }
-    }
-
-    if (noBlankNodes) {
-        util::Logger::log(util::LogEvent::CONFIG, constants::BLANK_NODES_INFO);
-    }
-
-    if (wktPrecision != DEFAULT_WKT_PRECISION) {
-        util::Logger::log(util::LogEvent::CONFIG,
-                          constants::WKT_PRECISION_INFO + " " + std::to_string(wktPrecision));
     }
 
     if (batchSize != DEFAULT_BATCH_SIZE) {

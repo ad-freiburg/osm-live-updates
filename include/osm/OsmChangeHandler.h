@@ -50,6 +50,13 @@ namespace olu::osm {
         explicit OsmChangeHandler(const config::Config &config, OsmDataFetcher &odf,
                                   StatisticsHandler &stats);
         void run();
+
+        /**
+         * Send a SPARQL update query to the endpoint
+         */
+        void runUpdateQuery(const sparql::UpdateOperation & updateOp, const std::string& query,
+                            const std::vector<std::string> &prefixes);
+
     private:
         config::Config _config;
         sparql::SparqlWrapper _sparql;
@@ -166,12 +173,6 @@ namespace olu::osm {
          * The result is written to a new file which is used as input for osm2rdf.
          */
         static void mergeAndSortDummyFiles();
-
-        /**
-         * Send a SPARQL update query to the endpoint
-         */
-        void runUpdateQuery(const sparql::UpdateOperation & updateOp, const std::string& query,
-                            const std::vector<std::string> &prefixes);
 
         /**
          * Delete all relevant triples from the database, while showing a progress bar on std::cout

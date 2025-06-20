@@ -47,7 +47,7 @@ olu::sparql::QueryWriter::writeInsertQuery(const std::vector<std::string>& tripl
 
 // _________________________________________________________________________________________________
 std::string
-olu::sparql::QueryWriter::writeDeleteQuery(const std::set<id_t> &ids,
+olu::sparql::QueryWriter::writeDeleteOsmObjectQuery(const std::set<id_t> &ids,
                                            const std::string &osmTag) const {
     std::string optionalPredicates;
     if (osmTag == cnst::NAMESPACE_OSM_NODE) {
@@ -78,6 +78,15 @@ olu::sparql::QueryWriter::writeDeleteQuery(const std::set<id_t> &ids,
         "FILTER (! STRSTARTS(STR(?p1), STR(" + cnst::NAMESPACE_OGC + ":))) . "
         "OPTIONAL {" + optionalPredicates +
         getTripleClause("?o1", "?pred", "?o2") + "}" );
+    oss << " }";
+    return oss.str();
+}
+
+// _________________________________________________________________________________________________
+std::string olu::sparql::QueryWriter::writeDeleteTripleQuery(ttl::Triple triple) const {
+    std::stringstream oss;
+    oss << "DELETE WHERE { ";
+    oss << wrapWithGraphOptional(getTripleClause(triple));
     oss << " }";
     return oss.str();
 }
@@ -292,6 +301,7 @@ olu::sparql::QueryWriter::writeQueryForRelationsReferencingRelations(const std::
     return oss.str();
 }
 
+// _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeQueryForTagsAndMetaInfo(const std::string &subject) const {
     std::ostringstream oss;
     oss << "SELECT ";
@@ -309,6 +319,39 @@ std::string olu::sparql::QueryWriter::writeQueryForTagsAndMetaInfo(const std::st
     oss << wrapWithUnion(getTripleClause(subject, cnst::PREFIXED_OSM_META_CHANGESET, cnst::QUERY_VAR_CHANGESET));
     oss << " }";
 
+    return oss.str();
+}
+
+// _________________________________________________________________________________________________
+std::string olu::sparql::QueryWriter::writeQueryForOsm2RdfVersion() const {
+    std::ostringstream oss;
+    oss << "SELECT " + cnst::QUERY_VAR_VAL + " ";
+    oss << getFromClauseOptional();
+    oss << "WHERE { ";
+    oss << getTripleClause(cnst::PREFIXED_OSM2RDF_META_INFO, cnst::PREFIXED_OSM2RDF_META_VERSION, cnst::QUERY_VAR_VAL);
+    oss << "}";
+    return oss.str();
+}
+
+// _________________________________________________________________________________________________
+std::string olu::sparql::QueryWriter::writeQueryForOsm2RdfOptions() const {
+    std::ostringstream oss;
+    oss << "SELECT " + cnst::QUERY_VAR_OPTION + " " + cnst::QUERY_VAR_VAL + " ";
+    oss << getFromClauseOptional();
+    oss << "WHERE { ";
+    oss << getTripleClause(cnst::PREFIXED_OSM2RDF_META_OPTION, cnst::QUERY_VAR_OPTION, cnst::QUERY_VAR_VAL);
+    oss << "}";
+    return oss.str();
+}
+
+// _________________________________________________________________________________________________
+std::string olu::sparql::QueryWriter::writeQueryForUpdatesCompleteUntil() const {
+    std::ostringstream oss;
+    oss << "SELECT " + cnst::QUERY_VAR_SEQUENCE_NUMBER + " ";
+    oss << getFromClauseOptional();
+    oss << "WHERE { ";
+    oss << getTripleClause(cnst::PREFIXED_OSM2RDF_META_INFO, cnst::PREFIXED_OSM2RDF_META_UPDATES_COMPLETE_UNTIL, cnst::QUERY_VAR_SEQUENCE_NUMBER);
+    oss << "}";
     return oss.str();
 }
 
@@ -365,4 +408,9 @@ std::string olu::sparql::QueryWriter::getTripleClause(const std::string& subject
                                                       const std::string& predicate,
                                                       const std::string& object) {
     return subject + " " + predicate + " " + object + " . ";
+}
+
+// _________________________________________________________________________________________________
+std::string olu::sparql::QueryWriter::getTripleClause(const ttl::Triple& triple) {
+    return getTripleClause(triple.subject, triple.predicate, triple.object);
 }

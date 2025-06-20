@@ -36,9 +36,6 @@
 namespace cnst = olu::config::constants;
 
 // _________________________________________________________________________________________________
-olu::osm::Osm2ttl::Osm2ttl(const config::Config& config) : _config(config) {}
-
-// _________________________________________________________________________________________________
 void olu::osm::Osm2ttl::convert() const {
     // Create a directory for scratch, if not already existent
     if (!std::filesystem::exists(cnst::PATH_TO_SCRATCH_DIRECTORY)) {
@@ -46,24 +43,7 @@ void olu::osm::Osm2ttl::convert() const {
     }
 
     auto config = osm2rdf::config::Config();
-    std::vector<std::string>
-    arguments = {   " ",
-                   cnst::PATH_TO_INPUT_FILE,
-                   "-o",
-                   cnst::PATH_TO_OUTPUT_FILE,
-                   "-t",
-                   cnst::PATH_TO_SCRATCH_DIRECTORY,
-                   "--" + osm2rdf::config::constants::OUTPUT_COMPRESS_OPTION_LONG,
-                   "none",
-                   "--" + osm2rdf::config::constants::OGC_GEO_TRIPLES_OPTION_LONG,
-                   "none",
-                    "--" + osm2rdf::config::constants::WKT_PRECISION_OPTION_LONG,
-                   std::to_string(_config.wktPrecision),
-                   };
-
-    if (_config.noBlankNodes) {
-        arguments.emplace_back("--" + osm2rdf::config::constants::BLANK_NODES_OPTION_LONG);
-    }
+    auto arguments = getArgsFromEndpoint();
 
     std::vector<char*> argv;
     for (const auto& arg : arguments) {
@@ -92,7 +72,9 @@ void olu::osm::Osm2ttl::convert() const {
         std::streambuf *coutbuf = std::cerr.rdbuf();
         std::cerr.rdbuf(out.rdbuf());
 
+        _stats->startTimeOsm2RdfConversion();
         run<osm2rdf::ttl::format::QLEVER>(config);
+        _stats->endTimeOsm2RdfConversion();
 
         std::cerr.rdbuf(coutbuf); //reset to standard output again
     } catch (const std::exception& e) {
@@ -128,3 +110,41 @@ void olu::osm::Osm2ttl::run(const osm2rdf::config::Config &config) {
     // All work done, close output
     output.close();
 }
+
+// _________________________________________________________________________________________________
+std::vector<std::string> olu::osm::Osm2ttl::getArgsFromEndpoint() const {
+    std::vector<std::string> arguments = {" ",
+       cnst::PATH_TO_INPUT_FILE,
+       "-o",
+       cnst::PATH_TO_OUTPUT_FILE,
+       "-t",
+       cnst::PATH_TO_SCRATCH_DIRECTORY,
+       "--" + osm2rdf::config::constants::OUTPUT_COMPRESS_OPTION_LONG,
+       "none"
+    };
+
+
+    std::map<std::string, std::string> argsFromEndpoint = _odf->fetchOsm2RdfOptions();
+    if (argsFromEndpoint.empty()) {
+        util::Logger::log(util::LogEvent::WARNING, "No osm2rdf options found on SPARQL "
+                                                   "endpoint, using default options.");
+        return arguments;
+    }
+
+    for (auto [optionName, optionValue] : argsFromEndpoint) {
+        if (optionValue.starts_with("false")) {
+            continue;
+        }
+
+        if (optionValue.starts_with("true")) {
+            arguments.emplace_back( "--" + optionName);
+            continue;
+        }
+
+        arguments.emplace_back("--" + optionName);
+        arguments.emplace_back(optionValue);
+    }
+
+    return arguments;
+}
+
