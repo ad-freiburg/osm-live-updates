@@ -285,3 +285,30 @@ olu::osm::OsmObjectHelper::getChangeAction(const osmium::OSMObject &osmObject) {
     if (osmObject.version() == 1) { return ChangeAction::CREATE; }
     return ChangeAction::MODIFY;
 }
+
+// _________________________________________________________________________________________________
+std::string olu::osm::OsmObjectHelper::parseOsm2rdfOptionName(std::string_view optionIRI) {
+    if (optionIRI.empty()) {
+       throw OsmObjectHelperException("Cannot parse option name from empty string.");
+    }
+
+    if (optionIRI.starts_with('<')) {
+        optionIRI = optionIRI.substr(1, optionIRI.size() - 1);
+    }
+
+    if (optionIRI.ends_with('>')) {
+        optionIRI = optionIRI.substr(0, optionIRI.size() - 1);
+    }
+
+    if (!optionIRI.starts_with(cnst::NAMESPACE_IRI_OSM2RDF_META)) {
+        const std::string msg = "Invalid osm2rdf option IRI: " + std::string(optionIRI);
+        throw OsmObjectHelperException(msg.c_str());
+    }
+
+    auto optionName = std::string(optionIRI.substr(cnst::NAMESPACE_IRI_OSM2RDF_META.size()));
+    if (optionName.empty()) {
+        throw OsmObjectHelperException("Empty osm2rdf option name.");
+    }
+
+    return optionName;
+}

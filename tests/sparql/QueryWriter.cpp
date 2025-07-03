@@ -55,7 +55,7 @@ namespace olu::sparql {
     TEST(QueryWriter, writeDeleteQuery) {
         {
             QueryWriter qw{config::Config()};
-            std::string query = qw.writeDeleteQuery({1960198, 1960199},
+            std::string query = qw.writeDeleteOsmObjectQuery({1960198, 1960199},
             "osmnode");
             ASSERT_EQ(
                     "DELETE { ?s ?p1 ?o1 . ?o1 ?p2 ?o2 . } "
@@ -68,7 +68,7 @@ namespace olu::sparql {
 
         {
             QueryWriter qw{config::Config()};
-            std::string query = qw.writeDeleteQuery({1960199},
+            std::string query = qw.writeDeleteOsmObjectQuery({1960199},
             "osmway");
             ASSERT_EQ(
                     "DELETE { ?s ?p1 ?o1 . ?o1 ?p2 ?o2 . } "

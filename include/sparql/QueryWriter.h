@@ -25,9 +25,9 @@
 
 #include "util/Types.h"
 #include "config/Config.h"
+#include "ttl/Triple.h"
 
 namespace olu::sparql {
-
     /**
      *  Convenience class for some functions that return SPARQL queries.
      */
@@ -45,7 +45,13 @@ namespace olu::sparql {
          * that are linked via another node
          */
         [[nodiscard]] std::string
-        writeDeleteQuery(const std::set<id_t> &ids, const std::string &osmTag) const;
+        writeDeleteOsmObjectQuery(const std::set<id_t> &ids, const std::string &osmTag) const;
+
+        /**
+         * @returns A SPARQL query that deletes the given triple
+         */
+        [[nodiscard]] std::string
+        writeDeleteTripleQuery(ttl::Triple triple) const;
 
         /**
          * @returns A SPARQL query that delete all triples with predicate 'osmmeta:...',
@@ -121,6 +127,22 @@ namespace olu::sparql {
         */
         [[nodiscard]] std::string writeQueryForTagsAndMetaInfo(const std::string &subject) const;
 
+        /**
+         * @returns A SPARQL query that returns the OSM2RDF version
+         */
+        [[nodiscard]] std::string writeQueryForOsm2RdfVersion() const;
+
+        /**
+        * @returns A SPARQL query that returns the OSM2RDF options
+        */
+        [[nodiscard]] std::string writeQueryForOsm2RdfOptions() const;
+
+        /**
+         * @returns A SPARQL query that returns the sequence number for the
+         * 'osm2rdfmeta:updatesCompleteUntil' triple.
+         */
+        [[nodiscard]] std::string writeQueryForUpdatesCompleteUntil() const;
+
         private:
         config::Config _config;
 
@@ -136,6 +158,8 @@ namespace olu::sparql {
         [[nodiscard]] static std::string getTripleClause(const std::string& subject,
                                                          const std::string& predicate,
                                                          const std::string& object);
+
+        [[nodiscard]] static std::string getTripleClause(const ttl::Triple &triple);
 
         [[nodiscard]] std::string wrapWithGraphOptional(const std::string& clause) const;
         [[nodiscard]] static std::string wrapWithUnion(const std::string& clause);

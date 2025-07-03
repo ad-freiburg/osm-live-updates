@@ -41,6 +41,14 @@ namespace olu::util {
       return oss.str();
     }
 
+    inline std::string currentIsoTime() {
+        char timeString[25];
+        struct tm t;
+        const auto n = std::chrono::system_clock::now();
+        const time_t time = std::chrono::system_clock::to_time_t(n);
+        strftime(timeString, 25, "%Y-%m-%dT%X", gmtime_r(&time, &t));
+        return std::string(timeString);
+    }
 }
 
 #endif  // OLU_UTIL_TIME_H

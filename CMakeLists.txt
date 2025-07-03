@@ -119,7 +119,7 @@ include_directories(SYSTEM ${POPL_INCLUDE_DIR})
 
 FetchContent_Declare(osm2rdf
         GIT_REPOSITORY  https://github.com/nicolano/osm2rdf.git
-        GIT_TAG 1c1f0d1697d9af283675c13d2a0f311f5eaa8a80
+        GIT_TAG 4f8cb8c8a3d1fb3bcfb6061df8feb9d881a4d9d6
 )
 FetchContent_MakeAvailable(osm2rdf)
 include_directories(SYSTEM ${osm2rdf_SOURCE_DIR}/include)

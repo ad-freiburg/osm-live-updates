@@ -637,6 +637,84 @@ olu::osm::OsmDataFetcherQLever::fetchRelationsReferencingRelations(
 }
 
 // _________________________________________________________________________________________________
+std::string olu::osm::OsmDataFetcherQLever::fetchOsm2RdfVersion() {
+    std::set<std::string> versions;
+
+    runQuery(_queryWriter.writeQueryForOsm2RdfVersion(), cnst::PREFIXES_FOR_OSM2RDF_VERSION,
+             [&versions](simdjson::ondemand::value results) {
+                 for (auto result: results) {
+                     auto version = getValue<std::string>(result.value());
+                     versions.insert(util::XmlHelper::parseRdfString<std::string>(version));
+                 }
+             });
+
+    if (versions.size() == 0) {
+        throw OsmDataFetcherException("Could not fetch osm2rdf version from SPARQL endpoint.");
+    }
+
+    if (versions.size() > 1) {
+        throw OsmDataFetcherException("SPARQL endpoint returned multiple different osm2rdf"
+                                      " versions.");
+    }
+
+    return *versions.begin();
+}
+
+// _________________________________________________________________________________________________
+std::map<std::string, std::string> olu::osm::OsmDataFetcherQLever::fetchOsm2RdfOptions() {
+    std::map<std::string, std::string> options;
+
+    runQuery(_queryWriter.writeQueryForOsm2RdfOptions(), cnst::PREFIXES_FOR_OSM2RDF_OPTIONS,
+             [&options](simdjson::ondemand::value results) {
+                 auto it = results.begin();
+                 const auto optionIRI = getValue<std::string>((*it).value());
+
+                 ++it;
+                 const auto optionValue = getValue<std::string>((*it).value());
+
+                 options.insert_or_assign(OsmObjectHelper::parseOsm2rdfOptionName(optionIRI),
+                                          util::XmlHelper::parseRdfString<std::string>(optionValue));
+             });
+
+    return options;
+}
+
+// _________________________________________________________________________________________________
+int olu::osm::OsmDataFetcherQLever::fetchUpdatesCompleteUntil() {
+    std::set<int> updatesCompleteUntilResponses;
+
+    runQuery(_queryWriter.writeQueryForUpdatesCompleteUntil(),
+             cnst::PREFIXES_FOR_METADATA_TRIPLES,
+             [&updatesCompleteUntilResponses](simdjson::ondemand::value results) {
+                 for (auto result: results) {
+                     try {
+                         auto seqNumResponse = getValue<std::string>(result.value());
+                         int seqNum = util::XmlHelper::parseRdfString<int>(seqNumResponse);
+                         updatesCompleteUntilResponses.insert(seqNum);
+                     } catch (std::exception &e) {
+                         util::Logger::log(util::LogEvent::WARNING,
+                                           "SPARQL endpoint returned invalid sequence number for "
+                                           "'osm2rdfmeta:updatesCompleteUntil' predicate: "
+                                           + std::string(e.what()));
+                     }
+                 }
+             });
+
+    // Return 0 if no updatesCompleteUntil triple is found
+    if (updatesCompleteUntilResponses.empty()) {
+        return 0;
+    }
+
+    if (updatesCompleteUntilResponses.size() > 1) {
+        util::Logger::log(util::LogEvent::WARNING,
+                          "Multiple updatesCompleteUntil triples found in the SPARQL endpoint.");
+        return 0;
+    }
+
+    return *updatesCompleteUntilResponses.begin();
+}
+
+// _________________________________________________________________________________________________
 template<typename T>
 std::vector<T>
 olu::osm::OsmDataFetcherQLever::parseValueList(const std::string_view &list,
@@ -652,6 +730,7 @@ olu::osm::OsmDataFetcherQLever::parseValueList(const std::string_view &list,
     return items;
 }
 
+// _________________________________________________________________________________________________
 void
 olu::osm::OsmDataFetcherQLever::forResults(const simdjson::padded_string &response,
                                            const std::function<void(simdjson::ondemand::value)>

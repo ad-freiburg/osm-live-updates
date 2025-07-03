@@ -22,6 +22,7 @@
 #include <iostream>
 #include <filesystem>
 #include <fstream>
+#include <util/Time.h>
 
 #include "omp.h"
 #include "osmium/visitor.hpp"
@@ -39,7 +40,9 @@
 #include "osm/OsmChangeHandler.h"
 #include "osm/OsmDataFetcherQLever.h"
 #include "osm/OsmDataFetcherSparql.h"
+#include "osm/Osm2ttl.h"
 #include "config/Constants.h"
+#include "ttl/Triple.h"
 #include "util/Logger.h"
 
 namespace cnst = olu::config::constants;
@@ -58,7 +61,8 @@ olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config)
                                                                  _stats(config),
                                                                  _repServer(config, _stats),
                                                                  _odf(createOsmDataFetcher(
-                                                                     config, _stats)) {
+                                                                     config, _stats)),
+                                                                 _queryWriter(_config) {
     _stats.startTime();
 
 #if defined(_OPENMP)
@@ -77,8 +81,8 @@ olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config)
     if (_config.sparqlOutput != config::ENDPOINT) {
         try {
             std::ofstream outputFile;
-            outputFile.open (_config.sparqlOutputFile,
-                std::ofstream::out | std::ios_base::trunc);
+            outputFile.open(_config.sparqlOutputFile,
+                            std::ofstream::out | std::ios_base::trunc);
             outputFile.close();
         } catch (const std::exception &e) {
             util::Logger::log(util::LogEvent::ERROR, e.what());
@@ -89,6 +93,10 @@ olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config)
 
 // _________________________________________________________________________________________________
 void olu::osm::OsmUpdater::run() {
+    // Check if the osm2rdf version that was used to create the dump on the SPARQL endpoint is the
+    // same that is used in this program.
+    checkOsm2RdfVersions();
+
     // Handle either local directory with change files or external one depending on the user
     // input
     if (!_config.changeFileDir.empty()) {
@@ -101,10 +109,29 @@ void olu::osm::OsmUpdater::run() {
 
         auto och{OsmChangeHandler(_config, *_odf, _stats)};
         och.run();
+
+        insertMetadataTriples(och);
     } else {
+        // Fetch the latest database state from the replication server
+        const OsmDatabaseState latestState = _repServer.fetchLatestDatabaseState();
+        _stats.setLatestDatabaseState(latestState);
+        util::Logger::log(util::LogEvent::INFO,
+                          "Latest database state on replication server is: "
+                           + olu::osm::to_string(latestState));
+
         _stats.startTimeDeterminingSequenceNumber();
         decideStartSequenceNumber();
         _stats.endTimeDeterminingSequenceNumber();
+
+        if (_stats.getStartDatabaseState().sequenceNumber == latestState.sequenceNumber) {
+            util::Logger::log(util::LogEvent::INFO, "Database is already up to date. DONE.");
+            return;
+        }
+
+        if (_stats.getStartDatabaseState().sequenceNumber > latestState.sequenceNumber) {
+            throw OsmUpdaterException("Start sequence number is greater than the latest sequence "
+                                      "number on the replication server.");
+        }
 
         _stats.startTimeFetchingChangeFiles();
         fetchChangeFiles();
@@ -117,7 +144,10 @@ void olu::osm::OsmUpdater::run() {
 
         auto och{OsmChangeHandler(_config, *_odf, _stats)};
         och.run();
+
+        insertMetadataTriples(och);
     }
+
 
     deleteTmpDir();
     _stats.endTime();
@@ -135,23 +165,40 @@ void olu::osm::OsmUpdater::run() {
 
 // _________________________________________________________________________________________________
 void olu::osm::OsmUpdater::decideStartSequenceNumber() {
+    // Check if the user specified a sequence number
     if (_config.sequenceNumber > 0) {
-        _stats.setStartDatabaseState({"", _config.sequenceNumber,});
+        util::Logger::log(util::LogEvent::INFO, "Start from user specified sequence number: " +
+                                                std::to_string(_config.sequenceNumber));
+        _stats.setStartDatabaseState({"", _config.sequenceNumber});
+        return;
     }
 
-    std::string timestamp;
-    if (_config.timestamp.empty()) {
-        util::Logger::log(util::LogEvent::INFO,
-                          "Fetch latest node-timestamp on SPARQL endpoint...");
-        timestamp = _odf->fetchLatestTimestampOfAnyNode();
-        util::Logger::log(util::LogEvent::INFO,
-                          "Latest node-timestamp on SPARQL endpoint is: " + timestamp);
-    } else {
-        timestamp = _config.timestamp;
+    // Check if the user specified a timestamp
+    if (!_config.timestamp.empty()) {
+        const std::string timestamp = _config.timestamp;
         util::Logger::log(util::LogEvent::INFO,
                           "Start from user specified timestamp: " + timestamp);
+
+        _repServer.fetchDatabaseStateForTimestamp(timestamp);
+        return;
     }
 
+    // Check if the SPARQL endpoint was already updated from olu once
+    // and pick up the sequence number
+    if (const auto seqNumFromEndpoint = _odf->fetchUpdatesCompleteUntil(); seqNumFromEndpoint > 0) {
+        util::Logger::log(util::LogEvent::INFO,
+                          "Start from SPARQL endpoint specified sequence number: " +
+                          std::to_string(seqNumFromEndpoint));
+        _stats.setStartDatabaseState({"", seqNumFromEndpoint});
+        return;
+    }
+
+    // Check SPARQL endpoint for the latest node timestamp
+    util::Logger::log(util::LogEvent::INFO,
+                      "Fetch latest node-timestamp on SPARQL endpoint...");
+    const std::string timestamp = _odf->fetchLatestTimestampOfAnyNode();
+    util::Logger::log(util::LogEvent::INFO,
+                      "Latest node-timestamp on SPARQL endpoint is: " + timestamp);
     _repServer.fetchDatabaseStateForTimestamp(timestamp);
 }
 
@@ -264,3 +311,56 @@ void olu::osm::OsmUpdater::deleteTmpDir() {
         throw OsmUpdaterException("Error while removing temporary files.");
     }
 }
+
+// _________________________________________________________________________________________________
+void olu::osm::OsmUpdater::checkOsm2RdfVersions() const {
+    try {
+        if (const std::string osm2rdfVersionEndpoint = _odf->fetchOsm2RdfVersion();
+            osm2rdfVersionEndpoint != Osm2ttl::getGitInfo()) {
+            util::Logger::log(util::LogEvent::WARNING, "The osm2rdf version on the SPARQL"
+                                                       " endpoint (" + osm2rdfVersionEndpoint +
+                                                       ") is different from the one used in this "
+                                                       "program (" + Osm2ttl::getGitInfo() + ")");
+        }
+    } catch (const OsmDataFetcherException &e) {
+        util::Logger::log(util::LogEvent::WARNING,
+                          "Could not verify that the osm2rdf version that was on the SPARQL"
+                          " endpoint. Please make sure that the osm2rdf version that was used to"
+                          " create the dump is the same as the one used in this program.");
+    }
+}
+
+// _________________________________________________________________________________________________
+void olu::osm::OsmUpdater::insertMetadataTriples(OsmChangeHandler &och) {
+    // Delete the old updatesCompleteUntil triple if it exists
+    const std::string updatesCompleteUntil = std::to_string(_stats.getLatestDatabaseState().sequenceNumber);
+    ttl::Triple updatesCompleteUntilTriple = {
+        cnst::PREFIXED_OSM2RDF_META_INFO,
+        cnst::PREFIXED_OSM2RDF_META_UPDATES_COMPLETE_UNTIL,
+        cnst::QUERY_VAR_VAL
+    };
+
+    const auto deleteQuery = _queryWriter.writeDeleteTripleQuery(updatesCompleteUntilTriple);
+    och.runUpdateQuery(sparql::UpdateOperation::DELETE, deleteQuery, cnst::PREFIXES_FOR_METADATA_TRIPLES);
+
+    // Create a new triple for the updatesCompleteUntil
+    updatesCompleteUntilTriple.object = "\"" + updatesCompleteUntil + "\"^^" + cnst::IRI_XSD_INT;
+
+    // Create a triple for the date modified
+    const std::string dateModified = util::currentIsoTime();
+    const ttl::Triple dateModifiedTriple = {
+        cnst::PREFIXED_OSM2RDF_META_INFO,
+        cnst::PREFIXED_OSM2RDF_META_DATE_MODIFIED,
+        "\"" + dateModified + "\"^^" + cnst::IRI_XSD_DATE_TIME
+    };
+
+    // Insert the new metadata triples into the database
+    const auto query = _queryWriter.writeInsertQuery({
+        to_string(dateModifiedTriple),
+        to_string(updatesCompleteUntilTriple)
+    });
+
+    och.runUpdateQuery(sparql::UpdateOperation::INSERT, query,
+                       cnst::PREFIXES_FOR_METADATA_TRIPLES);
+}
+

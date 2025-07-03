@@ -19,6 +19,10 @@
 #ifndef OSM_LIVE_UPDATES_OSMUPDATER_H
 #define OSM_LIVE_UPDATES_OSMUPDATER_H
 
+
+#include <sparql/QueryWriter.h>
+
+#include "OsmChangeHandler.h"
 #include "config/Config.h"
 #include "osm/StatisticsHandler.h"
 #include "osm/OsmDataFetcher.h"
@@ -44,6 +48,7 @@ namespace olu::osm {
         StatisticsHandler _stats;
         OsmReplicationServerHelper _repServer;
         std::unique_ptr<OsmDataFetcher> _odf;
+        sparql::QueryWriter _queryWriter;
 
         /**
          * Decides which sequence number to start from.
@@ -83,6 +88,24 @@ namespace olu::osm {
         * Delete /tmp dir
         */
         static void deleteTmpDir();
+
+        /**
+         * Compares the version of osm2rdf on the SPARQL endpoint with the one used in this program
+         * and logs a warning if they differ.
+         */
+        void checkOsm2RdfVersions() const;
+
+        /**
+         * Inserts "dateModified" and updatesCompleteUntil" metadata triples to the SPARQL endpoint.
+         *
+         * dateModified: The date when the last update was made to the database. For each run of olu
+         * one dateModified triple is inserted.
+         *
+         * updatesCompleteUntil: The sequence number until which the updates are complete. There is
+         * always only one updatesCompleteUntil triple in the database, which is updated with each
+         * run of olu.
+         */
+        void insertMetadataTriples(OsmChangeHandler &och);
     };
 
     /**

@@ -59,9 +59,6 @@ struct Config {
 
     int numThreads = std::thread::hardware_concurrency();
 
-    // Specifies if osm2rdf should be run with the option to mask blank nodes
-    bool noBlankNodes = false;
-
     // Specifies whether a progress bar should be shown
     bool showProgress = true;
 
@@ -73,9 +70,6 @@ struct Config {
 
     // The number of values or triples that should be sent in one batch to the SPARQL endpoint
     size_t batchSize = DEFAULT_BATCH_SIZE;
-
-    // The precision that should be used for the WKT representation of the coordinates.
-    uint16_t wktPrecision = DEFAULT_WKT_PRECISION;
 
     // Specifies what happens with the sparql output
     // - ENDPOINT: The sparql updates are sent to the sparql endpoint

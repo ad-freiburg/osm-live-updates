@@ -230,11 +230,16 @@ namespace olu::config::constants {
     const static inline std::string NAME_TIMESTAMP = "timestamp";
     const static inline std::string NAME_VERSION = "version";
     const static inline std::string NAME_CHANGESET = "changeset";
-    const static inline std::string NAME_OSM_NODE_ =  "osm_node_";
-    const static inline std::string NAME_NODE =  "node";
-    const static inline std::string NAME_NODES =  "nodes";
-    const static inline std::string NAME_WAY =  "way";
-    const static inline std::string NAME_REL =  "rel";
+    const static inline std::string NAME_OSM_NODE_ = "osm_node_";
+    const static inline std::string NAME_NODE = "node";
+    const static inline std::string NAME_NODES = "nodes";
+    const static inline std::string NAME_WAY = "way";
+    const static inline std::string NAME_REL = "rel";
+    const static inline std::string NAME_INFO = "info";
+    const static inline std::string NAME_OPTION = "option";
+    const static inline std::string NAME_SEQUENCE_NUMBER = "sequenceNumber";
+    const static inline std::string NAME_DATE_MODIFIED = "dateModified";
+    const static inline std::string NAME_UPDATES_COMPLETE_UNTIL = "updatesCompleteUntil";
 
     /// Prefixed names -----------------------------------------------------------------------------
     static std::string MakePrefixedName(const std::string &prefix, const std::string &name) {
@@ -268,6 +273,12 @@ namespace olu::config::constants {
     const static inline std::string PREFIXED_OSM_META_CHANGESET = MakePrefixedName(NAMESPACE_OSM_META, NAME_CHANGESET);
 
     const static inline std::string PREFIXED_RDF_TYPE = MakePrefixedName(NAMESPACE_RDF, NAME_TYPE);
+
+    const static inline std::string PREFIXED_OSM2RDF_META_OPTION = MakePrefixedName(NAMESPACE_OSM2RDF_META, NAME_OPTION);
+    const static inline std::string PREFIXED_OSM2RDF_META_INFO = MakePrefixedName(NAMESPACE_OSM2RDF_META, NAME_INFO);
+    const static inline std::string PREFIXED_OSM2RDF_META_VERSION = MakePrefixedName(NAMESPACE_OSM2RDF_META, NAME_VERSION);
+    const static inline std::string PREFIXED_OSM2RDF_META_UPDATES_COMPLETE_UNTIL = MakePrefixedName(NAMESPACE_OSM2RDF_META, NAME_UPDATES_COMPLETE_UNTIL);
+    const static inline std::string PREFIXED_OSM2RDF_META_DATE_MODIFIED = MakePrefixedName(NAMESPACE_OSM2RDF_META, NAME_DATE_MODIFIED);
 
     /// Prefix declarations ------------------------------------------------------------------------
     const static inline std::vector DEFAULT_PREFIXES {
@@ -326,6 +337,18 @@ namespace olu::config::constants {
     const static inline std::vector PREFIXES_FOR_RELATIONS_REFERENCING_RELATIONS {
             PREFIX_DECL_OSM2RDF_MEMBER, PREFIX_DECL_OSM_REL};
 
+    const static inline std::vector PREFIXES_FOR_OSM2RDF_VERSION {
+            PREFIX_DECL_OSM2RDF_META
+    };
+
+    const static inline std::vector PREFIXES_FOR_OSM2RDF_OPTIONS {
+            PREFIX_DECL_OSM2RDF_META
+    };
+
+    const static inline std::vector PREFIXES_FOR_METADATA_TRIPLES {
+        PREFIX_DECL_OSM2RDF_META, PREFIX_DECL_XSD
+    };
+
     // Query variables -----------------------------------------------------------------------------
     static std::string MakeQueryVar(const std::string &name) {
             return "?" + name;
@@ -347,8 +370,15 @@ namespace olu::config::constants {
     const static inline std::string QUERY_VAR_MEMBER_IDS = MakeQueryVar(NAME_MEMBER_IDS);
     const static inline std::string QUERY_VAR_MEMBER_ROLES = MakeQueryVar(NAME_MEMBER_ROLES);
     const static inline std::string QUERY_VAR_MEMBER_POSS = MakeQueryVar(NAME_MEMBER_POSS);
+    const static inline std::string QUERY_VAR_OPTION = MakeQueryVar(NAME_OPTION);
+    const static inline std::string QUERY_VAR_SEQUENCE_NUMBER = MakeQueryVar(NAME_SEQUENCE_NUMBER);
 
-    // Options and output --------------------------------------------------------------------------
+
+    // Triple patterns --------------------------------------------------------------------------
+    const static inline std::string IRI_XSD_DATE_TIME = "<" + NAMESPACE_IRI_XSD + "dateTime>";
+    const static inline std::string IRI_XSD_INT = "<" + NAMESPACE_IRI_XSD + "integer>";
+
+        // Options and output --------------------------------------------------------------------------
     const static inline std::string HELP_OPTION_SHORT = "h";
     const static inline std::string HELP_OPTION_LONG = "help";
     const static inline std::string HELP_OPTION_HELP = "Display help information.";
@@ -409,19 +439,6 @@ namespace olu::config::constants {
     const static inline std::string TIME_STAMP_OPTION_LONG = "timestamp";
     const static inline std::string TIME_STAMP_OPTION_HELP =
             "The time stamp to start the update process from.";
-
-    const static inline std::string BLANK_NODES_INFO = "Blank nodes are masked";
-    const static inline std::string BLANK_NODES_OPTION_SHORT = "";
-    const static inline std::string BLANK_NODES_OPTION_LONG = "no-blank-nodes";
-    const static inline std::string BLANK_NODES_OPTION_HELP =
-        "Avoid blank nodes by using a unique identifier for each member";
-
-    const static inline std::string WKT_PRECISION_INFO = "Precision for WKT Points: ";
-    const static inline std::string WKT_PRECISION_OPTION_SHORT = "";
-    const static inline std::string WKT_PRECISION_OPTION_LONG = "wkt-precision";
-    const static inline std::string WKT_PRECISION_OPTION_HELP =
-        "The precision for the WKT representation of the coordinates. Default is "
-        + std::to_string(Config::DEFAULT_WKT_PRECISION) + ".";
 
     const static inline std::string BATCH_SIZE_INFO = "Number of values per batch:";
     const static inline std::string BATCH_SIZE_OPTION_SHORT = "";
