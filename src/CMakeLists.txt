@@ -36,10 +36,10 @@ target_link_libraries(olu_library PRIVATE
         Boost::serialization
         Boost::iostreams
         Boost::regex
-        Threads::Threads
         ${ZLIB_LIBRARIES}
         ${CURL_LIBRARIES}
         osm2rdf_library
+        Threads::Threads
 )
 
 # Link OpenMP if found

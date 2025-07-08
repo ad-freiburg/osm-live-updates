@@ -18,13 +18,10 @@
 
 FROM ubuntu:24.04
 LABEL authors="nicolasvontrott"
-LABEL Description="Build environment"
 
 ENV HOME=/root
 ENV TZ=Europe/Berlin
-
 ARG DEBIAN_FRONTEND=noninteractive
-
 SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update && apt-get -y --no-install-recommends install \
@@ -59,11 +56,13 @@ RUN cd ${HOME} && \
   git config --global http.sslCAinfo /etc/ssl/certs/ca-certificates.crt
 
 COPY . /app/
-
-WORKDIR /app/
-ENV DEBIAN_FRONTEND=noninteractive
-
 WORKDIR /app/build/
-RUN cmake -DCMAKE_BUILD_TYPE=Release -DLOGLEVEL=INFO -DUSE_PARALLEL=true -D_NO_TIMING_TESTS=ON -GNinja .. && ninja
+RUN cmake -DCMAKE_BUILD_TYPE=Release  \
+          -DCMAKE_CXX_FLAGS="-fsanitize=address -fsanitize=undefined" \
+          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address -fsanitize=undefined" \
+          -DLOGLEVEL=INFO  \
+          -DUSE_PARALLEL=true  \
+          -D_NO_TIMING_TESTS=ON  \
+          -GNinja .. && ninja
 
 ENTRYPOINT ["/app/build/apps/olu"]
