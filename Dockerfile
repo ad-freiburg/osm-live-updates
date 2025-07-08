@@ -57,6 +57,12 @@ RUN cd ${HOME} && \
 
 COPY . /app/
 WORKDIR /app/build/
-RUN cmake -DCMAKE_BUILD_TYPE=Release -DLOGLEVEL=INFO -DUSE_PARALLEL=true -D_NO_TIMING_TESTS=ON -GNinja .. && ninja
+RUN cmake -DCMAKE_BUILD_TYPE=Release  \
+          -DCMAKE_CXX_FLAGS="-fsanitize=address -fsanitize=undefined" \
+          -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address -fsanitize=undefined" \
+          -DLOGLEVEL=INFO  \
+          -DUSE_PARALLEL=true  \
+          -D_NO_TIMING_TESTS=ON  \
+          -GNinja .. && ninja
 
 ENTRYPOINT ["/app/build/apps/olu"]
