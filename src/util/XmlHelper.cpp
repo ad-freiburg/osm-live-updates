@@ -87,12 +87,12 @@ std::string olu::util::XmlHelper::getRelationDummy(const id_t &relationId,
         result.append("\" ref=\"")
               .append(std::to_string(id))
               .append("\" role=\"")
-              .append(role)
+              .append(xmlEncode(role))
               .append("\"/>");
     }
 
     result.append("<tag k=\"type\" v=\"")
-          .append(relationType)
+          .append(xmlEncode(std::string(relationType)))
           .append("\"/>")
           .append("</relation>");
 

@@ -49,7 +49,7 @@ namespace olu::config::constants {
     const static inline std::string TEXT_FILE_EXTENSION = ".txt";
 
     // Directory paths -----------------------------------------------------------------------------
-    const static inline std::string PATH_TO_TEMP_DIR = "/tmp/";
+    const static inline std::string PATH_TO_TEMP_DIR = "/tmp/olu_tmp_files/";
     const static inline std::string PATH_TO_DUMMY_DIR = PATH_TO_TEMP_DIR  + "dummy/";
     const static inline std::string PATH_TO_CHANGE_FILE_DIR = PATH_TO_TEMP_DIR + "changes/";
     const static inline std::string PATH_TO_SCRATCH_DIRECTORY = PATH_TO_TEMP_DIR + "osm2rdfScratch/";

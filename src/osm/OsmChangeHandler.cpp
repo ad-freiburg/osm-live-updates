@@ -739,7 +739,7 @@ void olu::osm::OsmChangeHandler::filterRelationTriple(const triple_t &relationTr
     const auto relId = util::TtlHelper::parseId(subject);
 
     if (relationsToInsert.contains(relId)) {
-        relevantTriples.emplace_back(subject, predicate, object);
+        relevantTriples.emplace_back(subject, predicate, util::XmlHelper::xmlDecode(object));
 
         // (For example, "osmrel:member" links to the object which describes
         // the member)
