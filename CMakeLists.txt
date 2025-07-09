@@ -50,36 +50,6 @@ if (USE_PARALLEL)
 endif ()
 
 ######################################
-# clang tidy
-######################################
-find_program(
-        CLANG_TIDY_EXE
-        NAMES "clang-tidy"
-        DOC "Path to clang-tidy executable"
-)
-if (CLANG_TIDY_EXE)
-    message(STATUS "Found CLANG_TIDY_EXE at ${CLANG_TIDY_EXE}, enabling checks")
-    set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY_EXE};-checks=-*,readability-*")
-else()
-    message(STATUS "CLANG_TIDY_EXE not found")
-endif ()
-
-######################################
-# cpp check
-######################################
-find_program(
-        CPPCHECK_EXE
-        NAMES "cppcheck"
-        DOC "Path to cppcheck executable"
-)
-if (CPPCHECK_EXE)
-    message(STATUS "Found CPPCHECK_EXE at ${CPPCHECK_EXE}, enabling checks")
-    set(CMAKE_CXX_CPPCHECK "${CPPCHECK_EXE}")
-else()
-    message(STATUS "CPPCHECK_EXE not found")
-endif ()
-
-######################################
 # BOOST
 ######################################
 find_package(Boost 1.81 COMPONENTS serialization iostreams regex REQUIRED CONFIG)

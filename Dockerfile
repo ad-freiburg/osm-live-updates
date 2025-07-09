@@ -21,7 +21,7 @@ LABEL authors="nicolasvontrott"
 
 ENV HOME=/root
 ENV TZ=Europe/Berlin
-ARG DEBIAN_FRONTEND=noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update && apt-get -y --no-install-recommends install \
