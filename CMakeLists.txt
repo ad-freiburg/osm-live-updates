@@ -123,7 +123,7 @@ FetchContent_Declare(
 ######################################
 FetchContent_Declare(osm2rdf
         GIT_REPOSITORY  https://github.com/nicolano/osm2rdf.git
-        GIT_TAG 4f8cb8c8a3d1fb3bcfb6061df8feb9d881a4d9d6
+        GIT_TAG 5e043a0801e7ecbd917c0d40522d8c7fd3703856
 )
 
 ######################################
