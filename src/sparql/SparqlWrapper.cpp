@@ -136,8 +136,7 @@ std::string olu::sparql::SparqlWrapper::sendUpdate(const UpdateOperation &update
         }
     } catch(std::exception &e) {
         std::cerr << e.what() << std::endl;
-        const std::string msg = "Exception while sending `POST` request to the sparql endpoint with"
-                                " body: " + body;
+        const std::string msg = "Exception while sending `POST` request to the sparql endpoint";
         throw SparqlWrapperException(msg.c_str());
     }
 
