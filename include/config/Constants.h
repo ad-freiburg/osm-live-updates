@@ -240,6 +240,7 @@ namespace olu::config::constants {
     const static inline std::string NAME_SEQUENCE_NUMBER = "sequenceNumber";
     const static inline std::string NAME_DATE_MODIFIED = "dateModified";
     const static inline std::string NAME_UPDATES_COMPLETE_UNTIL = "updatesCompleteUntil";
+    const static inline std::string NAME_GEOMETRY = "geometry";
 
     /// Prefixed names -----------------------------------------------------------------------------
     static std::string MakePrefixedName(const std::string &prefix, const std::string &name) {
@@ -305,10 +306,10 @@ namespace olu::config::constants {
             PREFIX_DECL_OSM_META, PREFIX_DECL_OSM, PREFIX_DECL_RDF};
 
     const static inline std::vector PREFIXES_FOR_NODE_DELETE_QUERY {
-            PREFIX_DECL_OSM_NODE, PREFIX_DECL_OGC, PREFIX_DECL_GEO};
+            PREFIX_DECL_OSM_NODE, PREFIX_DECL_GEO};
 
     const static inline std::vector PREFIXES_FOR_WAY_DELETE_QUERY {
-            PREFIX_DECL_OSM_WAY, PREFIX_DECL_OGC, PREFIX_DECL_GEO};
+            PREFIX_DECL_OSM_WAY, PREFIX_DECL_GEO};
 
     const static inline std::vector PREFIXES_FOR_WAY_DELETE_META_AND_TAGS_QUERY {
             PREFIX_DECL_OSM_WAY, PREFIX_DECL_OSM_META, PREFIX_DECL_OSM2RDF, PREFIX_DECL_OSM_KEY};
@@ -323,7 +324,7 @@ namespace olu::config::constants {
             PREFIX_DECL_OSM_REL, PREFIX_DECL_GEO, PREFIX_DECL_OSM2RDF, PREFIX_DECL_OSM2RDF_GEOM};
 
     const static inline std::vector PREFIXES_FOR_RELATION_DELETE_QUERY {
-            PREFIX_DECL_OSM_REL, PREFIX_DECL_OGC, PREFIX_DECL_GEO};
+            PREFIX_DECL_OSM_REL, PREFIX_DECL_GEO};
 
     const static inline std::vector PREFIXES_FOR_WAYS_REFERENCING_NODE {
             PREFIX_DECL_OSM_WAY, PREFIX_DECL_OSM_NODE};
@@ -372,7 +373,7 @@ namespace olu::config::constants {
     const static inline std::string QUERY_VAR_MEMBER_POSS = MakeQueryVar(NAME_MEMBER_POSS);
     const static inline std::string QUERY_VAR_OPTION = MakeQueryVar(NAME_OPTION);
     const static inline std::string QUERY_VAR_SEQUENCE_NUMBER = MakeQueryVar(NAME_SEQUENCE_NUMBER);
-
+    const static inline std::string QUERY_VAR_GEOMETRY = MakeQueryVar(NAME_GEOMETRY);
 
     // Triple patterns --------------------------------------------------------------------------
     const static inline std::string IRI_XSD_DATE_TIME = "<" + NAMESPACE_IRI_XSD + "dateTime>";

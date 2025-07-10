@@ -41,11 +41,19 @@ namespace olu::sparql {
         [[nodiscard]] std::string writeInsertQuery(const std::vector<std::string>& triples) const;
 
         /**
-         * @returns A SPARQL query that deletes all triples with subject `osmTag:id` and all triples
+         * @returns A SPARQL query that deletes all triples for an osm object with subjec
+         * `osmTag:id` and all triples
          * that are linked via another node
          */
         [[nodiscard]] std::string
         writeDeleteOsmObjectQuery(const std::set<id_t> &ids, const std::string &osmTag) const;
+
+        [[nodiscard]] std::string
+        writeDeleteNodeObjectQuery(const std::set<id_t> &ids) const;
+        [[nodiscard]] std::string
+        writeDeleteWayObjectQuery(const std::set<id_t> &ids) const;
+        [[nodiscard]] std::string
+        writeDeleteRelObjectQuery(const std::set<id_t> &ids) const;
 
         /**
          * @returns A SPARQL query that deletes the given triple
