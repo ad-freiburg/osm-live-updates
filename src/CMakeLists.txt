@@ -23,11 +23,8 @@ add_library(olu_library ${CPP_LIST} ${HEADER_LIST})
 
 target_include_directories(olu_library PUBLIC "${CMAKE_CURRENT_LIST_DIR}/../include")
 
-## This depends on (header only) boost (Boost::boost)
 target_link_libraries(olu_library PRIVATE
         simdjson
-        Boost::boost
-        Boost::regex
         ${CURL_LIBRARIES}
         osm2rdf_library
         Threads::Threads

@@ -50,12 +50,6 @@ if (USE_PARALLEL)
 endif ()
 
 ######################################
-# BOOST
-######################################
-find_package(Boost 1.83 REQUIRED COMPONENTS regex)
-include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
-
-######################################
 # Threading
 ######################################
 set(THREADS_PREFER_PTHREAD_FLAG ON)

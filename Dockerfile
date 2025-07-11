@@ -32,8 +32,6 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     git \
     libcurl4-openssl-dev \
     g++ \
-    libboost1.83-dev \
-    libboost-regex1.83-dev \
     libomp-dev \
     libosmium2-dev \
     ninja-build \

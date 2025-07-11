@@ -16,7 +16,6 @@
 // You should have received a copy of the GNU General Public License
 // along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
-#include <boost/property_tree/ptree.hpp>
 #include "sparql/QueryWriter.h"
 #include "config/Constants.h"
 #include "gtest/gtest.h"

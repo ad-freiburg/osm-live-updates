@@ -22,7 +22,6 @@
 #include <string>
 
 #include "osmium/osm/object.hpp"
-#include <boost/tokenizer.hpp>
 
 #include "config/Constants.h"
 #include "osm/ChangeAction.h"
