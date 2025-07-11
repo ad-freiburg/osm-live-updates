@@ -35,14 +35,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     libomp-dev \
     libosmium2-dev \
     ninja-build \
-
-# Install certificates for git
-RUN cd ${HOME} && \
-  apt-get install -y --reinstall ca-certificates && \
-  mkdir /usr/local/share/ca-certificates/cacert.org && \
-  wget -P /usr/local/share/ca-certificates/cacert.org http://www.cacert.org/certs/root.crt http://www.cacert.org/certs/class3.crt && \
-  update-ca-certificates && \
-  git config --global http.sslCAinfo /etc/ssl/certs/ca-certificates.crt
+    ca-certificates
 
 COPY . /app/
 WORKDIR /app/build/
