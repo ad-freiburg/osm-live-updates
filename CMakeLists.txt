@@ -52,7 +52,7 @@ endif ()
 ######################################
 # BOOST
 ######################################
-find_package(Boost 1.81 COMPONENTS serialization iostreams regex REQUIRED CONFIG)
+find_package(Boost 1.83 REQUIRED COMPONENTS regex)
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 ######################################

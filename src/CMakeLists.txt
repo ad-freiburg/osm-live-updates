@@ -27,8 +27,6 @@ target_include_directories(olu_library PUBLIC "${CMAKE_CURRENT_LIST_DIR}/../incl
 target_link_libraries(olu_library PRIVATE
         simdjson
         Boost::boost
-        Boost::serialization
-        Boost::iostreams
         Boost::regex
         ${CURL_LIBRARIES}
         osm2rdf_library

@@ -25,23 +25,15 @@ ENV DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update && apt-get -y --no-install-recommends install \
+    wget \
     build-essential \
-    clang \
     cmake \
-    gdb \
     wget \
     git \
     libcurl4-openssl-dev \
-    clang-tidy \
-    cppcheck \
     g++ \
-    libboost-dev \
-    libboost-serialization-dev \
-    libboost-regex-dev \
-    libboost-iostreams-dev \
-    libexpat1-dev \
-    libbz2-dev \
-    zlib1g-dev \
+    libboost1.83-dev \
+    libboost-regex1.83-dev \
     libomp-dev \
     libosmium2-dev \
     ninja-build \
