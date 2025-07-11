@@ -25,23 +25,19 @@ ENV DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update && apt-get -y --no-install-recommends install \
-    wget \
+    ca-certificates \
     build-essential \
+    ninja-build \
     cmake \
-    wget \
     git \
     libcurl4-openssl-dev \
-    g++ \
     libomp-dev \
-    libosmium2-dev \
-    ninja-build \
-    ca-certificates
+    libosmium2-dev
 
 COPY . /app/
 WORKDIR /app/build/
 RUN cmake -DCMAKE_BUILD_TYPE=Release  \
           -DUSE_PARALLEL=true  \
           -GNinja .. && ninja
-
 
 ENTRYPOINT ["/app/build/apps/olu"]
