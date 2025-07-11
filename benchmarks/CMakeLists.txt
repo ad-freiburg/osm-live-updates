@@ -17,7 +17,6 @@
 # along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Suppressing benchmark's tests" FORCE)
-add_subdirectory("${PROJECT_SOURCE_DIR}/vendor/google/benchmark" "vendor/google/benchmark")
 
 set_target_properties(benchmark PROPERTIES FOLDER vendor)
 set_target_properties(benchmark_main PROPERTIES FOLDER vendor)

@@ -104,15 +104,6 @@ endif ()
 include(FetchContent)
 
 ######################################
-# GTEST AND GMOCK
-######################################
-FetchContent_Declare(
-        googletest
-        GIT_REPOSITORY https://github.com/google/googletest.git
-        GIT_TAG 33af80a883ddc33d9c0fac0a5b4578301efb18de # main branch on 2024/05/16
-)
-
-######################################
 # osm2rdf
 ######################################
 FetchContent_Declare(osm2rdf
@@ -133,13 +124,58 @@ FetchContent_Declare(
 ######################################
 # Apply FetchContent
 ######################################
-FetchContent_MakeAvailable(googletest osm2rdf simdjson)
+FetchContent_MakeAvailable(osm2rdf simdjson)
 
 target_compile_options(osm2rdf PRIVATE -Wno-extra -Wno-all -Wno-error)
 
 include_directories(SYSTEM ${osm2rdf_SOURCE_DIR}/include)
 include_directories(SYSTEM ${osm2rdf_SOURCE_DIR}/vendor/spatialjoin/src)
 include_directories(SYSTEM ${simdjson_SOURCE_DIR}/include)
+
+if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    # Let's nicely support folders in IDEs
+    set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+    # Testing only available if this is the main app
+    option(PACKAGE_TESTS "Build the tests" OFF)
+    if (PACKAGE_TESTS)
+        # Only fetch and configure googletest when tests are enabled
+        FetchContent_Declare(
+                googletest
+                GIT_REPOSITORY https://github.com/google/googletest.git
+                GIT_TAG 33af80a883ddc33d9c0fac0a5b4578301efb18de # main branch on 2024/05/16
+        )
+        # Disable installation of google stuff
+        set(INSTALL_GMOCK OFF CACHE BOOL "Install gmock" FORCE)
+        set(INSTALL_GTEST OFF CACHE BOOL "Install gtest" FORCE)
+
+        FetchContent_MakeAvailable(googletest)
+
+        enable_testing()
+        include(GoogleTest)
+        add_subdirectory(tests)
+        include_directories(SYSTEM ${gtest_SOURCE_DIR}/include)
+    endif()
+
+    option(PACKAGE_BENCHMARKS "Build the benchmarks" OFF)
+    if (PACKAGE_BENCHMARKS)
+        # Only fetch and configure benchmarks when benchmarks are enabled
+        FetchContent_Declare(
+                benchmarks
+                GIT_REPOSITORY https://github.com/google/benchmark.git
+                GIT_TAG 8516492e880bc26b1b5ba7a5c76b83ca7139761f # main branch on 2025/07/11
+        )
+        # Disable installation of benchmark
+        set(BENCHMARK_ENABLE_INSTALL OFF CACHE BOOL "Enable installation of benchmark" FORCE)
+        set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "Enable testing of benchmark" FORCE)
+
+        FetchContent_MakeAvailable(benchmarks)
+
+        add_subdirectory(benchmarks)
+        include_directories(SYSTEM ${benchmark_SOURCE_DIR}/include)
+    endif()
+endif()
+
 
 message(STATUS ---)
 message(STATUS "CXX_FLAGS are : " ${CMAKE_CXX_FLAGS})
