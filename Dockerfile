@@ -35,7 +35,6 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     libomp-dev \
     libosmium2-dev \
     ninja-build \
-    osmium-tool
 
 # Install certificates for git
 RUN cd ${HOME} && \

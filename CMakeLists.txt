@@ -70,7 +70,7 @@ include_directories(SYSTEM ${PROTOZERO_INCLUDE_DIR})
 ######################################
 # Osmium
 ######################################
-find_package(Osmium REQUIRED COMPONENTS pbf xml)
+find_package(Osmium 2.20.0 REQUIRED COMPONENTS pbf xml)
 include_directories(SYSTEM ${OSMIUM_INCLUDE_DIRS})
 
 ######################################

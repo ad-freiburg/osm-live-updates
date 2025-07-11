@@ -18,29 +18,18 @@
 
 #include "osm/OsmUpdater.h"
 
-#include <algorithm>
 #include <iostream>
 #include <filesystem>
 #include <fstream>
 #include <util/Time.h>
 
 #include "omp.h"
-#include "osmium/visitor.hpp"
-#include "osmium/object_pointer_collection.hpp"
-#include "osmium/io/file.hpp"
-#include "osmium/io/xml_input.hpp"
-#include "osmium/io/xml_output.hpp"
-#include "osmium/io/writer.hpp"
-#include "osmium/io/gzip_compression.hpp"
-#include "osmium/io/output_iterator.hpp"
-#include "osmium/io/reader.hpp"
-#include "osmium/memory/buffer.hpp"
-#include "osmium/osm/object_comparisons.hpp"
 
 #include "osm/OsmChangeHandler.h"
 #include "osm/OsmDataFetcherQLever.h"
 #include "osm/OsmDataFetcherSparql.h"
 #include "osm/Osm2ttl.h"
+#include "osm/OsmFileHelper.h"
 #include "config/Constants.h"
 #include "ttl/Triple.h"
 #include "util/Logger.h"
@@ -202,25 +191,6 @@ void olu::osm::OsmUpdater::decideStartSequenceNumber() {
     _repServer.fetchDatabaseStateForTimestamp(timestamp);
 }
 
-// We need to create a new ordering because we have to take the deleted status into account for
-// the objects
-struct object_order_type_id_reverse_version_delete {
-
-    bool operator()(const osmium::OSMObject& lhs, const osmium::OSMObject& rhs) const noexcept {
-        return const_tie(lhs.type(), lhs.id() > 0, lhs.positive_id(), rhs.version(), rhs.deleted(),
-                    lhs.timestamp().valid() && rhs.timestamp().valid() ? rhs.timestamp() : osmium::Timestamp()) <
-               const_tie(rhs.type(), rhs.id() > 0, rhs.positive_id(), lhs.version(), lhs.deleted(),
-                    lhs.timestamp().valid() && rhs.timestamp().valid() ? lhs.timestamp() : osmium::Timestamp());
-    }
-
-    /// @pre lhs and rhs must not be nullptr
-    bool operator()(const osmium::OSMObject* lhs, const osmium::OSMObject* rhs) const noexcept {
-        assert(lhs && rhs);
-        return operator()(*lhs, *rhs);
-    }
-
-};
-
 // _________________________________________________________________________________________________
 void olu::osm::OsmUpdater::mergeChangeFiles(const std::string &pathToChangeFileDir) {
     // Get names for each change file and order them after their id
@@ -232,38 +202,14 @@ void olu::osm::OsmUpdater::mergeChangeFiles(const std::string &pathToChangeFileD
         }
     }
 
-    util::Logger::log(util::LogEvent::INFO,
-                      "Merging and sorting change files...");
     if (inputs.empty()) {
-        throw OsmUpdaterException("No input files found");
+        throw OsmUpdaterException("No change files found for merging.");
     }
 
-    osmium::io::Writer writer{cnst::PATH_TO_CHANGE_FILE, osmium::io::overwrite::allow};
-    const auto out = make_output_iterator(writer);
-
-    osm2rdf::util::ProgressBar readProgress(inputs.size(),
-                                           inputs.size() > 1);
-    size_t counter = 0;
-    readProgress.update(counter);
-
-    std::vector<osmium::memory::Buffer> changes;
-    osmium::ObjectPointerCollection objects;
-    for (const osmium::io::File& change_file : inputs) {
-        osmium::io::Reader reader{change_file, osmium::osm_entity_bits::object};
-        while (osmium::memory::Buffer buffer = reader.read()) {
-            apply(buffer, objects);
-            // We need to keep the buffer in storage
-            changes.push_back(std::move(buffer));
-        }
-        reader.close();
-        readProgress.update(++counter);
-    }
-    readProgress.done();
-
-    objects.sort(object_order_type_id_reverse_version_delete());
-
-    std::unique_copy(objects.cbegin(), objects.cend(), out, osmium::object_equal_type_id());
-    writer.close();
+    util::Logger::log(util::LogEvent::INFO, "Merging and sorting change files...");
+    OsmFileHelper::mergeAndSortFiles(inputs, cnst::PATH_TO_CHANGE_FILE,
+                                     object_order_type_id_reverse_version_delete(),
+                                     inputs.size() > 1);
 }
 
 // _________________________________________________________________________________________________

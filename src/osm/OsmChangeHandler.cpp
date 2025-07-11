@@ -18,22 +18,13 @@
 
 #include "osm/OsmChangeHandler.h"
 
-#include <string>
-#include <iostream>
 #include <fstream>
-#include <iosfwd>
+#include <string>
 #include <iosfwd>
 #include <set>
 #include <vector>
-#include <vector>
-#include <util/Logger.h>
 
-#include "osmium/visitor.hpp"
-#include "osmium/builder/osm_object_builder.hpp"
-#include "osmium/io/pbf_output.hpp"
-#include "osmium/io/writer.hpp"
-#include "osmium/osm/entity_bits.hpp"
-#include "osmium/osm/object_comparisons.hpp"
+#include <osmium/io/reader.hpp>
 #include "osm2rdf/util/Time.h"
 #include "osm2rdf/util/ProgressBar.h"
 
@@ -41,10 +32,12 @@
 #include "osm/NodeHandler.h"
 #include "osm/Osm2ttl.h"
 #include "osm/OsmDataFetcherSparql.h"
+#include "osm/OsmFileHelper.h"
 #include "sparql/QueryWriter.h"
 #include "util/XmlHelper.h"
 #include "util/TtlHelper.h"
 #include "util/BatchHelper.h"
+#include "util/Logger.h"
 
 static inline constexpr size_t PROGRESS_BAR_BATCH_SIZE = 1000;
 
@@ -376,19 +369,18 @@ void olu::osm::OsmChangeHandler::createDummyRelations() {
 
 // _________________________________________________________________________________________________
 void olu::osm::OsmChangeHandler::mergeAndSortDummyFiles() {
-    std::string command = "osmium sort " + cnst::PATH_TO_CHANGE_FILE + " ";
-    for (const auto &file : std::filesystem::directory_iterator(cnst::PATH_TO_DUMMY_DIR)) {
+    std::vector<osmium::io::File> inputs;
+    inputs.emplace_back(cnst::PATH_TO_CHANGE_FILE);
+    for (const auto& file : std::filesystem::directory_iterator(
+        cnst::PATH_TO_DUMMY_DIR)) {
         if (file.is_regular_file()) {
-            command += file.path().string() + " ";
+            inputs.emplace_back(file.path());
         }
     }
-    command += " -o " + cnst::PATH_TO_INPUT_FILE + " --overwrite > /dev/null";
 
-    if (const int res = system(command.c_str()); res != 0) {
-        const std::string msg = "Error while sorting osm files with error code: "
-                                + std::to_string(res);
-        throw OsmChangeHandlerException(msg.c_str());
-    }
+    OsmFileHelper::mergeAndSortFiles(inputs, cnst::PATH_TO_INPUT_FILE,
+                                     osmium::object_order_type_id_version(),
+                                     inputs.size() > 1);
 }
 
 // _________________________________________________________________________________________________
