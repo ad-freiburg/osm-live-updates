@@ -485,7 +485,25 @@ void olu::osm::OsmChangeHandler::deleteWaysGeometry(osm2rdf::util::ProgressBar &
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
             runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteQueryForGeometry(batch, cnst::NAMESPACE_OSM_WAY),
+                           _queryWriter.writeDeleteOsmObjectGeometryQuery(OsmObjectType::WAY, batch),
+                           cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteOsmObjectCentroidQuery(OsmObjectType::WAY, batch),
+                           cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteOsmObjectOBBQuery(OsmObjectType::WAY, batch),
+                           cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteOsmObjectEnvelopeQuery(OsmObjectType::WAY, batch),
+                           cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteOsmObjectConvexHullQuery(OsmObjectType::WAY, batch),
+                           cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteOsmObjectLengthQuery(OsmObjectType::WAY, batch),
+                           cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteOsmObjectAreaQuery(OsmObjectType::WAY, batch),
                            cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
             progress.update(counter += batch.size());
         });
@@ -536,7 +554,25 @@ void olu::osm::OsmChangeHandler::deleteRelationsGeometry(osm2rdf::util::Progress
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
             runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteQueryForGeometry(batch, cnst::NAMESPACE_OSM_REL),
+                           _queryWriter.writeDeleteOsmObjectGeometryQuery(OsmObjectType::RELATION, batch),
+                           cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteOsmObjectCentroidQuery(OsmObjectType::RELATION, batch),
+                           cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteOsmObjectOBBQuery(OsmObjectType::RELATION, batch),
+                           cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteOsmObjectEnvelopeQuery(OsmObjectType::RELATION, batch),
+                           cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteOsmObjectConvexHullQuery(OsmObjectType::RELATION, batch),
+                           cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteOsmObjectLengthQuery(OsmObjectType::RELATION, batch),
+                           cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteOsmObjectAreaQuery(OsmObjectType::RELATION, batch),
                            cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
             progress.update(counter += batch.size());
         });
