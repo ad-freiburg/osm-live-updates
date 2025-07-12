@@ -25,6 +25,7 @@
 
 #include "util/Types.h"
 #include "config/Config.h"
+#include "osm/OsmObjectType.h"
 #include "ttl/Triple.h"
 
 namespace olu::sparql {
@@ -46,14 +47,15 @@ namespace olu::sparql {
          * that are linked via another node
          */
         [[nodiscard]] std::string
-        writeDeleteOsmObjectQuery(const std::set<id_t> &ids, const std::string &osmTag) const;
-
+        writeDeleteOsmObjectQuery(const osm::OsmObjectType &type, const std::set<id_t> &ids) const;
         [[nodiscard]] std::string
-        writeDeleteNodeObjectQuery(const std::set<id_t> &ids) const;
+        writeDeleteOsmObjectGeometryQuery(const osm::OsmObjectType & osmObjectType, const std::set<id_t> &ids) const;
         [[nodiscard]] std::string
-        writeDeleteWayObjectQuery(const std::set<id_t> &ids) const;
+        writeDeleteOsmObjectCentroidQuery(const osm::OsmObjectType &type, const std::set<id_t> &ids) const;
         [[nodiscard]] std::string
-        writeDeleteRelObjectQuery(const std::set<id_t> &ids) const;
+        writeDeleteWayMemberQuery(const std::set<id_t> &ids) const;
+        [[nodiscard]] std::string
+        writeDeleteRelMemberQuery(const std::set<id_t> &ids) const;
 
         /**
          * @returns A SPARQL query that deletes the given triple

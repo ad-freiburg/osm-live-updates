@@ -19,8 +19,311 @@
 #include "sparql/QueryWriter.h"
 #include "config/Constants.h"
 #include "gtest/gtest.h"
+#include "osm2rdf/config/Config.h"
 
 namespace olu::sparql {
+    TEST(QueryWriter, writeDeleteOsmObjectQuery) {
+        {
+            const QueryWriter qw{config::Config()};
+            const std::string query = qw.writeDeleteOsmObjectQuery(osm::OsmObjectType::NODE, {1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { ?value ?p ?o . } "
+                    "WHERE { VALUES ?value { osmnode:1 osmnode:2 osmnode:3 } "
+                    "?value ?p ?o . }",
+                    query
+            );
+        }
+        {
+            const QueryWriter qw{config::Config()};
+            const std::string query = qw.writeDeleteOsmObjectQuery(osm::OsmObjectType::WAY, {1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { ?value ?p ?o . } "
+                    "WHERE { VALUES ?value { osmway:1 osmway:2 osmway:3 } "
+                    "?value ?p ?o . }",
+                    query
+            );
+        }
+        {
+            const QueryWriter qw{config::Config()};
+            const std::string query = qw.writeDeleteOsmObjectQuery(osm::OsmObjectType::RELATION, {1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { ?value ?p ?o . } "
+                    "WHERE { VALUES ?value { osmrel:1 osmrel:2 osmrel:3 } "
+                    "?value ?p ?o . }",
+                    query
+            );
+        }
+        {
+            config::Config config {};
+            config.graphUri = "https://example.org/a";
+            const QueryWriter qw{config};
+            const std::string query = qw.writeDeleteOsmObjectQuery(osm::OsmObjectType::NODE, {1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { GRAPH <https://example.org/a> { ?value ?p ?o . } } "
+                    "WHERE { GRAPH <https://example.org/a> { "
+                    "VALUES ?value { osmnode:1 osmnode:2 osmnode:3 } "
+                    "?value ?p ?o . } }",
+                    query
+            );
+        }
+        {
+            config::Config config {};
+            config.graphUri = "https://example.org/a";
+            const QueryWriter qw{config};
+            const std::string query = qw.writeDeleteOsmObjectQuery(osm::OsmObjectType::WAY, {1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { GRAPH <https://example.org/a> { ?value ?p ?o . } } "
+                    "WHERE { GRAPH <https://example.org/a> { "
+                    "VALUES ?value { osmway:1 osmway:2 osmway:3 } "
+                    "?value ?p ?o . } }",
+                    query
+            );
+        }
+        {
+            config::Config config {};
+            config.graphUri = "https://example.org/a";
+            const QueryWriter qw{config};
+            const std::string query = qw.writeDeleteOsmObjectQuery(osm::OsmObjectType::RELATION, {1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { GRAPH <https://example.org/a> { ?value ?p ?o . } } "
+                    "WHERE { GRAPH <https://example.org/a> { "
+                    "VALUES ?value { osmrel:1 osmrel:2 osmrel:3 } "
+                    "?value ?p ?o . } }",
+                    query
+            );
+        }
+    }
+
+    TEST(QueryWriter, writeDeleteOsmObjectGeometryQuery) {
+        {
+            const QueryWriter qw{config::Config()};
+            const std::string query = qw.writeDeleteOsmObjectGeometryQuery(osm::OsmObjectType::NODE, {1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { ?o geo:asWKT ?geometry . } "
+                    "WHERE { VALUES ?value { osmnode:1 osmnode:2 osmnode:3 } "
+                    "?value geo:hasGeometry ?o . "
+                    "?o geo:asWKT ?geometry . }",
+                    query
+            );
+        }
+        {
+            const QueryWriter qw{config::Config()};
+            const std::string query = qw.writeDeleteOsmObjectGeometryQuery(osm::OsmObjectType::WAY, {1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { ?o geo:asWKT ?geometry . } "
+                    "WHERE { VALUES ?value { osmway:1 osmway:2 osmway:3 } "
+                    "?value geo:hasGeometry ?o . "
+                    "?o geo:asWKT ?geometry . }",
+                    query
+            );
+        }
+        {
+            const QueryWriter qw{config::Config()};
+            const std::string query = qw.writeDeleteOsmObjectGeometryQuery(osm::OsmObjectType::RELATION, {1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { ?o geo:asWKT ?geometry . } "
+                    "WHERE { VALUES ?value { osmrel:1 osmrel:2 osmrel:3 } "
+                    "?value geo:hasGeometry ?o . "
+                    "?o geo:asWKT ?geometry . }",
+                    query
+            );
+        }
+        {
+            config::Config config {};
+            config.graphUri = "https://example.org/a";
+            const QueryWriter qw{config};
+            const std::string query = qw.writeDeleteOsmObjectGeometryQuery(osm::OsmObjectType::NODE, {1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { GRAPH <https://example.org/a> { ?o geo:asWKT ?geometry . } } "
+                    "WHERE { GRAPH <https://example.org/a> { "
+                    "VALUES ?value { osmnode:1 osmnode:2 osmnode:3 } "
+                    "?value geo:hasGeometry ?o . "
+                    "?o geo:asWKT ?geometry . } }",
+                    query
+            );
+        }
+        {
+            config::Config config {};
+            config.graphUri = "https://example.org/a";
+            const QueryWriter qw{config};
+            const std::string query = qw.writeDeleteOsmObjectGeometryQuery(osm::OsmObjectType::WAY, {1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { GRAPH <https://example.org/a> { ?o geo:asWKT ?geometry . } } "
+                    "WHERE { GRAPH <https://example.org/a> { "
+                    "VALUES ?value { osmway:1 osmway:2 osmway:3 } "
+                    "?value geo:hasGeometry ?o . "
+                    "?o geo:asWKT ?geometry . } }",
+                    query
+            );
+        }
+        {
+            config::Config config {};
+            config.graphUri = "https://example.org/a";
+            const QueryWriter qw{config};
+            const std::string query = qw.writeDeleteOsmObjectGeometryQuery(osm::OsmObjectType::RELATION, {1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { GRAPH <https://example.org/a> { ?o geo:asWKT ?geometry . } } "
+                    "WHERE { GRAPH <https://example.org/a> { "
+                    "VALUES ?value { osmrel:1 osmrel:2 osmrel:3 } "
+                    "?value geo:hasGeometry ?o . "
+                    "?o geo:asWKT ?geometry . } }",
+                    query
+            );
+        }
+    }
+
+    TEST(QueryWriter, writeDeleteOsmObjectCentroidQuery) {
+        {
+            const QueryWriter qw{config::Config()};
+            const std::string query = qw.writeDeleteOsmObjectCentroidQuery(osm::OsmObjectType::NODE, {1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { ?o geo:asWKT ?geometry . } "
+                    "WHERE { VALUES ?value { osmnode:1 osmnode:2 osmnode:3 } "
+                    "?value geo:hasCentroid ?o . "
+                    "?o geo:asWKT ?geometry . }",
+                    query
+            );
+        }
+        {
+            const QueryWriter qw{config::Config()};
+            const std::string query = qw.writeDeleteOsmObjectCentroidQuery(osm::OsmObjectType::WAY, {1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { ?o geo:asWKT ?geometry . } "
+                    "WHERE { VALUES ?value { osmway:1 osmway:2 osmway:3 } "
+                    "?value geo:hasCentroid ?o . "
+                    "?o geo:asWKT ?geometry . }",
+                    query
+            );
+        }
+        {
+            const QueryWriter qw{config::Config()};
+            const std::string query = qw.writeDeleteOsmObjectCentroidQuery(osm::OsmObjectType::RELATION, {1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { ?o geo:asWKT ?geometry . } "
+                    "WHERE { VALUES ?value { osmrel:1 osmrel:2 osmrel:3 } "
+                    "?value geo:hasCentroid ?o . "
+                    "?o geo:asWKT ?geometry . }",
+                    query
+            );
+        }
+        {
+            config::Config config {};
+            config.graphUri = "https://example.org/a";
+            const QueryWriter qw{config};
+            const std::string query = qw.writeDeleteOsmObjectCentroidQuery(osm::OsmObjectType::NODE, {1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { GRAPH <https://example.org/a> { ?o geo:asWKT ?geometry . } } "
+                    "WHERE { GRAPH <https://example.org/a> { "
+                    "VALUES ?value { osmnode:1 osmnode:2 osmnode:3 } "
+                    "?value geo:hasCentroid ?o . "
+                    "?o geo:asWKT ?geometry . } }",
+                    query
+            );
+        }
+        {
+            config::Config config {};
+            config.graphUri = "https://example.org/a";
+            const QueryWriter qw{config};
+            const std::string query = qw.writeDeleteOsmObjectCentroidQuery(osm::OsmObjectType::WAY, {1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { GRAPH <https://example.org/a> { ?o geo:asWKT ?geometry . } } "
+                    "WHERE { GRAPH <https://example.org/a> { "
+                    "VALUES ?value { osmway:1 osmway:2 osmway:3 } "
+                    "?value geo:hasCentroid ?o . "
+                    "?o geo:asWKT ?geometry . } }",
+                    query
+            );
+        }
+        {
+            config::Config config {};
+            config.graphUri = "https://example.org/a";
+            const QueryWriter qw{config};
+            const std::string query = qw.writeDeleteOsmObjectCentroidQuery(osm::OsmObjectType::RELATION, {1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { GRAPH <https://example.org/a> { ?o geo:asWKT ?geometry . } } "
+                    "WHERE { GRAPH <https://example.org/a> { "
+                    "VALUES ?value { osmrel:1 osmrel:2 osmrel:3 } "
+                    "?value geo:hasCentroid ?o . "
+                    "?o geo:asWKT ?geometry . } }",
+                    query
+            );
+        }
+    }
+
+    TEST(QueryWriter, writeDeleteWayMemberQuery) {
+        {
+            const QueryWriter qw{config::Config()};
+            const std::string query = qw.writeDeleteWayMemberQuery({1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { "
+                    "?o osmway:member_id ?member_id . "
+                    "?o osmway:member_pos ?member_pos . } "
+                    "WHERE { VALUES ?value { osmway:1 osmway:2 osmway:3 } "
+                    "?value osmway:member ?o . "
+                    "?o osmway:member_id ?member_id . "
+                    "?o osmway:member_pos ?member_pos . "
+                    "}",
+                    query
+            );
+        }
+        {
+            config::Config config {};
+            config.graphUri = "https://example.org/a";
+            const QueryWriter qw{config};
+            const std::string query = qw.writeDeleteWayMemberQuery({1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { GRAPH <https://example.org/a> { "
+                    "?o osmway:member_id ?member_id . "
+                    "?o osmway:member_pos ?member_pos . } } "
+                    "WHERE { GRAPH <https://example.org/a> { "
+                    "VALUES ?value { osmway:1 osmway:2 osmway:3 } "
+                    "?value osmway:member ?o . "
+                    "?o osmway:member_id ?member_id . "
+                    "?o osmway:member_pos ?member_pos . } }",
+                    query
+            );
+        }
+    }
+
+    TEST(QueryWriter, writeDeleteRelMemberQuery) {
+        {
+            const QueryWriter qw{config::Config()};
+            const std::string query = qw.writeDeleteRelMemberQuery({1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { "
+                    "?o osmrel:member_id ?member_id . "
+                    "?o osmrel:member_pos ?member_pos . "
+                    "?o osmrel:member_role ?member_role . } "
+                    "WHERE { VALUES ?value { osmrel:1 osmrel:2 osmrel:3 } "
+                    "?value osmrel:member ?o . "
+                    "?o osmrel:member_id ?member_id . "
+                    "?o osmrel:member_pos ?member_pos . "
+                    "?o osmrel:member_role ?member_role . "
+                    "}",
+                    query
+            );
+        }
+        {
+            config::Config config {};
+            config.graphUri = "https://example.org/a";
+            const QueryWriter qw{config};
+            const std::string query = qw.writeDeleteRelMemberQuery({1, 2, 3});
+            ASSERT_EQ(
+                    "DELETE { GRAPH <https://example.org/a> { "
+                    "?o osmrel:member_id ?member_id . "
+                    "?o osmrel:member_pos ?member_pos . "
+                    "?o osmrel:member_role ?member_role . } } "
+                    "WHERE { GRAPH <https://example.org/a> { "
+                    "VALUES ?value { osmrel:1 osmrel:2 osmrel:3 } "
+                    "?value osmrel:member ?o . "
+                    "?o osmrel:member_id ?member_id . "
+                    "?o osmrel:member_pos ?member_pos . "
+                    "?o osmrel:member_role ?member_role . } }",
+                    query
+            );
+        }
+    }
+
     TEST(QueryWriter, writeInsertQuery) {
         {
             std::vector<std::string> triples;
@@ -47,33 +350,6 @@ namespace olu::sparql {
                     "osmrel:1960198 ogc:sfContains ?osm_id:10559440 . "
                     "region:102740 osmkey:name name:Bretagne . "
                     "}",
-                    query
-            );
-        }
-    }
-    TEST(QueryWriter, writeDeleteQuery) {
-        {
-            QueryWriter qw{config::Config()};
-            std::string query = qw.writeDeleteOsmObjectQuery({1960198, 1960199},
-            "osmnode");
-            ASSERT_EQ(
-                    "DELETE { ?s ?p1 ?o1 . ?o1 ?p2 ?o2 . } "
-                    "WHERE { VALUES ?s { osmnode:1960198 osmnode:1960199 } "
-                    "?s ?p1 ?o1 . "
-                    "OPTIONAL { ?o1 ?p2 ?o2. } }",
-                    query
-            );
-        }
-
-        {
-            QueryWriter qw{config::Config()};
-            std::string query = qw.writeDeleteOsmObjectQuery({1960199},
-            "osmway");
-            ASSERT_EQ(
-                    "DELETE { ?s ?p1 ?o1 . ?o1 ?p2 ?o2 . } "
-                    "WHERE { VALUES ?s { osmway:1960199 } "
-                    "?s ?p1 ?o1 . "
-                    "OPTIONAL { ?o1 ?p2 ?o2. } }",
                     query
             );
         }

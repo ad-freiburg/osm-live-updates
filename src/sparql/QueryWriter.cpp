@@ -23,6 +23,7 @@
 #include <sstream>
 
 #include "config/Constants.h"
+#include "osm/OsmObjectType.h"
 
 namespace cnst = olu::config::constants;
 
@@ -46,91 +47,136 @@ olu::sparql::QueryWriter::writeInsertQuery(const std::vector<std::string>& tripl
 }
 
 // _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeDeleteOsmObjectQuery(const std::set<id_t> &ids,
-                                                                const std::string &osmTag) const {
-    if (osmTag == cnst::NAMESPACE_OSM_NODE) {
-        return writeDeleteNodeObjectQuery(ids);
+std::string olu::sparql::QueryWriter::writeDeleteOsmObjectQuery(const osm::OsmObjectType &type,
+                                                                const std::set<id_t> &ids) const {
+    std::string osmNamespace;
+    switch (type) {
+        case osm::OsmObjectType::NODE:
+            osmNamespace = cnst::NAMESPACE_OSM_NODE;
+            break;
+        case osm::OsmObjectType::WAY:
+            osmNamespace = cnst::NAMESPACE_OSM_WAY;
+            break;
+        case osm::OsmObjectType::RELATION:
+            osmNamespace = cnst::NAMESPACE_OSM_REL;
+            break;
     }
 
-    if (osmTag == cnst::NAMESPACE_OSM_WAY) {
-        return writeDeleteWayObjectQuery(ids);
-    }
-
-    if (osmTag == cnst::NAMESPACE_OSM_REL) {
-        return writeDeleteRelObjectQuery(ids);
-    }
-
-    const std::string msg = "Unknown osmTag: " + osmTag;
-    throw QueryWriterException(msg.c_str());
-}
-
-// _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeDeleteNodeObjectQuery(const std::set<id_t> &ids) const {
     std::ostringstream oss;
     oss << "DELETE { ";
     oss << wrapWithGraphOptional(
-            getTripleClause(cnst::QUERY_VAR_VAL, "?p", "?o") +
-            getTripleClause("?o", cnst::PREFIXED_GEO_AS_WKT, cnst::QUERY_VAR_GEOMETRY)
+            getTripleClause(cnst::QUERY_VAR_VAL, "?p", "?o")
         );
     oss << "} WHERE { ";
     oss << wrapWithGraphOptional(
-            getValuesClause(cnst::NAMESPACE_OSM_NODE, ids) +
-            getTripleClause(cnst::QUERY_VAR_VAL, "?p", "?o") +
-            "OPTIONAL {"  +
-            getTripleClause("?o", cnst::PREFIXED_GEO_AS_WKT, cnst::QUERY_VAR_GEOMETRY) +
-            "}"
+            getValuesClause(osmNamespace, ids) +
+            getTripleClause(cnst::QUERY_VAR_VAL, "?p", "?o")
         );
-    oss << " }";
+    oss << "}";
     return oss.str();
 }
 
 // _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeDeleteWayObjectQuery(const std::set<id_t> &ids) const {
+std::string
+olu::sparql::QueryWriter::writeDeleteOsmObjectGeometryQuery(const osm::OsmObjectType & type,
+                                                            const std::set<id_t> &ids) const {
+    std::string osmNamespace;
+    switch (type) {
+        case osm::OsmObjectType::NODE:
+            osmNamespace = cnst::NAMESPACE_OSM_NODE;
+            break;
+        case osm::OsmObjectType::WAY:
+            osmNamespace = cnst::NAMESPACE_OSM_WAY;
+            break;
+        case osm::OsmObjectType::RELATION:
+            osmNamespace = cnst::NAMESPACE_OSM_REL;
+            break;
+    }
+
     std::ostringstream oss;
     oss << "DELETE { ";
     oss << wrapWithGraphOptional(
-            getTripleClause(cnst::QUERY_VAR_VAL, "?p", "?o") +
-            getTripleClause("?o", cnst::PREFIXED_WAY_MEMBER_ID, cnst::QUERY_VAR_MEMBER_ID) +
-            getTripleClause("?o", cnst::PREFIXED_WAY_MEMBER_POS, cnst::QUERY_VAR_MEMBER_POS) +
             getTripleClause("?o", cnst::PREFIXED_GEO_AS_WKT, cnst::QUERY_VAR_GEOMETRY)
         );
+    oss << "} WHERE { ";
+    oss << wrapWithGraphOptional(
+            getValuesClause(osmNamespace, ids) +
+            getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_GEO_HAS_GEOMETRY, "?o") +
+            getTripleClause("?o", cnst::PREFIXED_GEO_AS_WKT, cnst::QUERY_VAR_GEOMETRY)
+        );
+    oss << "}";
+    return oss.str();
+}
+
+// _________________________________________________________________________________________________
+std::string
+olu::sparql::QueryWriter::writeDeleteOsmObjectCentroidQuery(const osm::OsmObjectType &type,
+                                                            const std::set<id_t> &ids) const {
+    std::string osmNamespace;
+    switch (type) {
+        case osm::OsmObjectType::NODE:
+            osmNamespace = cnst::NAMESPACE_OSM_NODE;
+            break;
+        case osm::OsmObjectType::WAY:
+            osmNamespace = cnst::NAMESPACE_OSM_WAY;
+            break;
+        case osm::OsmObjectType::RELATION:
+            osmNamespace = cnst::NAMESPACE_OSM_REL;
+            break;
+    }
+
+    std::ostringstream oss;
+    oss << "DELETE { ";
+    oss << wrapWithGraphOptional(
+            getTripleClause("?o", cnst::PREFIXED_GEO_AS_WKT, cnst::QUERY_VAR_GEOMETRY)
+        );
+    oss << "} WHERE { ";
+    oss << wrapWithGraphOptional(
+            getValuesClause(osmNamespace, ids) +
+            getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_GEO_HAS_CENTROID, "?o") +
+            getTripleClause("?o", cnst::PREFIXED_GEO_AS_WKT, cnst::QUERY_VAR_GEOMETRY)
+        );
+    oss << "}";
+    return oss.str();
+}
+
+// _________________________________________________________________________________________________
+std::string olu::sparql::QueryWriter::writeDeleteWayMemberQuery(const std::set<id_t> &ids) const {
+    std::ostringstream oss;
+    oss << "DELETE { ";
+    oss << wrapWithGraphOptional(
+            getTripleClause("?o", cnst::PREFIXED_WAY_MEMBER_ID, cnst::QUERY_VAR_MEMBER_ID) +
+            getTripleClause("?o", cnst::PREFIXED_WAY_MEMBER_POS, cnst::QUERY_VAR_MEMBER_POS)
+    );
     oss << "} WHERE { ";
     oss << wrapWithGraphOptional(
             getValuesClause(cnst::NAMESPACE_OSM_WAY, ids) +
-            getTripleClause(cnst::QUERY_VAR_VAL, "?p", "?o") +
-            "OPTIONAL {"  +
+            getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_WAY_MEMBER, "?o") +
             getTripleClause("?o", cnst::PREFIXED_WAY_MEMBER_ID, cnst::QUERY_VAR_MEMBER_ID) +
-            getTripleClause("?o", cnst::PREFIXED_WAY_MEMBER_POS, cnst::QUERY_VAR_MEMBER_POS) +
-            getTripleClause("?o", cnst::PREFIXED_GEO_AS_WKT, cnst::QUERY_VAR_GEOMETRY) +
-            "}"
-        );
-    oss << " }";
+            getTripleClause("?o", cnst::PREFIXED_WAY_MEMBER_POS, cnst::QUERY_VAR_MEMBER_POS)
+            );
+    oss << "}";
     return oss.str();
 }
 
 // _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeDeleteRelObjectQuery(const std::set<id_t> &ids) const {
+std::string olu::sparql::QueryWriter::writeDeleteRelMemberQuery(const std::set<id_t> &ids) const {
     std::ostringstream oss;
     oss << "DELETE { ";
     oss << wrapWithGraphOptional(
-            getTripleClause(cnst::QUERY_VAR_VAL, "?p", "?o") +
             getTripleClause("?o", cnst::PREFIXED_REL_MEMBER_ID, cnst::QUERY_VAR_MEMBER_ID) +
             getTripleClause("?o", cnst::PREFIXED_REL_MEMBER_POS, cnst::QUERY_VAR_MEMBER_POS) +
-            getTripleClause("?o", cnst::PREFIXED_REL_MEMBER_ROLE, cnst::QUERY_VAR_MEMBER_ROLE) +
-            getTripleClause("?o", cnst::PREFIXED_GEO_AS_WKT, cnst::QUERY_VAR_GEOMETRY)
-        );
+            getTripleClause("?o", cnst::PREFIXED_REL_MEMBER_ROLE, cnst::QUERY_VAR_MEMBER_ROLE)
+            );
     oss << "} WHERE { ";
     oss << wrapWithGraphOptional(
             getValuesClause(cnst::NAMESPACE_OSM_REL, ids) +
-            getTripleClause(cnst::QUERY_VAR_VAL, "?p", "?o") +
-            "OPTIONAL {"  +
+            getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_REL_MEMBER, "?o") +
             getTripleClause("?o", cnst::PREFIXED_REL_MEMBER_ID, cnst::QUERY_VAR_MEMBER_ID) +
             getTripleClause("?o", cnst::PREFIXED_REL_MEMBER_POS, cnst::QUERY_VAR_MEMBER_POS) +
-            getTripleClause("?o", cnst::PREFIXED_REL_MEMBER_ROLE, cnst::QUERY_VAR_MEMBER_ROLE) +
-            getTripleClause("?o", cnst::PREFIXED_GEO_AS_WKT, cnst::QUERY_VAR_GEOMETRY) +
-            "}"
-        );
-    oss << " }";
+            getTripleClause("?o", cnst::PREFIXED_REL_MEMBER_ROLE, cnst::QUERY_VAR_MEMBER_ROLE)
+            );
+    oss << "}";
     return oss.str();
 }
 
@@ -422,7 +468,7 @@ std::string olu::sparql::QueryWriter::getValuesClause(const std::string &osmTag,
 std::string olu::sparql::QueryWriter::getValuesClause(const std::string &osmTag,
                                                       const std::string &delimiter,
                                                       const std::set<id_t> &objectIds) {
-    std::string valueClause = "VALUES " + cnst::QUERY_VAR_VAL + " {";
+    std::string valueClause = "VALUES " + cnst::QUERY_VAR_VAL + " { ";
     constexpr int MAX_CHARS_PER_OBJECT_ID = 20;
     valueClause.reserve(valueClause.size() +
         (osmTag.size() + delimiter.size() + MAX_CHARS_PER_OBJECT_ID  + 1) * objectIds.size() + 2);
@@ -442,7 +488,7 @@ std::string olu::sparql::QueryWriter::getValuesClause(const std::string &osmTag,
 
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::wrapWithGraphOptional(const std::string& clause) const {
-    return _config.graphUri.empty() ? clause : "GRAPH <" + _config.graphUri + "> { " + clause + " } ";
+    return _config.graphUri.empty() ? clause : "GRAPH <" + _config.graphUri + "> { " + clause + "} ";
 }
 
 // _________________________________________________________________________________________________

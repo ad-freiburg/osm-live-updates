@@ -424,8 +424,17 @@ void olu::osm::OsmChangeHandler::deleteNodesFromDatabase(osm2rdf::util::Progress
         _nodeHandler.getAllNodes(),
         _config.batchSize,
         [this, progress, &counter](std::set<id_t> const &batch) mutable {
+            // First, delete the triple that are linked to the osm node (geometry and centroid)
+            // via a node
             runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteOsmObjectQuery(batch, cnst::NAMESPACE_OSM_NODE),
+                           _queryWriter.writeDeleteOsmObjectGeometryQuery(OsmObjectType::NODE, batch),
+                           cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteOsmObjectCentroidQuery(OsmObjectType::NODE, batch),
+                           cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
+            // Then delete the all triples for the nodes
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteOsmObjectQuery(OsmObjectType::NODE, batch),
                            cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
             progress.update(counter += batch.size());
         });
@@ -449,8 +458,20 @@ void olu::osm::OsmChangeHandler::deleteWaysFromDatabase(osm2rdf::util::ProgressB
         waysToDelete,
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
+            // First, delete the triple that are linked to the osm way (geometry, centroid and member)
+            // via a node
             runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteOsmObjectQuery(batch, cnst::NAMESPACE_OSM_WAY),
+                           _queryWriter.writeDeleteOsmObjectGeometryQuery(OsmObjectType::WAY, batch),
+                           cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteOsmObjectCentroidQuery(OsmObjectType::WAY, batch),
+                           cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteWayMemberQuery(batch),
+                           cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
+            // Then delete the all triples for the ways
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteOsmObjectQuery(OsmObjectType::WAY, batch),
                            cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
             progress.update(counter += batch.size());
         });
@@ -488,8 +509,20 @@ void olu::osm::OsmChangeHandler::deleteRelationsFromDatabase(osm2rdf::util::Prog
         relationsToDelete,
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
+            // First, delete the triple that are linked to the osm relation (geometry, centroid and
+            // member) via a node
             runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteOsmObjectQuery(batch, cnst::NAMESPACE_OSM_REL),
+                           _queryWriter.writeDeleteOsmObjectGeometryQuery(OsmObjectType::RELATION, batch),
+                           cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteOsmObjectCentroidQuery(OsmObjectType::RELATION, batch),
+                           cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteRelMemberQuery(batch),
+                           cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
+            // Then delete the all triples for the relations
+            runUpdateQuery(sparql::UpdateOperation::DELETE,
+                           _queryWriter.writeDeleteOsmObjectQuery(OsmObjectType::RELATION, batch),
                            cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
             progress.update(counter += batch.size());
         });
