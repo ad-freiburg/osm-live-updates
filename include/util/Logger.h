@@ -20,7 +20,7 @@
 #define LOGGER_H
 
 #include <array>
-#include <iostream>
+#include <sstream>
 
 namespace olu::util {
     static inline constexpr std::array<std::string_view, 5> LOG_TYPE_DESC =
@@ -34,10 +34,44 @@ namespace olu::util {
         ERROR = 4
     };
 
+    class LogStream;
+
     class Logger {
     public:
-        static void log(const LogEvent &eventType, const std::string_view &description,
-                        const bool &writeToStdStream = true);
+        /**
+         * Formats and writes a log message to the console and to a log file.
+         * Example: "[2025-07-13 13:53:19.929] - INFO : Filtering converted triples..."
+         *
+         * @param eventType The type of log event
+         * @param description The description of the log event
+         */
+        static void log(const LogEvent &eventType, const std::string_view &description);
+
+        /**
+         * Writes a log message to the console and to a log file a message without formatting
+         * (i.e., no information about the log event and no timestamp).
+         *
+         * @param description The raw message to log
+         */
+        static void logWithOutFormatting(const std::string_view &description);
+
+        /**
+         * Stream for a log message that will be written to the console and log file without
+         * formatting.
+         */
+        static LogStream stream();
+
+    private:
+        /**
+         * Formats a log message with timestamp and event type.
+         * Example: "[2025-07-13 13:53:19.929] - INFO : Filtering converted triples..."
+         *
+         * @param eventType The type of log event
+         * @param description The description of the log event
+         * @return A formatted log message string
+         */
+        static std::string formatLogMessage(const LogEvent &eventType,
+                                            const std::string_view &description);
     };
 
     // _________________________________________________________________________________________________
@@ -51,6 +85,34 @@ namespace olu::util {
     };
 
     const static std::locale commaLocale(std::locale(), new CommaNumPunct());
+
+    // LogStream class that provides stream-like operations
+    class LogStream {
+        std::ostringstream _stream;
+
+    public:
+        explicit LogStream() {
+            _stream.imbue(commaLocale);
+        }
+
+        // Destructor will automatically log the message
+        ~LogStream() {
+            Logger::logWithOutFormatting(_stream.str());
+        }
+
+        // Template for stream insertion
+        template<typename T>
+        LogStream& operator<<(const T& value) {
+            _stream << value;
+            return *this;
+        }
+
+        // Special handling for manipulators like std::endl
+        LogStream& operator<<(std::ostream& (*manip)(std::ostream&)) {
+            manip(_stream);
+            return *this;
+        }
+    };
 }
 
 #endif //LOGGER_H

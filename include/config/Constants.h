@@ -61,6 +61,7 @@ namespace olu::config::constants {
     const static inline std::string PATH_TO_OSM2RDF_INFO_OUTPUT_FILE = PATH_TO_TEMP_DIR + "osm2rdf_info" + TEXT_FILE_EXTENSION;
     const static inline std::string PATH_TO_OSM2RDF_INFO_OUTPUT_FILE_DEBUG = "osm2rdf_info" + TEXT_FILE_EXTENSION;
     const static inline std::string PATH_TO_STATE_FILE = "state" + TEXT_FILE_EXTENSION;
+    const static inline std::string PATH_TO_LOG_FILE = "olu_log" + TEXT_FILE_EXTENSION;
 
     // XML -----------------------------------------------------------------------------------------
     const static inline std::string XML_TAG_ATTR = "<xmlattr>";
