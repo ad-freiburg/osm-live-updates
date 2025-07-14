@@ -112,14 +112,9 @@ void olu::osm::OsmUpdater::run() {
         decideStartSequenceNumber();
         _stats.endTimeDeterminingSequenceNumber();
 
-        if (_stats.getStartDatabaseState().sequenceNumber == latestState.sequenceNumber) {
+        if (_stats.getStartDatabaseState().sequenceNumber >= latestState.sequenceNumber) {
             util::Logger::log(util::LogEvent::INFO, "Database is already up to date. DONE.");
             return;
-        }
-
-        if (_stats.getStartDatabaseState().sequenceNumber > latestState.sequenceNumber) {
-            throw OsmUpdaterException("Start sequence number is greater than the latest sequence "
-                                      "number on the replication server.");
         }
 
         _stats.startTimeFetchingChangeFiles();
@@ -174,10 +169,11 @@ void olu::osm::OsmUpdater::decideStartSequenceNumber() {
 
     // Check if the SPARQL endpoint was already updated from olu once
     // and pick up the sequence number
-    if (const auto seqNumFromEndpoint = _odf->fetchUpdatesCompleteUntil(); seqNumFromEndpoint > 0) {
+    if (auto seqNumFromEndpoint = _odf->fetchUpdatesCompleteUntil(); seqNumFromEndpoint > 0) {
         util::Logger::log(util::LogEvent::INFO,
-                          "Start from SPARQL endpoint specified sequence number: " +
+                          "SPARQL endpoint returned sequence number: " +
                           std::to_string(seqNumFromEndpoint));
+        seqNumFromEndpoint += 1; // Start one sequence number after the last run
         _stats.setStartDatabaseState({"", seqNumFromEndpoint});
         return;
     }
