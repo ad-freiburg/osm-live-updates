@@ -100,12 +100,11 @@ std::string olu::util::HttpRequest::perform() {
         curl_easy_getinfo (_curl, CURLINFO_RESPONSE_CODE, &http_code);
 
         if (_method == POST) {
-            Logger::log(LogEvent::ERROR, "POST failed with reason " + reason);
+            Logger::log(LogEvent::ERROR, "POST failed with reason: " + reason);
             Logger::stream() << PREFIX_SPACER << "HTTP Code: " << http_code << std::endl;
             Logger::stream() << PREFIX_SPACER << "URL: " << _url << std::endl;
-            Logger::stream() << PREFIX_SPACER << "Response: " << response << std::endl;
         } else if (_method == GET) {
-            Logger::log(LogEvent::ERROR, "GET failed with reason " + reason);
+            Logger::log(LogEvent::ERROR, "GET failed with reason: " + reason);
             Logger::stream() << PREFIX_SPACER << "HTTP Code: " << http_code << std::endl;
             Logger::stream() << PREFIX_SPACER << "URL: " << _url << std::endl;
         }
