@@ -161,6 +161,10 @@ namespace olu::config::constants {
     const static inline std::string NAMESPACE_IRI_OSM_META = "https://www.openstreetmap.org/meta/";
     const static inline std::string PREFIX_DECL_OSM_META = MakePrefixDecl(NAMESPACE_OSM_META, NAMESPACE_IRI_OSM_META);
 
+    const static inline std::string NAMESPACE_OSM_CHANGESET = "osmchangeset";
+    const static inline std::string NAMESPACE_IRI_OSM_CHANGESET = "https://www.openstreetmap.org/changeset/";
+    const static inline std::string PREFIX_DECL_OSM_CHANGESET = MakePrefixDecl(NAMESPACE_OSM_CHANGESET, NAMESPACE_IRI_OSM_CHANGESET);
+
     const static inline std::string NAMESPACE_OSM2RDF = "osm2rdf";
     const static inline std::string NAMESPACE_IRI_OSM2RDF = "https://osm2rdf.cs.uni-freiburg.de/rdf#";
     const static inline std::string PREFIX_DECL_OSM2RDF = MakePrefixDecl(NAMESPACE_OSM2RDF, NAMESPACE_IRI_OSM2RDF);
@@ -285,7 +289,7 @@ namespace olu::config::constants {
 
     /// Prefix declarations ------------------------------------------------------------------------
     const static inline std::vector DEFAULT_PREFIXES {
-            PREFIX_DECL_OSM, PREFIX_DECL_OSM_NODE, PREFIX_DECL_OSM_WAY, PREFIX_DECL_OSM_REL, PREFIX_DECL_OSM_KEY, PREFIX_DECL_OSM_META,
+            PREFIX_DECL_OSM, PREFIX_DECL_OSM_NODE, PREFIX_DECL_OSM_WAY, PREFIX_DECL_OSM_REL, PREFIX_DECL_OSM_KEY, PREFIX_DECL_OSM_META, PREFIX_DECL_OSM_CHANGESET,
             PREFIX_DECL_OSM2RDF, PREFIX_DECL_OSM2RDF_KEY, PREFIX_DECL_OSM2RDF_GEOM, PREFIX_DECL_OSM2RDF_META, PREFIX_DECL_OSM2RDF_GENID, PREFIX_DECL_OSM2RDF_MEMBER,
             PREFIX_DECL_WD, PREFIX_DECL_GEO, PREFIX_DECL_OGC, PREFIX_DECL_RDF, PREFIX_DECL_XSD};
 
