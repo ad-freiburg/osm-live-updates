@@ -33,7 +33,9 @@ namespace olu::config {
         ENDPOINT_UPDATE_URI_INVALID,
         GRAPH_URI_INVALID,
         INPUT_NOT_EXISTS,
-        INPUT_IS_NOT_DIRECTORY
+        INPUT_IS_NOT_DIRECTORY,
+        POLYGON_FILE_NOT_EXISTS,
+        BBOX_INVALID
     };
 
 }

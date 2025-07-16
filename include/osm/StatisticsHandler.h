@@ -58,6 +58,12 @@ namespace olu::osm {
             return std::chrono::duration_cast<std::chrono::milliseconds>(_endTimeMergingChangeFiles - _startTimeMergingChangeFiles).count();
         }
 
+        void startTimeApplyingBoundaries() { _startTimeApplyingBoundaries = std::chrono::system_clock::now(); }
+        void endTimeApplyingBoundaries() { _endTimeApplyingBoundaries = std::chrono::system_clock::now(); }
+        long getTimeInMSApplyingBoundaries() const {
+            return std::chrono::duration_cast<std::chrono::milliseconds>(_endTimeApplyingBoundaries - _startTimeApplyingBoundaries).count();
+        }
+
         void startTimeFetchingChangeFiles() { _startTimeFetchingChangeFiles = std::chrono::system_clock::now(); }
         void endTimeFetchingChangeFiles() { _endTimeFetchingChangeFiles = std::chrono::system_clock::now(); }
         long getTimeInMSFetchingChangeFiles() const {
@@ -242,6 +248,9 @@ namespace olu::osm {
 
         time_point_t _startTimeMergingChangeFiles;
         time_point_t _endTimeMergingChangeFiles;
+
+        time_point_t _startTimeApplyingBoundaries;
+        time_point_t _endTimeApplyingBoundaries;
 
         time_point_t _startTimeFetchingChangeFiles;
         time_point_t _endTimeFetchingChangeFiles;

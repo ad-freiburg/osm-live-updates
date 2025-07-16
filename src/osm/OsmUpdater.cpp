@@ -95,11 +95,6 @@ void olu::osm::OsmUpdater::run() {
         _stats.startTimeMergingChangeFiles();
         mergeChangeFiles(_config.changeFileDir);
         _stats.endTimeMergingChangeFiles();
-
-        auto och{OsmChangeHandler(_config, *_odf, _stats)};
-        och.run();
-
-        insertMetadataTriples(och);
     } else {
         // Fetch the latest database state from the replication server
         const OsmDatabaseState latestState = _repServer.fetchLatestDatabaseState();
@@ -125,13 +120,18 @@ void olu::osm::OsmUpdater::run() {
         mergeChangeFiles(cnst::PATH_TO_CHANGE_FILE_DIR);
         clearChangesDir();
         _stats.endTimeMergingChangeFiles();
-
-        auto och{OsmChangeHandler(_config, *_odf, _stats)};
-        och.run();
-
-        insertMetadataTriples(och);
     }
 
+    if (!_config.bbox.empty() || !_config.pathToPolygonFile.empty()) {
+        _stats.startTimeApplyingBoundaries();
+        applyBoundaries();
+        _stats.endTimeApplyingBoundaries();
+    }
+
+    auto och{OsmChangeHandler(_config, *_odf, _stats)};
+    och.run();
+
+    insertMetadataTriples(och);
 
     deleteTmpDir();
     _stats.endTime();
@@ -227,6 +227,33 @@ void olu::osm::OsmUpdater::fetchChangeFiles() {
         }
     }
     downloadProgress.done();
+}
+
+// _________________________________________________________________________________________________`
+void olu::osm::OsmUpdater::applyBoundaries() const {
+    util::Logger::log(util::LogEvent::INFO, "Applying boundaries to change files...");
+
+    std::string cmd = "osmium extract " + cnst::PATH_TO_CHANGE_FILE;
+    if (!_config.bbox.empty()) {
+        cmd += " --bbox " + _config.bbox;
+    } else if (!_config.pathToPolygonFile.empty()) {
+        cmd += " --polygon " + _config.pathToPolygonFile;
+    } else {
+        throw OsmUpdaterException("No bounding box or polygon file specified.");
+    }
+
+    // Use the 'smart' strategy to include entire ways and multipolygons that intersect the boundary
+    // (as well as the referenced nodes that are not in the boundary).
+    // See the osmium-tool manual for details:
+    // https://osmcode.org/osmium-tool/manual.html#creating-geographic-extracts
+    cmd += " -o " + cnst::PATH_TO_CHANGE_FILE_EXTRACT + " --overwrite -s smart --no-progress";
+
+    // Overwrite the original change file with the extracted one
+    cmd += " && mv " + cnst::PATH_TO_CHANGE_FILE_EXTRACT + " " + cnst::PATH_TO_CHANGE_FILE;
+
+    if (std::system(cmd.c_str()) != 0) {
+        throw OsmUpdaterException("Failed to apply boundaries using osmium extract command.");
+    }
 }
 
 // _________________________________________________________________________________________________

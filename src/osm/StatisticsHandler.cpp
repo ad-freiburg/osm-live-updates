@@ -153,7 +153,8 @@ void olu::osm::StatisticsHandler::printSparqlStatistics() const {
             util::Logger::stream() << PREFIX_SPACER << "Inserted: " << _qleverInsertedTriplesCount << " and deleted "
                       << _qleverDeletedTriplesCount << " triples at QLever endpoint" << std::endl;
 
-            if (_qleverInsertedTriplesCount != _numOfTriplesToInsert) {
+            // Add the two metadata triples that are inserted at the end of the update process.
+            if (_qleverInsertedTriplesCount != _numOfTriplesToInsert + 2) {
                 util::Logger::log(util::LogEvent::WARNING, "The number of triples inserted"
                                   " at the end point is not equal to the"
                                   " number of triples that need to be"
@@ -201,6 +202,15 @@ void olu::osm::StatisticsHandler::printTimingStatistics() const {
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
+
+    if (!_config.bbox.empty() || !_config.pathToPolygonFile.empty()) {
+        partTime = getTimeInMSApplyingBoundaries();
+        util::Logger::stream() << PREFIX_SPACER << "Applying boundaries took "
+                << partTime
+                << " ms. ("
+                << calculatePercentageOfTotalTime(partTime) << "% of total time)"
+                << std::endl;
+    }
 
     partTime = getTimeInMSProcessingChangeFiles();
     util::Logger::stream() << PREFIX_SPACER << "Processing the change files took "

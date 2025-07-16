@@ -32,7 +32,9 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     git \
     libcurl4-openssl-dev \
     libomp-dev \
-    libosmium2-dev
+    libosmium2-dev \
+# Uncomment the following line if you want to add the support for bounding boxes or polygon files
+#    osmium-tool
 
 COPY . /app/
 WORKDIR /app/build/
