@@ -106,6 +106,12 @@ namespace olu::osm {
          * run of olu.
          */
         void insertMetadataTriples(OsmChangeHandler &och);
+
+        /**
+         * Applies the user-specified bounding box or polygon to the change files,
+         * by using the 'extract' option from the 'osmium-tool'
+         */
+        void applyBoundaries() const;
     };
 
     /**

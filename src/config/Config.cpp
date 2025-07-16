@@ -19,6 +19,7 @@
 #include "config/Config.h"
 
 #include <filesystem>
+#include <regex>
 #include <string>
 
 #include "popl.hpp"
@@ -109,6 +110,18 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
         constants::STATISTICS_OPTION_SHORT,
         constants::STATISTICS_OPTION_LONG,
         constants::STATISTICS_OPTION_HELP);
+
+    const auto bboxOp = parser.add<popl::Value<std::string>,
+        popl::Attribute::optional>(
+        constants::BBOX_OPTION_SHORT,
+        constants::BBOX_OPTION_LONG,
+        constants::BBOX_OPTION_HELP);
+
+    const auto polyFileOp = parser.add<popl::Value<std::string>,
+    popl::Attribute::optional>(
+        constants::POLY_FILE_OPTION_SHORT,
+        constants::POLY_FILE_OPTION_LONG,
+        constants::POLY_FILE_OPTION_HELP);
 
     try {
         parser.parse(argc, argv);
@@ -217,6 +230,56 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
             sparqlEndpointUriForUpdates = sparqlEndpointUri;
         }
 
+        if (bboxOp->is_set() && polyFileOp->is_set()) {
+            std::stringstream errorDescription;
+            errorDescription << "You can EITHER provide a bounding box (--bbox) or a polygon "
+                                "file (--polygon-file), but not both at the same time."
+                             << std::endl;
+            util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
+            exit(INCORRECT_ARGUMENTS);
+        }
+
+        if ((bboxOp->is_set() || polyFileOp->is_set()) &&
+            std::system("osmium >/dev/null 2>&1") != 0) {
+            std::stringstream errorDescription;
+            errorDescription << "Missing dependency: 'osmium-tool' is required for bounding box "
+                                "(--bbox) or polygon file (--polygon-file) support.\n"
+                                "Please install 'osmium-tool' and ensure it is available as "
+                                "'osmium' in your PATH.";
+            util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
+            exit(FAILURE);
+        }
+
+        if (bboxOp->is_set()) {
+            bbox = bboxOp->value();
+            // Check if the bounding box is in the correct format "LEFT,BOTTOM,RIGHT,TOP"
+            std::regex bboxRegex(R"(^-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?,-?\d+(\.\d+)?$)");
+            if (!std::regex_match(bbox, bboxRegex)) {
+                std::stringstream errorDescription;
+                errorDescription << "Bounding box is not valid: " << bbox << std::endl;
+                util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
+                exit(BBOX_INVALID);
+            }
+        }
+
+        if (polyFileOp->is_set()) {
+            pathToPolygonFile = polyFileOp->value();
+            if (!std::filesystem::exists(pathToPolygonFile)) {
+                std::stringstream errorDescription;
+                errorDescription << "Polygon file does not exist at path: " << pathToPolygonFile
+                                 << std::endl;
+                util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
+                exit(POLYGON_FILE_NOT_EXISTS);
+            }
+            if (!std::filesystem::is_regular_file(pathToPolygonFile)) {
+                std::stringstream errorDescription;
+                errorDescription << "Polygon file at : " << pathToPolygonFile
+                                 << "is not a regular file." << std::endl;
+                util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
+                exit(POLYGON_FILE_NOT_EXISTS);
+            }
+        }
+
         if (timestampOp->is_set()) {
             timestamp = timestampOp->value();
         }
@@ -305,6 +368,16 @@ void olu::config::Config::printInfo() const {
             util::Logger::log(util::LogEvent::CONFIG,
                               constants::TIME_STAMP_INFO + " " + timestamp);
         }
+    }
+
+    if (!bbox.empty()) {
+        util::Logger::log(util::LogEvent::CONFIG,
+                  constants::BBOX_INFO + " " + bbox);
+    }
+
+    if (!pathToPolygonFile.empty()) {
+        util::Logger::log(util::LogEvent::CONFIG,
+                  constants::POLY_FILE_INFO + " " + pathToPolygonFile);
     }
 
     if (batchSize != DEFAULT_BATCH_SIZE) {

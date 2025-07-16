@@ -56,6 +56,7 @@ namespace olu::config::constants {
 
     // File paths ----------------------------------------------------------------------------------
     const static inline std::string PATH_TO_CHANGE_FILE = PATH_TO_TEMP_DIR + "changes" + OSM_CHANGE_FILE_EXTENSION + GZIP_EXTENSION;
+    const static inline std::string PATH_TO_CHANGE_FILE_EXTRACT = PATH_TO_TEMP_DIR + "changes-boundary" + OSM_CHANGE_FILE_EXTENSION + GZIP_EXTENSION;
     const static inline std::string PATH_TO_INPUT_FILE = PATH_TO_TEMP_DIR + "input" + OSM_EXTENSION;
     const static inline std::string PATH_TO_OUTPUT_FILE = PATH_TO_TEMP_DIR + "output" + TURTLE_FILE_EXTENSION;
     const static inline std::string PATH_TO_OSM2RDF_INFO_OUTPUT_FILE = PATH_TO_TEMP_DIR + "osm2rdf_info" + TEXT_FILE_EXTENSION;
@@ -460,6 +461,18 @@ namespace olu::config::constants {
     const static inline std::string STATISTICS_OPTION_LONG = "statistics";
     const static inline std::string STATISTICS_OPTION_HELP =
         "Specify if detailed statistics should be added to the output.";
+
+    const static inline std::string BBOX_INFO = "Using bounding box: ";
+    const static inline std::string BBOX_OPTION_SHORT = "b";
+    const static inline std::string BBOX_OPTION_LONG = "bbox";
+    const static inline std::string BBOX_OPTION_HELP =
+         "Specify a bounding box (LEFT,BOTTOM,RIGHT,TOP) to cut out a specific area from the change files. ";
+
+    const static inline std::string POLY_FILE_INFO = "Using (multi)polygon file at: ";
+    const static inline std::string POLY_FILE_OPTION_SHORT = "p";
+    const static inline std::string POLY_FILE_OPTION_LONG = "polygon";
+    const static inline std::string POLY_FILE_OPTION_HELP =
+         "Specify a (multi)polygon file (.poly) to cut out a specific area from the change files. ";
 
 } // namespace olu::config::constants
 

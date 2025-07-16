@@ -54,8 +54,13 @@ struct Config {
 
     // User specified sequence number from command line.
     int sequenceNumber = -1;
-    // User specified timestamp from command line
+    // User specified timestamp from the command line
     std::string timestamp;
+
+    // User specified bounding box in the form of "LEFT, BOTTOM, RIGHT, TOP"
+    std::string bbox;
+    // User specified path to a polygon file
+    std::string pathToPolygonFile;
 
     int numThreads = std::thread::hardware_concurrency();
 
