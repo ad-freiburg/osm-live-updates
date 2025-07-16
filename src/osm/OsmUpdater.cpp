@@ -107,7 +107,7 @@ void olu::osm::OsmUpdater::run() {
         decideStartSequenceNumber();
         _stats.endTimeDeterminingSequenceNumber();
 
-        if (_stats.getStartDatabaseState().sequenceNumber >= latestState.sequenceNumber) {
+        if (_stats.getStartDatabaseState().sequenceNumber > latestState.sequenceNumber) {
             util::Logger::log(util::LogEvent::INFO, "Database is already up to date. DONE.");
             return;
         }
