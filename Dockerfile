@@ -25,41 +25,19 @@ ENV DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update && apt-get -y --no-install-recommends install \
+    ca-certificates \
     build-essential \
-    clang \
+    ninja-build \
     cmake \
-    gdb \
-    wget \
     git \
     libcurl4-openssl-dev \
-    clang-tidy \
-    cppcheck \
-    g++ \
-    libboost-dev \
-    libboost-serialization-dev \
-    libboost-regex-dev \
-    libboost-iostreams-dev \
-    libexpat1-dev \
-    libbz2-dev \
-    zlib1g-dev \
     libomp-dev \
-    libosmium2-dev \
-    ninja-build \
-    osmium-tool
-
-# Install certificates for git
-RUN cd ${HOME} && \
-  apt-get install -y --reinstall ca-certificates && \
-  mkdir /usr/local/share/ca-certificates/cacert.org && \
-  wget -P /usr/local/share/ca-certificates/cacert.org http://www.cacert.org/certs/root.crt http://www.cacert.org/certs/class3.crt && \
-  update-ca-certificates && \
-  git config --global http.sslCAinfo /etc/ssl/certs/ca-certificates.crt
+    libosmium2-dev
 
 COPY . /app/
 WORKDIR /app/build/
 RUN cmake -DCMAKE_BUILD_TYPE=Release  \
           -DUSE_PARALLEL=true  \
           -GNinja .. && ninja
-
 
 ENTRYPOINT ["/app/build/apps/olu"]

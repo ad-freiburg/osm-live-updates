@@ -19,8 +19,7 @@
 #include "util/URLHelper.h"
 
 #include <stdexcept>
-
-#include "boost/regex.hpp"
+#include <regex>
 
 #include "config/Constants.h"
 
@@ -96,6 +95,6 @@ std::string olu::util::URLHelper::encodeForUrlQuery(const std::string &value) {
 
 // _________________________________________________________________________________________________
 bool olu::util::URLHelper::isValidUri(const std::string &uri) {
-    const boost::regex regex(R"(((\w+:\/\/)[-a-zA-Z0-9:@;?&=\/%\+\.\*!'\(\),\$_\{\}\^~\[\]`#|]+))");
-    return regex_match (uri, regex);
+    const std::regex regex(R"(((\w+:\/\/)[-a-zA-Z0-9:@;?&=\/%\+\.\*!'\(\),\$_\{\}\^~\[\]`#|]+))");
+    return std::regex_match(uri, regex);
 }

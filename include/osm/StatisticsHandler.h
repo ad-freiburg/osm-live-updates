@@ -34,8 +34,6 @@ namespace olu::osm {
     public:
         explicit StatisticsHandler(const config::Config &config): _config(config) {};
 
-        void printCurrentStep(const std::string &stepDescription) const;
-
         void printOsmStatistics() const;
         void printUpdateStatistics() const;
         void printOsm2RdfStatistics() const;

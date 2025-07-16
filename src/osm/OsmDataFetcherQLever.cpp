@@ -24,16 +24,16 @@
 #include <map>
 #include <strstream>
 #include <spanstream>
-#include <util/XmlHelper.h>
+#include <regex>
 
 #include "simdjson.h"
-#include "boost/regex.hpp"
 
 #include "config/Constants.h"
 #include "osm/OsmObjectHelper.h"
 #include "osm/RelationMember.h"
 #include "sparql/QueryWriter.h"
 #include "util/Types.h"
+#include "util/XmlHelper.h"
 
 namespace cnst = olu::config::constants;
 
@@ -77,8 +77,8 @@ std::string olu::osm::OsmDataFetcherQLever::fetchLatestTimestampOfAnyNode() {
                      // QLever will return the timestamp in rdf syntax, e.g.:
                      // "\"2025-05-24T19:15:22\"^^<http://www.w3.org/2001/XMLSchema#dateTime>"
                      auto response = getValue<std::string>(value.value());
-                     const boost::regex expr("\\\"([^\\\"]+)\\\"");
-                     if (boost::smatch match; regex_search(response, match, expr)) {
+                     const std::regex expr("\\\"([^\\\"]+)\\\"");
+                     if (std::smatch match; regex_search(response, match, expr)) {
                          timestamp = match[1];
                      } else {
                          const std::string msg = "Could not extract timestamp from QLever"

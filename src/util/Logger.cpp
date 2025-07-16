@@ -18,27 +18,57 @@
 
 #include "util/Logger.h"
 
+#include <fstream>
 #include <iostream>
 #include <utility>
 #include <util/Time.h>
 
 #include "config/Constants.h"
 
-static inline constexpr std::string_view prefix = "                          ";
-
 namespace cnst = olu::config::constants;
 
 // _________________________________________________________________________________________________
-void olu::util::Logger::log(const LogEvent &eventType, const std::string_view &description,
-                            const bool &writeToStdStream) {
-    if (writeToStdStream) {
-        auto& outStream = (eventType == LogEvent::ERROR) ? std::cerr : std::cout;
-        outStream.imbue(commaLocale);
-        outStream << currentTimeFormatted()
-                  << "- "
-                  << LOG_TYPE_DESC[std::to_underlying(eventType)]
-                  << ": "
-                  << description
-                  << std::endl;
-    }
+void olu::util::Logger::log(const LogEvent &eventType, const std::string_view &description) {
+    auto message = formatLogMessage(eventType, description);
+    
+    auto& outStream = (eventType == LogEvent::ERROR) ? std::cerr : std::cout;
+    outStream.imbue(commaLocale);
+    outStream << message;
+
+    std::ofstream outputFile;
+    outputFile.open(cnst::PATH_TO_LOG_FILE, std::ios::app);
+    outputFile << message;
+    outputFile.close();
+}
+
+// _________________________________________________________________________________________________
+void olu::util::Logger::logWithOutFormatting(const std::string_view &description) {
+    std::cout.imbue(commaLocale);
+    std::cout << description;
+
+    std::ofstream outputFile;
+    outputFile.open(cnst::PATH_TO_LOG_FILE, std::ios::app);
+    outputFile << description;
+    outputFile.close();
+}
+
+// _________________________________________________________________________________________________
+olu::util::LogStream olu::util::Logger::stream() {
+    return LogStream();
+}
+
+// _________________________________________________________________________________________________
+std::string olu::util::Logger::formatLogMessage(const LogEvent &eventType,
+                                                const std::string_view &description) {
+    std::ostringstream oss;
+    oss.imbue(commaLocale);
+
+    oss << currentTimeFormatted()
+        << "- "
+        << LOG_TYPE_DESC[std::to_underlying(eventType)]
+        << ": "
+        << description
+        << std::endl;
+
+    return oss.str();
 }

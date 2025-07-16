@@ -25,6 +25,7 @@
 
 #include "util/Types.h"
 #include "config/Config.h"
+#include "osm/OsmObjectType.h"
 #include "ttl/Triple.h"
 
 namespace olu::sparql {
@@ -41,11 +42,30 @@ namespace olu::sparql {
         [[nodiscard]] std::string writeInsertQuery(const std::vector<std::string>& triples) const;
 
         /**
-         * @returns A SPARQL query that deletes all triples with subject `osmTag:id` and all triples
+         * @returns A SPARQL query that deletes all triples for an osm object with subjec
+         * `osmTag:id` and all triples
          * that are linked via another node
          */
         [[nodiscard]] std::string
-        writeDeleteOsmObjectQuery(const std::set<id_t> &ids, const std::string &osmTag) const;
+        writeDeleteOsmObjectQuery(const osm::OsmObjectType &type, const std::set<id_t> &ids) const;
+        [[nodiscard]] std::string
+        writeDeleteOsmObjectGeometryQuery(const osm::OsmObjectType & osmObjectType, const std::set<id_t> &ids) const;
+        [[nodiscard]] std::string
+        writeDeleteOsmObjectCentroidQuery(const osm::OsmObjectType &type, const std::set<id_t> &ids) const;
+        [[nodiscard]] std::string
+        writeDeleteOsmObjectOBBQuery(const osm::OsmObjectType &type, const std::set<id_t> &ids) const;
+        [[nodiscard]] std::string
+        writeDeleteOsmObjectEnvelopeQuery(const osm::OsmObjectType &type, const std::set<id_t> &ids) const;
+        [[nodiscard]] std::string
+        writeDeleteOsmObjectConvexHullQuery(const osm::OsmObjectType &type, const std::set<id_t> &ids) const;
+        [[nodiscard]] std::string
+        writeDeleteOsmObjectLengthQuery(const osm::OsmObjectType &type, const std::set<id_t> &ids) const;
+        [[nodiscard]] std::string
+        writeDeleteOsmObjectAreaQuery(const osm::OsmObjectType &type, const std::set<id_t> &ids) const;
+        [[nodiscard]] std::string
+        writeDeleteWayMemberQuery(const std::set<id_t> &ids) const;
+        [[nodiscard]] std::string
+        writeDeleteRelMemberQuery(const std::set<id_t> &ids) const;
 
         /**
          * @returns A SPARQL query that deletes the given triple
@@ -59,12 +79,6 @@ namespace olu::sparql {
          */
         [[nodiscard]] std::string
         writeDeleteQueryForMetaAndTags(const std::set<id_t> &ids, const std::string &osmTag) const;
-
-        /**
-         * @returns A SPARQL query that delete all geometry triples for subjects `osmTag:id`
-         */
-        [[nodiscard]] std::string
-        writeDeleteQueryForGeometry(const std::set<id_t> &ids, const std::string &osmTag) const;
 
         /**
         * @returns A SPARQL query for the locations of the nodes with the given ID in WKT format
@@ -160,6 +174,8 @@ namespace olu::sparql {
                                                          const std::string& object);
 
         [[nodiscard]] static std::string getTripleClause(const ttl::Triple &triple);
+
+        [[nodiscard]] static std::string getOsmNamespace(const osm::OsmObjectType &type);
 
         [[nodiscard]] std::string wrapWithGraphOptional(const std::string& clause) const;
         [[nodiscard]] static std::string wrapWithUnion(const std::string& clause);

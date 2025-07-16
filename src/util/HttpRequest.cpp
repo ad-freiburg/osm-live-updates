@@ -23,6 +23,9 @@
 #include <cstring>
 
 #include "curl/curl.h"
+#include "util/Logger.h"
+
+static inline constexpr std::string_view PREFIX_SPACER = "                          ";
 
 // _________________________________________________________________________________________________
 static size_t WriteMemoryCallback(void* contents, const size_t size, const size_t nmemb,
@@ -97,14 +100,13 @@ std::string olu::util::HttpRequest::perform() {
         curl_easy_getinfo (_curl, CURLINFO_RESPONSE_CODE, &http_code);
 
         if (_method == POST) {
-            std::cerr << "POST failed with reason " << reason << std::endl;
-            std::cerr << "HTTP Code: " << http_code << std::endl;
-            std::cerr << "URL: " << _url << std::endl;
-            std::cerr << "Response: " << response << std::endl;
+            Logger::log(LogEvent::ERROR, "POST failed with reason: " + reason);
+            Logger::stream() << PREFIX_SPACER << "HTTP Code: " << http_code << std::endl;
+            Logger::stream() << PREFIX_SPACER << "URL: " << _url << std::endl;
         } else if (_method == GET) {
-            std::cerr << "GET failed with reason " << reason << std::endl;
-            std::cerr << "HTTP Code: " << http_code << std::endl;
-            std::cerr << "URL: " << _url << std::endl;
+            Logger::log(LogEvent::ERROR, "GET failed with reason: " + reason);
+            Logger::stream() << PREFIX_SPACER << "HTTP Code: " << http_code << std::endl;
+            Logger::stream() << PREFIX_SPACER << "URL: " << _url << std::endl;
         }
 
         throw HttpRequestException(std::to_string(http_code).c_str());

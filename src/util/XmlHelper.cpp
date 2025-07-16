@@ -19,8 +19,7 @@
 #include "util/XmlHelper.h"
 
 #include <string>
-
-#include "boost/regex.hpp"
+#include <regex>
 
 #include "config/Constants.h"
 
@@ -101,8 +100,8 @@ return result;
 
 // _________________________________________________________________________________________________
 bool olu::util::XmlHelper::isXmlEncoded(const std::string &input) {
-    const boost::regex xmlEntityRegex("&(amp|lt|gt|quot|apos|#xA|#xD|#x9);");
-    return regex_search(input, xmlEntityRegex);
+    const std::regex xmlEntityRegex("&(amp|lt|gt|quot|apos|#xA|#xD|#x9);");
+    return std::regex_search(input, xmlEntityRegex);
 }
 
 // _________________________________________________________________________________________________

@@ -21,14 +21,14 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
-#include <util/Logger.h>
+#include <regex>
 
 #include "omp.h"
-#include "boost/regex.hpp"
 
 #include "config/Constants.h"
 #include "util/URLHelper.h"
 #include "util/HttpRequest.h"
+#include "util/Logger.h"
 
 namespace cnst = olu::config::constants;
 
@@ -183,8 +183,8 @@ olu::osm::OsmDatabaseState
 olu::osm::OsmReplicationServerHelper::extractStateFromStateFile(const std::string& stateFile) {
     OsmDatabaseState state;
     // The state file always contains the sequence number like "sequenceNumber=4290"
-    const boost::regex regexSeqNumber("sequenceNumber=(\\d+)");
-    if (boost::smatch matchSeqNumber;
+    const std::regex regexSeqNumber("sequenceNumber=(\\d+)");
+    if (std::smatch matchSeqNumber;
         regex_search(stateFile, matchSeqNumber, regexSeqNumber)) {
         state.sequenceNumber = std::stoi(matchSeqNumber[1]);
     } else {
@@ -194,9 +194,9 @@ olu::osm::OsmReplicationServerHelper::extractStateFromStateFile(const std::strin
     }
 
     // The state file always contains the timestamp like "timestamp=2025-01-04T21\:21\:15Z"
-    const boost::regex regexTimestamp(
+    const std::regex regexTimestamp(
             R"(timestamp=([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}\\:[0-9]{2}\\:[0-9]{2}Z))");
-    if (boost::smatch matchTimestamp;
+    if (std::smatch matchTimestamp;
         regex_search(stateFile, matchTimestamp, regexTimestamp)) {
         state.timeStamp = matchTimestamp[1];
     } else {

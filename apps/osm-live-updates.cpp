@@ -20,6 +20,7 @@
 #include "osm/OsmDataFetcher.h"
 #include "osm/OsmUpdater.h"
 #include "config/ExitCode.h"
+#include "util/Logger.h"
 
 #include <fstream>
 #include <iostream>
@@ -33,7 +34,8 @@ int main(int argc, char** argv) {
         auto osmUpdater = olu::osm::OsmUpdater(config);
         osmUpdater.run();
     } catch (const std::exception& e) {
-        std::cerr << e.what() << std::endl;
+        olu::util::Logger::log(olu::util::LogEvent::ERROR,
+                               "Failed update process with reason: " + std::string(e.what()));
         std::exit(olu::config::ExitCode::EXCEPTION);
     }
 

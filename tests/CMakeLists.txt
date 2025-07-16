@@ -17,7 +17,6 @@
 # along with osm-live-updates.  If not, see <https://www.gnu.org/licenses/>.
 
 set(INSTALL_GTEST OFF CACHE BOOL "Suppressing installation of googletest" FORCE)
-add_subdirectory("${PROJECT_SOURCE_DIR}/vendor/google/googletest" "vendor/google/googletest")
 
 mark_as_advanced(
     BUILD_GMOCK BUILD_GTEST BUILD_SHARED_LIBS
