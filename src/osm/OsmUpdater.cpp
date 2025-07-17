@@ -293,10 +293,12 @@ void olu::osm::OsmUpdater::checkOsm2RdfVersions() const {
                                                        "program (" + Osm2ttl::getGitInfo() + ")");
         }
     } catch (const OsmDataFetcherException &e) {
-        util::Logger::log(util::LogEvent::WARNING,
-                          "Could not verify that the osm2rdf version that was on the SPARQL"
-                          " endpoint. Please make sure that the osm2rdf version that was used to"
-                          " create the dump is the same as the one used in this program.");
+        std::stringstream errorMessage;
+        errorMessage << "Could not verify that the osm2rdf version that was on the SPARQL endpoint."
+                     << std::endl << util::Logger::PREFIX_SPACER
+                     << "Please make sure that the osm2rdf version that was used to create the dump"
+                        " is the same as the one used in this program.";
+        util::Logger::log(util::LogEvent::WARNING, errorMessage.str());
     }
 }
 

@@ -39,6 +39,9 @@ namespace olu::util {
 
     class Logger {
     public:
+        // Prefix for log messages to align them in the console output
+        static constexpr std::string_view PREFIX_SPACER = "                          ";
+
         /**
          * Formats and writes a log message to the console and to a log file.
          * Example: "[2025-07-13 13:53:19.929] - INFO : Filtering converted triples..."
