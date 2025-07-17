@@ -170,9 +170,10 @@ void olu::osm::OsmUpdater::decideStartSequenceNumber() {
     // Check if the SPARQL endpoint was already updated from olu once
     // and pick up the sequence number
     if (auto seqNumFromEndpoint = _odf->fetchUpdatesCompleteUntil(); seqNumFromEndpoint > 0) {
-        util::Logger::log(util::LogEvent::INFO,
-                          "SPARQL endpoint returned sequence number: " +
-                          std::to_string(seqNumFromEndpoint));
+        std::stringstream errorMessage;
+        errorMessage.imbue(util::commaLocale);
+        errorMessage << "SPARQL endpoint returned latest sequence number: " << seqNumFromEndpoint;
+        util::Logger::log(util::LogEvent::INFO, errorMessage.str());
         seqNumFromEndpoint += 1; // Start one sequence number after the last run
         _stats.setStartDatabaseState({"", seqNumFromEndpoint});
         return;

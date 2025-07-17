@@ -20,6 +20,7 @@
 #define LOGGER_H
 
 #include <array>
+#include <iomanip>
 #include <sstream>
 
 namespace olu::util {
@@ -93,6 +94,7 @@ namespace olu::util {
     public:
         explicit LogStream() {
             _stream.imbue(commaLocale);
+            _stream << std::setprecision(3);
         }
 
         // Destructor will automatically log the message
