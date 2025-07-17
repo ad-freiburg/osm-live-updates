@@ -19,6 +19,7 @@
 #ifndef OSM_LIVE_UPDATES_OSMDATABASESTATE_H
 #define OSM_LIVE_UPDATES_OSMDATABASESTATE_H
 
+#include <regex>
 #include <string>
 
 #include "util/Logger.h"
@@ -27,27 +28,51 @@ namespace olu::osm {
 
     struct OsmDatabaseState {
         std::string timeStamp;
-        int sequenceNumber;
+        int sequenceNumber = -1;
+
+        // Compare database states based on the timestamp as the sequence number can vary
+        // depending on which replication server is used (e.g., minute diffs will have another
+        // numbering as daily diffs, but the timestamp can still be used to compare them).
+        bool operator<(const OsmDatabaseState& other) const {
+            return timeStamp < other.timeStamp;
+        }
     };
 
-inline std::string to_string(const OsmDatabaseState& state) {
-    std::ostringstream oss;
-    oss.imbue(util::commaLocale);
+    inline std::string to_string(const OsmDatabaseState& state) {
+        std::ostringstream oss;
+        oss.imbue(util::commaLocale);
 
-    if (state.timeStamp.empty()) {
-        oss << "(Sequence number: " << state.sequenceNumber << ")";
+        if (state.timeStamp.empty()) {
+            oss << "(Sequence number: " << state.sequenceNumber << ")";
+            return oss.str();
+        }
+
+        std::string timestampFormatted = state.timeStamp;
+        std::erase_if(timestampFormatted, [](const char c) {
+            return c == '\\';
+        });
+
+        oss << "(Sequence number: " << state.sequenceNumber
+            << ", Timestamp: " << timestampFormatted << ")";
         return oss.str();
     }
 
-    std::string timestampFormatted = state.timeStamp;
-    std::erase_if(timestampFormatted, [](const char c) {
-        return c == '\\';
-    });
+    inline OsmDatabaseState from_string(const std::string& str) {
+        OsmDatabaseState state;
 
-    oss << "(Sequence number: " << state.sequenceNumber
-        << ", Timestamp: " << timestampFormatted << ")";
-    return oss.str();
-}
+        const std::regex regex(R"(\(Sequence number: ([\d,]+), Timestamp: (.+)\))");
+        if (std::smatch match; std::regex_search(str, match, regex) && match.size() == 3) {
+            std::string seqNumStr = match[1].str();
+            // Remove the thousand separator commas from the sequence number string
+            std::erase(seqNumStr, ',');
+            state.sequenceNumber = std::stoi(seqNumStr);
+            state.timeStamp = match[2].str();
+        } else {
+            throw std::runtime_error("Failed to parse OsmDatabaseState from string: " + str);
+        }
+
+        return state;
+    }
 
 } // namespace olu::osm
 

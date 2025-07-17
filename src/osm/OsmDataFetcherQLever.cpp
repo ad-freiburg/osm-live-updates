@@ -680,8 +680,8 @@ std::map<std::string, std::string> olu::osm::OsmDataFetcherQLever::fetchOsm2RdfO
 }
 
 // _________________________________________________________________________________________________
-int olu::osm::OsmDataFetcherQLever::fetchUpdatesCompleteUntil() {
-    std::set<int> updatesCompleteUntilResponses;
+olu::osm::OsmDatabaseState olu::osm::OsmDataFetcherQLever::fetchUpdatesCompleteUntil() {
+    std::set<OsmDatabaseState> updatesCompleteUntilResponses;
 
     runQuery(_queryWriter.writeQueryForUpdatesCompleteUntil(),
              cnst::PREFIXES_FOR_METADATA_TRIPLES,
@@ -689,29 +689,53 @@ int olu::osm::OsmDataFetcherQLever::fetchUpdatesCompleteUntil() {
                  for (auto result: results) {
                      try {
                          auto seqNumResponse = getValue<std::string>(result.value());
-                         int seqNum = util::XmlHelper::parseRdfString<int>(seqNumResponse);
-                         updatesCompleteUntilResponses.insert(seqNum);
+                         auto databaseState = util::XmlHelper::parseRdfString<std::string>(seqNumResponse);
+                         updatesCompleteUntilResponses.insert(from_string(databaseState));
                      } catch (std::exception &e) {
                          util::Logger::log(util::LogEvent::WARNING,
-                                           "SPARQL endpoint returned invalid sequence number for "
+                                           "SPARQL endpoint returned invalid database state for "
                                            "'osm2rdfmeta:updatesCompleteUntil' predicate: "
                                            + std::string(e.what()));
                      }
                  }
              });
 
-    // Return 0 if no updatesCompleteUntil triple is found
-    if (updatesCompleteUntilResponses.empty()) {
-        return 0;
-    }
+    if (const auto maxIt = std::max_element(updatesCompleteUntilResponses.begin(),
+                                            updatesCompleteUntilResponses.end());
+        maxIt != updatesCompleteUntilResponses.end()) {
+        const OsmDatabaseState &maxState = *maxIt;
+        return maxState;
+        }
 
-    if (updatesCompleteUntilResponses.size() > 1) {
+    throw OsmDataFetcherException("SPARQL endpoint did not return a valid database state.");
+}
+
+// _________________________________________________________________________________________________
+std::string olu::osm::OsmDataFetcherQLever::fetchReplicationServer() {
+    std::set<std::string> replicationServers;
+
+    runQuery(_queryWriter.writeQueryForReplicationServer(),
+             cnst::PREFIXES_FOR_METADATA_TRIPLES,
+             [&replicationServers](simdjson::ondemand::value results) {
+                 for (auto result: results) {
+                     try {
+                         auto replicationServer = getValue<std::string>(result.value());
+                         replicationServer = util::XmlHelper::parseRdfString<std::string>(replicationServer);
+                         replicationServers.insert(replicationServer);
+                     } catch (std::exception &e) {
+                         util::Logger::log(util::LogEvent::WARNING,
+                                           "SPARQL endpoint returned invalid replication server uri: "
+                                           + std::string(e.what()));
+                     }
+                 }
+             });
+
+    if (replicationServers.size() > 1) {
         util::Logger::log(util::LogEvent::WARNING,
-                          "Multiple updatesCompleteUntil triples found in the SPARQL endpoint.");
-        return 0;
+                "SPARQL endpoint returned multiple replication server uris");
     }
 
-    return *updatesCompleteUntilResponses.begin();
+    return replicationServers.empty() ? "" : *replicationServers.begin();
 }
 
 // _________________________________________________________________________________________________

@@ -26,6 +26,7 @@
 #include "omp.h"
 
 #include "config/Constants.h"
+#include "util/Exceptions.h"
 #include "util/URLHelper.h"
 #include "util/HttpRequest.h"
 #include "util/Logger.h"
@@ -39,7 +40,7 @@ olu::osm::OsmDatabaseState
 olu::osm::OsmReplicationServerHelper::fetchDatabaseStateFromUrl(
     const std::string &stateFilePath) const {
     const std::string url = util::URLHelper::buildUrl({
-        _config.changeFileDirUri,
+        _config.replicationServerUri,
         stateFilePath});
 
     std::string response;
@@ -79,7 +80,7 @@ void olu::osm::OsmReplicationServerHelper::fetchChangeFile(int &sequenceNumber) 
                                + cnst::OSM_CHANGE_FILE_EXTENSION
                                + cnst::GZIP_EXTENSION;
     std::string url = util::URLHelper::buildUrl({
-        _config.changeFileDirUri,
+        _config.replicationServerUri,
         diffFilename});
 
     // Get change file from server and write to a cache file.
@@ -116,8 +117,10 @@ olu::osm::OsmReplicationServerHelper::fetchDatabaseStateForTimestamp(
     // (We can lexicographically compare timestamps because they are ISO-formatted
     // "YYYY-MM-DDTHH:MM:SS")
     if (_stats->getLatestDatabaseState().timeStamp <= timeStamp) {
-        util::Logger::log(util::LogEvent::INFO, "Database is already up to date. DONE.");
-        throw OsmReplicationServerHelperException("Database is already up to date.");
+        const std::string msg = "The latest database state on the reapplication server (" + _stats->
+                                getLatestDatabaseState().timeStamp + ") is before or "
+                                "equal to the timestamp: " + timeStamp;
+        throw util::DatabaseUpToDateException(msg.c_str());
     }
 
     util::Logger::log(util::LogEvent::INFO,

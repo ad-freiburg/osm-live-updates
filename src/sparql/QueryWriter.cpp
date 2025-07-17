@@ -18,6 +18,7 @@
 
 #include "sparql/QueryWriter.h"
 
+#include <iostream>
 #include <string>
 #include <vector>
 #include <sstream>
@@ -232,10 +233,15 @@ std::string olu::sparql::QueryWriter::writeDeleteRelMemberQuery(const std::set<i
 }
 
 // _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeDeleteTripleQuery(ttl::Triple triple) const {
+std::string olu::sparql::QueryWriter::writeDeleteTripleQuery(const std::vector<ttl::Triple>& triples) const {
+    std::stringstream triplesStream;
+    for (const auto &triple : triples) {
+        triplesStream << getTripleClause(triple);
+    }
+
     std::stringstream oss;
     oss << "DELETE WHERE { ";
-    oss << wrapWithGraphOptional(getTripleClause(triple));
+    oss << wrapWithGraphOptional(triplesStream.str());
     oss << " }";
     return oss.str();
 }
@@ -465,11 +471,23 @@ std::string olu::sparql::QueryWriter::writeQueryForOsm2RdfOptions() const {
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeQueryForUpdatesCompleteUntil() const {
     std::ostringstream oss;
-    oss << "SELECT " + cnst::QUERY_VAR_SEQUENCE_NUMBER + " ";
+    oss << "SELECT " + cnst::QUERY_VAR_UPDATES_COMPLETE_UNTIL + " ";
     oss << getFromClauseOptional();
     oss << "WHERE { ";
-    oss << getTripleClause(cnst::PREFIXED_OSM2RDF_META_INFO, cnst::PREFIXED_OSM2RDF_META_UPDATES_COMPLETE_UNTIL, cnst::QUERY_VAR_SEQUENCE_NUMBER);
+    oss << getTripleClause(cnst::PREFIXED_OSM2RDF_META_INFO, cnst::PREFIXED_OSM2RDF_META_UPDATES_COMPLETE_UNTIL, cnst::QUERY_VAR_UPDATES_COMPLETE_UNTIL);
     oss << "}";
+    return oss.str();
+}
+
+// _________________________________________________________________________________________________
+std::string olu::sparql::QueryWriter::writeQueryForReplicationServer() const {
+    std::ostringstream oss;
+    oss << "SELECT " + cnst::QUERY_VAR_REPLICATION_SERVER + " ";
+    oss << getFromClauseOptional();
+    oss << "WHERE { ";
+    oss << getTripleClause(cnst::PREFIXED_OSM2RDF_META_INFO, cnst::PREFIXED_OSM2RDF_META_REPLICATION_SERVER, cnst::QUERY_VAR_REPLICATION_SERVER);
+    oss << "}";
+
     return oss.str();
 }
 

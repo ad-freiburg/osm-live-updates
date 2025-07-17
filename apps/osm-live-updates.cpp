@@ -23,7 +23,8 @@
 #include "util/Logger.h"
 
 #include <fstream>
-#include <iostream>
+
+#include "util/Exceptions.h"
 
 int main(int argc, char** argv) {
     auto config((olu::config::Config()));
@@ -33,6 +34,9 @@ int main(int argc, char** argv) {
     try {
         auto osmUpdater = olu::osm::OsmUpdater(config);
         osmUpdater.run();
+    } catch (const olu::util::DatabaseUpToDateException& e) {
+        olu::util::Logger::log(olu::util::LogEvent::INFO,
+                               "Database is already up to date. DONE.");
     } catch (const std::exception& e) {
         olu::util::Logger::log(olu::util::LogEvent::ERROR,
                                "Failed update process with reason: " + std::string(e.what()));

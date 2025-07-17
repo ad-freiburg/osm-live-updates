@@ -32,7 +32,6 @@ void olu::util::Logger::log(const LogEvent &eventType, const std::string_view &d
     auto message = formatLogMessage(eventType, description);
     
     auto& outStream = (eventType == LogEvent::ERROR) ? std::cerr : std::cout;
-    outStream.imbue(commaLocale);
     outStream << message;
 
     std::ofstream outputFile;
@@ -62,6 +61,7 @@ std::string olu::util::Logger::formatLogMessage(const LogEvent &eventType,
                                                 const std::string_view &description) {
     std::ostringstream oss;
     oss.imbue(commaLocale);
+    oss << std::setprecision(3);
 
     oss << currentTimeFormatted()
         << "- "

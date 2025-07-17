@@ -20,6 +20,7 @@
 #define LOGGER_H
 
 #include <array>
+#include <iomanip>
 #include <sstream>
 
 namespace olu::util {
@@ -38,6 +39,9 @@ namespace olu::util {
 
     class Logger {
     public:
+        // Prefix for log messages to align them in the console output
+        static constexpr std::string_view PREFIX_SPACER = "                          ";
+
         /**
          * Formats and writes a log message to the console and to a log file.
          * Example: "[2025-07-13 13:53:19.929] - INFO : Filtering converted triples..."
@@ -93,6 +97,7 @@ namespace olu::util {
     public:
         explicit LogStream() {
             _stream.imbue(commaLocale);
+            _stream << std::setprecision(3);
         }
 
         // Destructor will automatically log the message

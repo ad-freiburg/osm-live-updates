@@ -23,6 +23,7 @@
 #include <set>
 #include <string>
 
+#include "OsmDatabaseState.h"
 #include "config/Constants.h"
 #include "osm/Node.h"
 #include "osm/Relation.h"
@@ -199,14 +200,20 @@ namespace olu::osm {
 
 
         /**
-         * Fetches the 'osm2rdfmeta:updatesCompleteUntil' metadata triple from the SPARQL endpoint,
-         * and returns the sequence number until which the updates are complete.
+         * Fetches the 'osm2rdfmeta:updatesCompleteUntil' metadata triple from the SPARQL endpoint
+         * and returns the database state until which the updates are complete.
          *
-         * Returns 0 if the triple is not found or if the sequence number is not a valid integer.
-         *
-         * @return The sequence number until which the updates are complete, or 0 if not found.
+         * @return The database state until which the updates are complete, or 0 if not found.
          */
-        virtual int fetchUpdatesCompleteUntil() { return {}; }
+        virtual OsmDatabaseState fetchUpdatesCompleteUntil() { return {}; }
+
+        /**
+         * Fetches the 'osm2rdfmeta:replicationServer' metadata triple from the SPARQL endpoint
+         * and returns the replication server URI.
+         *
+         * @return The replication server URI, or an empty string if not found.
+         */
+        virtual std::string fetchReplicationServer() { return {}; }
     };
 } // namespace olu
 

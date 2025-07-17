@@ -71,7 +71,7 @@ namespace olu::sparql {
          * @returns A SPARQL query that deletes the given triple
          */
         [[nodiscard]] std::string
-        writeDeleteTripleQuery(ttl::Triple triple) const;
+        writeDeleteTripleQuery(const std::vector<ttl::Triple>& triples) const;
 
         /**
          * @returns A SPARQL query that delete all triples with predicate 'osmmeta:...',
@@ -152,10 +152,16 @@ namespace olu::sparql {
         [[nodiscard]] std::string writeQueryForOsm2RdfOptions() const;
 
         /**
-         * @returns A SPARQL query that returns the sequence number for the
+         * @returns A SPARQL query that returns the database state for the
          * 'osm2rdfmeta:updatesCompleteUntil' triple.
          */
         [[nodiscard]] std::string writeQueryForUpdatesCompleteUntil() const;
+
+        /**
+         * @returns A SPARQL query that returns the database state for the
+         * 'osm2rdfmeta:replicationServer' triple.
+         */
+        [[nodiscard]] std::string writeQueryForReplicationServer() const;
 
         private:
         config::Config _config;

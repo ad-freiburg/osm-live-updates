@@ -92,7 +92,8 @@ void olu::osm::OsmChangeHandler::run() {
     relationReader.close();
 
     if (_nodeHandler.empty() && _wayHandler.empty() && _relationHandler.empty()) {
-        throw OsmChangeHandlerException("Change file is empty.");
+        util::Logger::log(util::LogEvent::WARNING, "Change file is empty, no updates to process.");
+        return;
     }
 
     _stats->endTimeProcessingChangeFiles();

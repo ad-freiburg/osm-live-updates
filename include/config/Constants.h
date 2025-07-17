@@ -161,6 +161,10 @@ namespace olu::config::constants {
     const static inline std::string NAMESPACE_IRI_OSM_META = "https://www.openstreetmap.org/meta/";
     const static inline std::string PREFIX_DECL_OSM_META = MakePrefixDecl(NAMESPACE_OSM_META, NAMESPACE_IRI_OSM_META);
 
+    const static inline std::string NAMESPACE_OSM_CHANGESET = "osmchangeset";
+    const static inline std::string NAMESPACE_IRI_OSM_CHANGESET = "https://www.openstreetmap.org/changeset/";
+    const static inline std::string PREFIX_DECL_OSM_CHANGESET = MakePrefixDecl(NAMESPACE_OSM_CHANGESET, NAMESPACE_IRI_OSM_CHANGESET);
+
     const static inline std::string NAMESPACE_OSM2RDF = "osm2rdf";
     const static inline std::string NAMESPACE_IRI_OSM2RDF = "https://osm2rdf.cs.uni-freiburg.de/rdf#";
     const static inline std::string PREFIX_DECL_OSM2RDF = MakePrefixDecl(NAMESPACE_OSM2RDF, NAMESPACE_IRI_OSM2RDF);
@@ -242,6 +246,7 @@ namespace olu::config::constants {
     const static inline std::string NAME_SEQUENCE_NUMBER = "sequenceNumber";
     const static inline std::string NAME_DATE_MODIFIED = "dateModified";
     const static inline std::string NAME_UPDATES_COMPLETE_UNTIL = "updatesCompleteUntil";
+    const static inline std::string NAME_REPLICATION_SERVER = "replicationServer";
     const static inline std::string NAME_GEOMETRY = "geometry";
 
     /// Prefixed names -----------------------------------------------------------------------------
@@ -281,11 +286,12 @@ namespace olu::config::constants {
     const static inline std::string PREFIXED_OSM2RDF_META_INFO = MakePrefixedName(NAMESPACE_OSM2RDF_META, NAME_INFO);
     const static inline std::string PREFIXED_OSM2RDF_META_VERSION = MakePrefixedName(NAMESPACE_OSM2RDF_META, NAME_VERSION);
     const static inline std::string PREFIXED_OSM2RDF_META_UPDATES_COMPLETE_UNTIL = MakePrefixedName(NAMESPACE_OSM2RDF_META, NAME_UPDATES_COMPLETE_UNTIL);
+    const static inline std::string PREFIXED_OSM2RDF_META_REPLICATION_SERVER = MakePrefixedName(NAMESPACE_OSM2RDF_META, NAME_REPLICATION_SERVER);
     const static inline std::string PREFIXED_OSM2RDF_META_DATE_MODIFIED = MakePrefixedName(NAMESPACE_OSM2RDF_META, NAME_DATE_MODIFIED);
 
     /// Prefix declarations ------------------------------------------------------------------------
     const static inline std::vector DEFAULT_PREFIXES {
-            PREFIX_DECL_OSM, PREFIX_DECL_OSM_NODE, PREFIX_DECL_OSM_WAY, PREFIX_DECL_OSM_REL, PREFIX_DECL_OSM_KEY, PREFIX_DECL_OSM_META,
+            PREFIX_DECL_OSM, PREFIX_DECL_OSM_NODE, PREFIX_DECL_OSM_WAY, PREFIX_DECL_OSM_REL, PREFIX_DECL_OSM_KEY, PREFIX_DECL_OSM_META, PREFIX_DECL_OSM_CHANGESET,
             PREFIX_DECL_OSM2RDF, PREFIX_DECL_OSM2RDF_KEY, PREFIX_DECL_OSM2RDF_GEOM, PREFIX_DECL_OSM2RDF_META, PREFIX_DECL_OSM2RDF_GENID, PREFIX_DECL_OSM2RDF_MEMBER,
             PREFIX_DECL_WD, PREFIX_DECL_GEO, PREFIX_DECL_OGC, PREFIX_DECL_RDF, PREFIX_DECL_XSD};
 
@@ -376,6 +382,9 @@ namespace olu::config::constants {
     const static inline std::string QUERY_VAR_OPTION = MakeQueryVar(NAME_OPTION);
     const static inline std::string QUERY_VAR_SEQUENCE_NUMBER = MakeQueryVar(NAME_SEQUENCE_NUMBER);
     const static inline std::string QUERY_VAR_GEOMETRY = MakeQueryVar(NAME_GEOMETRY);
+    const static inline std::string QUERY_VAR_REPLICATION_SERVER = MakeQueryVar(NAME_REPLICATION_SERVER);
+    const static inline std::string QUERY_VAR_UPDATES_COMPLETE_UNTIL = MakeQueryVar(NAME_UPDATES_COMPLETE_UNTIL);
+
 
     // Triple patterns --------------------------------------------------------------------------
     const static inline std::string IRI_XSD_DATE_TIME = "<" + NAMESPACE_IRI_XSD + "dateTime>";
@@ -424,11 +433,11 @@ namespace olu::config::constants {
     const static inline std::string PATH_TO_INPUT_OPTION_HELP =
             "The path to the directory with the OsmChange files.";
 
-    const static inline std::string OSM_CHANGE_FILE_DIRECTORY_URI_INFO =
-            "URI of OsmChange file server:";
-    const static inline std::string OSM_CHANGE_FILE_SERVER_URI_OPTION_SHORT = "f";
-    const static inline std::string OSM_CHANGE_FILE_SERVER_URI_OPTION_LONG = "file-server";
-    const static inline std::string OSM_CHANGE_FILE_SERVER_URI_OPTION_HELP =
+    const static inline std::string REPLICATION_SERVER_URI_INFO =
+            "Replication server uri:";
+    const static inline std::string REPLICATION_SERVER_URI_OPTION_SHORT = "f";
+    const static inline std::string REPLICATION_SERVER_URI_OPTION_LONG = "file-server";
+    const static inline std::string REPLICATION_SERVER_URI_OPTION_HELP =
             "The URI of the server with the OsmChange files.";
 
     const static inline std::string SEQUENCE_NUMBER_INFO = "Starting sequence number:";

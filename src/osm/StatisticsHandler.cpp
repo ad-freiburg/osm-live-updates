@@ -24,54 +24,52 @@
 #include "util/Logger.h"
 #include "util/Time.h"
 
-static inline constexpr std::string_view PREFIX_SPACER = "                          ";
-
 namespace cnst = olu::config::constants;
 
 // _________________________________________________________________________________________________
 void olu::osm::StatisticsHandler::printOsmStatistics() const {
     util::Logger::log(util::LogEvent::INFO, "OSM Statistics:");
     if (_config.changeFileDir.empty()) {
-        util::Logger::stream() << PREFIX_SPACER << "Started update process at database state: "
+        util::Logger::stream() << util::Logger::PREFIX_SPACER << "Started update process at database state: "
                   << olu::osm::to_string(_startDatabaseState)
                   << std::endl;
 
-        util::Logger::stream() << PREFIX_SPACER << "Ended update process at database state: "
+        util::Logger::stream() << util::Logger::PREFIX_SPACER << "Ended update process at database state: "
                   << olu::osm::to_string(_latestDatabaseState)
                   << std::endl;
 
-        util::Logger::stream() << PREFIX_SPACER << "Handled "
+        util::Logger::stream() << util::Logger::PREFIX_SPACER << "Handled "
                   << std::to_string(getNumOfChangeFiles())
                   << " change files in total."
                   << std::endl;
     } else {
-        util::Logger::stream() << PREFIX_SPACER << "Handled change files at: "
+        util::Logger::stream() << util::Logger::PREFIX_SPACER << "Handled change files at: "
                   << _config.changeFileDir
                   << std::endl;
     }
 
     if (numOfNodes() == 0) {
-        util::Logger::stream() << PREFIX_SPACER << "0 nodes in change files." << std::endl;
+        util::Logger::stream() << util::Logger::PREFIX_SPACER << "0 nodes in change files." << std::endl;
     } else {
-        util::Logger::stream() << PREFIX_SPACER << "Nodes created: " << _numOfCreatedNodes
+        util::Logger::stream() << util::Logger::PREFIX_SPACER << "Nodes created: " << _numOfCreatedNodes
                   << ", modified: " << _numOfModifiedNodes
                   << ", deleted: " << _numOfDeletedNodes
                   << std::endl;
     }
 
     if (numOfWays() == 0) {
-        util::Logger::stream() << PREFIX_SPACER << "0 ways in change files." << std::endl;
+        util::Logger::stream() << util::Logger::PREFIX_SPACER << "0 ways in change files." << std::endl;
     } else {
-        util::Logger::stream() << PREFIX_SPACER << "Ways created: " << _numOfCreatedWays
+        util::Logger::stream() << util::Logger::PREFIX_SPACER << "Ways created: " << _numOfCreatedWays
                   << ", modified: " << _numOfModifiedWays
                   << ", deleted: " << _numOfDeletedWays
                   << std::endl;
     }
 
     if (numOfRelations() == 0) {
-        util::Logger::stream() << PREFIX_SPACER << "0 relations in change files." << std::endl;
+        util::Logger::stream() << util::Logger::PREFIX_SPACER << "0 relations in change files." << std::endl;
     } else {
-        util::Logger::stream() << PREFIX_SPACER << "Relations created: " << _numOfCreatedRelations
+        util::Logger::stream() << util::Logger::PREFIX_SPACER << "Relations created: " << _numOfCreatedRelations
                   << ", modified: " << _numOfModifiedRelations
                   << ", deleted: " << _numOfDeletedRelations
                   << std::endl;
@@ -85,9 +83,9 @@ void olu::osm::StatisticsHandler::printUpdateStatistics() const {
 
     if (_config.showDetailedStatistics) {
         if (_numOfNodesWithLocationChange == 0) {
-            util::Logger::stream() << PREFIX_SPACER << "No nodes with location change." << std::endl;
+            util::Logger::stream() << util::Logger::PREFIX_SPACER << "No nodes with location change." << std::endl;
         } else {
-            util::Logger::stream() << PREFIX_SPACER << _numOfNodesWithLocationChange
+            util::Logger::stream() << util::Logger::PREFIX_SPACER << _numOfNodesWithLocationChange
                       << " modified nodes changed their location ("
                       << calculatePercentage(_numOfModifiedNodes, _numOfNodesWithLocationChange)
                       << "%)"
@@ -96,9 +94,9 @@ void olu::osm::StatisticsHandler::printUpdateStatistics() const {
     }
 
     if (_numOfRelationsToUpdateGeometry == 0 && _numOfWaysToUpdateGeometry == 0) {
-        util::Logger::stream() << PREFIX_SPACER << "No geometries to update" << std::endl;
+        util::Logger::stream() << util::Logger::PREFIX_SPACER << "No geometries to update" << std::endl;
     } else {
-        util::Logger::stream() << PREFIX_SPACER << "Updated geometries for " << _numOfWaysToUpdateGeometry
+        util::Logger::stream() << util::Logger::PREFIX_SPACER << "Updated geometries for " << _numOfWaysToUpdateGeometry
                   << " ways and " << _numOfRelationsToUpdateGeometry
                   << " relations"
                   << std::endl;
@@ -106,9 +104,9 @@ void olu::osm::StatisticsHandler::printUpdateStatistics() const {
 
     if (_config.showDetailedStatistics) {
         if (getNumOfDummyNodes() == 0 && getNumOfDummyWays() == 0 && getNumOfDummyRelations() == 0) {
-            util::Logger::stream() << PREFIX_SPACER << "No references to nodes, ways or relations needed." << std::endl;
+            util::Logger::stream() << util::Logger::PREFIX_SPACER << "No references to nodes, ways or relations needed." << std::endl;
         } else {
-            util::Logger::stream() << PREFIX_SPACER << "Created objects from SPARQL endpoint for "
+            util::Logger::stream() << util::Logger::PREFIX_SPACER << "Created objects from SPARQL endpoint for "
                       << getNumOfDummyNodes() << " nodes, "
                       << getNumOfDummyWays() << " ways, "
                       << getNumOfDummyRelations() << " relations"
@@ -121,11 +119,11 @@ void olu::osm::StatisticsHandler::printUpdateStatistics() const {
 void olu::osm::StatisticsHandler::printOsm2RdfStatistics() const {
     util::Logger::log(util::LogEvent::INFO, "Osm2Rdf Statistics:");
 
-    util::Logger::stream() << PREFIX_SPACER << "Osm2Rdf converted the OSM objects into "
+    util::Logger::stream() << util::Logger::PREFIX_SPACER << "Osm2Rdf converted the OSM objects into "
               << _numOfConvertedTriples << " triples"
               << std::endl;
 
-    util::Logger::stream() << PREFIX_SPACER << _numOfTriplesToInsert
+    util::Logger::stream() << util::Logger::PREFIX_SPACER << _numOfTriplesToInsert
               << " of them are relevant for the update."
               << std::endl;
 }
@@ -134,7 +132,7 @@ void olu::osm::StatisticsHandler::printOsm2RdfStatistics() const {
 void olu::osm::StatisticsHandler::printSparqlStatistics() const {
     util::Logger::log(util::LogEvent::INFO, "SPARQL Statistics:");
 
-    util::Logger::stream() << PREFIX_SPACER
+    util::Logger::stream() << util::Logger::PREFIX_SPACER
           << _queriesCount << " queries, "
           << _deleteOpCount << " delete and "
           << _insertOpCount << " insert operations were ";
@@ -145,12 +143,12 @@ void olu::osm::StatisticsHandler::printSparqlStatistics() const {
     }
 
     if (_config.isQLever) {
-        util::Logger::stream() << PREFIX_SPACER << "QLever response time: " << _qleverResponseTimeMs << " ms";
+        util::Logger::stream() << util::Logger::PREFIX_SPACER << "QLever response time: " << _qleverResponseTimeMs << " ms";
 
         if (_config.sparqlOutput == config::SparqlOutput::ENDPOINT) {
             util::Logger::stream() << ", QLever update time: " << _qleverUpdateTimeMs << " ms" << std::endl;
 
-            util::Logger::stream() << PREFIX_SPACER << "Inserted: " << _qleverInsertedTriplesCount << " and deleted "
+            util::Logger::stream() << util::Logger::PREFIX_SPACER << "Inserted: " << _qleverInsertedTriplesCount << " and deleted "
                       << _qleverDeletedTriplesCount << " triples at QLever endpoint" << std::endl;
 
             // Add the two metadata triples that are inserted at the end of the update process.
@@ -171,7 +169,7 @@ void olu::osm::StatisticsHandler::printTimingStatistics() const {
     util::Logger::log(util::LogEvent::INFO, "Timing Statistics:");
 
     util::Logger::stream() << std::fixed << std::setprecision(config::Config::DEFAULT_PERCENTAGE_PRECISION);
-    util::Logger::stream() << PREFIX_SPACER << "The complete update process took "
+    util::Logger::stream() << util::Logger::PREFIX_SPACER << "The complete update process took "
             << getTimeInMSTotal()
             << " ms." << std::endl;
 
@@ -182,14 +180,14 @@ void olu::osm::StatisticsHandler::printTimingStatistics() const {
     long partTime;
     if (_config.changeFileDir.empty()) {
         partTime = getTimeInMSDeterminingSequenceNumber();
-        util::Logger::stream() << PREFIX_SPACER << "Determining sequence number took "
+        util::Logger::stream() << util::Logger::PREFIX_SPACER << "Determining sequence number took "
                 << partTime
                 << " ms. ("
                 << calculatePercentageOfTotalTime(partTime) << "% of total time)"
                 << std::endl;
 
         partTime = getTimeInMSFetchingChangeFiles();
-        util::Logger::stream() << PREFIX_SPACER << "Fetching change files took "
+        util::Logger::stream() << util::Logger::PREFIX_SPACER << "Fetching change files took "
                 << partTime
                 << " ms. ("
                 << calculatePercentageOfTotalTime(partTime) << "% of total time)"
@@ -197,7 +195,7 @@ void olu::osm::StatisticsHandler::printTimingStatistics() const {
     }
 
     partTime = getTimeInMSMergingChangeFiles();
-    util::Logger::stream() << PREFIX_SPACER << "Merging change files took "
+    util::Logger::stream() << util::Logger::PREFIX_SPACER << "Merging change files took "
             << partTime
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
@@ -205,7 +203,7 @@ void olu::osm::StatisticsHandler::printTimingStatistics() const {
 
     if (!_config.bbox.empty() || !_config.pathToPolygonFile.empty()) {
         partTime = getTimeInMSApplyingBoundaries();
-        util::Logger::stream() << PREFIX_SPACER << "Applying boundaries took "
+        util::Logger::stream() << util::Logger::PREFIX_SPACER << "Applying boundaries took "
                 << partTime
                 << " ms. ("
                 << calculatePercentageOfTotalTime(partTime) << "% of total time)"
@@ -213,84 +211,84 @@ void olu::osm::StatisticsHandler::printTimingStatistics() const {
     }
 
     partTime = getTimeInMSProcessingChangeFiles();
-    util::Logger::stream() << PREFIX_SPACER << "Processing the change files took "
+    util::Logger::stream() << util::Logger::PREFIX_SPACER << "Processing the change files took "
             << partTime
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
 
     partTime = getTimeInMSCheckingNodeLocations();
-    util::Logger::stream() << PREFIX_SPACER << "Checking nodes for location change took "
+    util::Logger::stream() << util::Logger::PREFIX_SPACER << "Checking nodes for location change took "
             << partTime
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
 
     partTime = getTimeInMSFetchingObjectsToUpdateGeo();
-    util::Logger::stream() << PREFIX_SPACER << "Fetching objects to update geometry for took "
+    util::Logger::stream() << util::Logger::PREFIX_SPACER << "Fetching objects to update geometry for took "
             << partTime
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
 
     partTime = getTimeInMSFetchingReferences();
-    util::Logger::stream() << PREFIX_SPACER << "Fetching references took "
+    util::Logger::stream() << util::Logger::PREFIX_SPACER << "Fetching references took "
             << partTime
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
 
     partTime = getTimeInMSCreatingDummyNodes();
-    util::Logger::stream() << PREFIX_SPACER << "Creating referenced node objects took "
+    util::Logger::stream() << util::Logger::PREFIX_SPACER << "Creating referenced node objects took "
             << partTime
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
 
     partTime = getTimeInMSCreatingDummyWays();
-    util::Logger::stream() << PREFIX_SPACER << "Creating referenced way objects took "
+    util::Logger::stream() << util::Logger::PREFIX_SPACER << "Creating referenced way objects took "
             << partTime
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
 
     partTime = getTimeInMSCreatingDummyRelations();
-    util::Logger::stream() << PREFIX_SPACER << "Creating referenced relation objects took "
+    util::Logger::stream() << util::Logger::PREFIX_SPACER << "Creating referenced relation objects took "
             << partTime
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
 
     partTime = getTimeInMSMergingAndSortingDummyFiles();
-    util::Logger::stream() << PREFIX_SPACER << "Merging and sorting dummy files took "
+    util::Logger::stream() << util::Logger::PREFIX_SPACER << "Merging and sorting dummy files took "
             << partTime
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
 
     partTime = getTimeInMSOsm2RdfConversion();
-    util::Logger::stream() << PREFIX_SPACER << "Osm2rdf conversion took "
+    util::Logger::stream() << util::Logger::PREFIX_SPACER << "Osm2rdf conversion took "
             << partTime
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
 
     partTime = getTimeInMSDeletingTriples();
-    util::Logger::stream() << PREFIX_SPACER << "Deleting triples took "
+    util::Logger::stream() << util::Logger::PREFIX_SPACER << "Deleting triples took "
             << partTime
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
 
     partTime = getTimeInMSFilteringTriples();
-    util::Logger::stream() << PREFIX_SPACER << "Filtering the triples took "
+    util::Logger::stream() << util::Logger::PREFIX_SPACER << "Filtering the triples took "
             << partTime
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
 
     partTime = getTimeInMSInsertingTriples();
-    util::Logger::stream() << PREFIX_SPACER << "Inserting triples took "
+    util::Logger::stream() << util::Logger::PREFIX_SPACER << "Inserting triples took "
             << partTime
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"

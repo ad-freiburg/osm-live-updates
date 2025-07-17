@@ -45,7 +45,7 @@ struct Config {
     // User specified local directory for change files.
     std::string changeFileDir;
     // User specified uri for server to download change files.
-    std::string changeFileDirUri;
+    std::string replicationServerUri;
 
     // Uri of the SPARQL graph. Optional.
     std::string graphUri;

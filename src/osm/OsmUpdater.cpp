@@ -32,6 +32,7 @@
 #include "osm/OsmFileHelper.h"
 #include "config/Constants.h"
 #include "ttl/Triple.h"
+#include "util/Exceptions.h"
 #include "util/Logger.h"
 
 namespace cnst = olu::config::constants;
@@ -107,9 +108,10 @@ void olu::osm::OsmUpdater::run() {
         decideStartSequenceNumber();
         _stats.endTimeDeterminingSequenceNumber();
 
-        if (_stats.getStartDatabaseState().sequenceNumber >= latestState.sequenceNumber) {
-            util::Logger::log(util::LogEvent::INFO, "Database is already up to date. DONE.");
-            return;
+        if (_stats.getStartDatabaseState().sequenceNumber > latestState.sequenceNumber) {
+            const std::string msg = "The sequence number from the SPARQL endpoint is larger that "
+                                    "the one on the replication server.";
+            throw util::DatabaseUpToDateException(msg.c_str());
         }
 
         _stats.startTimeFetchingChangeFiles();
@@ -169,13 +171,43 @@ void olu::osm::OsmUpdater::decideStartSequenceNumber() {
 
     // Check if the SPARQL endpoint was already updated from olu once
     // and pick up the sequence number
-    if (auto seqNumFromEndpoint = _odf->fetchUpdatesCompleteUntil(); seqNumFromEndpoint > 0) {
-        util::Logger::log(util::LogEvent::INFO,
-                          "SPARQL endpoint returned sequence number: " +
-                          std::to_string(seqNumFromEndpoint));
-        seqNumFromEndpoint += 1; // Start one sequence number after the last run
-        _stats.setStartDatabaseState({"", seqNumFromEndpoint});
+    try {
+        auto databaseStateFromEndpoint = _odf->fetchUpdatesCompleteUntil();
+        auto replicationServerUri = _odf->fetchReplicationServer();
+
+        if (!replicationServerUri.empty() && replicationServerUri == _config.replicationServerUri) {
+            std::stringstream message;
+            message.imbue(util::commaLocale);
+            message << "SPARQL endpoint was last updated to database state: "
+                    << osm::to_string(databaseStateFromEndpoint);
+            util::Logger::log(util::LogEvent::INFO, message.str());
+            // Start one sequence number after the last run
+            auto startSequenceNumber = databaseStateFromEndpoint.sequenceNumber + 1;
+            _stats.setStartDatabaseState({"", startSequenceNumber});
+            return;
+        }
+
+        // If the replication server uri is different, we can't rely on the sequence number, so we
+        // will use the timestamp instead
+        std::stringstream repServerMessage;
+        repServerMessage.imbue(util::commaLocale);
+        repServerMessage << "SPARQL endpoint was last updated from replication server: "
+                         << replicationServerUri;
+        util::Logger::log(util::LogEvent::INFO, repServerMessage.str());
+
+        std::stringstream message;
+        message.imbue(util::commaLocale);
+        message << "SPARQL endpoint was last updated up to timestamp: "
+                << databaseStateFromEndpoint.timeStamp;
+        util::Logger::log(util::LogEvent::INFO, message.str());
+        _repServer.fetchDatabaseStateForTimestamp(databaseStateFromEndpoint.timeStamp);
         return;
+    } catch (const util::DatabaseUpToDateException &e) {
+        // We pass the exception that occurs when the database is already up to date
+        throw util::DatabaseUpToDateException(e.what());
+    } catch (const OsmDataFetcherException &e) {
+        // This will fail if the SPARQL endpoint was never updated, so we move on to use the latest
+        // node timestamp
     }
 
     // Check SPARQL endpoint for the latest node timestamp
@@ -292,28 +324,43 @@ void olu::osm::OsmUpdater::checkOsm2RdfVersions() const {
                                                        "program (" + Osm2ttl::getGitInfo() + ")");
         }
     } catch (const OsmDataFetcherException &e) {
-        util::Logger::log(util::LogEvent::WARNING,
-                          "Could not verify that the osm2rdf version that was on the SPARQL"
-                          " endpoint. Please make sure that the osm2rdf version that was used to"
-                          " create the dump is the same as the one used in this program.");
+        std::stringstream errorMessage;
+        errorMessage << "Could not verify that the osm2rdf version that was on the SPARQL endpoint."
+                     << std::endl << util::Logger::PREFIX_SPACER
+                     << "Please make sure that the osm2rdf version that was used to create the dump"
+                        " is the same as the one used in this program.";
+        util::Logger::log(util::LogEvent::WARNING, errorMessage.str());
     }
 }
 
 // _________________________________________________________________________________________________
 void olu::osm::OsmUpdater::insertMetadataTriples(OsmChangeHandler &och) {
-    // Delete the old updatesCompleteUntil triple if it exists
-    const std::string updatesCompleteUntil = std::to_string(_stats.getLatestDatabaseState().sequenceNumber);
+    // Delete the old updatesCompleteUntil and replicationServer triple if it exists
     ttl::Triple updatesCompleteUntilTriple = {
         cnst::PREFIXED_OSM2RDF_META_INFO,
         cnst::PREFIXED_OSM2RDF_META_UPDATES_COMPLETE_UNTIL,
-        cnst::QUERY_VAR_VAL
+        cnst::QUERY_VAR_UPDATES_COMPLETE_UNTIL
+    };
+    ttl::Triple replicationServerTriple = {
+        cnst::PREFIXED_OSM2RDF_META_INFO,
+        cnst::PREFIXED_OSM2RDF_META_REPLICATION_SERVER,
+        cnst::QUERY_VAR_REPLICATION_SERVER
     };
 
-    const auto deleteQuery = _queryWriter.writeDeleteTripleQuery(updatesCompleteUntilTriple);
+    const auto deleteQuery = _queryWriter.writeDeleteTripleQuery({updatesCompleteUntilTriple, replicationServerTriple});
     och.runUpdateQuery(sparql::UpdateOperation::DELETE, deleteQuery, cnst::PREFIXES_FOR_METADATA_TRIPLES);
 
+    std::vector<std::string> metadataTriples;
     // Create a new triple for the updatesCompleteUntil
-    updatesCompleteUntilTriple.object = "\"" + updatesCompleteUntil + "\"^^" + cnst::IRI_XSD_INT;
+    const std::string updatesCompleteUntil = osm::to_string(_stats.getLatestDatabaseState());
+    updatesCompleteUntilTriple.object = "\"" + updatesCompleteUntil + "\"";
+    metadataTriples.emplace_back(to_string(updatesCompleteUntilTriple));
+
+    // Create a triple for the replication server
+    if (!_config.replicationServerUri.empty()) {
+        replicationServerTriple.object = "\"" + _config.replicationServerUri + "\"";
+        metadataTriples.emplace_back(to_string(replicationServerTriple));
+    }
 
     // Create a triple for the date modified
     const std::string dateModified = util::currentIsoTime();
@@ -322,12 +369,10 @@ void olu::osm::OsmUpdater::insertMetadataTriples(OsmChangeHandler &och) {
         cnst::PREFIXED_OSM2RDF_META_DATE_MODIFIED,
         "\"" + dateModified + "\"^^" + cnst::IRI_XSD_DATE_TIME
     };
+    metadataTriples.emplace_back(to_string(dateModifiedTriple));
 
     // Insert the new metadata triples into the database
-    const auto query = _queryWriter.writeInsertQuery({
-        to_string(dateModifiedTriple),
-        to_string(updatesCompleteUntilTriple)
-    });
+    const auto query = _queryWriter.writeInsertQuery(metadataTriples);
 
     och.runUpdateQuery(sparql::UpdateOperation::INSERT, query,
                        cnst::PREFIXES_FOR_METADATA_TRIPLES);

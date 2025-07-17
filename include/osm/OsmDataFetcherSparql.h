@@ -67,7 +67,9 @@ namespace olu::osm {
 
         std::map<std::string, std::string> fetchOsm2RdfOptions() override;
 
-        int fetchUpdatesCompleteUntil() override;
+        OsmDatabaseState fetchUpdatesCompleteUntil() override;
+
+        std::string fetchReplicationServer() override;
     private:
         config::Config _config;
         StatisticsHandler* _stats;
