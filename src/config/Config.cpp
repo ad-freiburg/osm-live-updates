@@ -63,11 +63,11 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
         constants::PATH_TO_INPUT_OPTION_LONG,
         constants::PATH_TO_INPUT_OPTION_HELP);
 
-    const auto osmChangeFileServerUriOp = parser.add<popl::Value<std::string>,
+    const auto replicationServerUriOp = parser.add<popl::Value<std::string>,
         popl::Attribute::optional>(
-        constants::OSM_CHANGE_FILE_SERVER_URI_OPTION_SHORT,
-        constants::OSM_CHANGE_FILE_SERVER_URI_OPTION_LONG,
-        constants::OSM_CHANGE_FILE_SERVER_URI_OPTION_HELP);
+        constants::REPLICATION_SERVER_URI_OPTION_SHORT,
+        constants::REPLICATION_SERVER_URI_OPTION_LONG,
+        constants::REPLICATION_SERVER_URI_OPTION_HELP);
 
     const auto sparqlOutputOp = parser.add<popl::Value<std::string>,
         popl::Attribute::optional>(
@@ -166,7 +166,7 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
             exit(ENDPOINT_URI_INVALID);
         }
 
-        if (pathToOsmChangeFileInputDirOp->is_set() == osmChangeFileServerUriOp->is_set()) {
+        if (pathToOsmChangeFileInputDirOp->is_set() == replicationServerUriOp->is_set()) {
             std::stringstream errorDescription;
             errorDescription << "You have to EITHER provide the path to an directory with the "
                                 "change files you want to process (--input) or the URI to an server"
@@ -192,12 +192,12 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
             }
         }
 
-        if (osmChangeFileServerUriOp->is_set()) {
-            changeFileDirUri = osmChangeFileServerUriOp->value();
-            if (!util::URLHelper::isValidUri(changeFileDirUri)) {
+        if (replicationServerUriOp->is_set()) {
+            replicationServerUri = replicationServerUriOp->value();
+            if (!util::URLHelper::isValidUri(replicationServerUri)) {
                 std::stringstream errorDescription;
                 errorDescription << "URI for OsmChange file server is not valid: "
-                                 << changeFileDirUri << std::endl;
+                                 << replicationServerUri << std::endl;
                 util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
                 exit(ENDPOINT_URI_INVALID);
             }
@@ -354,10 +354,10 @@ void olu::config::Config::printInfo() const {
         util::Logger::log(util::LogEvent::CONFIG,
                           constants::PATH_TO_INPUT_INFO + " " + changeFileDir);
     } else {
-        if (!changeFileDirUri.empty()) {
+        if (!replicationServerUri.empty()) {
             util::Logger::log(util::LogEvent::CONFIG,
-                              constants::OSM_CHANGE_FILE_DIRECTORY_URI_INFO + " " +
-                              changeFileDirUri);
+                              constants::REPLICATION_SERVER_URI_INFO + " " +
+                              replicationServerUri);
         }
 
         if (sequenceNumber > 0) {

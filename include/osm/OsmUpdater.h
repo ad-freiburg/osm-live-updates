@@ -96,7 +96,8 @@ namespace olu::osm {
         void checkOsm2RdfVersions() const;
 
         /**
-         * Inserts "dateModified" and updatesCompleteUntil" metadata triples to the SPARQL endpoint.
+         * Inserts "dateModified", "updatesCompleteUntil" and, if used, "replicationServer"
+         * metadata triples to the SPARQL endpoint.
          *
          * dateModified: The date when the last update was made to the database. For each run of olu
          * one dateModified triple is inserted.
@@ -104,11 +105,14 @@ namespace olu::osm {
          * updatesCompleteUntil: The sequence number until which the updates are complete. There is
          * always only one updatesCompleteUntil triple in the database, which is updated with each
          * run of olu.
+         *
+         * replicationServer: The replication server URI used to fetch the change files for the last
+         * update.
          */
         void insertMetadataTriples(OsmChangeHandler &och);
 
         /**
-         * Applies the user-specified bounding box or polygon to the change files,
+         * Applies the user-specified bounding box or polygon to the change files
          * by using the 'extract' option from the 'osmium-tool'
          */
         void applyBoundaries() const;
@@ -126,7 +130,6 @@ namespace olu::osm {
             return message.c_str();
         }
     };
-
 } // namespace olu::osm
 
 #endif //OSM_LIVE_UPDATES_OSMUPDATER_H
