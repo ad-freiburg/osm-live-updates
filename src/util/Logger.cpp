@@ -33,6 +33,7 @@ void olu::util::Logger::log(const LogEvent &eventType, const std::string_view &d
     
     auto& outStream = (eventType == LogEvent::ERROR) ? std::cerr : std::cout;
     outStream << message;
+    outStream.flush();
 
     std::ofstream outputFile;
     outputFile.open(cnst::PATH_TO_LOG_FILE, std::ios::app);

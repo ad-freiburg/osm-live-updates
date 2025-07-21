@@ -25,6 +25,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update && apt-get -y --no-install-recommends install \
+# Uncomment the following line if you want to add support for bounding boxes or polygon files
+#    osmium-tool \
     ca-certificates \
     build-essential \
     ninja-build \
@@ -32,9 +34,7 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
     git \
     libcurl4-openssl-dev \
     libomp-dev \
-    libosmium2-dev \
-# Uncomment the following line if you want to add the support for bounding boxes or polygon files
-#    osmium-tool
+    libosmium2-dev
 
 COPY . /app/
 WORKDIR /app/build/
