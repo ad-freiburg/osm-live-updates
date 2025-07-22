@@ -41,13 +41,6 @@ namespace olu::osm {
         void addTag(const std::string& key, const std::string& value);
 
         /**
-         * Returns true if the two lists of relation members are equal.
-         * This is the case if the members in both lists are exactly the same and in the same order
-         */
-        static bool areRelMemberEqual(std::vector<RelationMember>,
-                                      std::vector<RelationMember> member2);
-
-        /**
          * Returns an osm XML relation with an id and members.
          *
          * For relationId: `1` and members: `{
