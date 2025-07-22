@@ -35,4 +35,3 @@ output/
 *.exe
 *.out
 *.app
-/cmake-build-debug/
