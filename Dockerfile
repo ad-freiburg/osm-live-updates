@@ -25,8 +25,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update && apt-get -y --no-install-recommends install \
-# Uncomment the following line if you want to add support for bounding boxes or polygon files
-#    osmium-tool \
+# The osmium tool is only needed if you want to add support for bounding boxes or polygon files
+    osmium-tool \
     ca-certificates \
     build-essential \
     ninja-build \
@@ -39,6 +39,9 @@ RUN apt-get update && apt-get -y --no-install-recommends install \
 COPY . /app/
 WORKDIR /app/build/
 RUN cmake -DCMAKE_BUILD_TYPE=Release  \
+# Uncomment to build tests and benchmarks.
+#          -DPACKAGE_TESTS=true \
+#          -DPACKAGE_BENCHMARKS=true \
           -DUSE_PARALLEL=true  \
           -GNinja .. && ninja
 
