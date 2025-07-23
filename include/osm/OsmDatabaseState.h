@@ -24,8 +24,15 @@
 
 #include "util/Logger.h"
 
-namespace olu::osm {
+inline std::string formatTimestamp(const std::string& timestamp) {
+    std::string timestampFormatted = timestamp;
+    std::erase_if(timestampFormatted, [](const char c) {
+        return c == '\\';
+    });
+    return timestampFormatted;
+}
 
+namespace olu::osm {
     struct OsmDatabaseState {
         std::string timeStamp;
         int sequenceNumber = -1;
@@ -34,7 +41,23 @@ namespace olu::osm {
         // depending on which replication server is used (e.g., minute diffs will have another
         // numbering as daily diffs, but the timestamp can still be used to compare them).
         bool operator<(const OsmDatabaseState& other) const {
-            return timeStamp < other.timeStamp;
+            return formatTimestamp(timeStamp) < formatTimestamp(other.timeStamp);
+        }
+
+        bool operator>(const OsmDatabaseState& other) const {
+            return formatTimestamp(timeStamp) > formatTimestamp(other.timeStamp);
+        }
+
+        bool operator>=(const OsmDatabaseState& other) const {
+            return formatTimestamp(timeStamp) >= formatTimestamp(other.timeStamp);
+        }
+
+        bool operator<=(const OsmDatabaseState& other) const {
+            return formatTimestamp(timeStamp) <= formatTimestamp(other.timeStamp);
+        }
+
+        bool operator==(const OsmDatabaseState& other) const {
+            return formatTimestamp(timeStamp) == formatTimestamp(other.timeStamp);
         }
     };
 
@@ -47,13 +70,8 @@ namespace olu::osm {
             return oss.str();
         }
 
-        std::string timestampFormatted = state.timeStamp;
-        std::erase_if(timestampFormatted, [](const char c) {
-            return c == '\\';
-        });
-
         oss << "(Sequence number: " << state.sequenceNumber
-            << ", Timestamp: " << timestampFormatted << ")";
+            << ", Timestamp: " << formatTimestamp(state.timeStamp) << ")";
         return oss.str();
     }
 

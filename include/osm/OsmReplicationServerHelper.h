@@ -82,7 +82,8 @@ namespace olu::osm {
          * @param stateFilePath The path of the state file on the replication server
          * @return The database state for the state file at the provided file path
          */
-        OsmDatabaseState fetchDatabaseStateFromUrl(const std::string& stateFilePath) const;
+        [[nodiscard]] OsmDatabaseState
+        fetchDatabaseStateFromUrl(const std::string& stateFilePath) const;
 
         /**
          * Extracts the database state from a state file. A state file contains a sequence number
@@ -102,8 +103,22 @@ namespace olu::osm {
          * @return A vector containing the database states for the sequence numbers between
          * `fromSeqNum` and `toSeqNum` sorted by sequence number in descending order.
          */
-        std::vector<OsmDatabaseState>
+        [[nodiscard]] std::vector<OsmDatabaseState>
         fetchDatabaseStatesForSequenceNumbers(int fromSeqNum, int toSeqNum) const;
+
+        /**
+         * Makes an educated guess for the sequence number based on the timestamp and the
+         * replication server url.
+         *
+         * Works only for the osm planet replication servers that provide minute, hour and day diffs
+         * (https://planet.osm.org/replication/)
+         *
+         * @param timeStamp The timestamp to make an educated guess for
+         * @param latestSequenceNumber The latest sequence number on the replication server
+         * @return The guessed sequence number or -1 if no such guess can be made.
+         */
+        [[nodiscard]] int makeEducatedGuessForSequenceNumber(const std::string &timeStamp,
+                                                             const int &latestSequenceNumber) const;
     };
 
     /**
