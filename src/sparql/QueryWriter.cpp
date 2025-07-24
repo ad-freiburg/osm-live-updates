@@ -372,7 +372,7 @@ std::string olu::sparql::QueryWriter::writeQueryForRelationMemberIds(const std::
 std::string
 olu::sparql::QueryWriter::writeQueryForWaysReferencingNodes(const std::set<id_t> &nodeIds) const {
     std::ostringstream oss;
-    oss << "SELECT ?way " + cnst::QUERY_VAR_WAY + " ";
+    oss << "SELECT " + cnst::QUERY_VAR_WAY + " ";
     oss << getFromClauseOptional();
     oss << "WHERE { ";
     oss << getValuesClause(cnst::NAMESPACE_OSM_NODE, nodeIds);
@@ -406,7 +406,7 @@ olu::sparql::QueryWriter::writeQueryForRelationsReferencingWays(const std::set<i
     oss << getValuesClause(cnst::NAMESPACE_OSM_WAY, wayIds);
     oss << getTripleClause(cnst::QUERY_VAR_REL, cnst::PREFIXED_REL_MEMBER, "?o");
     oss << getTripleClause("?o", cnst::PREFIXED_REL_MEMBER_ID, cnst::QUERY_VAR_VAL);
-    oss << "} GROUP BY  " + cnst::QUERY_VAR_REL;
+    oss << "} GROUP BY " + cnst::QUERY_VAR_REL;
     return oss.str();
 }
 

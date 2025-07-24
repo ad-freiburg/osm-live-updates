@@ -332,9 +332,7 @@ namespace olu::sparql {
             QueryWriter qw{config::Config()};
             std::string query = qw.writeInsertQuery(triples);
             ASSERT_EQ(
-                    "INSERT DATA { "
-                    "osmrel:1960198 ogc:sfContains ?osm_id:10559440 . "
-                    "}",
+                    "osmrel:1960198 ogc:sfContains ?osm_id:10559440 . ",
                     query
             );
         }
@@ -346,10 +344,8 @@ namespace olu::sparql {
             QueryWriter qw{config::Config()};
             std::string query = qw.writeInsertQuery(triples);
             ASSERT_EQ(
-                    "INSERT DATA { "
                     "osmrel:1960198 ogc:sfContains ?osm_id:10559440 . "
-                    "region:102740 osmkey:name name:Bretagne . "
-                    "}",
+                    "region:102740 osmkey:name name:Bretagne . ",
                     query
             );
         }
@@ -359,9 +355,9 @@ namespace olu::sparql {
             QueryWriter qw{config::Config()};
             std::string query = qw.writeQueryForNodeLocations({1, 2, 3});
             ASSERT_EQ(
-            "SELECT ?nodeGeo ?location "
-            "WHERE { VALUES ?nodeGeo { osm2rdfgeom:osm_node_1 osm2rdfgeom:osm_node_2 osm2rdfgeom:osm_node_3 } "
-            "?nodeGeo geo:asWKT ?location . }",
+            "SELECT ?value ?location "
+            "WHERE { VALUES ?value { osm2rdfgeom:osm_node_1 osm2rdfgeom:osm_node_2 osm2rdfgeom:osm_node_3 } "
+            "?value geo:asWKT ?location . }",
             query
             );
         }
@@ -371,8 +367,8 @@ namespace olu::sparql {
             QueryWriter qw{config::Config()};
             std::string query = qw.writeQueryForLatestNodeTimestamp();
             ASSERT_EQ(
-                    "SELECT ?p WHERE { ?s rdf:type osm:node . ?s osmmeta:timestamp ?p . } "
-                    "ORDER BY DESC(?p) LIMIT 1",
+                    "SELECT ?timestamp WHERE { ?node rdf:type osm:node . ?node osmmeta:timestamp ?timestamp . } "
+                    "ORDER BY DESC(?timestamp) LIMIT 1",
                     query
             );
         }
@@ -383,9 +379,9 @@ namespace olu::sparql {
             std::string query = qw.writeQueryForReferencedNodes({1, 2, 3});
             ASSERT_EQ(
                     "SELECT ?node WHERE { "
-                    "VALUES ?way { osmway:1 osmway:2 osmway:3 } "
-                    "?way osmway:node ?member . "
-                    "?member osmway:node ?node . } "
+                    "VALUES ?value { osmway:1 osmway:2 osmway:3 } "
+                    "?value osmway:member ?member . "
+                    "?member osmway:member_id ?node . } "
                     "GROUP BY ?node",
                     query
             );
@@ -396,11 +392,11 @@ namespace olu::sparql {
             QueryWriter qw{config::Config()};
             std::string query = qw.writeQueryForRelationMemberIds({1, 2, 3});
             ASSERT_EQ(
-                    "SELECT ?p WHERE { "
-                    "VALUES ?rel { osmrel:1 osmrel:2 osmrel:3 } "
-                    "?rel osmrel:member ?o . "
-                    "?o osm2rdfmember:id ?p . } "
-                    "GROUP BY ?p",
+                    "SELECT ?member WHERE { "
+                    "VALUES ?value { osmrel:1 osmrel:2 osmrel:3 } "
+                    "?value osmrel:member ?o . "
+                    "?o osmrel:member_id ?member . } "
+                    "GROUP BY ?member",
                     query
             );
         }
@@ -411,9 +407,9 @@ namespace olu::sparql {
             std::string query = qw.writeQueryForWaysReferencingNodes({1, 2, 3});
             ASSERT_EQ(
                     "SELECT ?way WHERE { "
-                    "VALUES ?node { osmnode:1 osmnode:2 osmnode:3 } "
-                    "?identifier osmway:node ?node . "
-                    "?way osmway:node ?identifier . } "
+                    "VALUES ?value { osmnode:1 osmnode:2 osmnode:3 } "
+                    "?s osmway:member_id ?value . "
+                    "?way osmway:member ?s . } "
                     "GROUP BY ?way",
                     query
             );
@@ -424,11 +420,11 @@ namespace olu::sparql {
             QueryWriter qw{config::Config()};
             std::string query = qw.writeQueryForRelationsReferencingNodes({1, 2, 3});
             ASSERT_EQ(
-                    "SELECT ?s WHERE { "
-                    "VALUES ?node { osmnode:1 osmnode:2 osmnode:3 } "
-                    "?s osmrel:member ?o . "
-                    "?o osm2rdfmember:id ?node . "
-                    "} GROUP BY ?s",
+                    "SELECT ?rel WHERE { "
+                    "VALUES ?value { osmnode:1 osmnode:2 osmnode:3 } "
+                    "?rel osmrel:member ?o . "
+                    "?o osmrel:member_id ?value . "
+                    "} GROUP BY ?rel",
                     query
             );
         }
@@ -438,11 +434,11 @@ namespace olu::sparql {
             QueryWriter qw{config::Config()};
             std::string query = qw.writeQueryForRelationsReferencingWays({1, 2, 3});
             ASSERT_EQ(
-                    "SELECT ?s WHERE { "
-                    "VALUES ?way { osmway:1 osmway:2 osmway:3 } "
-                    "?s osmrel:member ?o . "
-                    "?o osm2rdfmember:id ?way . "
-                    "} GROUP BY ?s",
+                    "SELECT ?rel WHERE { "
+                    "VALUES ?value { osmway:1 osmway:2 osmway:3 } "
+                    "?rel osmrel:member ?o . "
+                    "?o osmrel:member_id ?value . "
+                    "} GROUP BY ?rel",
                     query
             );
         }
@@ -453,9 +449,9 @@ namespace olu::sparql {
             std::string query = qw.writeQueryForRelationsReferencingRelations({1, 2, 3});
             ASSERT_EQ(
                     "SELECT ?s WHERE { "
-                    "VALUES ?rel { osmrel:1 osmrel:2 osmrel:3 } "
+                    "VALUES ?value { osmrel:1 osmrel:2 osmrel:3 } "
                     "?s osmrel:member ?o . "
-                    "?o osm2rdfmember:id ?rel . "
+                    "?o osmrel:member_id ?value . "
                     "} GROUP BY ?s",
                     query
             );

@@ -30,6 +30,7 @@
 #include "util/URLHelper.h"
 #include "util/HttpRequest.h"
 #include "util/Logger.h"
+#include "util/Time.h"
 
 namespace cnst = olu::config::constants;
 
@@ -109,8 +110,7 @@ void olu::osm::OsmReplicationServerHelper::fetchChangeFile(int &sequenceNumber) 
 }
 
 // _________________________________________________________________________________________________
-void
-olu::osm::OsmReplicationServerHelper::fetchDatabaseStateForTimestamp(
+void olu::osm::OsmReplicationServerHelper::fetchDatabaseStateForTimestamp(
     const std::string &timeStamp) const {
     // We have found a state file at which we have to start if the timestamp from the state
     // file is further in the past than the latest timestamp from the sparql endpoint.
@@ -128,11 +128,34 @@ olu::osm::OsmReplicationServerHelper::fetchDatabaseStateForTimestamp(
     // Fetch database states in batches of BATCH_SIZE until we find a state file that has a matching
     // timestamp.
     auto toSeqNum = _stats->getLatestDatabaseState().sequenceNumber;
+
+    // If the osm planet replication server is used, we can make an educated guess for the sequence
+    // number based on the timestamp, since the sequences are generated with a granularity of
+    // minutes, hours or days.
+    if (const auto guessedSeqNum = makeEducatedGuessForSequenceNumber(timeStamp, toSeqNum);
+        guessedSeqNum > 0) {
+        // Fetch the database states for the guessed sequence number and the one before and after
+        // it
+        for (const auto databaseStates = fetchDatabaseStatesForSequenceNumbers(
+                 guessedSeqNum - 1, guessedSeqNum + 1);
+             const auto &fetchedState: databaseStates) {
+            if (fetchedState <= OsmDatabaseState(timeStamp)) {
+                _stats->setStartDatabaseState(fetchedState);
+                util::Logger::log(util::LogEvent::INFO,
+                                  "Matching database state on replication server is: "
+                                  + olu::osm::to_string(fetchedState));
+                return;
+            }
+        }
+    }
+
+    // If another replication server is used or the educated guess fails, we have to find a matching
+    // database state by brute-force iteration through the sequence numbers.
     while (toSeqNum > 0) {
         const auto fromSeqNum = std::max(toSeqNum - BATCH_SIZE, 0);
 
         for (auto databaseStates = fetchDatabaseStatesForSequenceNumbers(fromSeqNum, toSeqNum);
-             auto fetchedState : databaseStates) {
+             const auto& fetchedState : databaseStates) {
             if (fetchedState.timeStamp <= timeStamp) {
                 _stats->setStartDatabaseState(fetchedState);
                 util::Logger::log(util::LogEvent::INFO,
@@ -178,6 +201,11 @@ olu::osm::OsmReplicationServerHelper::fetchDatabaseStatesForSequenceNumbers(cons
         return a.sequenceNumber > b.sequenceNumber;
     });
 
+    if (static_cast<int>(states.size()) != (toSeqNum - fromSeqNum + 1)) {
+        std::cout << "Missing state between: " << fromSeqNum << " and " << toSeqNum << std::endl;
+        throw OsmReplicationServerHelperException("One or more state files could not be fetched for the given sequence number range.");
+    }
+
     return states;
 }
 
@@ -208,4 +236,27 @@ olu::osm::OsmReplicationServerHelper::extractStateFromStateFile(const std::strin
     }
 
     return state;
+}
+
+// _________________________________________________________________________________________________
+int olu::osm::OsmReplicationServerHelper::makeEducatedGuessForSequenceNumber(
+    const std::string &timeStamp, const int &latestSequenceNumber) const {
+    // We can only make an educated guess for sequence numbers if the OSM planet replication server
+    // that provides minute, hour, and day diffs is used
+    if (!_config.replicationServerUri.starts_with("https://planet.osm.org/replication/")) {
+        return -1;
+    }
+
+    int sequencesSinceLatest = 0;
+    if (_config.replicationServerUri.ends_with("day/")) {
+        sequencesSinceLatest = util::daysBetweenNowAndTimestamp(timeStamp);
+    } else if (_config.replicationServerUri.ends_with("hour/")) {
+        sequencesSinceLatest = util::hoursBetweenNowAndTimestamp(timeStamp);
+    } else if (_config.replicationServerUri.ends_with("minute/")) {
+        sequencesSinceLatest = util::minutesBetweenNowAndTimestamp(timeStamp);
+    } else {
+        return -1; // Not a valid replication server URL for making an educated guess
+    }
+
+    return latestSequenceNumber - sequencesSinceLatest;
 }

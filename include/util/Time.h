@@ -49,6 +49,30 @@ namespace olu::util {
         strftime(timeString, 25, "%Y-%m-%dT%X", gmtime_r(&time, &t));
         return std::string(timeString);
     }
+
+    inline int secondsBetweenNowAndTimestamp(const std::string& isoTimestamp) {
+        std::tm tm = {};
+        std::istringstream ss(isoTimestamp);
+        ss >> std::get_time(&tm, "%Y-%m-%dT%H:%M:%SZ");
+        auto time_c = std::mktime(&tm);
+
+        const auto now = std::chrono::system_clock::now();
+        const auto now_c = std::chrono::system_clock::to_time_t(now);
+
+        return std::difftime(now_c, time_c);
+    }
+
+    inline int minutesBetweenNowAndTimestamp(const std::string& isoTimestamp) {
+        return secondsBetweenNowAndTimestamp(isoTimestamp) / 60;
+    }
+
+    inline int hoursBetweenNowAndTimestamp(const std::string& isoTimestamp) {
+        return secondsBetweenNowAndTimestamp(isoTimestamp) / (60 * 60);
+    }
+
+    inline int daysBetweenNowAndTimestamp(const std::string& isoTimestamp) {
+        return secondsBetweenNowAndTimestamp(isoTimestamp) / (60 * 60 * 24);
+    }
 }
 
 #endif  // OLU_UTIL_TIME_H
