@@ -149,8 +149,6 @@ void olu::osm::OsmReplicationServerHelper::fetchDatabaseStateForTimestamp(
         }
     }
 
-    std::cout << "Educated guess for sequence number did not work" << std::endl;
-
     // If another replication server is used or the educated guess fails, we have to find a matching
     // database state by brute-force iteration through the sequence numbers.
     while (toSeqNum > 0) {
@@ -202,6 +200,11 @@ olu::osm::OsmReplicationServerHelper::fetchDatabaseStatesForSequenceNumbers(cons
     std::ranges::sort(states, [](const OsmDatabaseState& a, const OsmDatabaseState& b) {
         return a.sequenceNumber > b.sequenceNumber;
     });
+
+    if (static_cast<int>(states.size()) != (toSeqNum - fromSeqNum + 1)) {
+        std::cout << "Missing state between: " << fromSeqNum << " and " << toSeqNum << std::endl;
+        throw OsmReplicationServerHelperException("One or more state files could not be fetched for the given sequence number range.");
+    }
 
     return states;
 }
