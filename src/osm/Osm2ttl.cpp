@@ -136,6 +136,13 @@ std::vector<std::string> olu::osm::Osm2ttl::getArgsFromEndpoint() const {
             continue;
         }
 
+        // Always avoid blank nodes when working with QLever endpoints, as it is not supported atm
+        // to insert blank nodes (See issue: https://github.com/ad-freiburg/qlever/issues/1644).
+        if (_config.isQLever && optionName == osm2rdf::config::constants::BLANK_NODES_OPTION_LONG) {
+            arguments.emplace_back( "--" + osm2rdf::config::constants::BLANK_NODES_OPTION_LONG);
+            continue;
+        }
+
         if (optionValue.starts_with("true")) {
             arguments.emplace_back( "--" + optionName);
             continue;
