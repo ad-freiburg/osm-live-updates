@@ -278,7 +278,7 @@ olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::set<id_t> &nodeI
 }
 
 // _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeQueryForLatestNodeTimestamp() const {
+std::string olu::sparql::QueryWriter::writeQueryForLatestTimestamp() const {
     std::ostringstream oss;
     oss << "SELECT (MAX(" + cnst::QUERY_VAR_TIMESTAMP + ") AS " + cnst::QUERY_VAR_LATEST_TIMESTAMP + ") ";
     oss << getFromClauseOptional();

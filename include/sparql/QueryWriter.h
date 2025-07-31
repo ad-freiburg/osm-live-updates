@@ -86,9 +86,9 @@ namespace olu::sparql {
         [[nodiscard]] std::string writeQueryForNodeLocations(const std::set<id_t> &nodeIds) const;
 
         /**
-         * @returns A SPARQL query for the latest timestamp of any node in the database
+         * @returns A SPARQL query for the latest timestamp for the predicate 'osmmeta:timestamp'
          */
-        [[nodiscard]] std::string writeQueryForLatestNodeTimestamp() const;
+        [[nodiscard]] std::string writeQueryForLatestTimestamp() const;
 
         /**
         * @returns A SPARQL query for the subject of all members, that belong to the given relation

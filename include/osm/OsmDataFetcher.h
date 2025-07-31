@@ -156,11 +156,12 @@ namespace olu::osm {
         fetchRelationMembers(const std::set<id_t> &relIds){return {};}
 
         /**
-         * Sends a query to the sparql endpoint to the latest timestamp of any node in the database
+         * Sends a query to the sparql endpoint to fetch the latest timestamp for the predicate
+         * 'osmmeta:timestamp', which is the latest timestamp of all OSM objects in the database.
          *
-         * @return The latest timestamp of any node
+         * @return The latest timestamp for the predicate 'osmmeta:timestamp'
          */
-        virtual std::string fetchLatestTimestampOfAnyNode(){return {};}
+        virtual std::string fetchLatestTimestamp(){return {};}
 
         /**
          * @return The ids of all ways that reference the given nodes.

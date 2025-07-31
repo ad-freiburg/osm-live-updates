@@ -312,8 +312,8 @@ namespace olu::config::constants {
     const static inline std::vector PREFIXES_FOR_RELATION_TAGS_AND_META_INFO{
             PREFIX_DECL_OSM_REL, PREFIX_DECL_OSM_META, PREFIX_DECL_OSM_KEY};
 
-    const static inline std::vector PREFIXES_FOR_LATEST_NODE_TIMESTAMP {
-            PREFIX_DECL_OSM_META, PREFIX_DECL_OSM, PREFIX_DECL_RDF};
+    const static inline std::vector PREFIXES_FOR_LATEST_TIMESTAMP {
+            PREFIX_DECL_OSM_META };
 
     const static inline std::vector PREFIXES_FOR_NODE_DELETE_QUERY {
             PREFIX_DECL_OSM_NODE, PREFIX_DECL_GEO};

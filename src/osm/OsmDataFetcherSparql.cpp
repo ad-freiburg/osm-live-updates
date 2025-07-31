@@ -107,14 +107,14 @@ void olu::osm::OsmDataFetcherSparql::fetchAndWriteNodesToFile(const std::string 
 }
 
 // _________________________________________________________________________________________________
-std::string olu::osm::OsmDataFetcherSparql::fetchLatestTimestampOfAnyNode() {
+std::string olu::osm::OsmDataFetcherSparql::fetchLatestTimestamp() {
     const auto response = runQuery(
-        _queryWriter.writeQueryForLatestNodeTimestamp(),
-        cnst::PREFIXES_FOR_LATEST_NODE_TIMESTAMP);
+        _queryWriter.writeQueryForLatestTimestamp(),
+        cnst::PREFIXES_FOR_LATEST_TIMESTAMP);
 
     std::string timestamp;
     const auto error = _parser.iterate(response).at_path(
-        "$.results.bindings[0].timestamp.value").get_string(timestamp);
+        "$.results.bindings[0].latestTimestamp.value").get_string(timestamp);
     if (error || timestamp.empty()) {
         std::cerr << "JSON error: " << error << std::endl;
         throw OsmDataFetcherException("Could not parse latest timestamp of any node from "

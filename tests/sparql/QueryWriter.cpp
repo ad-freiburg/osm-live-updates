@@ -362,10 +362,10 @@ namespace olu::sparql {
             );
         }
     }
-    TEST(QueryWriter, writeQueryForLatestNodeTimestamp) {
+    TEST(QueryWriter, writeQueryForLatestTimestamp) {
         {
             QueryWriter qw{config::Config()};
-            std::string query = qw.writeQueryForLatestNodeTimestamp();
+            std::string query = qw.writeQueryForLatestTimestamp();
             ASSERT_EQ(
             "SELECT (MAX(?timestamp) AS ?latestTimestamp) WHERE { "
             "?object osmmeta:timestamp ?timestamp . }",
