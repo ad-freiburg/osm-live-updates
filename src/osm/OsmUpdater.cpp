@@ -210,12 +210,12 @@ void olu::osm::OsmUpdater::decideStartSequenceNumber() {
         // node timestamp
     }
 
-    // Check SPARQL endpoint for the latest node timestamp
+    // Check for the latest timestamp of any OSM object on the SPARQL endpoint
     util::Logger::log(util::LogEvent::INFO,
-                      "Fetch latest node-timestamp on SPARQL endpoint...");
-    const std::string timestamp = _odf->fetchLatestTimestampOfAnyNode();
+                      "Fetch latest timestamp on SPARQL endpoint...");
+    const std::string timestamp = _odf->fetchLatestTimestamp();
     util::Logger::log(util::LogEvent::INFO,
-                      "Latest node-timestamp on SPARQL endpoint is: " + timestamp);
+                      "Latest timestamp on SPARQL endpoint is: " + timestamp);
     _repServer.fetchDatabaseStateForTimestamp(timestamp);
 }
 

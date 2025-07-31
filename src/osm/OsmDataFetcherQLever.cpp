@@ -68,10 +68,10 @@ void olu::osm::OsmDataFetcherQLever::runQuery(const std::string &query,
 }
 
 // _________________________________________________________________________________________________
-std::string olu::osm::OsmDataFetcherQLever::fetchLatestTimestampOfAnyNode() {
+std::string olu::osm::OsmDataFetcherQLever::fetchLatestTimestamp() {
     std::string timestamp;
-    runQuery(_queryWriter.writeQueryForLatestNodeTimestamp(),
-             cnst::PREFIXES_FOR_LATEST_NODE_TIMESTAMP,
+    runQuery(_queryWriter.writeQueryForLatestTimestamp(),
+             cnst::PREFIXES_FOR_LATEST_TIMESTAMP,
              [&timestamp](simdjson::ondemand::value results) {
                  for (auto value: results) {
                      // QLever will return the timestamp in rdf syntax, e.g.:

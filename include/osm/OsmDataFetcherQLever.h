@@ -52,7 +52,7 @@ namespace olu::osm {
         std::pair<std::vector<id_t>, std::vector<id_t>>
         fetchRelationMembers(const std::set<id_t> &relIds) override;
 
-        std::string fetchLatestTimestampOfAnyNode() override;
+        std::string fetchLatestTimestamp() override;
 
         std::vector<id_t> fetchWaysReferencingNodes(const std::set<id_t> &nodeIds) override;
 

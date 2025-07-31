@@ -234,9 +234,11 @@ namespace olu::config::constants {
     const static inline std::string NAME_URI = "uri";
     const static inline std::string NAME_LOCATION = "location";
     const static inline std::string NAME_TIMESTAMP = "timestamp";
+    const static inline std::string NAME_LATEST_TIMESTAMP = "latestTimestamp";
     const static inline std::string NAME_VERSION = "version";
     const static inline std::string NAME_CHANGESET = "changeset";
     const static inline std::string NAME_OSM_NODE_ = "osm_node_";
+    const static inline std::string NAME_OBJECT = "object";
     const static inline std::string NAME_NODE = "node";
     const static inline std::string NAME_NODES = "nodes";
     const static inline std::string NAME_WAY = "way";
@@ -310,8 +312,8 @@ namespace olu::config::constants {
     const static inline std::vector PREFIXES_FOR_RELATION_TAGS_AND_META_INFO{
             PREFIX_DECL_OSM_REL, PREFIX_DECL_OSM_META, PREFIX_DECL_OSM_KEY};
 
-    const static inline std::vector PREFIXES_FOR_LATEST_NODE_TIMESTAMP {
-            PREFIX_DECL_OSM_META, PREFIX_DECL_OSM, PREFIX_DECL_RDF};
+    const static inline std::vector PREFIXES_FOR_LATEST_TIMESTAMP {
+            PREFIX_DECL_OSM_META };
 
     const static inline std::vector PREFIXES_FOR_NODE_DELETE_QUERY {
             PREFIX_DECL_OSM_NODE, PREFIX_DECL_GEO};
@@ -367,8 +369,10 @@ namespace olu::config::constants {
     const static inline std::string QUERY_VAR_VAL = MakeQueryVar(NAME_VALUE);
     const static inline std::string QUERY_VAR_LOC = MakeQueryVar(NAME_LOCATION);
     const static inline std::string QUERY_VAR_TIMESTAMP = MakeQueryVar(NAME_TIMESTAMP);
+    const static inline std::string QUERY_VAR_LATEST_TIMESTAMP = MakeQueryVar(NAME_LATEST_TIMESTAMP);
     const static inline std::string QUERY_VAR_VERSION = MakeQueryVar(NAME_VERSION);
     const static inline std::string QUERY_VAR_CHANGESET = MakeQueryVar(NAME_CHANGESET);
+    const static inline std::string QUERY_VAR_OBJECT = MakeQueryVar(NAME_OBJECT);
     const static inline std::string QUERY_VAR_NODE = MakeQueryVar(NAME_NODE);
     const static inline std::string QUERY_VAR_WAY = MakeQueryVar(NAME_WAY);
     const static inline std::string QUERY_VAR_REL = MakeQueryVar(NAME_REL);
