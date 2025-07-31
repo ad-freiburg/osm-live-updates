@@ -521,7 +521,7 @@ std::string olu::osm::OsmDataFetcherSparql::fetchOsm2RdfVersion() {
     for (auto doc = _parser.iterate(response);
         auto binding : getBindings(doc)) {
         auto version = getValue<std::string>(binding[cnst::NAME_VALUE]);
-        versions.insert(util::XmlHelper::parseRdfString<std::string>(version));
+        versions.insert(version);
     }
 
     if (versions.size() == 0) {
@@ -547,8 +547,7 @@ std::map<std::string, std::string> olu::osm::OsmDataFetcherSparql::fetchOsm2RdfO
         const auto optionIRI =  getValue<std::string_view>(binding[cnst::NAME_OPTION]);
         const auto optionValue = getValue<std::string>(binding[cnst::NAME_VALUE]);
 
-        options.insert_or_assign(OsmObjectHelper::parseOsm2rdfOptionName(optionIRI),
-                                 util::XmlHelper::parseRdfString<std::string>(optionValue));
+        options.insert_or_assign(OsmObjectHelper::parseOsm2rdfOptionName(optionIRI), optionValue);
     }
 
     return options;
