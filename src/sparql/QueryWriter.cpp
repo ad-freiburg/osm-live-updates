@@ -280,12 +280,11 @@ olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::set<id_t> &nodeI
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeQueryForLatestNodeTimestamp() const {
     std::ostringstream oss;
-    oss << "SELECT " + cnst::QUERY_VAR_TIMESTAMP + " ";
+    oss << "SELECT (MAX(" + cnst::QUERY_VAR_TIMESTAMP + ") AS " + cnst::QUERY_VAR_LATEST_TIMESTAMP + ") ";
     oss << getFromClauseOptional();
     oss << "WHERE { ";
-    oss << getTripleClause("?node", cnst::PREFIXED_RDF_TYPE, cnst::PREFIXED_OSM_NODE);
-    oss << getTripleClause("?node", cnst::PREFIXED_OSM_META_TIMESTAMP, cnst::QUERY_VAR_TIMESTAMP);
-    oss << "} ORDER BY DESC(" + cnst::QUERY_VAR_TIMESTAMP + ") LIMIT 1";
+    oss << getTripleClause(cnst::QUERY_VAR_OBJECT, cnst::PREFIXED_OSM_META_TIMESTAMP, cnst::QUERY_VAR_TIMESTAMP);
+    oss << "}";
     return oss.str();
 }
 

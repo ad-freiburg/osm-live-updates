@@ -367,9 +367,9 @@ namespace olu::sparql {
             QueryWriter qw{config::Config()};
             std::string query = qw.writeQueryForLatestNodeTimestamp();
             ASSERT_EQ(
-                    "SELECT ?timestamp WHERE { ?node rdf:type osm:node . ?node osmmeta:timestamp ?timestamp . } "
-                    "ORDER BY DESC(?timestamp) LIMIT 1",
-                    query
+            "SELECT (MAX(?timestamp) AS ?latestTimestamp) WHERE { "
+            "?object osmmeta:timestamp ?timestamp . }",
+            query
             );
         }
     }
