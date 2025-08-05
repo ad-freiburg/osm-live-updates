@@ -143,6 +143,7 @@ void olu::osm::OsmDataFetcherQLever::fetchAndWriteNodesToFile(const std::string 
                      nodeLocationAsWkt);
                  const auto nodeXml = util::XmlHelper::getNodeDummy(nodeId, nodeLocation);
                  outputFile.write(nodeXml.data(), nodeXml.size());
+                 outputFile << std::endl;
              });
 
     outputFile.close();
@@ -236,6 +237,7 @@ olu::osm::OsmDataFetcherQLever::fetchAndWriteRelationsToFile(const std::string &
                  const auto relationXml = util::XmlHelper::getRelationDummy(
                      relationId,relationType, members);
                  outputFile.write(relationXml.data(), relationXml.size());
+                 outputFile << std::endl;
              });
 
     outputFile.close();
@@ -303,6 +305,7 @@ size_t olu::osm::OsmDataFetcherQLever::fetchAndWriteWaysToFile(const std::string
                  // Write way to file
                  const auto wayXml = util::XmlHelper::getWayDummy(wayId, members);
                  outputFile.write(wayXml.data(), wayXml.size());
+                 outputFile << std::endl;
              });
 
     outputFile.close();
