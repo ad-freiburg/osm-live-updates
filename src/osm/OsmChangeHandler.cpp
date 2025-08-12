@@ -786,7 +786,7 @@ void olu::osm::OsmChangeHandler::filterWayTriple(const triple_t &wayTriple,
 
         // Check if the object links to a relevant triple for the geometry of the
         // relation (For example, "osm2rdfgeom:osm_node_1")
-        if (util::TtlHelper::hasRelevantObject(predicate, OsmObjectType::WAY)) {
+        if (util::TtlHelper::hasRelevantGeoObject(predicate)) {
             currentLink = object;
         }
     }
@@ -819,7 +819,7 @@ void olu::osm::OsmChangeHandler::filterRelationTriple(const triple_t &relationTr
 
         // Check if the object links to a relevant triple for the geometry of the
         // relation (For example, "osm2rdfgeom:osm_node_1")
-        if (util::TtlHelper::hasRelevantObject(predicate, OsmObjectType::RELATION)) {
+        if (util::TtlHelper::hasRelevantGeoObject(predicate)) {
             currentLink = object;
         }
     }

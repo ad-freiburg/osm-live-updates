@@ -91,6 +91,15 @@ namespace olu::util {
         static bool
         hasRelevantObject(const std::string& predicate, const osm::OsmObjectType & osmObject);
 
+        /**
+         * Checks if a predicate links to an object,
+         * which has a triple that is relevant to the geometry of an osm object.
+         *
+         * @param predicate The predicate string to check.
+         * @return True if the predicate links to a geometry object with a relevant triple,
+         * false otherwise.
+         */
+        static bool hasRelevantGeoObject(const std::string& predicate);
     };
 
     /**
