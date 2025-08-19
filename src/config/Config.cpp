@@ -123,6 +123,12 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
         constants::POLY_FILE_OPTION_LONG,
         constants::POLY_FILE_OPTION_HELP);
 
+    const auto extractStrategyOp = parser.add<popl::Value<std::string>,
+    popl::Attribute::optional>(
+        constants::EXTRACT_STRATEGY_OPTION_SHORT,
+        constants::EXTRACT_STRATEGY_OPTION_LONG,
+        constants::EXTRACT_STRATEGY_OPTION_HELP);
+
     try {
         parser.parse(argc, argv);
 
@@ -277,6 +283,30 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
                                  << "is not a regular file." << std::endl;
                 util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
                 exit(POLYGON_FILE_NOT_EXISTS);
+            }
+        }
+
+        if (extractStrategyOp->is_set()) {
+            extractStrategy = extractStrategyOp->value();
+            if (!polyFileOp->is_set() && !bboxOp->is_set()) {
+                std::stringstream errorDescription;
+                errorDescription << "Specified extract strategy without specifying a bounding box "
+                                    "or polygon file: " << extractStrategy
+                                 << std::endl;
+                util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
+                exit(INCORRECT_ARGUMENTS);
+            }
+
+            if (extractStrategy != "smart" &&
+                extractStrategy != "complete_ways" &&
+                extractStrategy != "simple") {
+                std::stringstream errorDescription;
+                errorDescription << "Invalid extract strategy specified: " << extractStrategy
+                                 << ". Valid strategies are 'smart', 'complete_ways', and 'simple'."
+                                    " See osmium manual for more information."
+                                 << std::endl;
+                util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
+                exit(INCORRECT_ARGUMENTS);
             }
         }
 

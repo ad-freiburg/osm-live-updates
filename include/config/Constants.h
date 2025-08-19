@@ -487,6 +487,13 @@ namespace olu::config::constants {
     const static inline std::string POLY_FILE_OPTION_HELP =
          "Specify a (multi)polygon file (.poly) to cut out a specific area from the change files. ";
 
+    const static inline std::string EXTRACT_STRATEGY_INFO = "Using extract strategy: ";
+    const static inline std::string EXTRACT_STRATEGY_OPTION_SHORT = "";
+    const static inline std::string EXTRACT_STRATEGY_OPTION_LONG = "extract-strategy";
+    const static inline std::string EXTRACT_STRATEGY_OPTION_HELP =
+        "Specify the extract strategy to use. Possible values are 'smart', 'complete_ways' and "
+        "'simple'. See osmium documentation for more information.";
+
 } // namespace olu::config::constants
 
 #endif //OSM_LIVE_UPDATES_CONSTANTS_H

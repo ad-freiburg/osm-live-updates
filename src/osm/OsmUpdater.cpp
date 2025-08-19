@@ -265,6 +265,8 @@ void olu::osm::OsmUpdater::fetchChangeFiles() {
 void olu::osm::OsmUpdater::applyBoundaries() const {
     util::Logger::log(util::LogEvent::INFO, "Applying boundaries to change files...");
 
+    // See the osmium-tool manual for details about the extract command:
+    // https://osmcode.org/osmium-tool/manual.html#creating-geographic-extracts
     std::string cmd = "osmium extract " + cnst::PATH_TO_CHANGE_FILE;
     if (!_config.bbox.empty()) {
         cmd += " --bbox " + _config.bbox;
@@ -274,11 +276,8 @@ void olu::osm::OsmUpdater::applyBoundaries() const {
         throw OsmUpdaterException("No bounding box or polygon file specified.");
     }
 
-    // Use the 'smart' strategy to include entire ways and multipolygons that intersect the boundary
-    // (as well as the referenced nodes that are not in the boundary).
-    // See the osmium-tool manual for details:
-    // https://osmcode.org/osmium-tool/manual.html#creating-geographic-extracts
-    cmd += " -o " + cnst::PATH_TO_CHANGE_FILE_EXTRACT + " --overwrite -s smart --no-progress";
+    cmd += " -o " + cnst::PATH_TO_CHANGE_FILE_EXTRACT + " --overwrite -s "
+        + _config.extractStrategy + "  --no-progress";
 
     // Overwrite the original change file with the extracted one
     cmd += " && mv " + cnst::PATH_TO_CHANGE_FILE_EXTRACT + " " + cnst::PATH_TO_CHANGE_FILE;

@@ -62,6 +62,13 @@ struct Config {
     // User specified path to a polygon file
     std::string pathToPolygonFile;
 
+    // Strategy that is used by the osmium extract command to extract the changes. Possible values
+    // are: smart, complete_ways and simple. The default is "smart", because this is the one
+    // Geofabrik uses for their country extracts.
+    // See: https://docs.osmcode.org/osmium/latest/osmium-extract.html for an explanation of the
+    // strategies.
+    std::string extractStrategy = "smart";
+
     int numThreads = std::thread::hardware_concurrency();
 
     // Specifies whether a progress bar should be shown
