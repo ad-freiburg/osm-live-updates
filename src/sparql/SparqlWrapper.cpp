@@ -75,7 +75,7 @@ std::string olu::sparql::SparqlWrapper::sendQuery() {
     } catch(std::exception &e) {
         std::cerr << e.what() << std::endl;
         const std::string msg = "Exception while sending `POST` request to the sparql endpoint with"
-                                " body: " + query;
+                                " body: " + query.substr(0, 100);
         throw SparqlWrapperException(msg.c_str());
     }
 
