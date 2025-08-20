@@ -83,6 +83,10 @@ olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config)
 
 // _________________________________________________________________________________________________
 void olu::osm::OsmUpdater::run() {
+    // Delete all files and folders in the temporary directory to ensure a clean start.
+    // This is needed to potentially avoid conflicts with files from a previous failed update.
+    deleteTmpDir();
+
     // Check if the osm2rdf version that was used to create the dump on the SPARQL endpoint is the
     // same that is used in this program.
     checkOsm2RdfVersions();
