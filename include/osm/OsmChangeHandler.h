@@ -21,6 +21,7 @@
 
 #include <set>
 
+#include "Osm2ttl.h"
 #include "osmium/handler.hpp"
 #include "osm2rdf/util/ProgressBar.h"
 
@@ -63,6 +64,7 @@ namespace olu::osm {
         sparql::QueryWriter _queryWriter;
         OsmDataFetcher* _odf;
         StatisticsHandler* _stats;
+        Osm2ttl _osm2ttl;
 
         /**
          * Osmium handler for the nodes in the change file.

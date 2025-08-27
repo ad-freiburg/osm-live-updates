@@ -21,6 +21,7 @@
 
 #include <string>
 #include <filesystem>
+#include <map>
 #include <thread>
 
 namespace olu::config {
@@ -89,6 +90,10 @@ struct Config {
     // - DEBUG: All sparql queries and updates are written to a file
     SparqlOutput sparqlOutput = ENDPOINT;
     std::filesystem::path sparqlOutputFile;
+
+    // Stores the osm2rdf options that will be fetched from the SPARQL endpoint before
+    // we convert the OSM data to RDF triples.
+    std::map<std::string, std::string> osm2rdfOptions;;
 
     // Generate the information string containing the current settings.
     void printInfo() const;

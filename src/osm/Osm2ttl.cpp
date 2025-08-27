@@ -36,7 +36,7 @@
 namespace cnst = olu::config::constants;
 
 // _________________________________________________________________________________________________
-void olu::osm::Osm2ttl::convert() const {
+void olu::osm::Osm2ttl::convert() {
     // Create a directory for scratch, if not already existent
     if (!std::filesystem::exists(cnst::PATH_TO_SCRATCH_DIRECTORY)) {
         std::filesystem::create_directories(cnst::PATH_TO_SCRATCH_DIRECTORY);
@@ -112,7 +112,16 @@ void olu::osm::Osm2ttl::run(const osm2rdf::config::Config &config) {
 }
 
 // _________________________________________________________________________________________________
-std::vector<std::string> olu::osm::Osm2ttl::getArgsFromEndpoint() const {
+bool olu::osm::Osm2ttl::hasTripleForOption(const std::string& option, const std::string& condition) const {
+    if (!_config.osm2rdfOptions.contains(option) || _config.osm2rdfOptions.at(option) == condition) {
+        return true;
+    }
+
+    return false;
+}
+
+// _________________________________________________________________________________________________
+std::vector<std::string> olu::osm::Osm2ttl::getArgsFromEndpoint() {
     std::vector<std::string> arguments = {" ",
        cnst::PATH_TO_INPUT_FILE,
        "-o",
@@ -123,15 +132,14 @@ std::vector<std::string> olu::osm::Osm2ttl::getArgsFromEndpoint() const {
        "none"
     };
 
-
-    std::map<std::string, std::string> argsFromEndpoint = _odf->fetchOsm2RdfOptions();
-    if (argsFromEndpoint.empty()) {
+    _config.osm2rdfOptions = _odf->fetchOsm2RdfOptions();
+    if (_config.osm2rdfOptions.empty()) {
         util::Logger::log(util::LogEvent::WARNING, "No osm2rdf options found on SPARQL "
                                                    "endpoint, using default options.");
         return arguments;
     }
 
-    for (auto [optionName, optionValue] : argsFromEndpoint) {
+    for (const auto& [optionName, optionValue] : _config.osm2rdfOptions) {
         if (optionValue.starts_with("false")) {
             continue;
         }

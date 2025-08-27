@@ -39,9 +39,8 @@
 #include "util/BatchHelper.h"
 #include "util/Logger.h"
 
-static inline constexpr size_t PROGRESS_BAR_BATCH_SIZE = 1000;
-
 namespace cnst = olu::config::constants;
+namespace osm2rdfCnst = osm2rdf::config::constants;
 
 // _________________________________________________________________________________________________
 olu::osm::OsmChangeHandler::OsmChangeHandler(const config::Config &config, OsmDataFetcher &odf,
@@ -54,7 +53,8 @@ olu::osm::OsmChangeHandler::OsmChangeHandler(const config::Config &config, OsmDa
     _nodeHandler(config, odf, stats),
     _wayHandler(config, odf, stats),
     _relationHandler(config, odf, stats),
-    _referencesHandler(_config, odf, _nodeHandler, _wayHandler, _relationHandler) { }
+    _referencesHandler(_config, odf, _nodeHandler, _wayHandler, _relationHandler),
+    _osm2ttl(_config, _odf, _stats) { }
 
 // _________________________________________________________________________________________________
 void olu::osm::OsmChangeHandler::run() {
@@ -155,7 +155,7 @@ void olu::osm::OsmChangeHandler::run() {
 
     try {
         util::Logger::log(util::LogEvent::INFO, "Converting osm data to triples...");
-        Osm2ttl(_config, _odf, _stats).convert();
+        _osm2ttl.convert();
     } catch (std::exception &e) {
         util::Logger::log(util::LogEvent::ERROR, e.what());
         throw OsmChangeHandlerException("Exception while trying to convert osm element to"
@@ -430,9 +430,14 @@ void olu::osm::OsmChangeHandler::deleteNodesFromDatabase(osm2rdf::util::Progress
             runUpdateQuery(sparql::UpdateOperation::DELETE,
                            _queryWriter.writeDeleteOsmObjectGeometryQuery(OsmObjectType::NODE, batch),
                            cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
-            runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteOsmObjectCentroidQuery(OsmObjectType::NODE, batch),
-                           cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
+
+            // Delete 'geo:hasCentroid' triples only if the option is activated
+            if (_osm2ttl.hasTripleForOption(osm2rdf::config::constants::ADD_CENTROID_OPTION_LONG)) {
+                runUpdateQuery(sparql::UpdateOperation::DELETE,
+                    _queryWriter.writeDeleteOsmObjectCentroidQuery(OsmObjectType::NODE, batch),
+                    cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
+            }
+
             // Then delete the all triples for the nodes
             runUpdateQuery(sparql::UpdateOperation::DELETE,
                            _queryWriter.writeDeleteOsmObjectQuery(OsmObjectType::NODE, batch),
@@ -459,18 +464,24 @@ void olu::osm::OsmChangeHandler::deleteWaysFromDatabase(osm2rdf::util::ProgressB
         waysToDelete,
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
-            // First, delete the triple that are linked to the osm way (geometry, centroid and member)
-            // via a node
+            // First, triples that are linked to the osm way (members, geometry and centroid)
+            if (_osm2ttl.hasTripleForOption(osm2rdfCnst::NO_MEMBER_TRIPLES_OPTION_LONG, "false")) {
+                runUpdateQuery(sparql::UpdateOperation::DELETE,
+                    _queryWriter.writeDeleteWayMemberQuery(batch),
+                    cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
+            }
+
+            if (_osm2ttl.hasTripleForOption(osm2rdfCnst::ADD_CENTROID_OPTION_LONG)) {
+                runUpdateQuery(sparql::UpdateOperation::DELETE,
+                    _queryWriter.writeDeleteOsmObjectCentroidQuery(OsmObjectType::WAY, batch),
+                    cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
+            }
+
             runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteOsmObjectGeometryQuery(OsmObjectType::WAY, batch),
-                           cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
-            runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteOsmObjectCentroidQuery(OsmObjectType::WAY, batch),
-                           cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
-            runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteWayMemberQuery(batch),
-                           cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
-            // Then delete the all triples for the ways
+                _queryWriter.writeDeleteOsmObjectGeometryQuery(OsmObjectType::WAY, batch),
+                cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
+
+            // Then delete the all triples where the way is the subject
             runUpdateQuery(sparql::UpdateOperation::DELETE,
                            _queryWriter.writeDeleteOsmObjectQuery(OsmObjectType::WAY, batch),
                            cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
@@ -478,7 +489,8 @@ void olu::osm::OsmChangeHandler::deleteWaysFromDatabase(osm2rdf::util::ProgressB
         });
 }
 
-// _________________________________________________________________________________________________
+// ____________________________________________________________________________________________
+
 void olu::osm::OsmChangeHandler::deleteWaysGeometry(osm2rdf::util::ProgressBar &progress,
                                                     size_t &counter) {
     util::BatchHelper::doInBatches(
@@ -486,26 +498,47 @@ void olu::osm::OsmChangeHandler::deleteWaysGeometry(osm2rdf::util::ProgressBar &
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
             runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteOsmObjectGeometryQuery(OsmObjectType::WAY, batch),
-                           cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
-            runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteOsmObjectCentroidQuery(OsmObjectType::WAY, batch),
-                           cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
-            runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteOsmObjectOBBQuery(OsmObjectType::WAY, batch),
-                           cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
-            runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteOsmObjectEnvelopeQuery(OsmObjectType::WAY, batch),
-                           cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
-            runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteOsmObjectConvexHullQuery(OsmObjectType::WAY, batch),
-                           cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
+                _queryWriter.writeDeleteOsmObjectGeometryQuery(OsmObjectType::WAY, batch),
+                cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
+
+            // In principle, we would only have to delete either the length or the area,
+            // depending on whether the way covers an area.
+            // However, this information is not available here;
+            // it would have to be read from the change file
+            // (e.g., fetched from the SPARQL endpoint).
             runUpdateQuery(sparql::UpdateOperation::DELETE,
                            _queryWriter.writeDeleteOsmObjectLengthQuery(OsmObjectType::WAY, batch),
                            cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
+
             runUpdateQuery(sparql::UpdateOperation::DELETE,
                            _queryWriter.writeDeleteOsmObjectAreaQuery(OsmObjectType::WAY, batch),
                            cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
+
+
+            if (_osm2ttl.hasTripleForOption(osm2rdfCnst::ADD_CENTROID_OPTION_LONG)) {
+                runUpdateQuery(sparql::UpdateOperation::DELETE,
+                    _queryWriter.writeDeleteOsmObjectCentroidQuery(OsmObjectType::WAY, batch),
+                    cnst::PREFIXES_FOR_WAY_DELETE_QUERY);
+            }
+
+            if(_osm2ttl.hasTripleForOption(osm2rdfCnst::ADD_OBB_OPTION_LONG)) {
+                runUpdateQuery(sparql::UpdateOperation::DELETE,
+                    _queryWriter.writeDeleteOsmObjectOBBQuery(OsmObjectType::WAY, batch),
+                    cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
+            }
+
+            if(_osm2ttl.hasTripleForOption(osm2rdfCnst::ADD_ENVELOPE_OPTION_LONG)) {
+                runUpdateQuery(sparql::UpdateOperation::DELETE,
+                    _queryWriter.writeDeleteOsmObjectEnvelopeQuery(OsmObjectType::WAY, batch),
+                    cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
+            }
+
+            if(_osm2ttl.hasTripleForOption(osm2rdfCnst::ADD_CONVEX_HULL_OPTION_LONG)) {
+                runUpdateQuery(sparql::UpdateOperation::DELETE,
+                    _queryWriter.writeDeleteOsmObjectConvexHullQuery(OsmObjectType::WAY, batch),
+                    cnst::PREFIXES_FOR_WAY_DELETE_GEOMETRY_QUERY);
+            }
+
             progress.update(counter += batch.size());
         });
 }
@@ -528,21 +561,28 @@ void olu::osm::OsmChangeHandler::deleteRelationsFromDatabase(osm2rdf::util::Prog
         relationsToDelete,
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
-            // First, delete the triple that are linked to the osm relation (geometry, centroid and
-            // member) via a node
+            // First, triples that are linked to the osm way (members, geometry and centroid)
+            if (_osm2ttl.hasTripleForOption(osm2rdfCnst::NO_MEMBER_TRIPLES_OPTION_LONG, "false")) {
+                runUpdateQuery(sparql::UpdateOperation::DELETE,
+                               _queryWriter.writeDeleteRelMemberQuery(batch),
+                               cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
+            }
+
+            if (_osm2ttl.hasTripleForOption(osm2rdfCnst::ADD_CENTROID_OPTION_LONG)) {
+                runUpdateQuery(sparql::UpdateOperation::DELETE,
+                    _queryWriter.writeDeleteOsmObjectCentroidQuery(OsmObjectType::RELATION, batch),
+                    cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
+            }
+
             runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteOsmObjectGeometryQuery(OsmObjectType::RELATION, batch),
-                           cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
-            runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteOsmObjectCentroidQuery(OsmObjectType::RELATION, batch),
-                           cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
-            runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteRelMemberQuery(batch),
-                           cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
-            // Then delete the all triples for the relations
+                _queryWriter.writeDeleteOsmObjectGeometryQuery(OsmObjectType::RELATION, batch),
+                cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
+
+            // Then delete the all triples where the relation is the subject
             runUpdateQuery(sparql::UpdateOperation::DELETE,
                            _queryWriter.writeDeleteOsmObjectQuery(OsmObjectType::RELATION, batch),
                            cnst::PREFIXES_FOR_RELATION_DELETE_QUERY);
+
             progress.update(counter += batch.size());
         });
 }
@@ -555,26 +595,37 @@ void olu::osm::OsmChangeHandler::deleteRelationsGeometry(osm2rdf::util::Progress
         _config.batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
             runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteOsmObjectGeometryQuery(OsmObjectType::RELATION, batch),
-                           cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
+                _queryWriter.writeDeleteOsmObjectGeometryQuery(OsmObjectType::RELATION, batch),
+                cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
+
             runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteOsmObjectCentroidQuery(OsmObjectType::RELATION, batch),
-                           cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
-            runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteOsmObjectOBBQuery(OsmObjectType::RELATION, batch),
-                           cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
-            runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteOsmObjectEnvelopeQuery(OsmObjectType::RELATION, batch),
-                           cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
-            runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteOsmObjectConvexHullQuery(OsmObjectType::RELATION, batch),
-                           cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
-            runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteOsmObjectLengthQuery(OsmObjectType::RELATION, batch),
-                           cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
-            runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteOsmObjectAreaQuery(OsmObjectType::RELATION, batch),
-                           cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
+               _queryWriter.writeDeleteOsmObjectAreaQuery(OsmObjectType::RELATION, batch),
+               cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
+
+            if (_osm2ttl.hasTripleForOption(osm2rdfCnst::ADD_CENTROID_OPTION_LONG)) {
+                runUpdateQuery(sparql::UpdateOperation::DELETE,
+                    _queryWriter.writeDeleteOsmObjectCentroidQuery(OsmObjectType::RELATION, batch),
+                    cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
+            }
+
+            if(_osm2ttl.hasTripleForOption(osm2rdfCnst::ADD_OBB_OPTION_LONG)) {
+                runUpdateQuery(sparql::UpdateOperation::DELETE,
+                    _queryWriter.writeDeleteOsmObjectOBBQuery(OsmObjectType::RELATION, batch),
+                    cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
+            }
+
+            if(_osm2ttl.hasTripleForOption(osm2rdfCnst::ADD_ENVELOPE_OPTION_LONG)) {
+                runUpdateQuery(sparql::UpdateOperation::DELETE,
+                    _queryWriter.writeDeleteOsmObjectEnvelopeQuery(OsmObjectType::RELATION, batch),
+                    cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
+            }
+
+            if(_osm2ttl.hasTripleForOption(osm2rdfCnst::ADD_CONVEX_HULL_OPTION_LONG)) {
+                runUpdateQuery(sparql::UpdateOperation::DELETE,
+                    _queryWriter.writeDeleteOsmObjectConvexHullQuery(OsmObjectType::RELATION, batch),
+                    cnst::PREFIXES_FOR_RELATION_DELETE_GEOMETRY_QUERY);
+            }
+
             progress.update(counter += batch.size());
         });
 }

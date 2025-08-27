@@ -34,7 +34,19 @@ namespace olu::osm {
                          StatisticsHandler *stats): _config(config), _odf(odf), _stats(stats) {}
 
         // Converts osm data to ttl triplets
-        void convert() const;
+        void convert();
+
+        /**
+         * Checks whether triples for a specific option name are in the SPARQL endpoint.
+         * If the option name was not found on the endpoint, this function returns true.
+         *
+         * @param option The name of the option to check for
+         * @param condition Condition that is stored as value for the option in the endpoint, which
+         * decides if the triple are present or not. Default is "true".
+         * @return True if triples for the option are in the endpoint, false otherwise
+         */
+        [[nodiscard]] bool hasTripleForOption(const std::string& option,
+                                              const std::string& condition = "true") const;
 
         static std::string getGitInfo() {
             return osm2rdf::version::GIT_INFO;
@@ -48,7 +60,7 @@ namespace olu::osm {
         template <typename T>
         static void run(const osm2rdf::config::Config& config);
 
-        std::vector<std::string> getArgsFromEndpoint() const;
+        std::vector<std::string> getArgsFromEndpoint();
     };
 
 } // namespace olu::osm
