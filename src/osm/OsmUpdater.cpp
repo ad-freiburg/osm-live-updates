@@ -59,6 +59,10 @@ olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config)
     omp_set_num_threads(config.numThreads);
 #endif
 
+    // Delete all files and folders in the temporary directory to ensure a clean start.
+    // This is needed to potentially avoid conflicts with files from a previous failed update.
+    deleteTmpDir();
+
     try {
         std::filesystem::create_directory(cnst::PATH_TO_TEMP_DIR);
         std::filesystem::create_directory(cnst::PATH_TO_CHANGE_FILE_DIR);
@@ -83,10 +87,6 @@ olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config)
 
 // _________________________________________________________________________________________________
 void olu::osm::OsmUpdater::run() {
-    // Delete all files and folders in the temporary directory to ensure a clean start.
-    // This is needed to potentially avoid conflicts with files from a previous failed update.
-    deleteTmpDir();
-
     // Check if the osm2rdf version that was used to create the dump on the SPARQL endpoint is the
     // same that is used in this program.
     checkOsm2RdfVersions();
@@ -307,6 +307,10 @@ void olu::osm::OsmUpdater::clearChangesDir() {
 // _________________________________________________________________________________________________
 void olu::osm::OsmUpdater::deleteTmpDir() {
     try {
+        if (!std::filesystem::exists(cnst::PATH_TO_TEMP_DIR)) {
+            return;
+        }
+
         for (const auto& entry : std::filesystem::directory_iterator(cnst::PATH_TO_TEMP_DIR)) {
             remove_all(entry.path());
         }
