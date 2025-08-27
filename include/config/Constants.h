@@ -439,10 +439,10 @@ namespace olu::config::constants {
 
     const static inline std::string REPLICATION_SERVER_URI_INFO =
             "Replication server uri:";
-    const static inline std::string REPLICATION_SERVER_URI_OPTION_SHORT = "f";
-    const static inline std::string REPLICATION_SERVER_URI_OPTION_LONG = "file-server";
+    const static inline std::string REPLICATION_SERVER_URI_OPTION_SHORT = "r";
+    const static inline std::string REPLICATION_SERVER_URI_OPTION_LONG = "replication-server";
     const static inline std::string REPLICATION_SERVER_URI_OPTION_HELP =
-            "The URI of the server with the OsmChange files.";
+            "The URI of the replication server with the OsmChange files.";
 
     const static inline std::string SEQUENCE_NUMBER_INFO = "Starting sequence number:";
     const static inline std::string SEQUENCE_NUMBER_OPTION_SHORT = "s";
