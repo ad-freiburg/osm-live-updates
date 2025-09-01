@@ -797,9 +797,10 @@ void olu::osm::OsmChangeHandler::filterNodeTriple(const triple_t &nodeTriple,
                                                   const std::set<id_t> &nodesToInsert,
                                                   std::vector<triple_t> &relevantTriples,
                                                   std::string &currentLink) {
-    if (const auto& [subject, predicate, object] = nodeTriple;
-        nodesToInsert.contains(util::TtlHelper::parseId(subject))) {
-        // Decode tag values
+    const auto& [subject, predicate, object] = nodeTriple;
+    const auto nodeId =util::TtlHelper::parseId(subject);
+
+    if (nodesToInsert.contains(nodeId)) {
         relevantTriples.emplace_back(subject, predicate, util::XmlHelper::xmlDecode(object));
 
         if (util::TtlHelper::hasRelevantObject(predicate, OsmObjectType::NODE)) {

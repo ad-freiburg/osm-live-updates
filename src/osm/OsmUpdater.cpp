@@ -137,9 +137,14 @@ void olu::osm::OsmUpdater::run() {
     auto och{OsmChangeHandler(_config, *_odf, _stats)};
     och.run();
 
+    _stats.startTimeInsertingMetadataTriples();
     insertMetadataTriples(och);
+    _stats.endTimeInsertingMetadataTriples();
 
+    _stats.startTimeCleanUpTmpDir();
     deleteTmpDir();
+    _stats.endTimeCleanUpTmpDir();
+
     _stats.endTime();
 
     _stats.printOsmStatistics();
