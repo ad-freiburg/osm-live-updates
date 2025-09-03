@@ -425,6 +425,12 @@ namespace olu::config::constants {
     const static inline std::string SPARQL_OUTPUT_OPTION_HELP =
         "Specify if SPARQL updates should be written to a file instead of sending them to the endpoint.";
 
+    const static inline std::string SPARQL_RESPONSE_OUTPUT_INFO = "SPARQL endpoint responses are written to file:";
+    const static inline std::string SPARQL_RESPONSE_OUTPUT_OPTION_SHORT = "";
+    const static inline std::string SPARQL_RESPONSE_OUTPUT_OPTION_LONG = "sparql-response-output";
+    const static inline std::string SPARQL_RESPONSE_OUTPUT_OPTION_HELP =
+        "Specify a file to which the SPARQL endpoint responses should be written.";
+
     const static inline std::string SPARQL_OUTPUT_FORMAT_INFO = "Output format:";
     const static inline std::string SPARQL_OUTPUT_FORMAT_OPTION_SHORT = "d";
     const static inline std::string SPARQL_OUTPUT_FORMAT_OPTION_LONG = "debug";
@@ -439,16 +445,22 @@ namespace olu::config::constants {
 
     const static inline std::string REPLICATION_SERVER_URI_INFO =
             "Replication server uri:";
-    const static inline std::string REPLICATION_SERVER_URI_OPTION_SHORT = "f";
-    const static inline std::string REPLICATION_SERVER_URI_OPTION_LONG = "file-server";
+    const static inline std::string REPLICATION_SERVER_URI_OPTION_SHORT = "r";
+    const static inline std::string REPLICATION_SERVER_URI_OPTION_LONG = "replication-server";
     const static inline std::string REPLICATION_SERVER_URI_OPTION_HELP =
-            "The URI of the server with the OsmChange files.";
+            "The URI of the replication server with the OsmChange files.";
 
     const static inline std::string SEQUENCE_NUMBER_INFO = "Starting sequence number:";
     const static inline std::string SEQUENCE_NUMBER_OPTION_SHORT = "s";
     const static inline std::string SEQUENCE_NUMBER_OPTION_LONG = "sequence-number";
     const static inline std::string SEQUENCE_NUMBER_OPTION_HELP =
             "The sequence number to start the update process from.";
+
+    const static inline std::string MAX_SEQUENCE_NUMBER_INFO = "Ending at sequence number:";
+    const static inline std::string MAX_SEQUENCE_NUMBER_OPTION_SHORT = "";
+    const static inline std::string MAX_SEQUENCE_NUMBER_OPTION_LONG = "max-sequence-number";
+    const static inline std::string MAX_SEQUENCE_NUMBER_OPTION_HELP =
+            "The maximum sequence number to use for the update process.";
 
     const static inline std::string TIME_STAMP_INFO = "Starting timestamp:";
     const static inline std::string TIME_STAMP_OPTION_SHORT = "t";
@@ -486,6 +498,13 @@ namespace olu::config::constants {
     const static inline std::string POLY_FILE_OPTION_LONG = "polygon";
     const static inline std::string POLY_FILE_OPTION_HELP =
          "Specify a (multi)polygon file (.poly) to cut out a specific area from the change files. ";
+
+    const static inline std::string EXTRACT_STRATEGY_INFO = "Using extract strategy: ";
+    const static inline std::string EXTRACT_STRATEGY_OPTION_SHORT = "";
+    const static inline std::string EXTRACT_STRATEGY_OPTION_LONG = "extract-strategy";
+    const static inline std::string EXTRACT_STRATEGY_OPTION_HELP =
+        "Specify the extract strategy to use. Possible values are 'smart', 'complete_ways' and "
+        "'simple'. See osmium documentation for more information.";
 
 } // namespace olu::config::constants
 

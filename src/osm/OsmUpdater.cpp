@@ -59,6 +59,10 @@ olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config)
     omp_set_num_threads(config.numThreads);
 #endif
 
+    // Delete all files and folders in the temporary directory to ensure a clean start.
+    // This is needed to potentially avoid conflicts with files from a previous failed update.
+    deleteTmpDir();
+
     try {
         std::filesystem::create_directory(cnst::PATH_TO_TEMP_DIR);
         std::filesystem::create_directory(cnst::PATH_TO_CHANGE_FILE_DIR);
@@ -114,6 +118,12 @@ void olu::osm::OsmUpdater::run() {
             throw util::DatabaseUpToDateException(msg.c_str());
         }
 
+        if (_config.maxSequenceNumber > 0) {
+            util::Logger::log(util::LogEvent::INFO, "End at user specified sequence number: "
+                + std::to_string(_config.maxSequenceNumber));
+            _stats.setLatestDatabaseState({"", _config.maxSequenceNumber});
+        }
+
         _stats.startTimeFetchingChangeFiles();
         fetchChangeFiles();
         _stats.endTimeFetchingChangeFiles();
@@ -133,9 +143,14 @@ void olu::osm::OsmUpdater::run() {
     auto och{OsmChangeHandler(_config, *_odf, _stats)};
     och.run();
 
+    _stats.startTimeInsertingMetadataTriples();
     insertMetadataTriples(och);
+    _stats.endTimeInsertingMetadataTriples();
 
+    _stats.startTimeCleanUpTmpDir();
     deleteTmpDir();
+    _stats.endTimeCleanUpTmpDir();
+
     _stats.endTime();
 
     _stats.printOsmStatistics();
@@ -265,6 +280,8 @@ void olu::osm::OsmUpdater::fetchChangeFiles() {
 void olu::osm::OsmUpdater::applyBoundaries() const {
     util::Logger::log(util::LogEvent::INFO, "Applying boundaries to change files...");
 
+    // See the osmium-tool manual for details about the extract command:
+    // https://osmcode.org/osmium-tool/manual.html#creating-geographic-extracts
     std::string cmd = "osmium extract " + cnst::PATH_TO_CHANGE_FILE;
     if (!_config.bbox.empty()) {
         cmd += " --bbox " + _config.bbox;
@@ -274,11 +291,8 @@ void olu::osm::OsmUpdater::applyBoundaries() const {
         throw OsmUpdaterException("No bounding box or polygon file specified.");
     }
 
-    // Use the 'smart' strategy to include entire ways and multipolygons that intersect the boundary
-    // (as well as the referenced nodes that are not in the boundary).
-    // See the osmium-tool manual for details:
-    // https://osmcode.org/osmium-tool/manual.html#creating-geographic-extracts
-    cmd += " -o " + cnst::PATH_TO_CHANGE_FILE_EXTRACT + " --overwrite -s smart --no-progress";
+    cmd += " -o " + cnst::PATH_TO_CHANGE_FILE_EXTRACT + " --overwrite -s "
+        + _config.extractStrategy + "  --no-progress";
 
     // Overwrite the original change file with the extracted one
     cmd += " && mv " + cnst::PATH_TO_CHANGE_FILE_EXTRACT + " " + cnst::PATH_TO_CHANGE_FILE;
@@ -304,6 +318,10 @@ void olu::osm::OsmUpdater::clearChangesDir() {
 // _________________________________________________________________________________________________
 void olu::osm::OsmUpdater::deleteTmpDir() {
     try {
+        if (!std::filesystem::exists(cnst::PATH_TO_TEMP_DIR)) {
+            return;
+        }
+
         for (const auto& entry : std::filesystem::directory_iterator(cnst::PATH_TO_TEMP_DIR)) {
             remove_all(entry.path());
         }

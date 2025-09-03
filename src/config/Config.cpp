@@ -81,6 +81,12 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
         constants::SPARQL_OUTPUT_FORMAT_OPTION_LONG,
         constants::SPARQL_OUTPUT_FORMAT_OPTION_HELP);
 
+    const auto sparqlResponseOutputOp = parser.add<popl::Value<std::string>,
+        popl::Attribute::optional>(
+        constants::SPARQL_RESPONSE_OUTPUT_OPTION_SHORT,
+        constants::SPARQL_RESPONSE_OUTPUT_OPTION_LONG,
+        constants::SPARQL_RESPONSE_OUTPUT_OPTION_HELP);
+
     const auto timestampOp = parser.add<popl::Value<std::string>,
         popl::Attribute::optional>(
         constants::TIME_STAMP_OPTION_SHORT,
@@ -92,6 +98,12 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
         constants::SEQUENCE_NUMBER_OPTION_SHORT,
         constants::SEQUENCE_NUMBER_OPTION_LONG,
         constants::SEQUENCE_NUMBER_OPTION_HELP);
+
+    const auto maxSequenceNumberOp = parser.add<popl::Value<int>,
+        popl::Attribute::optional>(
+        constants::MAX_SEQUENCE_NUMBER_OPTION_SHORT,
+        constants::MAX_SEQUENCE_NUMBER_OPTION_LONG,
+        constants::MAX_SEQUENCE_NUMBER_OPTION_HELP);
 
     const auto batchSizeOp = parser.add<popl::Value<u_int32_t>,
         popl::Attribute::advanced>(
@@ -122,6 +134,12 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
         constants::POLY_FILE_OPTION_SHORT,
         constants::POLY_FILE_OPTION_LONG,
         constants::POLY_FILE_OPTION_HELP);
+
+    const auto extractStrategyOp = parser.add<popl::Value<std::string>,
+    popl::Attribute::optional>(
+        constants::EXTRACT_STRATEGY_OPTION_SHORT,
+        constants::EXTRACT_STRATEGY_OPTION_LONG,
+        constants::EXTRACT_STRATEGY_OPTION_HELP);
 
     try {
         parser.parse(argc, argv);
@@ -280,12 +298,56 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
             }
         }
 
+        if (extractStrategyOp->is_set()) {
+            extractStrategy = extractStrategyOp->value();
+            if (!polyFileOp->is_set() && !bboxOp->is_set()) {
+                std::stringstream errorDescription;
+                errorDescription << "Specified extract strategy without specifying a bounding box "
+                                    "or polygon file: " << extractStrategy
+                                 << std::endl;
+                util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
+                exit(INCORRECT_ARGUMENTS);
+            }
+
+            if (extractStrategy != "smart" &&
+                extractStrategy != "complete_ways" &&
+                extractStrategy != "simple") {
+                std::stringstream errorDescription;
+                errorDescription << "Invalid extract strategy specified: " << extractStrategy
+                                 << ". Valid strategies are 'smart', 'complete_ways', and 'simple'."
+                                    " See osmium manual for more information."
+                                 << std::endl;
+                util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
+                exit(INCORRECT_ARGUMENTS);
+            }
+        }
+
         if (timestampOp->is_set()) {
             timestamp = timestampOp->value();
         }
 
         if (sequenceNumberOp->is_set()) {
             sequenceNumber = sequenceNumberOp->value();
+        }
+
+        if (maxSequenceNumberOp->is_set()) {
+            maxSequenceNumber = maxSequenceNumberOp->value();
+
+            if (maxSequenceNumber < 0) {
+                std::stringstream errorDescription;
+                errorDescription << "Maximum sequence number must be positiv: "
+                                 << maxSequenceNumber << std::endl;
+                util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
+                exit(INCORRECT_ARGUMENTS);
+            }
+
+            if (maxSequenceNumber < sequenceNumber) {
+                std::stringstream errorDescription;
+                errorDescription << "Maximum sequence number must be larger than the start sequence number: "
+                                 << maxSequenceNumber << std::endl;
+                util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
+                exit(INCORRECT_ARGUMENTS);
+            }
         }
 
         if (batchSizeOp->is_set()) {
@@ -305,6 +367,10 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
             sparqlOutput = sparqlOutputFormatOp->is_set() ? DEBUG_FILE : FILE;
         } else {
             sparqlOutput = ENDPOINT;
+        }
+
+        if (sparqlResponseOutputOp->is_set()) {
+            sparqlResponseFile = sparqlResponseOutputOp->value();
         }
     } catch (const popl::invalid_option& e) {
         std::stringstream errorDescription;
@@ -378,6 +444,16 @@ void olu::config::Config::printInfo() const {
     if (!pathToPolygonFile.empty()) {
         util::Logger::log(util::LogEvent::CONFIG,
                   constants::POLY_FILE_INFO + " " + pathToPolygonFile);
+    }
+
+    if (!extractStrategy.empty()) {
+        util::Logger::log(util::LogEvent::CONFIG,
+                  constants::EXTRACT_STRATEGY_INFO + " " + extractStrategy);
+    }
+
+    if (!sparqlResponseFile.empty()) {
+        util::Logger::log(util::LogEvent::CONFIG,
+                          constants::SPARQL_RESPONSE_OUTPUT_INFO + " " + sparqlResponseFile.generic_string());
     }
 
     if (batchSize != DEFAULT_BATCH_SIZE) {

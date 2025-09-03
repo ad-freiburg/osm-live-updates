@@ -39,12 +39,25 @@ namespace cnst = olu::config::constants;
 // _________________________________________________________________________________________________
 simdjson::padded_string
 olu::osm::OsmDataFetcherSparql::runQuery(const std::string &query,
-                                                               const std::vector<std::string> &prefixes) {
+                                         const std::vector<std::string> &prefixes) {
     _stats->countQuery();
 
     _sparqlWrapper.setQuery(query);
     _sparqlWrapper.setPrefixes(prefixes);
-    return {_sparqlWrapper.runQuery()};
+    auto response = _sparqlWrapper.runQuery();
+
+    // Write SPARQL response to a file, if configured by the user
+    if (!_config.sparqlResponseFile.empty()) {
+        std::ofstream outputFile(_config.sparqlResponseFile, std::ios::app);
+        if (!outputFile) {
+            std::cerr << "Error opening file for SPARQL response output." << std::endl;
+            throw OsmDataFetcherException("Cannot open file for SPARQL response output.");
+        }
+        outputFile << response << std::endl;
+        outputFile.close();
+    }
+
+    return {response};
 }
 
 // _________________________________________________________________________________________________

@@ -21,6 +21,7 @@
 
 #include <string>
 #include <filesystem>
+#include <map>
 #include <thread>
 
 namespace olu::config {
@@ -34,7 +35,7 @@ enum SparqlOutput {
 struct Config {
     static constexpr u_int16_t DEFAULT_WKT_PRECISION = 7;
     static constexpr u_int16_t DEFAULT_PERCENTAGE_PRECISION = 1;
-    static constexpr u_int32_t DEFAULT_BATCH_SIZE = 1 << 19;
+    static constexpr u_int32_t DEFAULT_BATCH_SIZE = 1 << 18;
 
     // The uri of the SPARQL endpoint for queries
     std::string sparqlEndpointUri;
@@ -54,6 +55,9 @@ struct Config {
 
     // User specified sequence number from command line.
     int sequenceNumber = -1;
+    // User specified sequence number up to which the change files should be processed.
+    int maxSequenceNumber = std::numeric_limits<int>::min();
+
     // User specified timestamp from the command line
     std::string timestamp;
 
@@ -61,6 +65,13 @@ struct Config {
     std::string bbox;
     // User specified path to a polygon file
     std::string pathToPolygonFile;
+
+    // Strategy that is used by the osmium extract command to extract the changes. Possible values
+    // are: smart, complete_ways and simple. The default is "smart", because this is the one
+    // Geofabrik uses for their country extracts.
+    // See: https://docs.osmcode.org/osmium/latest/osmium-extract.html for an explanation of the
+    // strategies.
+    std::string extractStrategy = "smart";
 
     int numThreads = std::thread::hardware_concurrency();
 
@@ -82,6 +93,13 @@ struct Config {
     // - DEBUG: All sparql queries and updates are written to a file
     SparqlOutput sparqlOutput = ENDPOINT;
     std::filesystem::path sparqlOutputFile;
+
+    // User can specify a file to which the response of the SPARQL endpoint will be written.
+    std::filesystem::path sparqlResponseFile;
+
+    // Stores the osm2rdf options that will be fetched from the SPARQL endpoint before
+    // we convert the OSM data to RDF triples.
+    std::map<std::string, std::string> osm2rdfOptions;;
 
     // Generate the information string containing the current settings.
     void printInfo() const;

@@ -137,7 +137,7 @@ void olu::osm::OsmReplicationServerHelper::fetchDatabaseStateForTimestamp(
         // Fetch the database states for the guessed sequence number and the one before and after
         // it
         for (const auto databaseStates = fetchDatabaseStatesForSequenceNumbers(
-                 guessedSeqNum - 1, guessedSeqNum + 1);
+                 std::max(guessedSeqNum - 1, 0), std::min(guessedSeqNum + 1, toSeqNum));
              const auto &fetchedState: databaseStates) {
             if (fetchedState <= OsmDatabaseState(timeStamp)) {
                 _stats->setStartDatabaseState(fetchedState);

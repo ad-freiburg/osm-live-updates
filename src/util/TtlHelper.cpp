@@ -139,3 +139,9 @@ bool olu::util::TtlHelper::hasRelevantObject(const std::string& predicate,
     const std::string msg = "Cant interpret predicate for relevancy check: " + predicate;
     throw TtlHelperException(msg.c_str());
 }
+
+// _________________________________________________________________________________________________
+bool olu::util::TtlHelper::hasRelevantGeoObject(const std::string& predicate) {
+   return predicate == cnst::PREFIXED_GEO_HAS_CENTROID ||
+          predicate == cnst::PREFIXED_GEO_HAS_GEOMETRY;
+}

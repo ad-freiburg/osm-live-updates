@@ -47,8 +47,9 @@ void olu::osm::OsmDataFetcherQLever::runQuery(const std::string &query,
     _sparqlWrapper.setQuery(query);
     _sparqlWrapper.setPrefixes(prefixes);
 
-    const simdjson::padded_string response = _sparqlWrapper.runQuery();
-    for (auto doc = _parser.iterate(response);
+    auto response = _sparqlWrapper.runQuery();
+    auto paddedResponse = simdjson::padded_string(response);
+    for (auto doc = _parser.iterate(paddedResponse);
          auto field: doc.get_object()) {
         if (field.error()) {
             std::cerr << field.error() << std::endl;
@@ -64,6 +65,17 @@ void olu::osm::OsmDataFetcherQLever::runQuery(const std::string &query,
         if (key == cnst::KEY_QLEVER_TIME) {
             _stats->logQleverQueryInfo(field.value().get_object());
         }
+    }
+
+    // Write SPARQL response to a file, if configured by the user
+    if (!_config.sparqlResponseFile.empty()) {
+        std::ofstream outputFile(_config.sparqlResponseFile, std::ios::app);
+        if (!outputFile) {
+            std::cerr << "Error opening file for SPARQL response output." << std::endl;
+            throw OsmDataFetcherException("Cannot open file for SPARQL response output.");
+        }
+        outputFile << response << std::endl;
+        outputFile.close();
     }
 }
 
@@ -143,6 +155,7 @@ void olu::osm::OsmDataFetcherQLever::fetchAndWriteNodesToFile(const std::string 
                      nodeLocationAsWkt);
                  const auto nodeXml = util::XmlHelper::getNodeDummy(nodeId, nodeLocation);
                  outputFile.write(nodeXml.data(), nodeXml.size());
+                 outputFile << std::endl;
              });
 
     outputFile.close();
@@ -236,6 +249,7 @@ olu::osm::OsmDataFetcherQLever::fetchAndWriteRelationsToFile(const std::string &
                  const auto relationXml = util::XmlHelper::getRelationDummy(
                      relationId,relationType, members);
                  outputFile.write(relationXml.data(), relationXml.size());
+                 outputFile << std::endl;
              });
 
     outputFile.close();
@@ -303,6 +317,7 @@ size_t olu::osm::OsmDataFetcherQLever::fetchAndWriteWaysToFile(const std::string
                  // Write way to file
                  const auto wayXml = util::XmlHelper::getWayDummy(wayId, members);
                  outputFile.write(wayXml.data(), wayXml.size());
+                 outputFile << std::endl;
              });
 
     outputFile.close();
