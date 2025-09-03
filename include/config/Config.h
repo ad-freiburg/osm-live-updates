@@ -91,6 +91,9 @@ struct Config {
     SparqlOutput sparqlOutput = ENDPOINT;
     std::filesystem::path sparqlOutputFile;
 
+    // User can specify a file to which the response of the SPARQL endpoint will be written.
+    std::filesystem::path sparqlResponseFile;
+
     // Stores the osm2rdf options that will be fetched from the SPARQL endpoint before
     // we convert the OSM data to RDF triples.
     std::map<std::string, std::string> osm2rdfOptions;;

@@ -416,6 +416,17 @@ void olu::osm::OsmChangeHandler::runUpdateQuery(const sparql::UpdateOperation & 
         response = response.substr(1, response.size() - 2);
         _stats->logQLeverUpdateInfo(response);
     }
+
+    // Write SPARQL response to a file, if configured by the user
+    if (!_config.sparqlResponseFile.empty()) {
+        std::ofstream outputFile(_config.sparqlResponseFile, std::ios::app);
+        if (!outputFile) {
+            std::cerr << "Error opening file for SPARQL response output." << std::endl;
+            throw OsmDataFetcherException("Cannot open file for SPARQL response output.");
+        }
+        outputFile << response << std::endl;
+        outputFile.close();
+    }
 }
 
 // _________________________________________________________________________________________________

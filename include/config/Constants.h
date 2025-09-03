@@ -425,6 +425,12 @@ namespace olu::config::constants {
     const static inline std::string SPARQL_OUTPUT_OPTION_HELP =
         "Specify if SPARQL updates should be written to a file instead of sending them to the endpoint.";
 
+    const static inline std::string SPARQL_RESPONSE_OUTPUT_INFO = "SPARQL endpoint responses are written to file:";
+    const static inline std::string SPARQL_RESPONSE_OUTPUT_OPTION_SHORT = "";
+    const static inline std::string SPARQL_RESPONSE_OUTPUT_OPTION_LONG = "sparql-response-output";
+    const static inline std::string SPARQL_RESPONSE_OUTPUT_OPTION_HELP =
+        "Specify a file to which the SPARQL endpoint responses should be written.";
+
     const static inline std::string SPARQL_OUTPUT_FORMAT_INFO = "Output format:";
     const static inline std::string SPARQL_OUTPUT_FORMAT_OPTION_SHORT = "d";
     const static inline std::string SPARQL_OUTPUT_FORMAT_OPTION_LONG = "debug";

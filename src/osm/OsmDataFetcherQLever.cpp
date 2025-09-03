@@ -47,8 +47,9 @@ void olu::osm::OsmDataFetcherQLever::runQuery(const std::string &query,
     _sparqlWrapper.setQuery(query);
     _sparqlWrapper.setPrefixes(prefixes);
 
-    const simdjson::padded_string response = _sparqlWrapper.runQuery();
-    for (auto doc = _parser.iterate(response);
+    auto response = _sparqlWrapper.runQuery();
+    auto paddedResponse = simdjson::padded_string(response);
+    for (auto doc = _parser.iterate(paddedResponse);
          auto field: doc.get_object()) {
         if (field.error()) {
             std::cerr << field.error() << std::endl;
@@ -64,6 +65,17 @@ void olu::osm::OsmDataFetcherQLever::runQuery(const std::string &query,
         if (key == cnst::KEY_QLEVER_TIME) {
             _stats->logQleverQueryInfo(field.value().get_object());
         }
+    }
+
+    // Write SPARQL response to a file, if configured by the user
+    if (!_config.sparqlResponseFile.empty()) {
+        std::ofstream outputFile(_config.sparqlResponseFile, std::ios::app);
+        if (!outputFile) {
+            std::cerr << "Error opening file for SPARQL response output." << std::endl;
+            throw OsmDataFetcherException("Cannot open file for SPARQL response output.");
+        }
+        outputFile << response << std::endl;
+        outputFile.close();
     }
 }
 

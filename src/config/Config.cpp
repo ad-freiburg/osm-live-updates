@@ -81,6 +81,12 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
         constants::SPARQL_OUTPUT_FORMAT_OPTION_LONG,
         constants::SPARQL_OUTPUT_FORMAT_OPTION_HELP);
 
+    const auto sparqlResponseOutputOp = parser.add<popl::Value<std::string>,
+        popl::Attribute::optional>(
+        constants::SPARQL_RESPONSE_OUTPUT_OPTION_SHORT,
+        constants::SPARQL_RESPONSE_OUTPUT_OPTION_LONG,
+        constants::SPARQL_RESPONSE_OUTPUT_OPTION_HELP);
+
     const auto timestampOp = parser.add<popl::Value<std::string>,
         popl::Attribute::optional>(
         constants::TIME_STAMP_OPTION_SHORT,
@@ -336,6 +342,10 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
         } else {
             sparqlOutput = ENDPOINT;
         }
+
+        if (sparqlResponseOutputOp->is_set()) {
+            sparqlResponseFile = sparqlResponseOutputOp->value();
+        }
     } catch (const popl::invalid_option& e) {
         std::stringstream errorDescription;
         errorDescription << "Invalid Option Exception: " << e.what() << "\n";
@@ -408,6 +418,16 @@ void olu::config::Config::printInfo() const {
     if (!pathToPolygonFile.empty()) {
         util::Logger::log(util::LogEvent::CONFIG,
                   constants::POLY_FILE_INFO + " " + pathToPolygonFile);
+    }
+
+    if (!extractStrategy.empty()) {
+        util::Logger::log(util::LogEvent::CONFIG,
+                  constants::EXTRACT_STRATEGY_INFO + " " + extractStrategy);
+    }
+
+    if (!sparqlResponseFile.empty()) {
+        util::Logger::log(util::LogEvent::CONFIG,
+                          constants::SPARQL_RESPONSE_OUTPUT_INFO + " " + sparqlResponseFile.generic_string());
     }
 
     if (batchSize != DEFAULT_BATCH_SIZE) {

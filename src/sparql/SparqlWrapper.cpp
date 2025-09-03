@@ -45,7 +45,7 @@ void olu::sparql::SparqlWrapper::setPrefixes(const std::vector<std::string> &pre
 // _________________________________________________________________________________________________
 std::string olu::sparql::SparqlWrapper::sendQuery() {
     if (_config.sparqlOutput == config::SparqlOutput::DEBUG_FILE) {
-        writeQueryToFileOutput();
+        writeQueryToFileOutput(false);
     }
 
     // Set the accept-value depending on whether we are using QLever or not.
@@ -88,7 +88,7 @@ std::string olu::sparql::SparqlWrapper::sendQuery() {
 std::string olu::sparql::SparqlWrapper::sendUpdate(const UpdateOperation &updateOp) {
     if (_config.sparqlOutput == config::SparqlOutput::DEBUG_FILE ||
         _config.sparqlOutput == config::SparqlOutput::FILE) {
-        writeQueryToFileOutput();
+        writeQueryToFileOutput(updateOp == UpdateOperation::INSERT);
     }
 
     std::string url = _config.sparqlEndpointUriForUpdates;
@@ -162,10 +162,19 @@ std::string olu::sparql::SparqlWrapper::runQuery() {
 }
 
 // _________________________________________________________________________________________________
-void olu::sparql::SparqlWrapper::writeQueryToFileOutput() const {
+void olu::sparql::SparqlWrapper::writeQueryToFileOutput(const bool &isInsertOperation) const {
     std::ofstream outputFile;
     outputFile.open (_config.sparqlOutputFile, std::ios_base::app);
-    outputFile << _prefixes << _query << std::endl;
+
+    // For insert operations, we use the graph store protocol which sends the triples as body to the
+    // SPARQL endpoint.
+    // However, when we write this operation to a file, we must wrap the query in an
+    // INSERT DATA { ... } clause, so it still makes sense as a SPARQL update operation.
+    if (isInsertOperation) {
+        outputFile << _prefixes << " INSERT DATA { " << _query << "}" << std::endl;
+    } else {
+        outputFile << _prefixes << _query << std::endl;
+    }
     outputFile.close();
 }
 

@@ -82,7 +82,7 @@ namespace olu::sparql {
         std::string _query;
         std::string _prefixes;
 
-        void writeQueryToFileOutput() const;
+        void writeQueryToFileOutput(const bool &isInsertOperation) const;
 
         /**
          * Sends a HTTP request to the sparql endpoint.
