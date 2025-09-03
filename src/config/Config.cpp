@@ -99,6 +99,12 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
         constants::SEQUENCE_NUMBER_OPTION_LONG,
         constants::SEQUENCE_NUMBER_OPTION_HELP);
 
+    const auto maxSequenceNumberOp = parser.add<popl::Value<int>,
+        popl::Attribute::optional>(
+        constants::MAX_SEQUENCE_NUMBER_OPTION_SHORT,
+        constants::MAX_SEQUENCE_NUMBER_OPTION_LONG,
+        constants::MAX_SEQUENCE_NUMBER_OPTION_HELP);
+
     const auto batchSizeOp = parser.add<popl::Value<u_int32_t>,
         popl::Attribute::advanced>(
         constants::BATCH_SIZE_OPTION_SHORT,
@@ -322,6 +328,26 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
 
         if (sequenceNumberOp->is_set()) {
             sequenceNumber = sequenceNumberOp->value();
+        }
+
+        if (maxSequenceNumberOp->is_set()) {
+            maxSequenceNumber = maxSequenceNumberOp->value();
+
+            if (maxSequenceNumber < 0) {
+                std::stringstream errorDescription;
+                errorDescription << "Maximum sequence number must be positiv: "
+                                 << maxSequenceNumber << std::endl;
+                util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
+                exit(INCORRECT_ARGUMENTS);
+            }
+
+            if (maxSequenceNumber < sequenceNumber) {
+                std::stringstream errorDescription;
+                errorDescription << "Maximum sequence number must be larger than the start sequence number: "
+                                 << maxSequenceNumber << std::endl;
+                util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
+                exit(INCORRECT_ARGUMENTS);
+            }
         }
 
         if (batchSizeOp->is_set()) {

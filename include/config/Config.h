@@ -55,6 +55,9 @@ struct Config {
 
     // User specified sequence number from command line.
     int sequenceNumber = -1;
+    // User specified sequence number up to which the change files should be processed.
+    int maxSequenceNumber = std::numeric_limits<int>::min();
+
     // User specified timestamp from the command line
     std::string timestamp;
 

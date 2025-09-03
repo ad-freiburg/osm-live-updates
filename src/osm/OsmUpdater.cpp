@@ -118,6 +118,12 @@ void olu::osm::OsmUpdater::run() {
             throw util::DatabaseUpToDateException(msg.c_str());
         }
 
+        if (_config.maxSequenceNumber > 0) {
+            util::Logger::log(util::LogEvent::INFO, "End at user specified sequence number: "
+                + std::to_string(_config.maxSequenceNumber));
+            _stats.setLatestDatabaseState({"", _config.maxSequenceNumber});
+        }
+
         _stats.startTimeFetchingChangeFiles();
         fetchChangeFiles();
         _stats.endTimeFetchingChangeFiles();

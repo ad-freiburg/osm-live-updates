@@ -456,6 +456,12 @@ namespace olu::config::constants {
     const static inline std::string SEQUENCE_NUMBER_OPTION_HELP =
             "The sequence number to start the update process from.";
 
+    const static inline std::string MAX_SEQUENCE_NUMBER_INFO = "Ending at sequence number:";
+    const static inline std::string MAX_SEQUENCE_NUMBER_OPTION_SHORT = "";
+    const static inline std::string MAX_SEQUENCE_NUMBER_OPTION_LONG = "max-sequence-number";
+    const static inline std::string MAX_SEQUENCE_NUMBER_OPTION_HELP =
+            "The maximum sequence number to use for the update process.";
+
     const static inline std::string TIME_STAMP_INFO = "Starting timestamp:";
     const static inline std::string TIME_STAMP_OPTION_SHORT = "t";
     const static inline std::string TIME_STAMP_OPTION_LONG = "timestamp";
