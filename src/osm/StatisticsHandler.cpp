@@ -21,6 +21,7 @@
 #include <iostream>
 
 #include "config/Constants.h"
+#include "sparql/SparqlWrapper.h"
 #include "util/Logger.h"
 #include "util/Time.h"
 
@@ -146,13 +147,16 @@ void olu::osm::StatisticsHandler::printSparqlStatistics() const {
         util::Logger::stream() << util::Logger::PREFIX_SPACER << "QLever response time: " << _qleverResponseTimeMs << " ms";
 
         if (_config.sparqlOutput == config::SparqlOutput::ENDPOINT) {
-            util::Logger::stream() << ", QLever update time: " << _qleverUpdateTimeMs << " ms" << std::endl;
+            util::Logger::stream() << ", QLever update time: " << getQleverUpdateTimeMs() << " ms" << std::endl;
+            util::Logger::stream() << util::Logger::PREFIX_SPACER  << "(of which "
+                      << _qleverInsertTimeMs << " ms were spent on insert operations and "
+                      << _qleverDeleteTimeMs << " ms on delete operations)"
+                      << std::endl;
 
             util::Logger::stream() << util::Logger::PREFIX_SPACER << "Inserted: " << _qleverInsertedTriplesCount << " and deleted "
                       << _qleverDeletedTriplesCount << " triples at QLever endpoint" << std::endl;
 
-            // Add the two metadata triples that are inserted at the end of the update process.
-            if (_qleverInsertedTriplesCount != _numOfTriplesToInsert + 2) {
+            if ((_qleverInsertedTriplesCount - 3) != _numOfTriplesToInsert) {
                 util::Logger::log(util::LogEvent::WARNING, "The number of triples inserted"
                                   " at the end point is not equal to the"
                                   " number of triples that need to be"
@@ -316,9 +320,14 @@ void olu::osm::StatisticsHandler::countQleverResponseTime(const std::string_view
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::StatisticsHandler::countQleverUpdateTime(const std::string_view &timeInMs) {
+void olu::osm::StatisticsHandler::countQleverUpdateTime(const std::string_view &timeInMs,
+                                                        const sparql::UpdateOperation & updateOp) {
     const auto timeString = timeInMs.substr(0, timeInMs.size() - 2); // Remove trailing "ms"
-    _qleverUpdateTimeMs += std::stoi(std::string(timeString));
+    if (updateOp == sparql::UpdateOperation::INSERT) {
+        _qleverInsertTimeMs += std::stoi(std::string(timeString));
+    } else if (updateOp == sparql::UpdateOperation::DELETE) {
+        _qleverDeleteTimeMs += std::stoi(std::string(timeString));
+    }
 }
 
 // _________________________________________________________________________________________________
@@ -331,7 +340,8 @@ void olu::osm::StatisticsHandler::logQleverQueryInfo(simdjson::ondemand::object 
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::StatisticsHandler::logQLeverUpdateInfo(const simdjson::padded_string &qleverResponse) {
+void olu::osm::StatisticsHandler::logQLeverUpdateInfo(const simdjson::padded_string &qleverResponse,
+                                                      const sparql::UpdateOperation & updateOp) {
     for (auto doc = _parser.iterate(qleverResponse);
          auto field: doc.get_object()) {
         if (field.error()) {
@@ -377,7 +387,7 @@ void olu::osm::StatisticsHandler::logQLeverUpdateInfo(const simdjson::padded_str
                 }
 
                 if (timeField.key() == cnst::KEY_QLEVER_TOTAL) {
-                    countQleverUpdateTime(timeField.value().value().get_string());
+                    countQleverUpdateTime(timeField.value().value().get_string(), updateOp);
                 }
             }
         }

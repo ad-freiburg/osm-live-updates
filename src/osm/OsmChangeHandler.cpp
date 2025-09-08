@@ -414,7 +414,7 @@ void olu::osm::OsmChangeHandler::runUpdateQuery(const sparql::UpdateOperation & 
     if (_config.sparqlOutput == config::SparqlOutput::ENDPOINT && _config.isQLever) {
         // Update responses are in "[]" so remove them before parsing
         response = response.substr(1, response.size() - 2);
-        _stats->logQLeverUpdateInfo(response);
+        _stats->logQLeverUpdateInfo(response, updateOp);
     }
 
     // Write SPARQL response to a file, if configured by the user
