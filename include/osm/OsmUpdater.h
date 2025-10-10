@@ -116,6 +116,14 @@ namespace olu::osm {
          * by using the 'extract' option from the 'osmium-tool'
          */
         void applyBoundaries() const;
+
+        /**
+         * Reads the osm2rdf options from the SPARQL endpoint and stores them in the config object.
+         *
+         * Also checks if a separate IRI is used for untagged nodes and sets the corresponding
+         * value in the config object.
+         */
+        void readOsm2RdfOptionsFromEndpoint();
     };
 
     /**

@@ -99,7 +99,10 @@ struct Config {
 
     // Stores the osm2rdf options that will be fetched from the SPARQL endpoint before
     // we convert the OSM data to RDF triples.
-    std::map<std::string, std::string> osm2rdfOptions;;
+    std::map<std::string, std::string> osm2rdfOptions;
+
+    // True, if the osm2rdf dump was created with a separate prefix for untagged nodes.
+    bool hasSeparatePrefixForUntaggedNodes = false;
 
     // Generate the information string containing the current settings.
     void printInfo() const;

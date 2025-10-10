@@ -175,6 +175,10 @@ namespace olu::sparql {
                                                          const std::string &delimiter,
                                                          const std::set<id_t> &objectIds);
 
+        [[nodiscard]] static std::string getValuesClause(const std::vector<std::string> &osmTags,
+                                                      const std::string &delimiter,
+                                                      const std::set<id_t> &objectIds);
+
         [[nodiscard]] static std::string getTripleClause(const std::string& subject,
                                                          const std::string& predicate,
                                                          const std::string& object);

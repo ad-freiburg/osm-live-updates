@@ -266,12 +266,22 @@ olu::sparql::QueryWriter::writeDeleteQueryForMetaAndTags(const std::set<id_t> &i
 
 // _________________________________________________________________________________________________
 std::string
-olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::set<id_t> &nodeIds) const {
+olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::set<id_t> &nodeIds)
+const {
     std::ostringstream oss;
     oss << "SELECT " + cnst::QUERY_VAR_VAL + " " + cnst::QUERY_VAR_LOC + " ";
     oss << getFromClauseOptional();
     oss << "WHERE { ";
-    oss << getValuesClause(cnst::PREFIXED_OSM2RDF_GEOM_NODE_, "", nodeIds);
+
+    if (_config.hasSeparatePrefixForUntaggedNodes) {
+        oss << getValuesClause({
+                                   cnst::PREFIXED_OSM2RDF_GEOM_NODE_TAGGED_,
+                                   cnst::PREFIXED_OSM2RDF_GEOM_NODE_UNTAGGED_
+                               },
+                               "", nodeIds);
+    } else {
+        oss << getValuesClause(cnst::PREFIXED_OSM2RDF_GEOM_NODE_, "", nodeIds);
+    }
     oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_GEO_AS_WKT, cnst::QUERY_VAR_LOC);
     oss << "}";
     return oss.str();
@@ -518,6 +528,32 @@ std::string olu::sparql::QueryWriter::getValuesClause(const std::string &osmTag,
         valueClause.append(buffer, ptr);
 
         valueClause += " ";
+    }
+    valueClause += "} ";
+    return valueClause;
+}
+
+// _________________________________________________________________________________________________
+std::string olu::sparql::QueryWriter::getValuesClause(const std::vector<std::string> &osmTags,
+                                                      const std::string &delimiter,
+                                                      const std::set<id_t> &objectIds) {
+    std::string valueClause = "VALUES " + cnst::QUERY_VAR_VAL + " { ";
+    constexpr int MAX_CHARS_PER_OBJECT_ID = 20;
+    // Max chars per OSM tag which we use is "osmnode_untagged_" with 17 chars
+    constexpr int MAX_CHARS_PER_OSM_TAG = 17;
+    valueClause.reserve(valueClause.size() +
+        ((MAX_CHARS_PER_OSM_TAG + delimiter.size() + MAX_CHARS_PER_OBJECT_ID  + 1) * objectIds.size() + 2) * osmTags.size());
+    for (const auto& objectId : objectIds) {
+        for (const auto& osmTag : osmTags) {
+            valueClause += osmTag;
+            valueClause += delimiter;
+
+            char buffer[MAX_CHARS_PER_OBJECT_ID];
+            auto [ptr, ec] = std::to_chars(buffer, buffer + sizeof(buffer), objectId);
+            valueClause.append(buffer, ptr);
+
+            valueClause += " ";
+        }
     }
     valueClause += "} ";
     return valueClause;

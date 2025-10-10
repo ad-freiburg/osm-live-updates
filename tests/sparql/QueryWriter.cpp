@@ -356,7 +356,21 @@ namespace olu::sparql {
             std::string query = qw.writeQueryForNodeLocations({1, 2, 3});
             ASSERT_EQ(
             "SELECT ?value ?location "
-            "WHERE { VALUES ?value { osm2rdfgeom:osm_node_1 osm2rdfgeom:osm_node_2 osm2rdfgeom:osm_node_3 } "
+            "WHERE { VALUES ?value { osm2rdfgeom:osmnode_1 osm2rdfgeom:osmnode_2 osm2rdfgeom:osmnode_3 } "
+            "?value geo:asWKT ?location . }",
+            query
+            );
+        }
+    }
+    TEST(QueryWriter, writeQueryForNodeLocationsSeparatePrefix) {
+        {
+            auto config = config::Config();
+            config.hasSeparatePrefixForUntaggedNodes = true;
+            QueryWriter qw{config};
+            std::string query = qw.writeQueryForNodeLocations({1, 2, 3});
+            ASSERT_EQ(
+            "SELECT ?value ?location "
+            "WHERE { VALUES ?value { osm2rdfgeom:osmnode_tagged_1 osm2rdfgeom:osmnode_untagged_1 osm2rdfgeom:osmnode_tagged_2 osm2rdfgeom:osmnode_untagged_2 osm2rdfgeom:osmnode_tagged_3 osm2rdfgeom:osmnode_untagged_3 } "
             "?value geo:asWKT ?location . }",
             query
             );

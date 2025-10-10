@@ -140,6 +140,8 @@ void olu::osm::OsmUpdater::run() {
         _stats.endTimeApplyingBoundaries();
     }
 
+    readOsm2RdfOptionsFromEndpoint();
+
     auto och{OsmChangeHandler(_config, *_odf, _stats)};
     och.run();
 
@@ -395,4 +397,22 @@ void olu::osm::OsmUpdater::insertMetadataTriples(OsmChangeHandler &och) {
     och.runUpdateQuery(sparql::UpdateOperation::INSERT, query,
                        cnst::PREFIXES_FOR_METADATA_TRIPLES);
 }
+
+// _________________________________________________________________________________________________
+void olu::osm::OsmUpdater::readOsm2RdfOptionsFromEndpoint() {
+    _config.osm2rdfOptions = _odf->fetchOsm2RdfOptions();
+    if (_config.osm2rdfOptions.empty()) {
+        util::Logger::log(util::LogEvent::WARNING, "No osm2rdf options found on SPARQL "
+                                                   "endpoint, using default options.");
+        return;
+    }
+
+    try {
+        std::cout << _config.osm2rdfOptions.at(osm2rdf::config::constants::IRI_PREFIX_FOR_UNTAGGED_NODES_OPTION_LONG) << std::endl;
+    } catch (const std::exception &e) {
+        util::Logger::log(util::LogEvent::WARNING, "Could not find option for IRI prefix for"
+                                                   " untagged nodes, using default prefix.");
+    }
+}
+
 

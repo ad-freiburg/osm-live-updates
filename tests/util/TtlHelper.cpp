@@ -36,8 +36,8 @@ namespace olu::util {
     const std::string tripleString8 = "osmnode:1 osmkey:man_made \"mast\" .";
     const std::string tripleString9 = "osmnode:1 osmkey:communication:microwave \"yes\" .";
     const std::string tripleString10 = "osmnode:1 osm2rdf:facts \"9\"^^xsd:integer .";
-    const std::string tripleString11 = "osmnode:1 geo:hasGeometry osm2rdfgeom:osm_node_1 .";
-    const std::string tripleString12 = "osm2rdfgeom:osm_node_1 geo:asWKT \"POINT(13.5690032 42.7957187)\"^^geo:wktLiteral .";
+    const std::string tripleString11 = "osmnode:1 geo:hasGeometry osm2rdfgeom:osmnode_1 .";
+    const std::string tripleString12 = "osm2rdfgeom:osmnode_1 geo:asWKT \"POINT(13.5690032 42.7957187)\"^^geo:wktLiteral .";
     const std::string tripleString13 = "osmnode:1 osm2rdfgeom:convex_hull \"POLYGON((13.5690032 42.7957187,13.5690032 42.7957187,13.5690032 42.7957187,13.5690032 42.7957187,13.5690032 42.7957187))\"^^geo:wktLiteral .";
     const std::string tripleString14 = "osmnode:1 osm2rdfgeom:envelope \"POLYGON((13.5690032 42.7957187,13.5690032 42.7957187,13.5690032 42.7957187,13.5690032 42.7957187,13.5690032 42.7957187))\"^^geo:wktLiteral .";
     const std::string tripleString15 = "osmnode:1 osm2rdfgeom:obb \"POLYGON((13.5690032 42.7957187,13.5690032 42.7957187,13.5690032 42.7957187,13.5690032 42.7957187,13.5690032 42.7957187))\"^^geo:wktLiteral .";
@@ -114,11 +114,11 @@ namespace olu::util {
             auto [subject, predicate, object] = TtlHelper::parseTriple(tripleString11);
             ASSERT_EQ(subject, "osmnode:1");
             ASSERT_EQ(predicate, "geo:hasGeometry");
-            ASSERT_EQ(object, "osm2rdfgeom:osm_node_1");
+            ASSERT_EQ(object, "osm2rdfgeom:osmnode_1");
         }
         {
             auto [subject, predicate, object] = TtlHelper::parseTriple(tripleString12);
-            ASSERT_EQ(subject, "osm2rdfgeom:osm_node_1");
+            ASSERT_EQ(subject, "osm2rdfgeom:osmnode_1");
             ASSERT_EQ(predicate, "geo:asWKT");
             ASSERT_EQ(object, "\"POINT(13.5690032 42.7957187)\"^^geo:wktLiteral");
         }
@@ -153,7 +153,7 @@ namespace olu::util {
             ASSERT_EQ(TtlHelper::parseId(subject), 123);
         }
         {
-            const std::string subject = "osm2rdfgeom:osm_node_1";
+            const std::string subject = "osm2rdfgeom:osmnode_1";
             ASSERT_EQ(TtlHelper::parseId(subject), 1);
         }
         {

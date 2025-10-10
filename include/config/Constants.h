@@ -237,7 +237,9 @@ namespace olu::config::constants {
     const static inline std::string NAME_LATEST_TIMESTAMP = "latestTimestamp";
     const static inline std::string NAME_VERSION = "version";
     const static inline std::string NAME_CHANGESET = "changeset";
-    const static inline std::string NAME_OSM_NODE_ = "osm_node_";
+    const static inline std::string NAME_OSM_NODE_ = "osmnode_";
+    const static inline std::string NAME_OSM_NODE_TAGGED_ = "osmnode_tagged_";
+    const static inline std::string NAME_OSM_NODE_UNTAGGEG = "osmnode_untagged_";
     const static inline std::string NAME_OBJECT = "object";
     const static inline std::string NAME_NODE = "node";
     const static inline std::string NAME_NODES = "nodes";
@@ -275,6 +277,8 @@ namespace olu::config::constants {
     const static inline std::string PREFIXED_OSM2RDF_GEOM_ENVELOPE = MakePrefixedName(NAMESPACE_OSM2RDF_GEOM, NAME_ENVELOPE);
     const static inline std::string PREFIXED_OSM2RDF_GEOM_CONVEX_HULL = MakePrefixedName(NAMESPACE_OSM2RDF_GEOM, NAME_CONVEX_HULL);
     const static inline std::string PREFIXED_OSM2RDF_GEOM_NODE_ = MakePrefixedName(NAMESPACE_OSM2RDF_GEOM, NAME_OSM_NODE_);
+    const static inline std::string PREFIXED_OSM2RDF_GEOM_NODE_TAGGED_ = MakePrefixedName(NAMESPACE_OSM2RDF_GEOM, NAME_OSM_NODE_TAGGED_);
+    const static inline std::string PREFIXED_OSM2RDF_GEOM_NODE_UNTAGGED_ = MakePrefixedName(NAMESPACE_OSM2RDF_GEOM, NAME_OSM_NODE_UNTAGGEG);
 
     const static inline std::string PREFIXED_OSM_NODE = MakePrefixedName(NAMESPACE_OSM, NAME_NODE);
     const static inline std::string PREFIXED_OSM_KEY_TYPE = MakePrefixedName(NAMESPACE_OSM_KEY, NAME_TYPE);
