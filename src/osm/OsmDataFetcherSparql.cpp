@@ -77,10 +77,8 @@ olu::osm::OsmDataFetcherSparql::fetchNodes(const std::set<id_t> &nodeIds) {
     }
 
     if (nodes.size() > nodeIds.size()) {
-        std::cerr << "The SPARQL endpoint returned " << std::to_string(nodes.size())
-                  << " locations, for " << std::to_string(nodeIds.size())
-                  << " nodes." << std::endl;
-        throw OsmDataFetcherException("Exception while trying to fetch nodes locations");
+        util::Logger::log(util::LogEvent::WARNING,
+                          "The SPARQL endpoint returned multiple locations for one or more nodes.");
     }
 
     return nodes;

@@ -28,6 +28,7 @@
 #include <util/Types.h>
 
 #include "OsmDatabaseState.h"
+#include "sparql/SparqlWrapper.h"
 
 namespace olu::osm {
     class StatisticsHandler {
@@ -204,7 +205,10 @@ namespace olu::osm {
         void countTriple() { ++_numOfConvertedTriples; }
 
         void logQleverQueryInfo(simdjson::ondemand::object qleverResponse);
-        void logQLeverUpdateInfo(const simdjson::padded_string &qleverResponse);
+        void logQLeverUpdateInfo(const simdjson::padded_string &qleverResponse, const sparql::UpdateOperation &updateOp);
+
+        [[nodiscard]] size_t getQleverUpdateTimeMs() const { return _qleverInsertTimeMs + _qleverDeleteTimeMs; }
+
     private:
         config::Config _config;
         simdjson::ondemand::parser _parser;
@@ -248,7 +252,10 @@ namespace olu::osm {
         size_t _updateOpCount = _deleteOpCount + _insertOpCount;
 
         size_t _qleverResponseTimeMs = 0;
-        size_t _qleverUpdateTimeMs = 0;
+
+        size_t _qleverInsertTimeMs =0;
+        size_t _qleverDeleteTimeMs =0;
+
         size_t _qleverInsertedTriplesCount = 0;
         size_t _qleverDeletedTriplesCount = 0;
 
@@ -320,7 +327,8 @@ namespace olu::osm {
         }
 
         void countQleverResponseTime(const std::string_view &timeInMs);
-        void countQleverUpdateTime(const std::string_view &timeInMs);
+        void countQleverUpdateTime(const std::string_view &timeInMs,
+                                   const sparql::UpdateOperation & updateOp);
     };
 
     /**
