@@ -18,6 +18,7 @@
 
 #include "sparql/QueryWriter.h"
 
+#include <charconv>
 #include <iostream>
 #include <string>
 #include <vector>

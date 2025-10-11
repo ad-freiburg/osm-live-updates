@@ -18,7 +18,7 @@
 
 #include "osm/OsmObjectHelper.h"
 
-#include <iostream>
+#include <charconv>
 #include <string>
 
 #include "osmium/osm/object.hpp"
@@ -56,8 +56,8 @@ olu::id_t olu::osm::OsmObjectHelper::parseIdFromUri(const std::string_view &uri)
 
     id_t result = 0;
     const auto idString = uri.substr(i, end - i);
-    auto [_, ec] = std::from_chars(idString.data(), idString.data() + idString.size(), result);
-    if (ec == std::errc()) {
+    const std::from_chars_result fcResult = std::from_chars(idString.data(), idString.data() + idString.size(), result);
+    if (fcResult.ec == std::errc()) {
         return result;
     }
 
@@ -173,10 +173,10 @@ olu::osm::OsmObjectHelper::parseWayMemberList(const std::string_view &uriList,
         }
 
         int currentPos;
-        auto [ptr, ec] = std::from_chars(posToken.data(),
-                                                        posToken.data() + posToken.size(),
-                                                        currentPos);
-        if (ec != std::errc()) {
+        const std::from_chars_result fcResult = std::from_chars(posToken.data(),
+                                                            posToken.data() + posToken.size(),
+                                                            currentPos);
+        if (fcResult.ec != std::errc()) {
             throw OsmObjectHelperException("Invalid character in position list,"
                                            " when parsing way member list.");
         }
@@ -244,10 +244,10 @@ olu::osm::OsmObjectHelper::parseRelationMemberList(const std::string_view &uriLi
         }
 
         int currentPos;
-        auto [ptr, ec] = std::from_chars(posToken.data(),
+        const std::from_chars_result fcResult = std::from_chars(posToken.data(),
                                                         posToken.data() + posToken.size(),
                                                         currentPos);
-        if (ec != std::errc()) {
+        if (fcResult.ec != std::errc()) {
             throw OsmObjectHelperException("Invalid character in position list,"
                                            " when parsing way member list.");
         }
