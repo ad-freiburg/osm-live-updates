@@ -524,8 +524,8 @@ std::string olu::sparql::QueryWriter::getValuesClause(const std::string &osmTag,
         valueClause += delimiter;
 
         char buffer[MAX_CHARS_PER_OBJECT_ID];
-        auto [ptr, ec] = std::to_chars(buffer, buffer + sizeof(buffer), objectId);
-        valueClause.append(buffer, ptr);
+        const std::to_chars_result result = std::to_chars(buffer, buffer + sizeof(buffer), objectId);
+        valueClause.append(buffer, result.ptr);
 
         valueClause += " ";
     }
@@ -549,8 +549,8 @@ std::string olu::sparql::QueryWriter::getValuesClause(const std::vector<std::str
             valueClause += delimiter;
 
             char buffer[MAX_CHARS_PER_OBJECT_ID];
-            auto [ptr, ec] = std::to_chars(buffer, buffer + sizeof(buffer), objectId);
-            valueClause.append(buffer, ptr);
+            const std::to_chars_result result = std::to_chars(buffer, buffer + sizeof(buffer), objectId);
+            valueClause.append(buffer, result.ptr);
 
             valueClause += " ";
         }
