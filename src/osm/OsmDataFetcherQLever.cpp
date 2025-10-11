@@ -23,7 +23,6 @@
 #include <fstream>
 #include <map>
 #include <strstream>
-#include <spanstream>
 #include <regex>
 
 #include "simdjson.h"
@@ -757,7 +756,7 @@ std::vector<T>
 olu::osm::OsmDataFetcherQLever::parseValueList(const std::string_view &list,
                                                const std::function<T(std::string)> function) {
     std::vector<T> items;
-    std::ispanstream stream(list);
+    std::stringstream stream{std::string(list)};
 
     std::string token;
     while (std::getline(stream, token, ';')) {
