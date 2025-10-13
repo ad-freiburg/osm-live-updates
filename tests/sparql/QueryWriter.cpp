@@ -365,7 +365,7 @@ namespace olu::sparql {
     TEST(QueryWriter, writeQueryForNodeLocationsSeparatePrefix) {
         {
             auto config = config::Config();
-            config.hasSeparatePrefixForUntaggedNodes = true;
+            config.separatePrefixForUntaggedNodes = "http://example.org/untagged";
             QueryWriter qw{config};
             std::string query = qw.writeQueryForNodeLocations({1, 2, 3});
             ASSERT_EQ(
