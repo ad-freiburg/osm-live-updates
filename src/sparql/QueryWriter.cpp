@@ -276,7 +276,7 @@ const {
 
     // Depending on whether a separate prefix for untagged nodes is used, osm2rdf uses different
     // namespaces for tagged and untagged nodes
-    if (!_config.separatePrefixForUntaggedNodes.empty()) {
+    if (!_config->separatePrefixForUntaggedNodes.empty()) {
         oss << getValuesClause({
                                    cnst::PREFIXED_OSM2RDF_GEOM_NODE_TAGGED_,
                                    cnst::PREFIXED_OSM2RDF_GEOM_NODE_UNTAGGED_
@@ -505,7 +505,7 @@ std::string olu::sparql::QueryWriter::writeQueryForReplicationServer() const {
 
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::getFromClauseOptional() const {
-    return  _config.graphUri.empty() ? "" : "FROM <" +_config.graphUri + "> ";
+    return  _config->graphUri.empty() ? "" : "FROM <" +_config->graphUri + "> ";
 }
 
 // _________________________________________________________________________________________________
@@ -582,7 +582,7 @@ std::string olu::sparql::QueryWriter::getOsmNamespace(const osm::OsmObjectType &
 
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::wrapWithGraphOptional(const std::string& clause) const {
-    return _config.graphUri.empty() ? clause : "GRAPH <" + _config.graphUri + "> { " + clause + "} ";
+    return _config->graphUri.empty() ? clause : "GRAPH <" + _config->graphUri + "> { " + clause + "} ";
 }
 
 // _________________________________________________________________________________________________

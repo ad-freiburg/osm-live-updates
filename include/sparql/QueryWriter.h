@@ -34,7 +34,7 @@ namespace olu::sparql {
      */
     class QueryWriter {
     public:
-        explicit QueryWriter(config::Config  config): _config(std::move(config)) { }
+        explicit QueryWriter(config::Config &config): _config(&config) { }
 
         /**
          * @returns A SPARQL query that inserts a list of triples in to the database
@@ -164,7 +164,7 @@ namespace olu::sparql {
         [[nodiscard]] std::string writeQueryForReplicationServer() const;
 
         private:
-        config::Config _config;
+        config::Config* _config;
 
         [[nodiscard]] std::string getFromClauseOptional() const;
 

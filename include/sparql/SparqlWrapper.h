@@ -45,7 +45,7 @@ namespace olu::sparql {
      */
     class SparqlWrapper {
     public:
-        explicit SparqlWrapper(config::Config  config): _config(std::move(config)) { }
+        explicit SparqlWrapper(config::Config &config): _config(&config) { }
 
         /**
          * Sets the query to send to the SPARQL endpoint. The prefixes must be set
@@ -78,7 +78,7 @@ namespace olu::sparql {
          */
         std::string runUpdate(const UpdateOperation &updateOp);
     private:
-        config::Config _config;
+        config::Config* _config;
         std::string _query;
         std::string _prefixes;
 

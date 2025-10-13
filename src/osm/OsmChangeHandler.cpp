@@ -43,9 +43,9 @@ namespace cnst = olu::config::constants;
 namespace osm2rdfCnst = osm2rdf::config::constants;
 
 // _________________________________________________________________________________________________
-olu::osm::OsmChangeHandler::OsmChangeHandler(const config::Config &config, OsmDataFetcher &odf,
+olu::osm::OsmChangeHandler::OsmChangeHandler(config::Config &config, OsmDataFetcher &odf,
                                              StatisticsHandler &stats) :
-    _config(config),
+    _config(&config),
     _sparql(config),
     _queryWriter(config),
     _odf(&odf),
@@ -53,8 +53,8 @@ olu::osm::OsmChangeHandler::OsmChangeHandler(const config::Config &config, OsmDa
     _nodeHandler(config, odf, stats),
     _wayHandler(config, odf, stats),
     _relationHandler(config, odf, stats),
-    _referencesHandler(_config, odf, _nodeHandler, _wayHandler, _relationHandler),
-    _osm2ttl(_config, _odf, _stats) { }
+    _referencesHandler(config, odf, _nodeHandler, _wayHandler, _relationHandler),
+    _osm2ttl(config, _odf, _stats) { }
 
 // _________________________________________________________________________________________________
 void olu::osm::OsmChangeHandler::run() {
@@ -216,7 +216,7 @@ void olu::osm::OsmChangeHandler::getIdsOfWaysToUpdateGeo() {
     if (!_nodeHandler.getModifiedNodesWithChangedLocation().empty()) {
         util::BatchHelper::doInBatches(
             _nodeHandler.getModifiedNodesWithChangedLocation(),
-            _config.batchSize,
+            _config->batchSize,
             [this](const std::set<id_t> &batch) {
                 for (const auto &wayId: _odf->fetchWaysReferencingNodes(batch)) {
                     if (!_wayHandler.wayInChangeFile(wayId)) {
@@ -234,7 +234,7 @@ void olu::osm::OsmChangeHandler::getIdsOfRelationsToUpdateGeo() {
     if (!_nodeHandler.getModifiedNodesWithChangedLocation().empty()) {
         util::BatchHelper::doInBatches(
             _nodeHandler.getModifiedNodesWithChangedLocation(),
-            _config.batchSize,
+            _config->batchSize,
             [this](const std::set<id_t>& batch) {
                 for (const auto &relId: _odf->fetchRelationsReferencingNodes(batch)) {
                     if (!_relationHandler.relationInChangeFile(relId)) {
@@ -255,7 +255,7 @@ void olu::osm::OsmChangeHandler::getIdsOfRelationsToUpdateGeo() {
     if (!updatedWays.empty()) {
         util::BatchHelper::doInBatches(
             updatedWays,
-            _config.batchSize,
+            _config->batchSize,
             [this](const std::set<id_t>& batch) {
                 for (const auto &relId: _odf->fetchRelationsReferencingWays(batch)) {
                     if (!_relationHandler.relationInChangeFile(relId) &&
@@ -290,7 +290,7 @@ void olu::osm::OsmChangeHandler::getReferencedRelations() {
     if (!_relationsToUpdateGeometry.empty()) {
         util::BatchHelper::doInBatches(
                 _relationsToUpdateGeometry,
-            _config.batchSize,
+            _config->batchSize,
             [this](const std::set<id_t>& batch) {
                 for (const auto &relId: _odf->fetchRelationsReferencingRelations(batch)) {
                     if (!_relationsToUpdateGeometry.contains(relId) &&
@@ -309,7 +309,7 @@ void olu::osm::OsmChangeHandler::createDummyNodes() {
 
     util::BatchHelper::doInBatchesWithProgressBar(
         _referencesHandler.getReferencedNodes(),
-        _config.batchSize,
+        _config->batchSize,
         [this](std::set<id_t> const& batch, int const &batchNumber) {
             const auto filePath = getPathToTempFile(OsmObjectType::NODE, batchNumber);
             initTmpFile(filePath);
@@ -329,7 +329,7 @@ void olu::osm::OsmChangeHandler::createDummyWays() {
     size_t countWayReferences = 0;
     util::BatchHelper::doInBatchesWithProgressBar(
         wayIds,
-        _config.batchSize,
+        _config->batchSize,
         [this, &countWayReferences](std::set<id_t> const& batch, int const &batchNumber) mutable {
             const auto filePath = getPathToTempFile(OsmObjectType::WAY, batchNumber);
             initTmpFile(filePath);
@@ -354,7 +354,7 @@ void olu::osm::OsmChangeHandler::createDummyRelations() {
     size_t countRelationReferences = 0;
     util::BatchHelper::doInBatchesWithProgressBar(
         relations,
-        _config.batchSize,
+        _config->batchSize,
         [this, &countRelationReferences](std::set<id_t> const& batch, int const &batchNumber) mutable {
             const auto filePath = getPathToTempFile(OsmObjectType::RELATION, batchNumber);
             initTmpFile(filePath);
@@ -411,15 +411,15 @@ void olu::osm::OsmChangeHandler::runUpdateQuery(const sparql::UpdateOperation & 
         throw OsmChangeHandlerException(msg.c_str());
     }
 
-    if (_config.sparqlOutput == config::SparqlOutput::ENDPOINT && _config.isQLever) {
+    if (_config->sparqlOutput == config::SparqlOutput::ENDPOINT && _config->isQLever) {
         // Update responses are in "[]" so remove them before parsing
         response = response.substr(1, response.size() - 2);
         _stats->logQLeverUpdateInfo(response, updateOp);
     }
 
     // Write SPARQL response to a file, if configured by the user
-    if (!_config.sparqlResponseFile.empty()) {
-        std::ofstream outputFile(_config.sparqlResponseFile, std::ios::app);
+    if (!_config->sparqlResponseFile.empty()) {
+        std::ofstream outputFile(_config->sparqlResponseFile, std::ios::app);
         if (!outputFile) {
             std::cerr << "Error opening file for SPARQL response output." << std::endl;
             throw OsmDataFetcherException("Cannot open file for SPARQL response output.");
@@ -434,7 +434,7 @@ void olu::osm::OsmChangeHandler::deleteNodesFromDatabase(osm2rdf::util::Progress
                                                          size_t &counter) {
     util::BatchHelper::doInBatches(
         _nodeHandler.getAllNodes(),
-        _config.batchSize,
+        _config->batchSize,
         [this, progress, &counter](std::set<id_t> const &batch) mutable {
             // First, delete the triple that are linked to the osm node (geometry and centroid)
             // via a node
@@ -473,7 +473,7 @@ void olu::osm::OsmChangeHandler::deleteWaysFromDatabase(osm2rdf::util::ProgressB
 
     util::BatchHelper::doInBatches(
         waysToDelete,
-        _config.batchSize,
+        _config->batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
             // First, triples that are linked to the osm way (members, geometry and centroid)
             if (_osm2ttl.hasTripleForOption(osm2rdfCnst::NO_MEMBER_TRIPLES_OPTION_LONG, "false")) {
@@ -506,7 +506,7 @@ void olu::osm::OsmChangeHandler::deleteWaysGeometry(osm2rdf::util::ProgressBar &
                                                     size_t &counter) {
     util::BatchHelper::doInBatches(
         _waysToUpdateGeometry,
-        _config.batchSize,
+        _config->batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
             runUpdateQuery(sparql::UpdateOperation::DELETE,
                 _queryWriter.writeDeleteOsmObjectGeometryQuery(OsmObjectType::WAY, batch),
@@ -570,7 +570,7 @@ void olu::osm::OsmChangeHandler::deleteRelationsFromDatabase(osm2rdf::util::Prog
 
     util::BatchHelper::doInBatches(
         relationsToDelete,
-        _config.batchSize,
+        _config->batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
             // First, triples that are linked to the osm way (members, geometry and centroid)
             if (_osm2ttl.hasTripleForOption(osm2rdfCnst::NO_MEMBER_TRIPLES_OPTION_LONG, "false")) {
@@ -603,7 +603,7 @@ void olu::osm::OsmChangeHandler::deleteRelationsGeometry(osm2rdf::util::Progress
                                                          size_t &counter) {
     util::BatchHelper::doInBatches(
         _relationsToUpdateGeometry,
-        _config.batchSize,
+        _config->batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
             runUpdateQuery(sparql::UpdateOperation::DELETE,
                 _queryWriter.writeDeleteOsmObjectGeometryQuery(OsmObjectType::RELATION, batch),
@@ -655,7 +655,7 @@ void olu::osm::OsmChangeHandler::deleteTriplesFromDatabase() {
     }
 
     util::Logger::log(util::LogEvent::INFO,"Deleting elements from database...");
-    osm2rdf::util::ProgressBar deleteProgress(count, _config.showProgress);
+    osm2rdf::util::ProgressBar deleteProgress(count, _config->showProgress);
     size_t counter = 0;
     deleteProgress.update(counter);
 
@@ -677,7 +677,7 @@ void olu::osm::OsmChangeHandler::insertTriplesToDatabase(const std::vector<tripl
     }
 
     util::Logger::log(util::LogEvent::INFO,"Inserting triples into database...");
-    osm2rdf::util::ProgressBar insertProgress(triples.size(), _config.showProgress);
+    osm2rdf::util::ProgressBar insertProgress(triples.size(), _config->showProgress);
     size_t counter = 0;
     insertProgress.update(counter);
 
@@ -711,16 +711,16 @@ void olu::osm::OsmChangeHandler::insertTriplesToDatabase(const std::vector<tripl
 
         tripleBatch.emplace_back(triple);
 
-        if (tripleBatch.size() == _config.batchSize || i == triples.size() - 1) {
+        if (tripleBatch.size() == _config->batchSize || i == triples.size() - 1) {
             runUpdateQuery(sparql::UpdateOperation::INSERT,
                            _queryWriter.writeInsertQuery(tripleBatch),
-                           cnst::getDefaultPrefixes(_config.separatePrefixForUntaggedNodes));
+                           cnst::getDefaultPrefixes(_config->separatePrefixForUntaggedNodes));
             tripleBatch.clear();
 
             if (i == triples.size() - 1) {
                 insertProgress.done();
             } else {
-                insertProgress.update(counter += _config.batchSize);
+                insertProgress.update(counter += _config->batchSize);
             }
         }
     }

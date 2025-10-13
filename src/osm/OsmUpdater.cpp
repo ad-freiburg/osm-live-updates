@@ -48,8 +48,8 @@ createOsmDataFetcher(olu::config::Config &config, olu::osm::StatisticsHandler &s
 
 // _________________________________________________________________________________________________
 olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config),
-                                                                 _stats(config),
-                                                                 _repServer(config, _stats),
+                                                                 _stats(_config),
+                                                                 _repServer(_config, _stats),
                                                                  _queryWriter(_config) {
     _stats.startTime();
 
