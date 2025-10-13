@@ -359,7 +359,7 @@ void olu::osm::StatisticsHandler::logQLeverUpdateInfo(const simdjson::padded_str
                                                      "response.");
                 }
 
-                if (deltaField.key() == cnst::KEY_QLEVER_DIFFERENCE) {
+                if (deltaField.key() == cnst::KEY_QLEVER_OPERATION) {
                     for (auto diffField: deltaField.value().get_object()) {
                         if (diffField.error()) {
                             std::cerr << diffField.error() << std::endl;

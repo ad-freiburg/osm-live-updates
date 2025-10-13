@@ -94,6 +94,7 @@ namespace olu::config::constants {
     const static inline std::string KEY_QLEVER_DIFFERENCE = "difference";
     const static inline std::string KEY_QLEVER_DELETED = "deleted";
     const static inline std::string KEY_QLEVER_INSERTED = "inserted";
+    const static inline std::string KEY_QLEVER_OPERATION = "operation";
     const static inline std::string KEY_VALUE = "value";
 
     const static inline std::string XML_TAG_NAME = "name";
