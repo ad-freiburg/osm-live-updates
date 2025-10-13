@@ -320,13 +320,12 @@ void olu::osm::StatisticsHandler::countQleverResponseTime(const std::string_view
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::StatisticsHandler::countQleverUpdateTime(const std::string_view &timeInMs,
+void olu::osm::StatisticsHandler::countQleverUpdateTime(const long &timeInMs,
                                                         const sparql::UpdateOperation & updateOp) {
-    const auto timeString = timeInMs.substr(0, timeInMs.size() - 2); // Remove trailing "ms"
     if (updateOp == sparql::UpdateOperation::INSERT) {
-        _qleverInsertTimeMs += std::stoi(std::string(timeString));
+        _qleverInsertTimeMs += timeInMs;
     } else if (updateOp == sparql::UpdateOperation::DELETE) {
-        _qleverDeleteTimeMs += std::stoi(std::string(timeString));
+        _qleverDeleteTimeMs += timeInMs;
     }
 }
 
@@ -408,7 +407,7 @@ void olu::osm::StatisticsHandler::logQLeverUpdateInfo(const simdjson::padded_str
                 }
 
                 if (timeField.key() == cnst::KEY_QLEVER_TOTAL) {
-                    auto timeFieldValue = timeField.value().get_string();
+                    auto timeFieldValue = timeField.value().get_int64();
                     if (timeFieldValue.error()) {
                         util::Logger::log(util::LogEvent::ERROR,
                             "simdjson threw exception with error code: " + timeFieldValue.error());

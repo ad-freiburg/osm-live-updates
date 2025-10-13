@@ -327,7 +327,7 @@ namespace olu::osm {
         }
 
         void countQleverResponseTime(const std::string_view &timeInMs);
-        void countQleverUpdateTime(const std::string_view &timeInMs,
+        void countQleverUpdateTime(const long &timeInMs,
                                    const sparql::UpdateOperation & updateOp);
     };
 
