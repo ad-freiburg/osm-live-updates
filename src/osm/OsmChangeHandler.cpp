@@ -714,7 +714,7 @@ void olu::osm::OsmChangeHandler::insertTriplesToDatabase(const std::vector<tripl
         if (tripleBatch.size() == _config.batchSize || i == triples.size() - 1) {
             runUpdateQuery(sparql::UpdateOperation::INSERT,
                            _queryWriter.writeInsertQuery(tripleBatch),
-                           cnst::DEFAULT_PREFIXES);
+                           cnst::getDefaultPrefixes(_config.separatePrefixForUntaggedNodes));
             tripleBatch.clear();
 
             if (i == triples.size() - 1) {

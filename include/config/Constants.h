@@ -145,6 +145,12 @@ namespace olu::config::constants {
     const static inline std::string NAMESPACE_IRI_OSM_NODE = "https://www.openstreetmap.org/node/";
     const static inline std::string PREFIX_DECL_OSM_NODE = MakePrefixDecl(NAMESPACE_OSM_NODE, NAMESPACE_IRI_OSM_NODE);
 
+    const static inline std::string NAMESPACE_OSM_NODE_TAGGED = "osmnode_tagged";
+    const static inline std::string NAMESPACE_IRI_OSM_NODE_TAGGED = NAMESPACE_IRI_OSM_NODE;
+    const static inline std::string PREFIX_DECL_OSM_NODE_TAGGED = MakePrefixDecl(NAMESPACE_OSM_NODE_TAGGED, NAMESPACE_IRI_OSM_NODE_TAGGED);
+
+    const static inline std::string NAMESPACE_OSM_NODE_UNTAGGED = "osmnode_untagged";
+
     const static inline std::string NAMESPACE_OSM_WAY = "osmway";
     const static inline std::string NAMESPACE_IRI_OSM_WAY = "https://www.openstreetmap.org/way/";
     const static inline std::string PREFIX_DECL_OSM_WAY = MakePrefixDecl(NAMESPACE_OSM_WAY, NAMESPACE_IRI_OSM_WAY);
@@ -296,10 +302,28 @@ namespace olu::config::constants {
     const static inline std::string PREFIXED_OSM2RDF_META_DATE_MODIFIED = MakePrefixedName(NAMESPACE_OSM2RDF_META, NAME_DATE_MODIFIED);
 
     /// Prefix declarations ------------------------------------------------------------------------
-    const static inline std::vector DEFAULT_PREFIXES {
-            PREFIX_DECL_OSM, PREFIX_DECL_OSM_NODE, PREFIX_DECL_OSM_WAY, PREFIX_DECL_OSM_REL, PREFIX_DECL_OSM_KEY, PREFIX_DECL_OSM_META, PREFIX_DECL_OSM_CHANGESET,
+    const static inline std::vector DEFAULT_PREFIXES_W_O_NODES {
+            PREFIX_DECL_OSM, PREFIX_DECL_OSM_WAY, PREFIX_DECL_OSM_REL, PREFIX_DECL_OSM_KEY, PREFIX_DECL_OSM_META, PREFIX_DECL_OSM_CHANGESET,
             PREFIX_DECL_OSM2RDF, PREFIX_DECL_OSM2RDF_KEY, PREFIX_DECL_OSM2RDF_GEOM, PREFIX_DECL_OSM2RDF_META, PREFIX_DECL_OSM2RDF_GENID, PREFIX_DECL_OSM2RDF_MEMBER,
             PREFIX_DECL_WD, PREFIX_DECL_GEO, PREFIX_DECL_OGC, PREFIX_DECL_RDF, PREFIX_DECL_XSD};
+
+    static std::vector<std::string>
+    getDefaultPrefixes(const std::string_view &separatePrefixForUntaggedNodes) {
+            // Depending on the configuration, osm2rdf either uses a single prefix for all nodes or
+            // separate prefixes for tagged and untagged nodes
+            if (separatePrefixForUntaggedNodes.empty()) {
+                    auto defaultPrefixes = DEFAULT_PREFIXES_W_O_NODES;
+                    defaultPrefixes.emplace_back(PREFIX_DECL_OSM_NODE);
+                    return defaultPrefixes;
+            }
+
+            auto defaultPrefixes = DEFAULT_PREFIXES_W_O_NODES;
+            defaultPrefixes.emplace_back(PREFIX_DECL_OSM_NODE_TAGGED);
+            defaultPrefixes.emplace_back(
+                    MakePrefixDecl(NAMESPACE_OSM_NODE_UNTAGGED,
+                                   separatePrefixForUntaggedNodes.data()));
+            return defaultPrefixes;
+    }
 
     const static inline std::vector PREFIXES_FOR_NODE_LOCATION {
             PREFIX_DECL_OSM_NODE, PREFIX_DECL_GEO, PREFIX_DECL_OSM2RDF_GEOM};
