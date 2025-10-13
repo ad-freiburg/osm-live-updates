@@ -274,7 +274,9 @@ const {
     oss << getFromClauseOptional();
     oss << "WHERE { ";
 
-    if (_config.hasSeparatePrefixForUntaggedNodes) {
+    // Depending on whether a separate prefix for untagged nodes is used, osm2rdf uses different
+    // namespaces for tagged and untagged nodes
+    if (!_config.separatePrefixForUntaggedNodes.empty()) {
         oss << getValuesClause({
                                    cnst::PREFIXED_OSM2RDF_GEOM_NODE_TAGGED_,
                                    cnst::PREFIXED_OSM2RDF_GEOM_NODE_UNTAGGED_

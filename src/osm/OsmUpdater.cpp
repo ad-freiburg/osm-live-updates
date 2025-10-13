@@ -403,15 +403,23 @@ void olu::osm::OsmUpdater::readOsm2RdfOptionsFromEndpoint() {
     _config.osm2rdfOptions = _odf->fetchOsm2RdfOptions();
     if (_config.osm2rdfOptions.empty()) {
         util::Logger::log(util::LogEvent::WARNING, "No osm2rdf options found on SPARQL "
-                                                   "endpoint, using default options.");
+                                                   "endpoint, using default values.");
         return;
     }
 
+    // Check if a separate IRI prefix for untagged nodes is used and set the corresponding value in
+    // the config if that is the case
     try {
-        std::cout << _config.osm2rdfOptions.at(osm2rdf::config::constants::IRI_PREFIX_FOR_UNTAGGED_NODES_OPTION_LONG) << std::endl;
+        const auto separateUriForUntaggedNodes = _config.osm2rdfOptions.at(
+            osm2rdf::config::constants::IRI_PREFIX_FOR_UNTAGGED_NODES_OPTION_LONG);
+        if (!separateUriForUntaggedNodes.empty() && separateUriForUntaggedNodes !=
+            cnst::NAMESPACE_IRI_OSM_NODE) {
+            _config.separatePrefixForUntaggedNodes = separateUriForUntaggedNodes;
+        }
     } catch (const std::exception &e) {
-        util::Logger::log(util::LogEvent::WARNING, "Could not find option for IRI prefix for"
-                                                   " untagged nodes, using default prefix.");
+        util::Logger::log(util::LogEvent::WARNING, "Could not find value for option"
+                                                   " '--iri-prefix-for-untagged-nodes', using"
+                                                   " default prefix.");
     }
 }
 

@@ -102,7 +102,7 @@ struct Config {
     std::map<std::string, std::string> osm2rdfOptions;
 
     // True, if the osm2rdf dump was created with a separate prefix for untagged nodes.
-    bool hasSeparatePrefixForUntaggedNodes = false;
+    std::string separatePrefixForUntaggedNodes = "";
 
     // Generate the information string containing the current settings.
     void printInfo() const;

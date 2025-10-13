@@ -160,7 +160,7 @@ olu::osm::OsmDataFetcherSparql::fetchRelations(const std::set<id_t> &relationIds
         auto memberPosList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_POSS]);
 
         const auto members = OsmObjectHelper::parseRelationMemberList(memberUriList, memberRolesList,
-                                                                                      memberPosList);
+                                                                                      memberPosList, _config.separatePrefixForUntaggedNodes);
         for (const auto &member : members) {
             relation.addMember(member);
         }
@@ -195,7 +195,7 @@ olu::osm::OsmDataFetcherSparql::fetchAndWriteRelationsToFile(const std::string &
         auto memberRolesList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_ROLES]);
         auto memberPosList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_POSS]);
         const auto members = OsmObjectHelper::parseRelationMemberList(
-                memberUriList, memberRolesList, memberPosList);
+                memberUriList, memberRolesList, memberPosList, _config.separatePrefixForUntaggedNodes);
 
         // Write relation to file
         outputFile << util::XmlHelper::getRelationDummy(relationId, relationType, members)
@@ -397,8 +397,9 @@ olu::osm::OsmDataFetcherSparql::fetchRelsMembersSorted(const std::set<id_t> &rel
                 return OsmObjectHelper::parseIdFromUri(uri);
             });
         std::vector<OsmObjectType> memberTypes = parseValueList<OsmObjectType>(memberUriList,
-            [](const std::string &uri) {
-                return OsmObjectHelper::parseOsmTypeFromUri(uri);
+            [this](const std::string &uri) {
+                return OsmObjectHelper::parseOsmTypeFromUri(uri,
+                    _config.separatePrefixForUntaggedNodes);
             });
 
         auto memberPositionsList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_POSS]);

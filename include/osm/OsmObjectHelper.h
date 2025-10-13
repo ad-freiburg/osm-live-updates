@@ -52,9 +52,13 @@ namespace olu::osm {
          * (NAMESPACE_IRI_OSM_NODE, NAMESPACE_IRI_OSM_WAY, or NAMESPACE_IRI_OSM_RELATION).
          *
          * @param uri The uri to extract the osm object type from.
+         * @param separateUriForUntaggedNodes If set to a non-empty string, this uri will be
+         * considered as a separate namespace for nodes.
          * @return The extracted osm object type as an OsmObjectType enum value.
          */
-        static OsmObjectType parseOsmTypeFromUri(const std::string_view& uri);
+        static
+        OsmObjectType parseOsmTypeFromUri(const std::string_view &uri,
+                                          const std::string_view & separateUriForUntaggedNodes = "");
 
         /**
          * Parses a WKT point string and returns the latitude and longitude as a pair.
@@ -96,12 +100,16 @@ namespace olu::osm {
          * @param uriList A string containing the URIs of the members.
          * @param rolesList A string containing the roles of the members.
          * @param positionList A string containing the positions of the members.
+         * @param separateUriForUntaggedNodes If set to a non-empty string, this uri will be
+         * considered as a separate namespace for nodes.
          * @return A sorted vector of 'RelationMember' objects, where each object contains the osm
-         * object type, its id, and role.
+         * object type, its ID and role.
          */
-        static relation_members_t parseRelationMemberList(const std::string_view &uriList,
-                                                          const std::string_view &rolesList,
-                                                          const std::string_view &positionList);
+        static
+        relation_members_t parseRelationMemberList(const std::string_view &uriList,
+                                                   const std::string_view &rolesList,
+                                                   const std::string_view &positionList,
+                                                   const std::string_view &separateUriForUntaggedNodes = "");
 
         /**
          * To check whether an object has been created or modified, we check if the version is

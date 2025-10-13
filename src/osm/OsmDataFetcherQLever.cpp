@@ -195,7 +195,9 @@ olu::osm::OsmDataFetcherQLever::fetchRelations(const std::set<id_t> &relationIds
                  auto memberPosList = getValue<std::string_view>((*it).value());
                  memberPosList = memberPosList.substr(1, memberPosList.size() - 2);
 
-                 const auto members = OsmObjectHelper::parseRelationMemberList(memberUriList, memberRolesList, memberPosList);
+                 const auto members = OsmObjectHelper::parseRelationMemberList(
+                     memberUriList, memberRolesList, memberPosList,
+                     _config.separatePrefixForUntaggedNodes);
                  for (const auto &member: members) {
                      relation.addMember(member);
                  }
@@ -240,7 +242,7 @@ olu::osm::OsmDataFetcherQLever::fetchAndWriteRelationsToFile(const std::string &
 
                  const auto relationId = OsmObjectHelper::parseIdFromUri(relationUri);
                  const auto members = OsmObjectHelper::parseRelationMemberList(
-                         memberUriList, memberRolesList, memberPosList);
+                         memberUriList, memberRolesList, memberPosList, _config.separatePrefixForUntaggedNodes);
 
                  // Write relation to file
                  const auto relationXml = util::XmlHelper::getRelationDummy(
@@ -516,8 +518,9 @@ olu::osm::OsmDataFetcherQLever::fetchRelsMembersSorted(const std::set<id_t> &rel
                                                                });
                  std::vector<OsmObjectType> memberTypes = parseValueList<OsmObjectType>(
                      memberUriList,
-                     [](const std::string &uri) {
-                         return OsmObjectHelper::parseOsmTypeFromUri(uri);
+                     [this](const std::string &uri) {
+                         return OsmObjectHelper::parseOsmTypeFromUri(uri,
+                             _config.separatePrefixForUntaggedNodes);
                      });
 
                  ++it;
