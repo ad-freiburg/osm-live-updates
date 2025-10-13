@@ -89,7 +89,7 @@ olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config)
 void olu::osm::OsmUpdater::run() {
     // Check if the osm2rdf version that was used to create the dump on the SPARQL endpoint is the
     // same that is used in this program.
-    checkOsm2RdfVersions();
+    // checkOsm2RdfVersions();
 
     // Read the osm2rdf options from the SPARQL endpoint and adapt the config accordingly
     readOsm2RdfOptionsFromEndpoint();
