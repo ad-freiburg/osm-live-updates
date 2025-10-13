@@ -46,8 +46,8 @@ olu::osm::OsmDataFetcherSparql::runQuery(const std::string &query,
     auto response = _sparqlWrapper.runQuery();
 
     // Write SPARQL response to a file, if configured by the user
-    if (!_config.sparqlResponseFile.empty()) {
-        std::ofstream outputFile(_config.sparqlResponseFile, std::ios::app);
+    if (!_config->sparqlResponseFile.empty()) {
+        std::ofstream outputFile(_config->sparqlResponseFile, std::ios::app);
         if (!outputFile) {
             std::cerr << "Error opening file for SPARQL response output." << std::endl;
             throw OsmDataFetcherException("Cannot open file for SPARQL response output.");
@@ -160,7 +160,7 @@ olu::osm::OsmDataFetcherSparql::fetchRelations(const std::set<id_t> &relationIds
         auto memberPosList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_POSS]);
 
         const auto members = OsmObjectHelper::parseRelationMemberList(memberUriList, memberRolesList,
-                                                                                      memberPosList, _config.separatePrefixForUntaggedNodes);
+                                                                                      memberPosList, _config->separatePrefixForUntaggedNodes);
         for (const auto &member : members) {
             relation.addMember(member);
         }
@@ -195,7 +195,7 @@ olu::osm::OsmDataFetcherSparql::fetchAndWriteRelationsToFile(const std::string &
         auto memberRolesList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_ROLES]);
         auto memberPosList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_POSS]);
         const auto members = OsmObjectHelper::parseRelationMemberList(
-                memberUriList, memberRolesList, memberPosList, _config.separatePrefixForUntaggedNodes);
+                memberUriList, memberRolesList, memberPosList, _config->separatePrefixForUntaggedNodes);
 
         // Write relation to file
         outputFile << util::XmlHelper::getRelationDummy(relationId, relationType, members)
@@ -399,7 +399,7 @@ olu::osm::OsmDataFetcherSparql::fetchRelsMembersSorted(const std::set<id_t> &rel
         std::vector<OsmObjectType> memberTypes = parseValueList<OsmObjectType>(memberUriList,
             [this](const std::string &uri) {
                 return OsmObjectHelper::parseOsmTypeFromUri(uri,
-                    _config.separatePrefixForUntaggedNodes);
+                    _config->separatePrefixForUntaggedNodes);
             });
 
         auto memberPositionsList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_POSS]);

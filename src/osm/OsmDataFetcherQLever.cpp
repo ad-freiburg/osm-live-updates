@@ -67,8 +67,8 @@ void olu::osm::OsmDataFetcherQLever::runQuery(const std::string &query,
     }
 
     // Write SPARQL response to a file, if configured by the user
-    if (!_config.sparqlResponseFile.empty()) {
-        std::ofstream outputFile(_config.sparqlResponseFile, std::ios::app);
+    if (!_config->sparqlResponseFile.empty()) {
+        std::ofstream outputFile(_config->sparqlResponseFile, std::ios::app);
         if (!outputFile) {
             std::cerr << "Error opening file for SPARQL response output." << std::endl;
             throw OsmDataFetcherException("Cannot open file for SPARQL response output.");
@@ -197,7 +197,7 @@ olu::osm::OsmDataFetcherQLever::fetchRelations(const std::set<id_t> &relationIds
 
                  const auto members = OsmObjectHelper::parseRelationMemberList(
                      memberUriList, memberRolesList, memberPosList,
-                     _config.separatePrefixForUntaggedNodes);
+                     _config->separatePrefixForUntaggedNodes);
                  for (const auto &member: members) {
                      relation.addMember(member);
                  }
@@ -242,7 +242,7 @@ olu::osm::OsmDataFetcherQLever::fetchAndWriteRelationsToFile(const std::string &
 
                  const auto relationId = OsmObjectHelper::parseIdFromUri(relationUri);
                  const auto members = OsmObjectHelper::parseRelationMemberList(
-                         memberUriList, memberRolesList, memberPosList, _config.separatePrefixForUntaggedNodes);
+                         memberUriList, memberRolesList, memberPosList, _config->separatePrefixForUntaggedNodes);
 
                  // Write relation to file
                  const auto relationXml = util::XmlHelper::getRelationDummy(
@@ -520,7 +520,7 @@ olu::osm::OsmDataFetcherQLever::fetchRelsMembersSorted(const std::set<id_t> &rel
                      memberUriList,
                      [this](const std::string &uri) {
                          return OsmObjectHelper::parseOsmTypeFromUri(uri,
-                             _config.separatePrefixForUntaggedNodes);
+                             _config->separatePrefixForUntaggedNodes);
                      });
 
                  ++it;

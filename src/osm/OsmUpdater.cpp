@@ -38,7 +38,7 @@
 namespace cnst = olu::config::constants;
 
 std::unique_ptr<olu::osm::OsmDataFetcher>
-createOsmDataFetcher(const olu::config::Config& config, olu::osm::StatisticsHandler &stats) {
+createOsmDataFetcher(olu::config::Config &config, olu::osm::StatisticsHandler &stats) {
     if (config.isQLever) {
         return std::make_unique<olu::osm::OsmDataFetcherQLever>(config, stats);
     }
@@ -50,8 +50,6 @@ createOsmDataFetcher(const olu::config::Config& config, olu::osm::StatisticsHand
 olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config),
                                                                  _stats(config),
                                                                  _repServer(config, _stats),
-                                                                 _odf(createOsmDataFetcher(
-                                                                     config, _stats)),
                                                                  _queryWriter(_config) {
     _stats.startTime();
 
@@ -83,6 +81,8 @@ olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config)
             throw OsmUpdaterException("Failed to clear sparql output file");
         }
     }
+
+    _odf = createOsmDataFetcher(_config, _stats);
 }
 
 // _________________________________________________________________________________________________
@@ -90,6 +90,9 @@ void olu::osm::OsmUpdater::run() {
     // Check if the osm2rdf version that was used to create the dump on the SPARQL endpoint is the
     // same that is used in this program.
     checkOsm2RdfVersions();
+
+    // Read the osm2rdf options from the SPARQL endpoint and adapt the config accordingly
+    readOsm2RdfOptionsFromEndpoint();
 
     // Handle either local directory with change files or external one depending on the user
     // input
@@ -139,8 +142,6 @@ void olu::osm::OsmUpdater::run() {
         applyBoundaries();
         _stats.endTimeApplyingBoundaries();
     }
-
-    readOsm2RdfOptionsFromEndpoint();
 
     auto och{OsmChangeHandler(_config, *_odf, _stats)};
     och.run();
