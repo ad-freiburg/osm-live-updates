@@ -297,20 +297,6 @@ void olu::osm::StatisticsHandler::printTimingStatistics() const {
             << " ms. ("
             << calculatePercentageOfTotalTime(partTime) << "% of total time)"
             << std::endl;
-
-    partTime = getTimeInMSInsertingMetadataTriples();
-    util::Logger::stream() << util::Logger::PREFIX_SPACER << "Inserting metadata triples took "
-            << partTime
-            << " ms. ("
-            << calculatePercentageOfTotalTime(partTime) << "% of total time)"
-            << std::endl;
-
-    partTime = getTimeInMSCleanUpTmpDir();
-    util::Logger::stream() << util::Logger::PREFIX_SPACER << "Cleaning up temporary files took "
-            << partTime
-            << " ms. ("
-            << calculatePercentageOfTotalTime(partTime) << "% of total time)"
-            << std::endl;
 }
 
 // _________________________________________________________________________________________________
