@@ -82,17 +82,19 @@ void olu::osm::StatisticsHandler::printUpdateStatistics() const {
     util::Logger::log(util::LogEvent::INFO, "Update Statistics:");
     util::Logger::stream() << std::fixed << std::setprecision(config::Config::DEFAULT_PERCENTAGE_PRECISION);
 
-    if (_config.showDetailedStatistics) {
-        if (_numOfNodesWithLocationChange == 0) {
-            util::Logger::stream() << util::Logger::PREFIX_SPACER << "No nodes with location change." << std::endl;
-        } else {
-            util::Logger::stream() << util::Logger::PREFIX_SPACER << _numOfNodesWithLocationChange
-                      << " modified nodes changed their location ("
-                      << calculatePercentage(_numOfModifiedNodes, _numOfNodesWithLocationChange)
-                      << "%)"
-                      << std::endl;
-        }
-    }
+    // Leave this out for now as more as 99% of the nodes are modified in most updates
+    // and this statistic is not very informative then.
+    // if (_config.showDetailedStatistics) {
+    //     if (_numOfNodesWithLocationChange == 0) {
+    //         util::Logger::stream() << util::Logger::PREFIX_SPACER << "No nodes with location change." << std::endl;
+    //     } else {
+    //         util::Logger::stream() << util::Logger::PREFIX_SPACER << _numOfNodesWithLocationChange
+    //                   << "modified nodes changed their location ("
+    //                   << calculatePercentage(_numOfModifiedNodes, _numOfNodesWithLocationChange)
+    //                   << "%)"
+    //                   << std::endl;
+    //     }
+    // }
 
     if (_numOfRelationsToUpdateGeometry == 0 && _numOfWaysToUpdateGeometry == 0) {
         util::Logger::stream() << util::Logger::PREFIX_SPACER << "No geometries to update" << std::endl;
