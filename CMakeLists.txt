@@ -108,7 +108,7 @@ include(FetchContent)
 ######################################
 FetchContent_Declare(osm2rdf
         GIT_REPOSITORY  https://github.com/nicolano/osm2rdf.git
-        GIT_TAG 01cb6e3b05000a1b7b3f163d7333e2bd276972d1
+        GIT_TAG 0c7f051ebbf5c617e182024932ecd72d5dd161e9
 )
 
 ######################################
