@@ -390,6 +390,35 @@ namespace olu::sparql {
             );
         }
     }
+    TEST(QueryWriter, writeQueryForNodeLocationsWFacts) {
+        {
+            config::Config config;
+            QueryWriter qw{config};
+            std::string query = qw.writeQueryForNodeLocationsWithFacts({1, 2, 3});
+            ASSERT_EQ(
+            "SELECT ?value ?location ?facts "
+            "WHERE { VALUES ?value { osmnode:1 osmnode:2 osmnode:3 } "
+            "?value geo:hasGeometry/geo:asWKT ?location . "
+            "?value osm2rdf:facts ?facts . }",
+            query
+            );
+        }
+    }
+    TEST(QueryWriter, writeQueryForNodeLocationsWFactsSeparatePrefix) {
+        {
+            auto config = config::Config();
+            config.separatePrefixForUntaggedNodes = "http://example.org/untagged";
+            QueryWriter qw{config};
+            std::string query = qw.writeQueryForNodeLocations({1, 2, 3});
+            ASSERT_EQ(
+            "SELECT ?value ?location ?facts "
+            "WHERE { VALUES ?value { osmnode_tagged:1 osmnode_untagged:1 osmnode_tagged:2 osmnode_untagged:2 osmnode_tagged:3 osmnode_untagged:3 } "
+            "?value geo:hasGeometry/geo:asWKT ?location . "
+            "?value osm2rdf:facts ?facts . }",
+            query
+            );
+        }
+    }
     TEST(QueryWriter, writeQueryForLatestTimestamp) {
         {
             config::Config config;

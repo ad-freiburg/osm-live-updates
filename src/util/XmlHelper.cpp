@@ -26,7 +26,8 @@
 namespace cnst = olu::config::constants;
 
 // _______________________________________________________________________________________________
-std::string olu::util::XmlHelper::getNodeDummy(const id_t &nodeId, const lon_lat_t &lonLat) {
+std::string olu::util::XmlHelper::getNodeDummy(const id_t &nodeId, const lon_lat_t &lonLat,
+                                               const bool &hasTags) {
     std::string result;
     result.reserve(64);
     result.append("<node id=\"")
@@ -34,8 +35,13 @@ std::string olu::util::XmlHelper::getNodeDummy(const id_t &nodeId, const lon_lat
           .append("\" lat=\"")
           .append(lonLat.second)
           .append("\" lon=\"")
-          .append(lonLat.first)
-          .append("\"/>");
+          .append(lonLat.first);
+
+    if (hasTags)
+        result.append("\"><tag k=\"K\" v=\"V\"/></node>");
+    else
+        result.append("\"/>");
+
     return result;
 }
 

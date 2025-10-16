@@ -86,6 +86,13 @@ namespace olu::sparql {
         [[nodiscard]] std::string writeQueryForNodeLocations(const std::set<id_t> &nodeIds) const;
 
         /**
+        * @returns A SPARQL query for the locations of the nodes with the given ID in WKT format and
+        * the number of facts (tags) for each node
+        */
+        [[nodiscard]] std::string
+        writeQueryForNodeLocationsWithFacts(const std::set<id_t> &nodeIds) const;
+
+        /**
          * @returns A SPARQL query for the latest timestamp for the predicate 'osmmeta:timestamp'
          */
         [[nodiscard]] std::string writeQueryForLatestTimestamp() const;

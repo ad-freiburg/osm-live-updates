@@ -404,9 +404,14 @@ namespace olu::config::constants {
         return defaultPrefixes;
     }
 
-    const static inline std::vector PREFIXES_FOR_NODE_LOCATION{
-        PREFIX_DECL_OSM_NODE, PREFIX_DECL_GEO, PREFIX_DECL_OSM2RDF_GEOM
-    };
+    static std::vector<std::string>
+    getPrefixesForNodeLocation(const std::string_view &separatePrefixForUntaggedNodes) {
+        std::vector defaultPrefixes = {PREFIX_DECL_GEO, PREFIX_DECL_OSM2RDF_GEOM };
+        for (const auto &nodePrefix : getNodePrefixes(separatePrefixForUntaggedNodes)) {
+            defaultPrefixes.emplace_back(nodePrefix);
+        }
+        return defaultPrefixes;
+    }
 
     const static inline std::vector PREFIXES_FOR_RELATION_MEMBERS{
         PREFIX_DECL_OSM_REL, PREFIX_DECL_RDF, PREFIX_DECL_OSM2RDF_MEMBER, PREFIX_DECL_OSM,
@@ -499,6 +504,7 @@ namespace olu::config::constants {
     const static inline std::string QUERY_VAR_KEY = MakeQueryVar(NAME_KEY);
     const static inline std::string QUERY_VAR_VAL = MakeQueryVar(NAME_VALUE);
     const static inline std::string QUERY_VAR_LOC = MakeQueryVar(NAME_LOCATION);
+    const static inline std::string QUERY_VAR_FACTS = MakeQueryVar(NAME_FACTS);
     const static inline std::string QUERY_VAR_TIMESTAMP = MakeQueryVar(NAME_TIMESTAMP);
     const static inline std::string QUERY_VAR_LATEST_TIMESTAMP =
             MakeQueryVar(NAME_LATEST_TIMESTAMP);

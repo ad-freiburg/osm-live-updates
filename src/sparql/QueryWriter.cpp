@@ -291,6 +291,32 @@ const {
 }
 
 // _________________________________________________________________________________________________
+std::string
+olu::sparql::QueryWriter::writeQueryForNodeLocationsWithFacts(const std::set<id_t> &nodeIds)
+const {
+    std::ostringstream oss;
+    oss << "SELECT " + cnst::QUERY_VAR_VAL + " " + cnst::QUERY_VAR_LOC + " " + cnst::QUERY_VAR_FACTS + " ";
+    oss << getFromClauseOptional();
+    oss << "WHERE { ";
+
+    // Depending on whether a separate prefix for untagged nodes is used, osm2rdf uses different
+    // namespaces for tagged and untagged nodes
+    if (!_config->separatePrefixForUntaggedNodes.empty()) {
+        oss << getValuesClause({
+                                   cnst::NAMESPACE_OSM_NODE_TAGGED,
+                                   cnst::NAMESPACE_OSM_NODE_UNTAGGED
+                               }, ":", nodeIds);
+    } else {
+        oss << getValuesClause(cnst::NAMESPACE_OSM_NODE, ":", nodeIds);
+    }
+
+    oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_GEO_HAS_GEOMETRY + "/" + cnst::PREFIXED_GEO_AS_WKT, cnst::QUERY_VAR_LOC);
+    oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_OSM2RDF_FACTS, cnst::QUERY_VAR_FACTS);
+    oss << "}";
+    return oss.str();
+}
+
+// _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeQueryForLatestTimestamp() const {
     std::ostringstream oss;
     oss << "SELECT (MAX(" + cnst::QUERY_VAR_TIMESTAMP + ") AS " + cnst::QUERY_VAR_LATEST_TIMESTAMP + ") ";

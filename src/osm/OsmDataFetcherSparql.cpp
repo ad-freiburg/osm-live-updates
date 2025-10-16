@@ -64,7 +64,7 @@ std::vector<olu::osm::Node>
 olu::osm::OsmDataFetcherSparql::fetchNodes(const std::set<id_t> &nodeIds) {
     const auto response = runQuery(
         _queryWriter.writeQueryForNodeLocations(nodeIds),
-        cnst::PREFIXES_FOR_NODE_LOCATION);
+        cnst::getPrefixesForNodeLocation(_config->separatePrefixForUntaggedNodes));
 
     std::vector<Node> nodes;
     nodes.reserve(nodeIds.size());
@@ -86,9 +86,15 @@ olu::osm::OsmDataFetcherSparql::fetchNodes(const std::set<id_t> &nodeIds) {
 // _________________________________________________________________________________________________
 void olu::osm::OsmDataFetcherSparql::fetchAndWriteNodesToFile(const std::string &filePath,
                                                               const std::set<id_t> &nodeIds) {
-    const auto response = runQuery(
-        _queryWriter.writeQueryForNodeLocations(nodeIds),
-        cnst::PREFIXES_FOR_NODE_LOCATION);
+    const auto response = _config->separatePrefixForUntaggedNodes.empty()
+                              ? runQuery(
+                                  _queryWriter.writeQueryForNodeLocations(nodeIds),
+                                  cnst::getPrefixesForNodeLocation(
+                                      _config->separatePrefixForUntaggedNodes)
+                              )
+                              : runQuery(_queryWriter.writeQueryForNodeLocationsWithFacts(nodeIds),
+                                         cnst::getPrefixesForNodeLocation(
+                                             _config->separatePrefixForUntaggedNodes));
 
     std::ofstream outputFile;
     outputFile.open (filePath, std::ios::app);
@@ -103,7 +109,15 @@ void olu::osm::OsmDataFetcherSparql::fetchAndWriteNodesToFile(const std::string 
         const auto nodeId = OsmObjectHelper::parseIdFromUri(nodeUri);
         const auto nodeLocation = OsmObjectHelper::parseLonLatFromWktPoint(nodeLocationAsWkt);
 
-        outputFile << util::XmlHelper::getNodeDummy(nodeId, nodeLocation) << std::endl;
+        bool hasTags = false;
+        try {
+            const auto nodeFacts = getValue<std::string_view>(binding[cnst::NAME_FACTS]);
+            hasTags = !nodeFacts.starts_with("0");
+        } catch (std::exception &e) {
+            // This will throw, if no zero facts triple is present for untagged nodes
+        }
+
+        outputFile << util::XmlHelper::getNodeDummy(nodeId, nodeLocation, hasTags) << std::endl;
     }
 
     outputFile.close();
