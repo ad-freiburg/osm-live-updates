@@ -176,7 +176,9 @@ void olu::osm::OsmDataFetcherQLever::fetchAndWriteNodesToFile(const std::string 
                          nodeLocationAsWkt);
 
                      bool hasTags = false;
-                     if (auto value = (*it).value(); !value.is_null()) {
+                     auto value = (*it).value();
+                     auto is_null = value.is_null();
+                     if (is_null.error() == simdjson::SUCCESS && !is_null.value()) {
                          const auto nodeFacts = getValue<std::string_view>(value);
                          hasTags = !nodeFacts.starts_with("0");
                      }

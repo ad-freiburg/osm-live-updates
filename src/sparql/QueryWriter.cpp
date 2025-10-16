@@ -311,7 +311,7 @@ const {
     }
 
     oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_GEO_HAS_GEOMETRY + "/" + cnst::PREFIXED_GEO_AS_WKT, cnst::QUERY_VAR_LOC);
-    oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_OSM2RDF_FACTS, cnst::QUERY_VAR_FACTS);
+    oss << wrapWithOptional(getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_OSM2RDF_FACTS, cnst::QUERY_VAR_FACTS));
     oss << "}";
     return oss.str();
 }
