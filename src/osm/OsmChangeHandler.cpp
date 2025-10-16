@@ -438,9 +438,26 @@ void olu::osm::OsmChangeHandler::deleteNodesFromDatabase(osm2rdf::util::Progress
         [this, progress, &counter](std::set<id_t> const &batch) mutable {
             // First, delete the triple that are linked to the osm node (geometry and centroid)
             // via a node
-            runUpdateQuery(sparql::UpdateOperation::DELETE,
-                           _queryWriter.writeDeleteOsmObjectGeometryQuery(OsmObjectType::NODE, batch),
-                           cnst::getPrefixesForNodeDeleteQuery(_config->separatePrefixForUntaggedNodes));
+            if (_config->separatePrefixForUntaggedNodes.empty()) {
+                runUpdateQuery(sparql::UpdateOperation::DELETE,
+                               _queryWriter.writeDeleteOsmObjectGeometryQuery(
+                                   OsmObjectType::NODE, batch),
+                               cnst::getPrefixesForNodeDeleteQuery(
+                                   _config->separatePrefixForUntaggedNodes));
+            } else {
+                runUpdateQuery(sparql::UpdateOperation::DELETE,
+                               _queryWriter.writeDeleteOsmObjectGeometryQuery(
+                                   OsmObjectType::NODE_TAGGED, batch),
+                               cnst::getPrefixesForNodeDeleteQuery(
+                                   _config->separatePrefixForUntaggedNodes));
+
+                runUpdateQuery(sparql::UpdateOperation::DELETE,
+                               _queryWriter.writeDeleteOsmObjectGeometryQuery(
+                                   OsmObjectType::NODE_UNTAGGED, batch),
+                               cnst::getPrefixesForNodeDeleteQuery(
+                                   _config->separatePrefixForUntaggedNodes));
+            }
+
 
             // Delete 'geo:hasCentroid' triples only if the option is activated
             if (_osm2ttl.hasTripleForOption(osm2rdf::config::constants::ADD_CENTROID_OPTION_LONG)) {
