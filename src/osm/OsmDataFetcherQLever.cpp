@@ -162,7 +162,7 @@ void olu::osm::OsmDataFetcherQLever::fetchAndWriteNodesToFile(const std::string 
          });
     } else {
         runQuery(_queryWriter.writeQueryForNodeLocationsWithFacts(nodeIds),
-            cnst::getPrefixesForNodeLocation(_config->separatePrefixForUntaggedNodes),
+            cnst::getPrefixesForNodeLocationWithFacts(_config->separatePrefixForUntaggedNodes),
          [&returnedNodeCount, &outputFile](simdjson::ondemand::value results) {
              returnedNodeCount++;
 

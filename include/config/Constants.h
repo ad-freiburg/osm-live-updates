@@ -413,6 +413,15 @@ namespace olu::config::constants {
         return defaultPrefixes;
     }
 
+    static std::vector<std::string>
+    getPrefixesForNodeLocationWithFacts(const std::string_view &separatePrefixForUntaggedNodes) {
+        std::vector defaultPrefixes = {PREFIX_DECL_GEO, PREFIX_DECL_OSM2RDF_GEOM, PREFIX_DECL_OSM2RDF };
+        for (const auto &nodePrefix : getNodePrefixes(separatePrefixForUntaggedNodes)) {
+            defaultPrefixes.emplace_back(nodePrefix);
+        }
+        return defaultPrefixes;
+    }
+
     const static inline std::vector PREFIXES_FOR_RELATION_MEMBERS{
         PREFIX_DECL_OSM_REL, PREFIX_DECL_RDF, PREFIX_DECL_OSM2RDF_MEMBER, PREFIX_DECL_OSM,
         PREFIX_DECL_OSM_KEY

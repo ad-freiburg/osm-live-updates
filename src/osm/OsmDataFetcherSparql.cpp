@@ -93,7 +93,7 @@ void olu::osm::OsmDataFetcherSparql::fetchAndWriteNodesToFile(const std::string 
                                       _config->separatePrefixForUntaggedNodes)
                               )
                               : runQuery(_queryWriter.writeQueryForNodeLocationsWithFacts(nodeIds),
-                                         cnst::getPrefixesForNodeLocation(
+                                         cnst::getPrefixesForNodeLocationWithFacts(
                                              _config->separatePrefixForUntaggedNodes));
 
     std::ofstream outputFile;
