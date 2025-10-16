@@ -567,13 +567,14 @@ std::string olu::sparql::QueryWriter::getOsmNamespace(const osm::OsmObjectType &
     switch (type) {
         case osm::OsmObjectType::NODE:
             return cnst::NAMESPACE_OSM_NODE;
-            break;
+        case osm::OsmObjectType::NODE_TAGGED:
+            return cnst::NAMESPACE_OSM_NODE_TAGGED;
+        case osm::OsmObjectType::NODE_UNTAGGED:
+            return cnst::NAMESPACE_OSM_NODE_UNTAGGED;
         case osm::OsmObjectType::WAY:
             return cnst::NAMESPACE_OSM_WAY;
-            break;
         case osm::OsmObjectType::RELATION:
             return cnst::NAMESPACE_OSM_REL;
-            break;
     }
 
     throw QueryWriterException("Unknown OsmObjectType");
