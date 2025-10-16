@@ -179,8 +179,10 @@ void olu::osm::OsmDataFetcherQLever::fetchAndWriteNodesToFile(const std::string 
                      auto value = (*it).value();
                      auto is_null = value.is_null();
                      if (is_null.error() == simdjson::SUCCESS && !is_null.value()) {
-                         const auto nodeFacts = getValue<std::string_view>(value);
-                         hasTags = !nodeFacts.starts_with("0");
+                         std::string_view nodeFacts;
+                         if (value.get(nodeFacts) == simdjson::SUCCESS) {
+                             hasTags = !nodeFacts.starts_with("0");
+                         }
                      }
 
                      const auto nodeXml = util::XmlHelper::getNodeDummy(
