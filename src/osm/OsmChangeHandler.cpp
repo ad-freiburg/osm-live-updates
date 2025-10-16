@@ -440,19 +440,19 @@ void olu::osm::OsmChangeHandler::deleteNodesFromDatabase(osm2rdf::util::Progress
             // via a node
             runUpdateQuery(sparql::UpdateOperation::DELETE,
                            _queryWriter.writeDeleteOsmObjectGeometryQuery(OsmObjectType::NODE, batch),
-                           cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
+                           cnst::getPrefixesForNodeDeleteQuery(_config->separatePrefixForUntaggedNodes));
 
             // Delete 'geo:hasCentroid' triples only if the option is activated
             if (_osm2ttl.hasTripleForOption(osm2rdf::config::constants::ADD_CENTROID_OPTION_LONG)) {
                 runUpdateQuery(sparql::UpdateOperation::DELETE,
                     _queryWriter.writeDeleteOsmObjectCentroidQuery(OsmObjectType::NODE, batch),
-                    cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
+                    cnst::getPrefixesForNodeDeleteQuery(_config->separatePrefixForUntaggedNodes));
             }
 
             // Then delete the all triples for the nodes
             runUpdateQuery(sparql::UpdateOperation::DELETE,
                            _queryWriter.writeDeleteOsmObjectQuery(OsmObjectType::NODE, batch),
-                           cnst::PREFIXES_FOR_NODE_DELETE_QUERY);
+                           cnst::getPrefixesForNodeDeleteQuery(_config->separatePrefixForUntaggedNodes));
             progress.update(counter += batch.size());
         });
 }
