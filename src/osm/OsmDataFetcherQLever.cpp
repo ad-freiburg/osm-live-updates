@@ -145,48 +145,47 @@ void olu::osm::OsmDataFetcherQLever::fetchAndWriteNodesToFile(const std::string 
     if (_config->separatePrefixForUntaggedNodes.empty()) {
         runQuery(_queryWriter.writeQueryForNodeLocations(nodeIds),
                  cnst::getPrefixesForNodeLocation(_config->separatePrefixForUntaggedNodes),
-         [&returnedNodeCount, &outputFile](simdjson::ondemand::value results) {
-             returnedNodeCount++;
+                 [&returnedNodeCount, &outputFile](simdjson::ondemand::value results) {
+                     returnedNodeCount++;
 
-             auto it = results.begin();
-             const auto nodeUri = getValue<std::string_view>((*it).value());
-             ++it;
-             const auto nodeLocationAsWkt = getValue<std::string_view>((*it).value());
+                     auto it = results.begin();
+                     const auto nodeUri = getValue<std::string_view>((*it).value());
+                     ++it;
+                     const auto nodeLocationAsWkt = getValue<std::string_view>((*it).value());
 
-             const auto nodeId = OsmObjectHelper::parseIdFromUri(nodeUri);
-             const auto nodeLocation = OsmObjectHelper::parseLonLatFromWktPoint(
-                 nodeLocationAsWkt);
-             const auto nodeXml = util::XmlHelper::getNodeDummy(nodeId, nodeLocation);
-             outputFile.write(nodeXml.data(), nodeXml.size());
-             outputFile << std::endl;
-         });
+                     const auto nodeId = OsmObjectHelper::parseIdFromUri(nodeUri);
+                     const auto nodeLocation = OsmObjectHelper::parseLonLatFromWktPoint(
+                         nodeLocationAsWkt);
+                     const auto nodeXml = util::XmlHelper::getNodeDummy(nodeId, nodeLocation);
+                     outputFile.write(nodeXml.data(), nodeXml.size());
+                     outputFile << std::endl;
+                 });
     } else {
         runQuery(_queryWriter.writeQueryForNodeLocationsWithFacts(nodeIds),
-            cnst::getPrefixesForNodeLocationWithFacts(_config->separatePrefixForUntaggedNodes),
-         [&returnedNodeCount, &outputFile](simdjson::ondemand::value results) {
-             returnedNodeCount++;
+                 cnst::getPrefixesForNodeLocationWithFacts(_config->separatePrefixForUntaggedNodes),
+                 [&returnedNodeCount, &outputFile](simdjson::ondemand::value results) {
+                     returnedNodeCount++;
 
-             auto it = results.begin();
-             const auto nodeUri = getValue<std::string_view>((*it).value());
-             ++it;
-             const auto nodeLocationAsWkt = getValue<std::string_view>((*it).value());
+                     auto it = results.begin();
+                     const auto nodeUri = getValue<std::string_view>((*it).value());
+                     ++it;
+                     const auto nodeLocationAsWkt = getValue<std::string_view>((*it).value());
 
-             const auto nodeId = OsmObjectHelper::parseIdFromUri(nodeUri);
-             const auto nodeLocation = OsmObjectHelper::parseLonLatFromWktPoint(
-                 nodeLocationAsWkt);
+                     const auto nodeId = OsmObjectHelper::parseIdFromUri(nodeUri);
+                     const auto nodeLocation = OsmObjectHelper::parseLonLatFromWktPoint(
+                         nodeLocationAsWkt);
 
-             bool hasTags = false;
-             try {
-                 const auto nodeFacts = getValue<std::string_view>((*it).value());
-                 hasTags = !nodeFacts.starts_with("0");
-             } catch (std::exception &e) {
-                // This will throw, if no zero facts triple is present for untagged nodes
-             }
+                     bool hasTags = false;
+                     if (auto value = (*it).value(); !value.is_null()) {
+                         const auto nodeFacts = getValue<std::string_view>(value);
+                         hasTags = !nodeFacts.starts_with("0");
+                     }
 
-             const auto nodeXml = util::XmlHelper::getNodeDummy(nodeId, nodeLocation, hasTags);
-             outputFile.write(nodeXml.data(), nodeXml.size());
-             outputFile << std::endl;
-         });
+                     const auto nodeXml = util::XmlHelper::getNodeDummy(
+                         nodeId, nodeLocation, hasTags);
+                     outputFile.write(nodeXml.data(), nodeXml.size());
+                     outputFile << std::endl;
+                 });
     }
 
     outputFile.close();
