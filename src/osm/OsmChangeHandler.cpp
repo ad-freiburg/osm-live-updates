@@ -655,7 +655,9 @@ void olu::osm::OsmChangeHandler::deleteTriplesFromDatabase() {
     }
 
     util::Logger::log(util::LogEvent::INFO,"Deleting elements from database...");
-    osm2rdf::util::ProgressBar deleteProgress(count, _config.showProgress);
+
+    osm2rdf::util::ProgressBar deleteProgress(count,_config.showProgress &&
+                                              !_config.showDetailedStatistics);
     size_t counter = 0;
     deleteProgress.update(counter);
 
@@ -677,7 +679,11 @@ void olu::osm::OsmChangeHandler::insertTriplesToDatabase(const std::vector<tripl
     }
 
     util::Logger::log(util::LogEvent::INFO,"Inserting triples into database...");
-    osm2rdf::util::ProgressBar insertProgress(triples.size(), _config.showProgress);
+
+    // We do not show the progress bar here when detailed statistics for each update operation are
+    // shown because that breaks the output format.
+    osm2rdf::util::ProgressBar insertProgress(triples.size(), _config.showProgress &&
+                                              !_config.showDetailedStatistics);
     size_t counter = 0;
     insertProgress.update(counter);
 

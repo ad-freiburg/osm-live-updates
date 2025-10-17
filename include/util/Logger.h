@@ -40,7 +40,7 @@ namespace olu::util {
     class Logger {
     public:
         // Prefix for log messages to align them in the console output
-        static constexpr std::string_view PREFIX_SPACER = "                          ";
+        static constexpr std::string_view PREFIX_SPACER = "                          > ";
 
         /**
          * Formats and writes a log message to the console and to a log file.
