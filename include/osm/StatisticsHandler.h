@@ -327,8 +327,16 @@ namespace olu::osm {
         }
 
         void countQleverResponseTime(const std::string_view &timeInMs);
-        void countQleverUpdateTime(const std::string_view &timeInMs,
+        void countQleverUpdateTime(const long &timeInMs,
                                    const sparql::UpdateOperation & updateOp);
+
+        static void handleParsingObjectError(
+            const simdjson::simdjson_result<simdjson::ondemand::field> &parsingResult,
+            const std::string &objectName);
+
+        static void handleParsingIntError(
+            const simdjson::simdjson_result<int64_t> &parsingResult,
+            const std::string &fieldName);
     };
 
     /**

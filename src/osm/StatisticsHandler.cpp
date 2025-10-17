@@ -82,18 +82,6 @@ void olu::osm::StatisticsHandler::printUpdateStatistics() const {
     util::Logger::log(util::LogEvent::INFO, "Update Statistics:");
     util::Logger::stream() << std::fixed << std::setprecision(config::Config::DEFAULT_PERCENTAGE_PRECISION);
 
-    if (_config.showDetailedStatistics) {
-        if (_numOfNodesWithLocationChange == 0) {
-            util::Logger::stream() << util::Logger::PREFIX_SPACER << "No nodes with location change." << std::endl;
-        } else {
-            util::Logger::stream() << util::Logger::PREFIX_SPACER << _numOfNodesWithLocationChange
-                      << " modified nodes changed their location ("
-                      << calculatePercentage(_numOfModifiedNodes, _numOfNodesWithLocationChange)
-                      << "%)"
-                      << std::endl;
-        }
-    }
-
     if (_numOfRelationsToUpdateGeometry == 0 && _numOfWaysToUpdateGeometry == 0) {
         util::Logger::stream() << util::Logger::PREFIX_SPACER << "No geometries to update" << std::endl;
     } else {
@@ -144,14 +132,14 @@ void olu::osm::StatisticsHandler::printSparqlStatistics() const {
     }
 
     if (_config.isQLever) {
-        util::Logger::stream() << util::Logger::PREFIX_SPACER << "QLever response time: " << _qleverResponseTimeMs << " ms";
+        util::Logger::stream() << util::Logger::PREFIX_SPACER
+            << "QLever response time: " << _qleverResponseTimeMs << " ms" << std::endl;
 
         if (_config.sparqlOutput == config::SparqlOutput::ENDPOINT) {
-            util::Logger::stream() << ", QLever update time: " << getQleverUpdateTimeMs() << " ms" << std::endl;
-            util::Logger::stream() << util::Logger::PREFIX_SPACER  << "(of which "
-                      << _qleverInsertTimeMs << " ms were spent on insert operations and "
-                      << _qleverDeleteTimeMs << " ms on delete operations)"
-                      << std::endl;
+            util::Logger::stream() << util::Logger::PREFIX_SPACER
+                << "QLever update time: " << getQleverUpdateTimeMs() << " ms [insert operations: "
+                      << _qleverInsertTimeMs << " ms, delete operations: "
+                      << _qleverDeleteTimeMs << " ms]" << std::endl;
 
             util::Logger::stream() << util::Logger::PREFIX_SPACER << "Inserted: " << _qleverInsertedTriplesCount << " and deleted "
                       << _qleverDeletedTriplesCount << " triples at QLever endpoint" << std::endl;
@@ -320,13 +308,12 @@ void olu::osm::StatisticsHandler::countQleverResponseTime(const std::string_view
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::StatisticsHandler::countQleverUpdateTime(const std::string_view &timeInMs,
+void olu::osm::StatisticsHandler::countQleverUpdateTime(const long &timeInMs,
                                                         const sparql::UpdateOperation & updateOp) {
-    const auto timeString = timeInMs.substr(0, timeInMs.size() - 2); // Remove trailing "ms"
     if (updateOp == sparql::UpdateOperation::INSERT) {
-        _qleverInsertTimeMs += std::stoi(std::string(timeString));
+        _qleverInsertTimeMs += timeInMs;
     } else if (updateOp == sparql::UpdateOperation::DELETE) {
-        _qleverDeleteTimeMs += std::stoi(std::string(timeString));
+        _qleverDeleteTimeMs += timeInMs;
     }
 }
 
@@ -339,57 +326,274 @@ void olu::osm::StatisticsHandler::logQleverQueryInfo(simdjson::ondemand::object 
     }
 }
 
+struct QLeverUpdateTriplesTimingStatistics {
+    long total;
+    long updateMetadata;
+    long performUpdate() const { return this->total - this->updateMetadata; }
+};
+
+struct QleverProcessUpdateStatistics {
+    long total;
+    long preparation;
+    long materializeResult;
+    long clearCache;
+    QLeverUpdateTriplesTimingStatistics deleteTriples;
+    QLeverUpdateTriplesTimingStatistics insertTriples;
+};
+
+struct QleverExecutionTimingStatistics {
+    long total;
+    long acquiringDeltaTriplesWriteLock;
+    long diskWriteback;
+    long snapshotCreation;
+    QleverProcessUpdateStatistics processUpdateImpl;
+};
+
+struct QleverTimingStatistics {
+    long total;
+    long snapshot;
+    long planning;
+    long waitingForUpdateThread;
+    QleverExecutionTimingStatistics execution;
+};
+
+struct QleverDeltaTriplesStatistics {
+    long deleted;
+    long inserted;
+};
+
 // _________________________________________________________________________________________________
 void olu::osm::StatisticsHandler::logQLeverUpdateInfo(const simdjson::padded_string &qleverResponse,
                                                       const sparql::UpdateOperation & updateOp) {
+    QleverTimingStatistics qleverTiming{};
+    QleverDeltaTriplesStatistics qleverDeltaTriples{};
     for (auto doc = _parser.iterate(qleverResponse);
          auto field: doc.get_object()) {
-        if (field.error()) {
-            std::cerr << field.error() << std::endl;
-            throw StatisticsHandlerException("Error while parsing QLever update response.");
-        }
+        handleParsingObjectError(field, "qlever-update-response");
 
         const std::string_view key = field.escaped_key();
-        if (key == cnst::KEY_QLEVER_DELTA_TRIPLES) {
+        if (key == "delta-triples") {
             for (auto deltaField: field.value().get_object()) {
-                if (deltaField.error()) {
-                    std::cerr << deltaField.error() << std::endl;
-                    throw StatisticsHandlerException("Error while parsing QLever delta-field "
-                                                     "response.");
-                }
+                handleParsingObjectError(deltaField, "delta-triples");
 
-                if (deltaField.key() == cnst::KEY_QLEVER_DIFFERENCE) {
+                if (deltaField.key() == "operation") {
                     for (auto diffField: deltaField.value().get_object()) {
-                        if (diffField.error()) {
-                            std::cerr << diffField.error() << std::endl;
-                            throw StatisticsHandlerException("Error while parsing QLever "
-                                                             "differences-field response.");
+                        handleParsingObjectError(diffField, "operation");
+
+                        if (diffField.key() == "deleted") {
+                            qleverDeltaTriples.deleted = diffField.value().get_int64().value();
                         }
 
-                        if (diffField.key() == cnst::KEY_QLEVER_DELETED) {
-                            _qleverDeletedTriplesCount += diffField.value().get_int64().value();
-                        }
-
-                        if (diffField.key() == cnst::KEY_QLEVER_INSERTED) {
-                            _qleverInsertedTriplesCount += diffField.value().get_int64().value();
+                        if (diffField.key() == "inserted") {
+                            qleverDeltaTriples.inserted = diffField.value().get_int64().value();
                         }
                     }
                 }
             }
         }
 
-        if ( key == cnst::KEY_QLEVER_TIME) {
+        if ( key == "time") {
             for (auto timeField: field.value().get_object()) {
-                if (timeField.error()) {
-                    std::cerr << timeField.error() << std::endl;
-                    throw StatisticsHandlerException("Error while parsing QLever time-field "
-                                                     "response.");
+                handleParsingObjectError(timeField, "time");
+
+                if (timeField.key() == "total") {
+                    auto timeFieldValue = timeField.value().value().get_int64();
+                    handleParsingIntError(timeFieldValue, "time:total");
+
+                    qleverTiming.total = timeFieldValue.value();
                 }
 
-                if (timeField.key() == cnst::KEY_QLEVER_TOTAL) {
-                    countQleverUpdateTime(timeField.value().value().get_string(), updateOp);
+                if (timeField.key() == "snapshot") {
+                    auto timeFieldValue = timeField.value().value().get_int64();
+                    handleParsingIntError(timeFieldValue, "time:snapshot");
+
+                    qleverTiming.snapshot = timeFieldValue.value();
+                }
+
+                if (timeField.key() == "planning") {
+                    auto timeFieldValue = timeField.value().value().get_int64();
+                    handleParsingIntError(timeFieldValue, "time:planning");
+
+                    qleverTiming.planning = timeFieldValue.value();
+                }
+
+                if (timeField.key() == "waitingForUpdateThread") {
+                    auto timeFieldValue = timeField.value().value().get_int64();
+                    handleParsingIntError(timeFieldValue, "time:waitingForUpdateThread");
+
+                    qleverTiming.waitingForUpdateThread = timeFieldValue.value();
+                }
+
+                if (timeField.key() == "execution") {
+                    for (auto executionField: timeField.value().get_object()) {
+                        handleParsingObjectError(executionField, "execution");
+
+                        if (executionField.key() == "total") {
+                            auto intField = executionField.value().value().get_int64();
+                            handleParsingIntError(intField, "execution:total");
+                            qleverTiming.execution.total = intField.value();
+                        }
+
+                        if (executionField.key() == "acquiringDeltaTriplesWriteLock") {
+                            auto intField = executionField.value().value().get_int64();
+                            handleParsingIntError(intField, "acquiringDeltaTriplesWriteLock");
+                            qleverTiming.execution.acquiringDeltaTriplesWriteLock = intField.value();
+                        }
+
+                        if (executionField.key() == "diskWriteback") {
+                            auto intField = executionField.value().value().get_int64();
+                            handleParsingIntError(intField, "diskWriteback");
+                            qleverTiming.execution.diskWriteback = intField.value();
+                        }
+
+                        if (executionField.key() == "snapshotCreation") {
+                            auto intField = executionField.value().value().get_int64();
+                            handleParsingIntError(intField, "snapshotCreation");
+                            qleverTiming.execution.snapshotCreation = intField.value();
+                        }
+
+                        if (executionField.key() == "processUpdateImpl") {
+                            for (auto processUpdateField: executionField.value().get_object()) {
+                                handleParsingObjectError(processUpdateField, "processUpdateImpl");
+
+                                if (processUpdateField.key() == "total") {
+                                    auto intField = processUpdateField.value().value().get_int64();
+                                    handleParsingIntError(intField, "processUpdateImpl:total");
+                                    qleverTiming.execution.processUpdateImpl.total = intField.value();
+                                }
+
+                                if (processUpdateField.key() == "preparation") {
+                                    auto intField = processUpdateField.value().value().get_int64();
+                                    handleParsingIntError(intField, "preparation");
+                                    qleverTiming.execution.processUpdateImpl.preparation = intField.value();
+                                }
+
+                                if (processUpdateField.key() == "materializeResult") {
+                                    auto intField = processUpdateField.value().value().get_int64();
+                                    handleParsingIntError(intField, "materializeResult");
+                                    qleverTiming.execution.processUpdateImpl.materializeResult = intField.value();
+                                }
+
+                                if (processUpdateField.key() == "clearCache") {
+                                    auto intField = processUpdateField.value().value().get_int64();
+                                    handleParsingIntError(intField, "clearCache");
+                                    qleverTiming.execution.processUpdateImpl.clearCache = intField.value();
+                                }
+
+                                if (processUpdateField.key() == "deleteTriples") {
+                                    if (processUpdateField.value().type() != simdjson::ondemand::json_type::object) {
+                                        auto intField = processUpdateField.value().value().get_int64();
+                                        handleParsingIntError(intField, "deleteTriples");
+                                        qleverTiming.execution.processUpdateImpl.insertTriples.total = intField.value();
+                                    } else {
+                                        for (auto deleteTriplesField: processUpdateField.value().get_object()) {
+                                            handleParsingObjectError(deleteTriplesField, "deleteTriplesField");
+                                            if (deleteTriplesField.key() == "total") {
+                                                auto intField = deleteTriplesField.value().value().get_int64();
+                                                handleParsingIntError(intField, "deleteTriples:total");
+                                                qleverTiming.execution.processUpdateImpl.deleteTriples.total = intField.value();
+                                            }
+
+                                            if (deleteTriplesField.key() == "updateMetadata") {
+                                                auto intField = deleteTriplesField.value().value().get_int64();
+                                                handleParsingIntError(intField, "updateMetadata");
+                                                qleverTiming.execution.processUpdateImpl.deleteTriples.updateMetadata = intField.value();
+                                            }
+                                        }
+                                    }
+                                }
+
+                                if (processUpdateField.key() == "insertTriples") {
+                                    if (processUpdateField.value().type() != simdjson::ondemand::json_type::object) {
+                                        auto intField = processUpdateField.value().value().get_int64();
+                                        handleParsingIntError(intField, "insertTriples");
+                                        qleverTiming.execution.processUpdateImpl.insertTriples.total = intField.value();
+                                    } else {
+                                        for (auto insertTriplesField: processUpdateField.value().get_object()) {
+                                            handleParsingObjectError(insertTriplesField, "insertTriplesField");
+                                            if (insertTriplesField.key() == "total") {
+                                                auto intField = insertTriplesField.value().value().get_int64();
+                                                handleParsingIntError(intField, "deleteTriples:total");
+                                                qleverTiming.execution.processUpdateImpl.insertTriples.total = intField.value();
+                                            }
+
+                                            if (insertTriplesField.key() == "updateMetadata") {
+                                                auto intField = insertTriplesField.value().value().get_int64();
+                                                handleParsingIntError(intField, "updateMetadata");
+                                                qleverTiming.execution.processUpdateImpl.insertTriples.updateMetadata = intField.value();
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
+    }
+
+    // Keep track of some statistics over all update operations
+    _qleverInsertedTriplesCount += qleverDeltaTriples.inserted;
+    _qleverDeletedTriplesCount += qleverDeltaTriples.deleted;
+
+    // For overall statistics we only care about the total time spent
+    if (updateOp == sparql::UpdateOperation::INSERT) {
+        _qleverInsertTimeMs += qleverTiming.total;
+    } else if (updateOp == sparql::UpdateOperation::DELETE) {
+        _qleverDeleteTimeMs += qleverTiming.total;
+    }
+
+    // Detailed statistics for this specific update operation
+    if (_config.showDetailedStatistics) {
+        if (updateOp == sparql::UpdateOperation::INSERT) {
+            util::Logger::log(util::LogEvent::INFO, "Processed INSERT Operation:");
+        } else if (updateOp == sparql::UpdateOperation::DELETE) {
+            util::Logger::log(util::LogEvent::INFO, "Processed DELETE Operation:");
+        }
+        util::Logger::stream() << util::Logger::PREFIX_SPACER << "Inserted "
+                << qleverDeltaTriples.inserted << " triples and deleted: "
+                << qleverDeltaTriples.deleted  << " triples" << std::endl;
+
+        util::Logger::stream() << util::Logger::PREFIX_SPACER << "Total time: "
+                << qleverTiming.total
+                << " ms [Snapshot: " << qleverTiming.execution.snapshotCreation
+                << " ms, Preparation: " << qleverTiming.execution.processUpdateImpl.preparation;
+
+        if (updateOp == sparql::UpdateOperation::INSERT) {
+            util::Logger::stream() << ", Update Metadata: " << qleverTiming.execution.processUpdateImpl.insertTriples.updateMetadata
+                    << " ms, Perform Update: " << qleverTiming.execution.processUpdateImpl.insertTriples.performUpdate()
+                    << " ms";
+        } else {
+            util::Logger::stream() << ", Update Metadata: " << qleverTiming.execution.processUpdateImpl.deleteTriples.updateMetadata
+                    << " ms, Perform Update: " << qleverTiming.execution.processUpdateImpl.deleteTriples.performUpdate()
+                    << " ms";
+        }
+
+        util::Logger::stream() << "]" << std::endl;
+    }
+}
+
+// _________________________________________________________________________________________________
+void olu::osm::StatisticsHandler::handleParsingObjectError(
+    const simdjson::simdjson_result<simdjson::ondemand::field> &parsingResult,
+    const std::string & objectName) {
+    if (parsingResult.error()) {
+        util::Logger::log(util::LogEvent::ERROR,
+                simdjson::error_message(parsingResult.error()));
+        const auto exceptionMsg = "Error while parsing " + objectName + " object.";
+        throw StatisticsHandlerException(exceptionMsg.c_str());
+    }
+}
+
+// _________________________________________________________________________________________________
+void olu::osm::StatisticsHandler::handleParsingIntError(
+    const simdjson::simdjson_result<int64_t> &parsingResult,
+    const std::string & fieldName) {
+    if (parsingResult.error()) {
+        util::Logger::log(util::LogEvent::ERROR,
+                simdjson::error_message(parsingResult.error()));
+        const auto exceptionMsg = "Error while parsing " + fieldName + " field.";
+        throw StatisticsHandlerException(exceptionMsg.c_str());
     }
 }
