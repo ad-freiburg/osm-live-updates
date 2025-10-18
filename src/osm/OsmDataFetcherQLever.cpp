@@ -170,19 +170,16 @@ void olu::osm::OsmDataFetcherQLever::fetchAndWriteNodesToFile(const std::string 
                      const auto nodeUri = getValue<std::string_view>((*it).value());
                      ++it;
                      const auto nodeLocationAsWkt = getValue<std::string_view>((*it).value());
+                     ++it;
 
                      const auto nodeId = OsmObjectHelper::parseIdFromUri(nodeUri);
                      const auto nodeLocation = OsmObjectHelper::parseLonLatFromWktPoint(
                          nodeLocationAsWkt);
 
                      bool hasTags = false;
-                     auto value = (*it).value();
-                     auto is_null = value.is_null();
-                     if (is_null.error() == simdjson::SUCCESS && !is_null.value()) {
-                         std::string_view nodeFacts;
-                         if (value.get(nodeFacts) == simdjson::SUCCESS) {
-                             hasTags = !nodeFacts.starts_with("0");
-                         }
+                     if (auto value = *it; !value.is_null()) {
+                         const auto nodeFacts = getValue<std::string_view>(value.value());
+                         hasTags = !nodeFacts.starts_with("0");
                      }
 
                      const auto nodeXml = util::XmlHelper::getNodeDummy(
