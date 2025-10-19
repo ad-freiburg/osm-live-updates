@@ -39,15 +39,11 @@ namespace olu::osm {
         void node(const osmium::Node& node);
 
         /**
-         * Checks if the location of the given modified nodes from the change file has changed.
-         * If so, the node is added to the _modifiedNodesWithChangedLocation set,
-         * otherwise to the _modifiedNodes set
-         *
-         * @param markAllNodesAsChangedLocation If true, all modified nodes in the change file are
-         * added to the _modifiedNodesWithChangedLocation set.
+         * Checks if the location of the given nodes from the change file has changed. If so, the
+         * node is added to the _modifiedNodesWithChangedLocation set, otherwise to the
+         * _modifiedNodes set
          */
-        void checkNodesForLocationChange(const bool &markAllNodesAsChangedLocation);
-
+        void checkNodesForLocationChange();
 
         [[nodiscard]] std::set<id_t> getCreatedNodes() const { return _createdNodes; }
         [[nodiscard]] std::set<id_t> getModifiedNodes() const { return _modifiedNodes; }
