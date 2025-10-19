@@ -67,19 +67,25 @@ std::string olu::sparql::QueryWriter::writeDeleteOsmObjectQuery(const osm::OsmOb
 
 // _________________________________________________________________________________________________
 std::string
-olu::sparql::QueryWriter::writeDeleteOsmObjectGeometryQuery(const osm::OsmObjectType & type,
+olu::sparql::QueryWriter::writeDeleteOsmObjectGeometryQuery(const osm::OsmObjectType &type,
                                                             const std::set<id_t> &ids) const {
     std::ostringstream oss;
     oss << "DELETE { ";
     oss << wrapWithGraphOptional(
-            getTripleClause("?o", cnst::PREFIXED_GEO_AS_WKT, cnst::QUERY_VAR_GEOMETRY)
-        );
+        (type == osm::OsmObjectType::RELATION
+            ? getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_OSM2RDF_HAS_COMPLETE_GEOMETRY, cnst::QUERY_VAR_HAS_COMPLETE_GEOMETRY)
+            : "") +
+              getTripleClause("?o", cnst::PREFIXED_GEO_AS_WKT, cnst::QUERY_VAR_GEOMETRY)
+    );
     oss << "} WHERE { ";
     oss << wrapWithGraphOptional(
-            getValuesClause(getOsmNamespace(type), ids) +
-            getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_GEO_HAS_GEOMETRY, "?o") +
-            getTripleClause("?o", cnst::PREFIXED_GEO_AS_WKT, cnst::QUERY_VAR_GEOMETRY)
-        );
+        getValuesClause(getOsmNamespace(type), ids) +
+        (type == osm::OsmObjectType::RELATION
+            ? getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_OSM2RDF_HAS_COMPLETE_GEOMETRY, cnst::QUERY_VAR_HAS_COMPLETE_GEOMETRY)
+            : "") +
+              getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_GEO_HAS_GEOMETRY, "?o") +
+              getTripleClause("?o", cnst::PREFIXED_GEO_AS_WKT, cnst::QUERY_VAR_GEOMETRY)
+    );
     oss << "}";
     return oss.str();
 }

@@ -114,6 +114,7 @@ bool olu::util::TtlHelper::isGeometryPredicate(const std::string &predicate,
                                      "predicates");
         default:
             return predicate.starts_with(cnst::NAMESPACE_OSM2RDF_GEOM) ||
+                   predicate.starts_with(cnst::PREFIXED_OSM2RDF_HAS_COMPLETE_GEOMETRY) ||
                    predicate.starts_with(cnst::PREFIXED_OSM2RDF_LENGTH) ||
                    predicate.starts_with(cnst::PREFIXED_OSM2RDF_AREA);
     }

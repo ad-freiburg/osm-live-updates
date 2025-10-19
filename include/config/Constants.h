@@ -265,6 +265,7 @@ namespace olu::config::constants {
     const static inline std::string NAME_MEMBER_POSS = "member_poss";
     const static inline std::string NAME_MEMBER_ROLES = "member_roles";
 
+    const static inline std::string NAME_HAS_COMPLETE_GEOMETRY ="hasCompleteGeometry";
     const static inline std::string NAME_HAS_GEOMETRY = "hasGeometry";
     const static inline std::string NAME_HAS_CENTROID = "hasCentroid";
     const static inline std::string NAME_AS_WKT = "asWKT";
@@ -321,6 +322,8 @@ namespace olu::config::constants {
     const static inline std::string PREFIXED_REL_MEMBER_ROLE = MakePrefixedName(
         NAMESPACE_OSM_REL, NAME_MEMBER_ROLE);
 
+    const static inline std::string PREFIXED_OSM2RDF_HAS_COMPLETE_GEOMETRY = MakePrefixedName(
+        NAMESPACE_OSM2RDF, NAME_HAS_COMPLETE_GEOMETRY);
     const static inline std::string PREFIXED_GEO_HAS_GEOMETRY = MakePrefixedName(
         NAMESPACE_GEO, NAME_HAS_GEOMETRY);
     const static inline std::string PREFIXED_GEO_HAS_CENTROID = MakePrefixedName(
@@ -533,6 +536,8 @@ namespace olu::config::constants {
     const static inline std::string QUERY_VAR_OPTION = MakeQueryVar(NAME_OPTION);
     const static inline std::string QUERY_VAR_SEQUENCE_NUMBER = MakeQueryVar(NAME_SEQUENCE_NUMBER);
     const static inline std::string QUERY_VAR_GEOMETRY = MakeQueryVar(NAME_GEOMETRY);
+    const static inline std::string QUERY_VAR_HAS_COMPLETE_GEOMETRY  = MakeQueryVar(
+        NAME_HAS_COMPLETE_GEOMETRY);
     const static inline std::string QUERY_VAR_REPLICATION_SERVER = MakeQueryVar(
         NAME_REPLICATION_SERVER);
     const static inline std::string QUERY_VAR_UPDATES_COMPLETE_UNTIL = MakeQueryVar(

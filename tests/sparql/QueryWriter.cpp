@@ -127,8 +127,11 @@ namespace olu::sparql {
             QueryWriter qw{config};
             const std::string query = qw.writeDeleteOsmObjectGeometryQuery(osm::OsmObjectType::RELATION, {1, 2, 3});
             ASSERT_EQ(
-                    "DELETE { ?o geo:asWKT ?geometry . } "
+                    "DELETE { "
+                    "?value osm2rdf:hasCompleteGeometry ?hasCompleteGeometry . "
+                    "?o geo:asWKT ?geometry . } "
                     "WHERE { VALUES ?value { osmrel:1 osmrel:2 osmrel:3 } "
+                    "?value osm2rdf:hasCompleteGeometry ?hasCompleteGeometry . "
                     "?value geo:hasGeometry ?o . "
                     "?o geo:asWKT ?geometry . }",
                     query
@@ -168,9 +171,12 @@ namespace olu::sparql {
             const QueryWriter qw{config};
             const std::string query = qw.writeDeleteOsmObjectGeometryQuery(osm::OsmObjectType::RELATION, {1, 2, 3});
             ASSERT_EQ(
-                    "DELETE { GRAPH <https://example.org/a> { ?o geo:asWKT ?geometry . } } "
+                    "DELETE { GRAPH <https://example.org/a> { "
+                    "?value osm2rdf:hasCompleteGeometry ?hasCompleteGeometry . "
+                    "?o geo:asWKT ?geometry . } } "
                     "WHERE { GRAPH <https://example.org/a> { "
                     "VALUES ?value { osmrel:1 osmrel:2 osmrel:3 } "
+                    "?value osm2rdf:hasCompleteGeometry ?hasCompleteGeometry . "
                     "?value geo:hasGeometry ?o . "
                     "?o geo:asWKT ?geometry . } }",
                     query
