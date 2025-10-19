@@ -160,8 +160,6 @@ void olu::osm::OsmChangeHandler::run() {
     mergeAndSortDummyFiles();
     _stats->endTimeMergingAndSortingDummyFiles();
 
-    throw std::runtime_error("STOP HERE");
-
     try {
         util::Logger::log(util::LogEvent::INFO, "Converting osm data to triples...");
         _osm2ttl.convert();
