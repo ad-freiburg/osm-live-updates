@@ -47,7 +47,7 @@ void olu::osm::NodeHandler::node(const osmium::Node& node) {
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::NodeHandler::checkNodesForLocationChange() {
+void olu::osm::NodeHandler::checkNodesForLocationChange(const bool &markAllNodesAsChangedLocation) {
     auto keysView = std::views::keys(_modifiedNodesBuffer);
     const auto nodeIds = std::set(keysView.begin(), keysView.end());
 
@@ -63,7 +63,7 @@ void olu::osm::NodeHandler::checkNodesForLocationChange() {
 
     for (const auto&[localId, localLocation] : _modifiedNodesBuffer) {
         if (const auto remoteNode = remoteNodes.find(localId); remoteNode != remoteNodes.end()) {
-            if (localLocation == remoteNode->second) {
+            if (!markAllNodesAsChangedLocation && localLocation == remoteNode->second) {
                 _modifiedNodes.insert(localId);
             } else {
                 _modifiedNodesWithChangedLocation.insert(localId);

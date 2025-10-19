@@ -72,7 +72,14 @@ void olu::osm::OsmChangeHandler::run() {
     // If so, the node is added to the _modifiedNodesWithChangedLocation set, otherwise to the
     // _modifiedNodes set
     _stats->startTimeCheckingNodeLocations();
-    _nodeHandler.checkNodesForLocationChange();
+
+    // When a separate prefix is used for untagged nodes,
+    // we treat all nodes as if their location has changed.
+    // This is because they may require a new prefix in the member lists of ways and relations,
+    // which are only updated for nodes with a changed location.
+    const auto markAllNodesAsChangedLocation = !_config->separatePrefixForUntaggedNodes.empty();
+    _nodeHandler.checkNodesForLocationChange(markAllNodesAsChangedLocation);
+
     _stats->endTimeCheckingNodeLocations();
     nodeReader.close();
 
@@ -152,6 +159,8 @@ void olu::osm::OsmChangeHandler::run() {
     _stats->startTimeMergingAndSortingDummyFiles();
     mergeAndSortDummyFiles();
     _stats->endTimeMergingAndSortingDummyFiles();
+
+    throw std::runtime_error("STOP HERE");
 
     try {
         util::Logger::log(util::LogEvent::INFO, "Converting osm data to triples...");
