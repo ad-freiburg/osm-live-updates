@@ -572,9 +572,12 @@ olu::osm::OsmDataFetcherQLever::fetchRelationMembers(const std::set<id_t> &relId
                  for (auto result: results) {
                      auto memberUri = getValue<std::string_view>(result.value());
                      id_t memberId = OsmObjectHelper::parseIdFromUri(memberUri);
-                     if (memberUri.starts_with(cnst::NAMESPACE_IRI_OSM_NODE)) {
+
+                     // Skip the first char in member URI, because it is a special character ('<')
+                     // when using Qlever responses
+                     if (memberUri.substr(1).starts_with(cnst::NAMESPACE_IRI_OSM_NODE)) {
                          nodeIds.emplace_back(memberId);
-                     } else if (memberUri.starts_with(cnst::NAMESPACE_IRI_OSM_WAY)) {
+                     } else if (memberUri.substr(1).starts_with(cnst::NAMESPACE_IRI_OSM_WAY)) {
                          wayIds.emplace_back(memberId);
                      }
                  }

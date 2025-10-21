@@ -53,6 +53,7 @@ std::string olu::util::XmlHelper::getWayDummy(const id_t &wayId, const member_id
               .append("\"/>");
     }
 
+    result.append(R"(<tag k="K" v="V"/>)");
     result.append("</way>");
 
     return result;
