@@ -366,6 +366,12 @@ void olu::osm::OsmUpdater::insertMetadataTriples(OsmChangeHandler &och) {
     const auto deleteQuery = _queryWriter.writeDeleteTripleQuery({updatesCompleteUntilTriple, replicationServerTriple});
     och.runUpdateQuery(sparql::UpdateOperation::DELETE, deleteQuery, cnst::PREFIXES_FOR_METADATA_TRIPLES);
 
+    // Do not insert new metadata triples if a replication server URI is not provided,
+    // as the database state is unknown in that case.
+    if (_config.replicationServerUri.empty()) {
+        return;
+    }
+
     std::vector<std::string> metadataTriples;
     // Create a new triple for the updatesCompleteUntil
     const std::string updatesCompleteUntil = osm::to_string(_stats.getLatestDatabaseState());
@@ -373,10 +379,8 @@ void olu::osm::OsmUpdater::insertMetadataTriples(OsmChangeHandler &och) {
     metadataTriples.emplace_back(to_string(updatesCompleteUntilTriple));
 
     // Create a triple for the replication server
-    if (!_config.replicationServerUri.empty()) {
-        replicationServerTriple.object = "\"" + _config.replicationServerUri + "\"";
-        metadataTriples.emplace_back(to_string(replicationServerTriple));
-    }
+    replicationServerTriple.object = "\"" + _config.replicationServerUri + "\"";
+    metadataTriples.emplace_back(to_string(replicationServerTriple));
 
     // Create a triple for the date modified
     const std::string dateModified = util::currentIsoTime();

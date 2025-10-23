@@ -575,7 +575,7 @@ namespace olu::config::constants {
 
     const static inline std::string SPARQL_OUTPUT_INFO = "SPARQL update output is set to file:";
     const static inline std::string SPARQL_OUTPUT_OPTION_SHORT = "o";
-    const static inline std::string SPARQL_OUTPUT_OPTION_LONG = "sparql-output";
+    const static inline std::string SPARQL_OUTPUT_OPTION_LONG = "output";
     const static inline std::string SPARQL_OUTPUT_OPTION_HELP =
             "Specify if SPARQL updates should be written to a file instead of sending them to the endpoint.";
 

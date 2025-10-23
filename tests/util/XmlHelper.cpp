@@ -47,6 +47,7 @@ TEST(XmlHelper, getWayDummy) {
     const std::string expectedXml = "<way id=\"987654321\">"
                                     "<nd ref=\"1\"/><nd ref=\"2\"/>"
                                     "<nd ref=\"3\"/>"
+                                    "<tag k=\"K\" v=\"V\"/>"
                                     "</way>";
 
     const std::string xml = olu::util::XmlHelper::getWayDummy(wayId, memberIds);
