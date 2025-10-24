@@ -77,17 +77,17 @@ namespace olu::osm {
         /**
         * Uses osmium to merge all change files in the /changes directory into a single one.
         */
-        void mergeChangeFiles(const std::string &pathToChangeFileDir);
+        void mergeChangeFiles(const std::string &pathToChangeFileDir) const;
 
         /**
         * Delete all files in the /changes dir
         */
-        static void clearChangesDir();
+        void clearChangesDir() const;
 
         /**
         * Delete /tmp dir
         */
-        static void deleteTmpDir();
+        void deleteTmpDir() const;
 
         /**
          * Compares the version of osm2rdf on the SPARQL endpoint with the one used in this program

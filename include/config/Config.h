@@ -87,6 +87,9 @@ struct Config {
     // The number of values or triples that should be sent in one batch to the SPARQL endpoint
     size_t batchSize = DEFAULT_BATCH_SIZE;
 
+    // Directory to store temporary files
+    std::filesystem::path tmpDir = std::filesystem::temp_directory_path();
+
     // Specifies what happens with the sparql output
     // - ENDPOINT: The sparql updates are sent to the sparql endpoint
     // - FILE: The sparql updates are written to a file

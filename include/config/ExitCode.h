@@ -34,6 +34,8 @@ namespace olu::config {
         GRAPH_URI_INVALID,
         INPUT_NOT_EXISTS,
         INPUT_IS_NOT_DIRECTORY,
+        TMP_DIR_NOT_EXISTS,
+        TMP_DIR_IS_NOT_DIRECTORY,
         POLYGON_FILE_NOT_EXISTS,
         BBOX_INVALID
     };
