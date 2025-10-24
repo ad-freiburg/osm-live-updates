@@ -367,7 +367,7 @@ void olu::osm::OsmChangeHandler::createDummyRelations() {
 // _________________________________________________________________________________________________
 void olu::osm::OsmChangeHandler::mergeAndSortDummyFiles() const {
     std::vector<osmium::io::File> inputs;
-    inputs.emplace_back(cnst::getPathToChangeFileDir(_config->tmpDir));
+    inputs.emplace_back(cnst::getPathToChangeFile(_config->tmpDir));
     for (const auto& file : std::filesystem::directory_iterator(
         cnst::getPathToDummyDir(_config->tmpDir))) {
         if (file.is_regular_file()) {
