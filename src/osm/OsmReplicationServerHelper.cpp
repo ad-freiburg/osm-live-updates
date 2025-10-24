@@ -98,10 +98,7 @@ void olu::osm::OsmReplicationServerHelper::fetchChangeFile(int &sequenceNumber) 
         throw OsmReplicationServerHelperException(msg.c_str());
     }
 
-    std::string fileName = cnst::PATH_TO_CHANGE_FILE_DIR
-                           + std::to_string(sequenceNumber)
-                           + cnst::OSM_CHANGE_FILE_EXTENSION
-                           + cnst::GZIP_EXTENSION;
+    std::string fileName = cnst::getPathForChangeFile(_config->tmpDir, sequenceNumber);
 
     std::ofstream outputFile;
     outputFile.open(fileName);

@@ -30,7 +30,7 @@ namespace olu::osm {
 
     class Osm2ttl {
     public:
-        explicit Osm2ttl(const olu::config::Config &config, OsmDataFetcher *odf,
+        explicit Osm2ttl(olu::config::Config *config, OsmDataFetcher *odf,
                          StatisticsHandler *stats): _config(config), _odf(odf), _stats(stats) {}
 
         // Converts osm data to ttl triplets
@@ -53,7 +53,7 @@ namespace olu::osm {
         }
 
     private:
-        olu::config::Config _config;
+        olu::config::Config* _config;
         olu::osm::OsmDataFetcher* _odf;
         olu::osm::StatisticsHandler* _stats;
 

@@ -54,7 +54,7 @@ olu::osm::OsmChangeHandler::OsmChangeHandler(config::Config &config, OsmDataFetc
     _wayHandler(config, odf, stats),
     _relationHandler(config, odf, stats),
     _referencesHandler(config, odf, _nodeHandler, _wayHandler, _relationHandler),
-    _osm2ttl(config, _odf, _stats) { }
+    _osm2ttl(_config, _odf, _stats) { }
 
 // _________________________________________________________________________________________________
 void olu::osm::OsmChangeHandler::run() {
@@ -64,7 +64,7 @@ void olu::osm::OsmChangeHandler::run() {
     // corresponding set
     // (_createdNodes/Ways/Relations, _modifiedNodes/Ways/Relations,
     // _deletedNodes/Ways/Relations).
-    osmium::io::Reader nodeReader{cnst::PATH_TO_CHANGE_FILE,
+    osmium::io::Reader nodeReader{ cnst::getPathToChangeFile(_config->tmpDir),
         osmium::osm_entity_bits::node,
         osmium::io::read_meta::no};
     osmium::apply(nodeReader, _nodeHandler);
@@ -76,7 +76,7 @@ void olu::osm::OsmChangeHandler::run() {
     _stats->endTimeCheckingNodeLocations();
     nodeReader.close();
 
-    osmium::io::Reader wayReader{ cnst::PATH_TO_CHANGE_FILE,
+    osmium::io::Reader wayReader{ cnst::getPathToChangeFile(_config->tmpDir),
         osmium::osm_entity_bits::way,
         osmium::io::read_meta::no};
     osmium::apply(wayReader, _wayHandler);
@@ -85,7 +85,7 @@ void olu::osm::OsmChangeHandler::run() {
     // _modifiedWays set
     wayReader.close();
 
-    osmium::io::Reader relationReader{ cnst::PATH_TO_CHANGE_FILE,
+    osmium::io::Reader relationReader{ cnst::getPathToChangeFile(_config->tmpDir),
         osmium::osm_entity_bits::relation,
         osmium::io::read_meta::no};
     osmium::apply(relationReader, _relationHandler);
@@ -111,7 +111,7 @@ void olu::osm::OsmChangeHandler::run() {
     // in the change file) for osm2rdf to calculate the geometries.
     _stats->startTimeFetchingReferences();
     util::Logger::log(util::LogEvent::INFO, "Reading and fetching references...");
-    osmium::io::Reader referencesReader{ cnst::PATH_TO_CHANGE_FILE,
+    osmium::io::Reader referencesReader{ cnst::getPathToChangeFile(_config->tmpDir),
         osmium::osm_entity_bits::way | osmium::osm_entity_bits::relation,
         osmium::io::read_meta::no};
     osmium::apply(referencesReader, _referencesHandler);
@@ -175,8 +175,8 @@ void olu::osm::OsmChangeHandler::run() {
 
 // _________________________________________________________________________________________________
 std::string olu::osm::OsmChangeHandler::getPathToTempFile(const OsmObjectType &osmType,
-                                                          const size_t &index) {
-    auto filePath = cnst::PATH_TO_DUMMY_DIR;
+                                                          const size_t &index) const {
+    auto filePath = cnst::getPathToDummyDir(_config->tmpDir);
     switch (osmType) {
         case OsmObjectType::NODE:
             filePath += cnst::XML_TAG_NODE;
@@ -365,17 +365,17 @@ void olu::osm::OsmChangeHandler::createDummyRelations() {
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::OsmChangeHandler::mergeAndSortDummyFiles() {
+void olu::osm::OsmChangeHandler::mergeAndSortDummyFiles() const {
     std::vector<osmium::io::File> inputs;
-    inputs.emplace_back(cnst::PATH_TO_CHANGE_FILE);
+    inputs.emplace_back(cnst::getPathToChangeFileDir(_config->tmpDir));
     for (const auto& file : std::filesystem::directory_iterator(
-        cnst::PATH_TO_DUMMY_DIR)) {
+        cnst::getPathToDummyDir(_config->tmpDir))) {
         if (file.is_regular_file()) {
             inputs.emplace_back(file.path());
         }
     }
 
-    OsmFileHelper::mergeAndSortFiles(inputs, cnst::PATH_TO_INPUT_FILE,
+    OsmFileHelper::mergeAndSortFiles(inputs, cnst::getPathToOsm2rdfInputFile(_config->tmpDir),
                                      osmium::object_order_type_id_version(),
                                      inputs.size() > 1);
 }
@@ -799,7 +799,7 @@ void olu::osm::OsmChangeHandler::filterAndInsertRelevantTriples() {
     // Loop over each triple that osm2rdf outputs
     std::string line;
     std::ifstream osm2rdfOutput;
-    osm2rdfOutput.open(cnst::PATH_TO_OUTPUT_FILE);
+    osm2rdfOutput.open(cnst::getPathToOsm2rdfOutputFile(_config->tmpDir));
     while (std::getline(osm2rdfOutput, line)) {
         // Filer out prefixes at the start of the document
         if (line.starts_with("@")) { continue; }

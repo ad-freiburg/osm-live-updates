@@ -131,7 +131,7 @@ namespace olu::osm {
          * @param index The index of the temporary file, used to distinguish between multiple files
          * @return A string containing the path to the temporary file.
          */
-        static std::string getPathToTempFile(const OsmObjectType &osmType, const size_t &index);
+        std::string getPathToTempFile(const OsmObjectType &osmType, const size_t &index) const;
 
         /**
          * Initializes a temporary XML file for writing the dummy nodes, ways or relations, with
@@ -174,7 +174,7 @@ namespace olu::osm {
          * and sorts them by type and id.
          * The result is written to a new file which is used as input for osm2rdf.
          */
-        static void mergeAndSortDummyFiles();
+         void mergeAndSortDummyFiles() const;
 
         /**
          * Delete all relevant triples from the database, while showing a progress bar on std::cout

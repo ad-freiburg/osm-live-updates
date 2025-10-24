@@ -62,9 +62,10 @@ olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config)
     deleteTmpDir();
 
     try {
-        std::filesystem::create_directory(cnst::PATH_TO_TEMP_DIR);
-        std::filesystem::create_directory(cnst::PATH_TO_CHANGE_FILE_DIR);
-        std::filesystem::create_directory(cnst::PATH_TO_DUMMY_DIR);
+        std::filesystem::create_directory(_config.tmpDir);
+        std::filesystem::create_directory(cnst::getPathToOluTmpDir(_config.tmpDir));
+        std::filesystem::create_directory(cnst::getPathToChangeFileDir(_config.tmpDir));
+        std::filesystem::create_directory(cnst::getPathToDummyDir(_config.tmpDir));
     } catch (const std::exception &e) {
         util::Logger::log(util::LogEvent::ERROR, e.what());
         throw OsmUpdaterException("Failed to create temporary directories");
@@ -132,7 +133,7 @@ void olu::osm::OsmUpdater::run() {
         _stats.endTimeFetchingChangeFiles();
 
         _stats.startTimeMergingChangeFiles();
-        mergeChangeFiles(cnst::PATH_TO_CHANGE_FILE_DIR);
+        mergeChangeFiles(cnst::getPathToChangeFileDir(_config.tmpDir));
         clearChangesDir();
         _stats.endTimeMergingChangeFiles();
     }
@@ -233,7 +234,7 @@ void olu::osm::OsmUpdater::decideStartSequenceNumber() {
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::OsmUpdater::mergeChangeFiles(const std::string &pathToChangeFileDir) {
+void olu::osm::OsmUpdater::mergeChangeFiles(const std::string &pathToChangeFileDir) const {
     // Get names for each change file and order them after their id
     std::vector<osmium::io::File> inputs;
     for (const auto& file : std::filesystem::directory_iterator(
@@ -248,7 +249,7 @@ void olu::osm::OsmUpdater::mergeChangeFiles(const std::string &pathToChangeFileD
     }
 
     util::Logger::log(util::LogEvent::INFO, "Merging and sorting change files...");
-    OsmFileHelper::mergeAndSortFiles(inputs, cnst::PATH_TO_CHANGE_FILE,
+    OsmFileHelper::mergeAndSortFiles(inputs, cnst::getPathToChangeFile(_config.tmpDir),
                                      object_order_type_id_reverse_version_delete(),
                                      inputs.size() > 1);
 }
@@ -280,7 +281,7 @@ void olu::osm::OsmUpdater::applyBoundaries() const {
 
     // See the osmium-tool manual for details about the extract command:
     // https://osmcode.org/osmium-tool/manual.html#creating-geographic-extracts
-    std::string cmd = "osmium extract " + cnst::PATH_TO_CHANGE_FILE;
+    std::string cmd = "osmium extract " + cnst::getPathToChangeFile(_config.tmpDir);
     if (!_config.bbox.empty()) {
         cmd += " --bbox " + _config.bbox;
     } else if (!_config.pathToPolygonFile.empty()) {
@@ -289,11 +290,11 @@ void olu::osm::OsmUpdater::applyBoundaries() const {
         throw OsmUpdaterException("No bounding box or polygon file specified.");
     }
 
-    cmd += " -o " + cnst::PATH_TO_CHANGE_FILE_EXTRACT + " --overwrite -s "
+    cmd += " -o " + cnst::getPathToChangeFileExtract(_config.tmpDir) + " --overwrite -s "
         + _config.extractStrategy + "  --no-progress";
 
     // Overwrite the original change file with the extracted one
-    cmd += " && mv " + cnst::PATH_TO_CHANGE_FILE_EXTRACT + " " + cnst::PATH_TO_CHANGE_FILE;
+    cmd += " && mv " + cnst::getPathToChangeFileExtract(_config.tmpDir) + " " + cnst::getPathToChangeFile(_config.tmpDir);
 
     if (std::system(cmd.c_str()) != 0) {
         throw OsmUpdaterException("Failed to apply boundaries using osmium extract command.");
@@ -301,10 +302,10 @@ void olu::osm::OsmUpdater::applyBoundaries() const {
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::OsmUpdater::clearChangesDir() {
+void olu::osm::OsmUpdater::clearChangesDir() const {
     try {
         for (const auto& entry : std::filesystem::directory_iterator(
-            cnst::PATH_TO_CHANGE_FILE_DIR)) {
+            cnst::getPathToChangeFileDir(_config.tmpDir))) {
             remove_all(entry.path());
         }
     } catch (const std::filesystem::filesystem_error& e) {
@@ -314,13 +315,13 @@ void olu::osm::OsmUpdater::clearChangesDir() {
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::OsmUpdater::deleteTmpDir() {
+void olu::osm::OsmUpdater::deleteTmpDir() const {
     try {
-        if (!std::filesystem::exists(cnst::PATH_TO_TEMP_DIR)) {
+        if (!std::filesystem::exists(cnst::getPathToOluTmpDir(_config.tmpDir))) {
             return;
         }
 
-        for (const auto& entry : std::filesystem::directory_iterator(cnst::PATH_TO_TEMP_DIR)) {
+        for (const auto& entry : std::filesystem::directory_iterator(cnst::getPathToOluTmpDir(_config.tmpDir))) {
             remove_all(entry.path());
         }
     } catch (const std::filesystem::filesystem_error& e) {

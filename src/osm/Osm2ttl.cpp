@@ -38,8 +38,8 @@ namespace cnst = olu::config::constants;
 // _________________________________________________________________________________________________
 void olu::osm::Osm2ttl::convert() {
     // Create a directory for scratch, if not already existent
-    if (!std::filesystem::exists(cnst::PATH_TO_SCRATCH_DIRECTORY)) {
-        std::filesystem::create_directories(cnst::PATH_TO_SCRATCH_DIRECTORY);
+    if (!std::filesystem::exists(cnst::getPathToOsm2rdfScratchDir(_config->tmpDir))) {
+        std::filesystem::create_directories(cnst::getPathToOsm2rdfScratchDir(_config->tmpDir));
     }
 
     auto config = osm2rdf::config::Config();
@@ -63,10 +63,10 @@ void olu::osm::Osm2ttl::convert() {
 
         // Keep osm2rdf output in debug mode, otherwise write to temp directory and delete
         // after done
-        if (_config.sparqlOutput == config::DEBUG_FILE) {
+        if (_config->sparqlOutput == config::DEBUG_FILE) {
             outputFile = cnst::PATH_TO_OSM2RDF_INFO_OUTPUT_FILE_DEBUG;
         } else {
-            outputFile = cnst::PATH_TO_OSM2RDF_INFO_OUTPUT_FILE;
+            outputFile = cnst::getPathToOsm2rdfInfoOutputFile(_config->tmpDir);
         }
         const std::ofstream out(outputFile);
         std::streambuf *coutbuf = std::cerr.rdbuf();
@@ -113,7 +113,7 @@ void olu::osm::Osm2ttl::run(const osm2rdf::config::Config &config) {
 
 // _________________________________________________________________________________________________
 bool olu::osm::Osm2ttl::hasTripleForOption(const std::string& option, const std::string& condition) const {
-    if (!_config.osm2rdfOptions.contains(option) || _config.osm2rdfOptions.at(option) == condition) {
+    if (!_config->osm2rdfOptions.contains(option) || _config->osm2rdfOptions.at(option) == condition) {
         return true;
     }
 
@@ -123,16 +123,16 @@ bool olu::osm::Osm2ttl::hasTripleForOption(const std::string& option, const std:
 // _________________________________________________________________________________________________
 std::vector<std::string> olu::osm::Osm2ttl::formatOptionsFromEndpoint() {
     std::vector<std::string> arguments = {" ",
-       cnst::PATH_TO_INPUT_FILE,
+       cnst::getPathToOsm2rdfInputFile(_config->tmpDir),
        "-o",
-       cnst::PATH_TO_OUTPUT_FILE,
+       cnst::getPathToOsm2rdfOutputFile(_config->tmpDir),
        "-t",
-       cnst::PATH_TO_SCRATCH_DIRECTORY,
+       cnst::getPathToOsm2rdfScratchDir(_config->tmpDir),
        "--" + osm2rdf::config::constants::OUTPUT_COMPRESS_OPTION_LONG,
        "none"
     };
 
-    for (const auto& [optionName, optionValue] : _config.osm2rdfOptions) {
+    for (const auto& [optionName, optionValue] : _config->osm2rdfOptions) {
         if (optionValue.starts_with("false")) {
             continue;
         }

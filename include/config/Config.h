@@ -87,6 +87,9 @@ struct Config {
     // The number of values or triples that should be sent in one batch to the SPARQL endpoint
     size_t batchSize = DEFAULT_BATCH_SIZE;
 
+    // Directory to store temporary files
+    std::filesystem::path tmpDir = std::filesystem::temp_directory_path();
+
     // Specifies what happens with the sparql output
     // - ENDPOINT: The sparql updates are sent to the sparql endpoint
     // - FILE: The sparql updates are written to a file
@@ -102,7 +105,7 @@ struct Config {
     std::map<std::string, std::string> osm2rdfOptions;
 
     // True, if the osm2rdf dump was created with a separate prefix for untagged nodes.
-    std::string separatePrefixForUntaggedNodes = "";
+    std::string separatePrefixForUntaggedNodes;
 
     // Generate the information string containing the current settings.
     void printInfo() const;
