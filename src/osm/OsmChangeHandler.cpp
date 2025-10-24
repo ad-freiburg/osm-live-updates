@@ -807,7 +807,7 @@ void olu::osm::OsmChangeHandler::filterAndInsertRelevantTriples() {
 
         // If we have reached the batch size, sent insert operation to the SPARQL endpoint.
         // Only if we are not currently in a link object (e.g. blank node).
-        if (relevantTriples.size() >= _config.batchSize && currentBlankNode.empty()) {
+        if (relevantTriples.size() >= _config->batchSize && currentBlankNode.empty()) {
             _stats->countNumberOfTriplesToInsert(relevantTriples.size());
             _stats->startTimeInsertingTriples();
             insertTriplesToDatabase(relevantTriples);
