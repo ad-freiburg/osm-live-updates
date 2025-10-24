@@ -221,7 +221,7 @@ namespace olu::osm {
          * elements that occurred in the change file or osm elements which geometry needs to be
          * updated. Irrelevant triples are triples that where generated for referenced elements.
          */
-        [[nodiscard]] std::vector<triple_t> filterRelevantTriples() const;
+        void filterAndInsertRelevantTriples();
 
         /**
          * Checks if the given triple is relevant for the osm node object it belongs to and adds it

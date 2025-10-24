@@ -131,16 +131,16 @@ namespace olu::osm {
             return std::chrono::duration_cast<std::chrono::milliseconds>(_endTimeDeletingTriples - _startTimeDeletingTriples).count();
         }
 
-        void startTimeFilteringTriples() { _startTimeFilteringTriples = std::chrono::system_clock::now(); }
-        void endTimeFilteringTriples() { _endTimeFilteringTriples = std::chrono::system_clock::now(); }
+        void startTimeFilteringAndInsertingTriples() { _startTimeFilteringTriples = std::chrono::system_clock::now(); }
+        void endTimeFilteringAndInsertingTriples() { _endTimeFilteringTriples = std::chrono::system_clock::now(); }
         long getTimeInMSFilteringTriples() const {
-            return std::chrono::duration_cast<std::chrono::milliseconds>(_endTimeFilteringTriples - _startTimeFilteringTriples).count();
+            return std::chrono::duration_cast<std::chrono::milliseconds>(_endTimeFilteringTriples - _startTimeFilteringTriples).count() - getTimeInMSInsertingTriples();
         }
 
         void startTimeInsertingTriples() { _startTimeInsertingTriples = std::chrono::system_clock::now(); }
-        void endTimeInsertingTriples() { _endTimeInsertingTriples = std::chrono::system_clock::now(); }
+        void countTimeInsertingTriples() { _countTimeInsertingTriples += std::chrono::system_clock::now() - _startTimeInsertingTriples; }
         long getTimeInMSInsertingTriples() const {
-            return std::chrono::duration_cast<std::chrono::milliseconds>(_endTimeInsertingTriples - _startTimeInsertingTriples).count();
+            return (_countTimeInsertingTriples).count();
         }
 
         void startTimeInsertingMetadataTriples() { _startTimeInsertingMetadataTriples = std::chrono::system_clock::now(); }
@@ -174,7 +174,7 @@ namespace olu::osm {
         void setNumberOfNodesWithLocationChange(const size_t num) { _numOfNodesWithLocationChange = num; }
         void setNumberOfWaysToUpdateGeometry(const size_t num) { _numOfWaysToUpdateGeometry = num; }
         void setNumberOfRelationsToUpdateGeometry(const size_t num) { _numOfRelationsToUpdateGeometry = num; }
-        void setNumberOfTriplesToInsert(const size_t num) { _numOfTriplesToInsert = num; }
+        void countNumberOfTriplesToInsert(const size_t num) { _numOfTriplesToInsert += num; }
 
         void countCreatedNode() { ++_numOfCreatedNodes; }
         void countModifiedNode() { ++_numOfModifiedNodes; }
@@ -306,7 +306,7 @@ namespace olu::osm {
         time_point_t _endTimeFilteringTriples;
 
         time_point_t _startTimeInsertingTriples;
-        time_point_t _endTimeInsertingTriples;
+        std::chrono::duration_cast<std::chrono::milliseconds> _countTimeInsertingTriples;
 
         time_point_t _startTimeInsertingMetadataTriples;
         time_point_t _endTimeInsertingMetadataTriples;

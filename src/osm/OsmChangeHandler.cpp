@@ -167,14 +167,10 @@ void olu::osm::OsmChangeHandler::run() {
     deleteTriplesFromDatabase();
     _stats->endTimeDeletingTriples();
 
-    util::Logger::log(util::LogEvent::INFO, "Filtering converted triples...");
-    _stats->startTimeFilteringTriples();
-    const auto triples = filterRelevantTriples();
-    _stats->endTimeFilteringTriples();
-
-    _stats->startTimeInsertingTriples();
-    insertTriplesToDatabase(triples);
-    _stats->endTimeInsertingTriples();
+    util::Logger::log(util::LogEvent::INFO, "Insert triples...");
+    _stats->startTimeFilteringAndInsertingTriples();
+    filterAndInsertRelevantTriples();
+    _stats->endTimeFilteringAndInsertingTriples();
 }
 
 // _________________________________________________________________________________________________
@@ -678,15 +674,6 @@ void olu::osm::OsmChangeHandler::insertTriplesToDatabase(const std::vector<tripl
         return;
     }
 
-    util::Logger::log(util::LogEvent::INFO,"Inserting triples into database...");
-
-    // We do not show the progress bar here when detailed statistics for each update operation are
-    // shown because that breaks the output format.
-    osm2rdf::util::ProgressBar insertProgress(triples.size(), _config.showProgress &&
-                                              !_config.showDetailedStatistics);
-    size_t counter = 0;
-    insertProgress.update(counter);
-
     std::vector<std::string> tripleBatch;
     for (size_t i = 0; i < triples.size(); ++i) {
         auto [s, p, o] = triples[i];
@@ -712,28 +699,20 @@ void olu::osm::OsmChangeHandler::insertTriplesToDatabase(const std::vector<tripl
 
             triple += " ]";
         } else {
-            triple += util::TtlHelper::getTripleString(std::move<triple_t>({s, p, o}));
+            triple += util::TtlHelper::getTripleString({s, p, o});
         }
 
         tripleBatch.emplace_back(triple);
+    }
 
-        if (tripleBatch.size() == _config.batchSize || i == triples.size() - 1) {
-            runUpdateQuery(sparql::UpdateOperation::INSERT,
+    runUpdateQuery(sparql::UpdateOperation::INSERT,
                            _queryWriter.writeInsertQuery(tripleBatch),
                            cnst::DEFAULT_PREFIXES);
-            tripleBatch.clear();
-
-            if (i == triples.size() - 1) {
-                insertProgress.done();
-            } else {
-                insertProgress.update(counter += _config.batchSize);
-            }
-        }
-    }
+    tripleBatch.clear();
 }
 
 // _________________________________________________________________________________________________
-std::vector<olu::triple_t> olu::osm::OsmChangeHandler::filterRelevantTriples() const {
+void olu::osm::OsmChangeHandler::filterAndInsertRelevantTriples() {
     // Get the ids of all nodes, ways and relations for which the triples should be inserted
     // into the database
     std::set<id_t> nodesToInsert;
@@ -766,7 +745,7 @@ std::vector<olu::triple_t> olu::osm::OsmChangeHandler::filterRelevantTriples() c
     // Triples that should be inserted into the database
     std::vector<triple_t> relevantTriples;
     // current link object, for example, member nodes or geometries (can also be blank nodes)
-    std::string currentLink;
+    std::string currentBlankNode;
 
     // Loop over each triple that osm2rdf outputs
     std::string line;
@@ -777,36 +756,45 @@ std::vector<olu::triple_t> olu::osm::OsmChangeHandler::filterRelevantTriples() c
         if (line.starts_with("@")) { continue; }
         _stats->countTriple();
 
+        // If we have reached the batch size, sent insert operation to the SPARQL endpoint.
+        // Only if we are not currently in a link object (e.g. blank node).
+        if (relevantTriples.size() >= _config.batchSize && currentBlankNode.empty()) {
+            _stats->countNumberOfTriplesToInsert(relevantTriples.size());
+            _stats->startTimeInsertingTriples();
+            insertTriplesToDatabase(relevantTriples);
+            _stats->countTimeInsertingTriples();
+
+            relevantTriples.clear();
+        }
+
         auto triple = util::TtlHelper::parseTriple(line);
         const auto& [subject, predicate, object] = triple;
 
         // Check if there is currently a link set
-        if (!currentLink.empty() && currentLink == subject) {
+        if (!currentBlankNode.empty() && currentBlankNode == subject) {
             relevantTriples.emplace_back(subject, predicate, util::XmlHelper::xmlDecode(object));
             continue;
         }
 
         // Check all triples that are in the "osmnode" namespace.
         if (util::TtlHelper::isInNamespaceForOsmObject(subject, OsmObjectType::NODE)) {
-            filterNodeTriple(triple, nodesToInsert, relevantTriples, currentLink);
+            filterNodeTriple(triple, nodesToInsert, relevantTriples, currentBlankNode);
             continue;
         }
 
         // Check all triples that are in the "osmway" namespace.
         if (util::TtlHelper::isInNamespaceForOsmObject(subject, OsmObjectType::WAY)) {
-            filterWayTriple(triple, waysToInsert, relevantTriples, currentLink);
+            filterWayTriple(triple, waysToInsert, relevantTriples, currentBlankNode);
             continue;
         }
 
         // Check all triples that are in the "osmrel" namespace.
         if (util::TtlHelper::isInNamespaceForOsmObject(subject, OsmObjectType::RELATION)) {
-            filterRelationTriple(triple, relationsToInsert, relevantTriples, currentLink);
+            filterRelationTriple(triple, relationsToInsert, relevantTriples, currentBlankNode);
         }
     }
 
     osm2rdfOutput.close();
-    _stats->setNumberOfTriplesToInsert(relevantTriples.size());
-    return relevantTriples;
 }
 
 // _________________________________________________________________________________________________
@@ -822,6 +810,8 @@ void olu::osm::OsmChangeHandler::filterNodeTriple(const triple_t &nodeTriple,
 
         if (util::TtlHelper::hasRelevantObject(predicate, OsmObjectType::NODE)) {
             currentLink = object;
+        } else {
+            currentLink.clear();
         }
     }
 }
@@ -843,6 +833,8 @@ void olu::osm::OsmChangeHandler::filterWayTriple(const triple_t &wayTriple,
         // the member)
         if (util::TtlHelper::hasRelevantObject(predicate, OsmObjectType::WAY)) {
             currentLink = object;
+        } else {
+            currentLink.clear();
         }
     }
 
@@ -857,6 +849,8 @@ void olu::osm::OsmChangeHandler::filterWayTriple(const triple_t &wayTriple,
         // relation (For example, "osm2rdfgeom:osm_node_1")
         if (util::TtlHelper::hasRelevantGeoObject(predicate)) {
             currentLink = object;
+        } else {
+            currentLink.clear();
         }
     }
 }
@@ -876,6 +870,8 @@ void olu::osm::OsmChangeHandler::filterRelationTriple(const triple_t &relationTr
         // the member)
         if (util::TtlHelper::hasRelevantObject(predicate, OsmObjectType::RELATION)) {
             currentLink = object;
+        } else {
+            currentLink.clear();
         }
     }
 
@@ -890,6 +886,8 @@ void olu::osm::OsmChangeHandler::filterRelationTriple(const triple_t &relationTr
         // relation (For example, "osm2rdfgeom:osm_node_1")
         if (util::TtlHelper::hasRelevantGeoObject(predicate)) {
             currentLink = object;
+        } else {
+            currentLink.clear();
         }
     }
 }
