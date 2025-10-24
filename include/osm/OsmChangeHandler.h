@@ -48,7 +48,7 @@ namespace olu::osm {
      */
     class OsmChangeHandler: public osmium::handler::Handler {
     public:
-        explicit OsmChangeHandler(const config::Config &config, OsmDataFetcher &odf,
+        explicit OsmChangeHandler(config::Config &config, OsmDataFetcher &odf,
                                   StatisticsHandler &stats);
         void run();
 
@@ -59,7 +59,7 @@ namespace olu::osm {
                             const std::vector<std::string> &prefixes);
 
     private:
-        config::Config _config;
+        config::Config* _config;
         sparql::SparqlWrapper _sparql;
         sparql::QueryWriter _queryWriter;
         OsmDataFetcher* _odf;

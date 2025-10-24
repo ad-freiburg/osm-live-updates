@@ -44,14 +44,14 @@ void olu::sparql::SparqlWrapper::setPrefixes(const std::vector<std::string> &pre
 
 // _________________________________________________________________________________________________
 std::string olu::sparql::SparqlWrapper::sendQuery() {
-    if (_config.sparqlOutput == config::SparqlOutput::DEBUG_FILE) {
+    if (_config->sparqlOutput == config::SparqlOutput::DEBUG_FILE) {
         writeQueryToFileOutput(false);
     }
 
     // Set the accept-value depending on whether we are using QLever or not.
     // QLever endpoints will return metadata with the results, while SPARQL results will only
     // include the actual data.
-    const auto acceptValue = _config.isQLever
+    const auto acceptValue = _config->isQLever
                                  ? cnst::HTML_VALUE_ACCEPT_QLEVER_RESULT_JSON
                                  : cnst::HTML_VALUE_ACCEPT_SPARQL_RESULT_JSON;
 
@@ -59,14 +59,14 @@ std::string olu::sparql::SparqlWrapper::sendQuery() {
     const std::string query = _prefixes + _query;
     const std::string encodedQuery = util::URLHelper::encodeForUrlQuery(query);
 
-    auto request = util::HttpRequest(util::POST, _config.sparqlEndpointUri);
+    auto request = util::HttpRequest(util::POST, _config->sparqlEndpointUri);
     request.addHeader(cnst::HTML_KEY_CONTENT_TYPE, cnst::HTML_VALUE_CONTENT_TYPE);
     request.addHeader(cnst::HTML_KEY_ACCEPT, acceptValue);
     // We need to set this otherwise libcurl will wait 1 sec before sending the request
     request.addHeader("Expect", "");
 
     std::string body = "query=" + encodedQuery;
-    body += _config.accessToken.empty() ? "" : "&access-token=" + _config.accessToken;
+    body += _config->accessToken.empty() ? "" : "&access-token=" + _config->accessToken;
     request.addBody(body);
 
     std::string response;
@@ -86,16 +86,16 @@ std::string olu::sparql::SparqlWrapper::sendQuery() {
 
 // _________________________________________________________________________________________________
 std::string olu::sparql::SparqlWrapper::sendUpdate(const UpdateOperation &updateOp) {
-    if (_config.sparqlOutput == config::SparqlOutput::DEBUG_FILE ||
-        _config.sparqlOutput == config::SparqlOutput::FILE) {
+    if (_config->sparqlOutput == config::SparqlOutput::DEBUG_FILE ||
+        _config->sparqlOutput == config::SparqlOutput::FILE) {
         writeQueryToFileOutput(updateOp == UpdateOperation::INSERT);
     }
 
-    std::string url = _config.sparqlEndpointUriForUpdates;
+    std::string url = _config->sparqlEndpointUriForUpdates;
     if (updateOp == UpdateOperation::INSERT) {
         // For INSERT operations, we use the Graph store HTTP protocol, where the graph URI is
         // specified as a parameter in the body.
-        url += _config.graphUri.empty() ? "?default" : "?graph=" + util::URLHelper::encodeForUrlQuery(_config.graphUri);
+        url += _config->graphUri.empty() ? "?default" : "?graph=" + util::URLHelper::encodeForUrlQuery(_config->graphUri);
     }
 
     auto request = util::HttpRequest(util::POST,  url);
@@ -103,7 +103,7 @@ std::string olu::sparql::SparqlWrapper::sendUpdate(const UpdateOperation &update
     // Set the accept-value depending on whether we are using QLever or not.
     // QLever endpoints will return metadata with the results, while SPARQL results will only
     // include the actual data.
-    const auto acceptValue = _config.isQLever
+    const auto acceptValue = _config->isQLever
                                  ? cnst::HTML_VALUE_ACCEPT_QLEVER_RESULT_JSON
                                  : cnst::HTML_VALUE_ACCEPT_SPARQL_RESULT_JSON;
     request.addHeader(cnst::HTML_KEY_ACCEPT, acceptValue);
@@ -111,8 +111,8 @@ std::string olu::sparql::SparqlWrapper::sendUpdate(const UpdateOperation &update
     request.addHeader("Expect", "");
 
     // Set an authorization header if an access token is provided by user
-    if (!_config.accessToken.empty()) {
-        request.addHeader(cnst::HTML_KEY_AUTHORIZATION, "Bearer " + _config.accessToken);
+    if (!_config->accessToken.empty()) {
+        request.addHeader(cnst::HTML_KEY_AUTHORIZATION, "Bearer " + _config->accessToken);
     }
 
     std::string body = _prefixes + _query;
@@ -131,7 +131,7 @@ std::string olu::sparql::SparqlWrapper::sendUpdate(const UpdateOperation &update
 
     std::string response;
     try {
-        if (_config.sparqlOutput == config::SparqlOutput::ENDPOINT) {
+        if (_config->sparqlOutput == config::SparqlOutput::ENDPOINT) {
             response = request.perform();
         }
     } catch(std::exception &e) {
@@ -164,7 +164,7 @@ std::string olu::sparql::SparqlWrapper::runQuery() {
 // _________________________________________________________________________________________________
 void olu::sparql::SparqlWrapper::writeQueryToFileOutput(const bool &isInsertOperation) const {
     std::ofstream outputFile;
-    outputFile.open (_config.sparqlOutputFile, std::ios_base::app);
+    outputFile.open (_config->sparqlOutputFile, std::ios_base::app);
 
     // For insert operations, we use the graph store protocol which sends the triples as body to the
     // SPARQL endpoint.
@@ -180,7 +180,7 @@ void olu::sparql::SparqlWrapper::writeQueryToFileOutput(const bool &isInsertOper
 
 // _________________________________________________________________________________________________
 void olu::sparql::SparqlWrapper::clearCache() const {
-    auto request = util::HttpRequest(util::HttpMethod::POST, _config.sparqlEndpointUri);
+    auto request = util::HttpRequest(util::HttpMethod::POST, _config->sparqlEndpointUri);
     request.addHeader(cnst::HTML_KEY_CONTENT_TYPE, cnst::HTML_VALUE_CONTENT_TYPE);
     request.addBody("cmd=clear-cache");
 

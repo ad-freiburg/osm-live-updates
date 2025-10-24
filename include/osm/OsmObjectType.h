@@ -22,9 +22,13 @@
 namespace olu::osm {
     /**
      * Possible types of osm objects in a change file.
+     *
+     * NODE_TAGGED and NODE_UNTAGGED are only used internally to distinguish between nodes if
+     * osm2rdf was run with the option to use a separate IRI for untagged nodes.
+     *
      */
     enum class OsmObjectType {
-        NODE, WAY, RELATION
+        NODE, NODE_TAGGED, NODE_UNTAGGED, WAY, RELATION
     };
 }
 

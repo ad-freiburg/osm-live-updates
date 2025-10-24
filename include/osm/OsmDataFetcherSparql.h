@@ -22,8 +22,8 @@
 namespace olu::osm {
     class OsmDataFetcherSparql final : public OsmDataFetcher {
     public:
-        explicit OsmDataFetcherSparql(const config::Config &config, StatisticsHandler &stats)
-            : _config(config), _stats(&stats), _sparqlWrapper(config), _queryWriter(config) { }
+        explicit OsmDataFetcherSparql(config::Config &config, StatisticsHandler &stats)
+            : _config(&config), _stats(&stats), _sparqlWrapper(config), _queryWriter(config) { }
 
         std::vector<Node> fetchNodes(const std::set<id_t> &nodeIds) override;
 
@@ -71,7 +71,7 @@ namespace olu::osm {
 
         std::string fetchReplicationServer() override;
     private:
-        config::Config _config;
+        config::Config* _config;
         StatisticsHandler* _stats;
         sparql::SparqlWrapper _sparqlWrapper;
         sparql::QueryWriter _queryWriter;

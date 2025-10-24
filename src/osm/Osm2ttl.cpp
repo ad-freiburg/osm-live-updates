@@ -43,7 +43,7 @@ void olu::osm::Osm2ttl::convert() {
     }
 
     auto config = osm2rdf::config::Config();
-    auto arguments = getArgsFromEndpoint();
+    auto arguments = formatOptionsFromEndpoint();
 
     std::vector<char*> argv;
     for (const auto& arg : arguments) {
@@ -121,7 +121,7 @@ bool olu::osm::Osm2ttl::hasTripleForOption(const std::string& option, const std:
 }
 
 // _________________________________________________________________________________________________
-std::vector<std::string> olu::osm::Osm2ttl::getArgsFromEndpoint() {
+std::vector<std::string> olu::osm::Osm2ttl::formatOptionsFromEndpoint() {
     std::vector<std::string> arguments = {" ",
        cnst::PATH_TO_INPUT_FILE,
        "-o",
@@ -131,13 +131,6 @@ std::vector<std::string> olu::osm::Osm2ttl::getArgsFromEndpoint() {
        "--" + osm2rdf::config::constants::OUTPUT_COMPRESS_OPTION_LONG,
        "none"
     };
-
-    _config.osm2rdfOptions = _odf->fetchOsm2RdfOptions();
-    if (_config.osm2rdfOptions.empty()) {
-        util::Logger::log(util::LogEvent::WARNING, "No osm2rdf options found on SPARQL "
-                                                   "endpoint, using default options.");
-        return arguments;
-    }
 
     for (const auto& [optionName, optionValue] : _config.osm2rdfOptions) {
         if (optionValue.starts_with("false")) {

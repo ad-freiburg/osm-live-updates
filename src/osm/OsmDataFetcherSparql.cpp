@@ -23,7 +23,6 @@
 #include <fstream>
 #include <map>
 #include <strstream>
-#include <spanstream>
 #include <util/XmlHelper.h>
 
 #include "simdjson.h"
@@ -47,8 +46,8 @@ olu::osm::OsmDataFetcherSparql::runQuery(const std::string &query,
     auto response = _sparqlWrapper.runQuery();
 
     // Write SPARQL response to a file, if configured by the user
-    if (!_config.sparqlResponseFile.empty()) {
-        std::ofstream outputFile(_config.sparqlResponseFile, std::ios::app);
+    if (!_config->sparqlResponseFile.empty()) {
+        std::ofstream outputFile(_config->sparqlResponseFile, std::ios::app);
         if (!outputFile) {
             std::cerr << "Error opening file for SPARQL response output." << std::endl;
             throw OsmDataFetcherException("Cannot open file for SPARQL response output.");
@@ -65,7 +64,7 @@ std::vector<olu::osm::Node>
 olu::osm::OsmDataFetcherSparql::fetchNodes(const std::set<id_t> &nodeIds) {
     const auto response = runQuery(
         _queryWriter.writeQueryForNodeLocations(nodeIds),
-        cnst::PREFIXES_FOR_NODE_LOCATION);
+        cnst::getPrefixesForNodeLocation(_config->separatePrefixForUntaggedNodes));
 
     std::vector<Node> nodes;
     nodes.reserve(nodeIds.size());
@@ -87,9 +86,15 @@ olu::osm::OsmDataFetcherSparql::fetchNodes(const std::set<id_t> &nodeIds) {
 // _________________________________________________________________________________________________
 void olu::osm::OsmDataFetcherSparql::fetchAndWriteNodesToFile(const std::string &filePath,
                                                               const std::set<id_t> &nodeIds) {
-    const auto response = runQuery(
-        _queryWriter.writeQueryForNodeLocations(nodeIds),
-        cnst::PREFIXES_FOR_NODE_LOCATION);
+    const auto response = _config->separatePrefixForUntaggedNodes.empty()
+                              ? runQuery(
+                                  _queryWriter.writeQueryForNodeLocations(nodeIds),
+                                  cnst::getPrefixesForNodeLocation(
+                                      _config->separatePrefixForUntaggedNodes)
+                              )
+                              : runQuery(_queryWriter.writeQueryForNodeLocationsWithFacts(nodeIds),
+                                         cnst::getPrefixesForNodeLocationWithFacts(
+                                             _config->separatePrefixForUntaggedNodes));
 
     std::ofstream outputFile;
     outputFile.open (filePath, std::ios::app);
@@ -104,7 +109,15 @@ void olu::osm::OsmDataFetcherSparql::fetchAndWriteNodesToFile(const std::string 
         const auto nodeId = OsmObjectHelper::parseIdFromUri(nodeUri);
         const auto nodeLocation = OsmObjectHelper::parseLonLatFromWktPoint(nodeLocationAsWkt);
 
-        outputFile << util::XmlHelper::getNodeDummy(nodeId, nodeLocation) << std::endl;
+        bool hasTags = false;
+        try {
+            const auto nodeFacts = getValue<std::string_view>(binding[cnst::NAME_FACTS]);
+            hasTags = !nodeFacts.starts_with("0");
+        } catch (std::exception &e) {
+            // This will throw, if no zero facts triple is present for untagged nodes
+        }
+
+        outputFile << util::XmlHelper::getNodeDummy(nodeId, nodeLocation, hasTags) << std::endl;
     }
 
     outputFile.close();
@@ -161,7 +174,7 @@ olu::osm::OsmDataFetcherSparql::fetchRelations(const std::set<id_t> &relationIds
         auto memberPosList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_POSS]);
 
         const auto members = OsmObjectHelper::parseRelationMemberList(memberUriList, memberRolesList,
-                                                                                      memberPosList);
+                                                                                      memberPosList, _config->separatePrefixForUntaggedNodes);
         for (const auto &member : members) {
             relation.addMember(member);
         }
@@ -196,7 +209,7 @@ olu::osm::OsmDataFetcherSparql::fetchAndWriteRelationsToFile(const std::string &
         auto memberRolesList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_ROLES]);
         auto memberPosList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_POSS]);
         const auto members = OsmObjectHelper::parseRelationMemberList(
-                memberUriList, memberRolesList, memberPosList);
+                memberUriList, memberRolesList, memberPosList, _config->separatePrefixForUntaggedNodes);
 
         // Write relation to file
         outputFile << util::XmlHelper::getRelationDummy(relationId, relationType, members)
@@ -398,8 +411,9 @@ olu::osm::OsmDataFetcherSparql::fetchRelsMembersSorted(const std::set<id_t> &rel
                 return OsmObjectHelper::parseIdFromUri(uri);
             });
         std::vector<OsmObjectType> memberTypes = parseValueList<OsmObjectType>(memberUriList,
-            [](const std::string &uri) {
-                return OsmObjectHelper::parseOsmTypeFromUri(uri);
+            [this](const std::string &uri) {
+                return OsmObjectHelper::parseOsmTypeFromUri(uri,
+                    _config->separatePrefixForUntaggedNodes);
             });
 
         auto memberPositionsList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_POSS]);
@@ -626,7 +640,7 @@ template <typename T> std::vector<T>
 olu::osm::OsmDataFetcherSparql::parseValueList(const std::string_view &list,
                                          const std::function<T(std::string)> function) {
     std::vector<T> items;
-    std::ispanstream stream(list);
+    std::stringstream stream{std::string(list)};
 
     std::string token;
     while (std::getline(stream, token, ';')) {

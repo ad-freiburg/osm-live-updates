@@ -18,7 +18,7 @@
 
 #include "osm/OsmObjectHelper.h"
 
-#include <iostream>
+#include <charconv>
 #include <string>
 
 #include "osmium/osm/object.hpp"
@@ -56,8 +56,8 @@ olu::id_t olu::osm::OsmObjectHelper::parseIdFromUri(const std::string_view &uri)
 
     id_t result = 0;
     const auto idString = uri.substr(i, end - i);
-    auto [_, ec] = std::from_chars(idString.data(), idString.data() + idString.size(), result);
-    if (ec == std::errc()) {
+    const std::from_chars_result fcResult = std::from_chars(idString.data(), idString.data() + idString.size(), result);
+    if (fcResult.ec == std::errc()) {
         return result;
     }
 
@@ -68,13 +68,15 @@ olu::id_t olu::osm::OsmObjectHelper::parseIdFromUri(const std::string_view &uri)
 
 //__________________________________________________________________________________________________
 olu::osm::OsmObjectType
-olu::osm::OsmObjectHelper::parseOsmTypeFromUri(const std::string_view &uri) {
+olu::osm::OsmObjectHelper::parseOsmTypeFromUri(const std::string_view &uri,
+                                               const std::string_view &separateUriForUntaggedNodes) {
     if (uri.empty()) {
         const std::string msg = "Cannot parse type from empty uri.";
         throw OsmObjectHelperException(msg.c_str());
     }
 
-    if (uri.starts_with(cnst::NAMESPACE_IRI_OSM_NODE)) {
+    if (uri.starts_with(cnst::NAMESPACE_IRI_OSM_NODE) ||
+        (!separateUriForUntaggedNodes.empty() && uri.starts_with(separateUriForUntaggedNodes))) {
         return OsmObjectType::NODE;
     }
 
@@ -173,10 +175,10 @@ olu::osm::OsmObjectHelper::parseWayMemberList(const std::string_view &uriList,
         }
 
         int currentPos;
-        auto [ptr, ec] = std::from_chars(posToken.data(),
-                                                        posToken.data() + posToken.size(),
-                                                        currentPos);
-        if (ec != std::errc()) {
+        const std::from_chars_result fcResult = std::from_chars(posToken.data(),
+                                                            posToken.data() + posToken.size(),
+                                                            currentPos);
+        if (fcResult.ec != std::errc()) {
             throw OsmObjectHelperException("Invalid character in position list,"
                                            " when parsing way member list.");
         }
@@ -218,7 +220,8 @@ struct RelationMemberInfo {
 olu::osm::relation_members_t
 olu::osm::OsmObjectHelper::parseRelationMemberList(const std::string_view &uriList,
                                                    const std::string_view &rolesList,
-                                                   const std::string_view &positionList) {
+                                                   const std::string_view &positionList,
+                                                   const std::string_view &separateUriForUntaggedNodes) {
     if (uriList.empty() || rolesList.empty() || positionList.empty()) {
         throw OsmObjectHelperException("Cannot parse way member list from empty strings.");
     }
@@ -244,10 +247,10 @@ olu::osm::OsmObjectHelper::parseRelationMemberList(const std::string_view &uriLi
         }
 
         int currentPos;
-        auto [ptr, ec] = std::from_chars(posToken.data(),
+        const std::from_chars_result fcResult = std::from_chars(posToken.data(),
                                                         posToken.data() + posToken.size(),
                                                         currentPos);
-        if (ec != std::errc()) {
+        if (fcResult.ec != std::errc()) {
             throw OsmObjectHelperException("Invalid character in position list,"
                                            " when parsing way member list.");
         }
@@ -270,7 +273,7 @@ olu::osm::OsmObjectHelper::parseRelationMemberList(const std::string_view &uriLi
 
     for (const auto&[position, uri_view, role_view] : tempMembers) {
         const auto memberId = parseIdFromUri(uri_view);
-        const auto memberType = parseOsmTypeFromUri(uri_view);
+        const auto memberType = parseOsmTypeFromUri(uri_view, separateUriForUntaggedNodes);
         members.emplace_back(memberId, memberType, role_view);
     }
 

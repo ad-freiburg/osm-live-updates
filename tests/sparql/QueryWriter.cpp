@@ -24,7 +24,8 @@
 namespace olu::sparql {
     TEST(QueryWriter, writeDeleteOsmObjectQuery) {
         {
-            const QueryWriter qw{config::Config()};
+            config::Config config;
+            QueryWriter qw{config};
             const std::string query = qw.writeDeleteOsmObjectQuery(osm::OsmObjectType::NODE, {1, 2, 3});
             ASSERT_EQ(
                     "DELETE { ?value ?p ?o . } "
@@ -34,7 +35,8 @@ namespace olu::sparql {
             );
         }
         {
-            const QueryWriter qw{config::Config()};
+            config::Config config;
+            QueryWriter qw{config};
             const std::string query = qw.writeDeleteOsmObjectQuery(osm::OsmObjectType::WAY, {1, 2, 3});
             ASSERT_EQ(
                     "DELETE { ?value ?p ?o . } "
@@ -44,7 +46,8 @@ namespace olu::sparql {
             );
         }
         {
-            const QueryWriter qw{config::Config()};
+            config::Config config;
+            QueryWriter qw{config};
             const std::string query = qw.writeDeleteOsmObjectQuery(osm::OsmObjectType::RELATION, {1, 2, 3});
             ASSERT_EQ(
                     "DELETE { ?value ?p ?o . } "
@@ -96,7 +99,8 @@ namespace olu::sparql {
 
     TEST(QueryWriter, writeDeleteOsmObjectGeometryQuery) {
         {
-            const QueryWriter qw{config::Config()};
+            config::Config config;
+            QueryWriter qw{config};
             const std::string query = qw.writeDeleteOsmObjectGeometryQuery(osm::OsmObjectType::NODE, {1, 2, 3});
             ASSERT_EQ(
                     "DELETE { ?o geo:asWKT ?geometry . } "
@@ -107,7 +111,8 @@ namespace olu::sparql {
             );
         }
         {
-            const QueryWriter qw{config::Config()};
+            config::Config config;
+            QueryWriter qw{config};
             const std::string query = qw.writeDeleteOsmObjectGeometryQuery(osm::OsmObjectType::WAY, {1, 2, 3});
             ASSERT_EQ(
                     "DELETE { ?o geo:asWKT ?geometry . } "
@@ -118,7 +123,8 @@ namespace olu::sparql {
             );
         }
         {
-            const QueryWriter qw{config::Config()};
+            config::Config config;
+            QueryWriter qw{config};
             const std::string query = qw.writeDeleteOsmObjectGeometryQuery(osm::OsmObjectType::RELATION, {1, 2, 3});
             ASSERT_EQ(
                     "DELETE { "
@@ -180,7 +186,8 @@ namespace olu::sparql {
 
     TEST(QueryWriter, writeDeleteOsmObjectCentroidQuery) {
         {
-            const QueryWriter qw{config::Config()};
+            config::Config config;
+            QueryWriter qw{config};
             const std::string query = qw.writeDeleteOsmObjectCentroidQuery(osm::OsmObjectType::NODE, {1, 2, 3});
             ASSERT_EQ(
                     "DELETE { ?o geo:asWKT ?geometry . } "
@@ -191,7 +198,8 @@ namespace olu::sparql {
             );
         }
         {
-            const QueryWriter qw{config::Config()};
+            config::Config config;
+            QueryWriter qw{config};
             const std::string query = qw.writeDeleteOsmObjectCentroidQuery(osm::OsmObjectType::WAY, {1, 2, 3});
             ASSERT_EQ(
                     "DELETE { ?o geo:asWKT ?geometry . } "
@@ -202,7 +210,8 @@ namespace olu::sparql {
             );
         }
         {
-            const QueryWriter qw{config::Config()};
+            config::Config config;
+            QueryWriter qw{config};
             const std::string query = qw.writeDeleteOsmObjectCentroidQuery(osm::OsmObjectType::RELATION, {1, 2, 3});
             ASSERT_EQ(
                     "DELETE { ?o geo:asWKT ?geometry . } "
@@ -258,7 +267,8 @@ namespace olu::sparql {
 
     TEST(QueryWriter, writeDeleteWayMemberQuery) {
         {
-            const QueryWriter qw{config::Config()};
+            config::Config config;
+            QueryWriter qw{config};
             const std::string query = qw.writeDeleteWayMemberQuery({1, 2, 3});
             ASSERT_EQ(
                     "DELETE { "
@@ -293,7 +303,8 @@ namespace olu::sparql {
 
     TEST(QueryWriter, writeDeleteRelMemberQuery) {
         {
-            const QueryWriter qw{config::Config()};
+            config::Config config;
+            QueryWriter qw{config};
             const std::string query = qw.writeDeleteRelMemberQuery({1, 2, 3});
             ASSERT_EQ(
                     "DELETE { "
@@ -335,7 +346,8 @@ namespace olu::sparql {
             std::vector<std::string> triples;
             triples.emplace_back("osmrel:1960198 ogc:sfContains ?osm_id:10559440");
 
-            QueryWriter qw{config::Config()};
+            config::Config config;
+            QueryWriter qw{config};
             std::string query = qw.writeInsertQuery(triples);
             ASSERT_EQ(
                     "osmrel:1960198 ogc:sfContains ?osm_id:10559440 . ",
@@ -347,7 +359,8 @@ namespace olu::sparql {
             triples.emplace_back("osmrel:1960198 ogc:sfContains ?osm_id:10559440");
             triples.emplace_back("region:102740 osmkey:name name:Bretagne");
 
-            QueryWriter qw{config::Config()};
+            config::Config config;
+            QueryWriter qw{config};
             std::string query = qw.writeInsertQuery(triples);
             ASSERT_EQ(
                     "osmrel:1960198 ogc:sfContains ?osm_id:10559440 . "
@@ -358,19 +371,64 @@ namespace olu::sparql {
     }
     TEST(QueryWriter, writeQueryForNodeLocations) {
         {
-            QueryWriter qw{config::Config()};
+            config::Config config;
+            QueryWriter qw{config};
             std::string query = qw.writeQueryForNodeLocations({1, 2, 3});
             ASSERT_EQ(
             "SELECT ?value ?location "
-            "WHERE { VALUES ?value { osm2rdfgeom:osm_node_1 osm2rdfgeom:osm_node_2 osm2rdfgeom:osm_node_3 } "
+            "WHERE { VALUES ?value { osm2rdfgeom:osmnode_1 osm2rdfgeom:osmnode_2 osm2rdfgeom:osmnode_3 } "
             "?value geo:asWKT ?location . }",
+            query
+            );
+        }
+    }
+    TEST(QueryWriter, writeQueryForNodeLocationsSeparatePrefix) {
+        {
+            auto config = config::Config();
+            config.separatePrefixForUntaggedNodes = "http://example.org/untagged";
+            QueryWriter qw{config};
+            std::string query = qw.writeQueryForNodeLocations({1, 2, 3});
+            ASSERT_EQ(
+            "SELECT ?value ?location "
+            "WHERE { VALUES ?value { osm2rdfgeom:osmnode_tagged_1 osm2rdfgeom:osmnode_untagged_1 osm2rdfgeom:osmnode_tagged_2 osm2rdfgeom:osmnode_untagged_2 osm2rdfgeom:osmnode_tagged_3 osm2rdfgeom:osmnode_untagged_3 } "
+            "?value geo:asWKT ?location . }",
+            query
+            );
+        }
+    }
+    TEST(QueryWriter, writeQueryForNodeLocationsWFacts) {
+        {
+            config::Config config;
+            QueryWriter qw{config};
+            std::string query = qw.writeQueryForNodeLocationsWithFacts({1, 2, 3});
+            ASSERT_EQ(
+            "SELECT ?value ?location ?facts "
+            "WHERE { VALUES ?value { osmnode:1 osmnode:2 osmnode:3 } "
+            "?value geo:hasGeometry/geo:asWKT ?location . "
+            "OPTIONAL { ?value osm2rdf:facts ?facts .  } }",
+            query
+            );
+        }
+    }
+    TEST(QueryWriter, writeQueryForNodeLocationsWFactsSeparatePrefix) {
+        {
+            auto config = config::Config();
+            config.separatePrefixForUntaggedNodes = "http://example.org/untagged";
+            QueryWriter qw{config};
+            std::string query = qw.writeQueryForNodeLocationsWithFacts({1, 2, 3});
+            ASSERT_EQ(
+            "SELECT ?value ?location ?facts "
+            "WHERE { VALUES ?value { osmnode_tagged:1 osmnode_untagged:1 osmnode_tagged:2 osmnode_untagged:2 osmnode_tagged:3 osmnode_untagged:3 } "
+            "?value geo:hasGeometry/geo:asWKT ?location . "
+            "OPTIONAL { ?value osm2rdf:facts ?facts .  } }",
             query
             );
         }
     }
     TEST(QueryWriter, writeQueryForLatestTimestamp) {
         {
-            QueryWriter qw{config::Config()};
+            config::Config config;
+            QueryWriter qw{config};
             std::string query = qw.writeQueryForLatestTimestamp();
             ASSERT_EQ(
             "SELECT (MAX(?timestamp) AS ?latestTimestamp) WHERE { "
@@ -381,7 +439,8 @@ namespace olu::sparql {
     }
     TEST(QueryWriter, writeQueryForWaysMembers) {
         {
-            QueryWriter qw{config::Config()};
+            config::Config config;
+            QueryWriter qw{config};
             std::string query = qw.writeQueryForReferencedNodes({1, 2, 3});
             ASSERT_EQ(
                     "SELECT ?node WHERE { "
@@ -395,7 +454,8 @@ namespace olu::sparql {
     }
     TEST(QueryWriter, writeQueryForRelationMembersWay) {
         {
-            QueryWriter qw{config::Config()};
+            config::Config config;
+            QueryWriter qw{config};
             std::string query = qw.writeQueryForRelationMemberIds({1, 2, 3});
             ASSERT_EQ(
                     "SELECT ?member WHERE { "
@@ -409,7 +469,8 @@ namespace olu::sparql {
     }
     TEST(QueryWriter, writeQueryForWaysReferencingNodes) {
         {
-            QueryWriter qw{config::Config()};
+            config::Config config;
+            QueryWriter qw{config};
             std::string query = qw.writeQueryForWaysReferencingNodes({1, 2, 3});
             ASSERT_EQ(
                     "SELECT ?way WHERE { "
@@ -423,7 +484,8 @@ namespace olu::sparql {
     }
     TEST(QueryWriter, writeQueryForRelationsReferencingNodes) {
         {
-            QueryWriter qw{config::Config()};
+            config::Config config;
+            QueryWriter qw{config};
             std::string query = qw.writeQueryForRelationsReferencingNodes({1, 2, 3});
             ASSERT_EQ(
                     "SELECT ?rel WHERE { "
@@ -437,7 +499,8 @@ namespace olu::sparql {
     }
     TEST(QueryWriter, writeQueryForRelationsReferencingWays) {
         {
-            QueryWriter qw{config::Config()};
+            config::Config config;
+            QueryWriter qw{config};
             std::string query = qw.writeQueryForRelationsReferencingWays({1, 2, 3});
             ASSERT_EQ(
                     "SELECT ?rel WHERE { "
@@ -451,7 +514,8 @@ namespace olu::sparql {
     }
     TEST(QueryWriter, writeQueryForRelationsReferencingRelations) {
         {
-            QueryWriter qw{config::Config()};
+            config::Config config;
+            QueryWriter qw{config};
             std::string query = qw.writeQueryForRelationsReferencingRelations({1, 2, 3});
             ASSERT_EQ(
                     "SELECT ?s WHERE { "

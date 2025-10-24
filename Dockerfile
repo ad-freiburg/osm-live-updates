@@ -26,14 +26,17 @@ SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update && apt-get -y --no-install-recommends install \
 # The osmium tool is only needed if you want to add support for bounding boxes or polygon files
-    osmium-tool \
+#    osmium-tool \
     ca-certificates \
     build-essential \
     ninja-build \
     cmake \
     git \
     libcurl4-openssl-dev \
+    libexpat1-dev \
+    libbz2-dev \
     libomp-dev \
+    zlib1g-dev \
     libosmium2-dev
 
 COPY . /app/

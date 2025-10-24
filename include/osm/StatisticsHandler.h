@@ -143,18 +143,6 @@ namespace olu::osm {
             return (_countTimeInsertingTriples).count();
         }
 
-        void startTimeInsertingMetadataTriples() { _startTimeInsertingMetadataTriples = std::chrono::system_clock::now(); }
-        void endTimeInsertingMetadataTriples() { _endTimeInsertingMetadataTriples = std::chrono::system_clock::now(); }
-        long getTimeInMSInsertingMetadataTriples() const {
-            return std::chrono::duration_cast<std::chrono::milliseconds>(_endTimeInsertingMetadataTriples - _startTimeInsertingMetadataTriples).count();
-        }
-
-        void startTimeCleanUpTmpDir() { _startTimeCleanUpTmpDir = std::chrono::system_clock::now(); }
-        void endTimeCleanUpTmpDir() { _endTimeCleanUpTmpDir = std::chrono::system_clock::now(); }
-        long getTimeInMSCleanUpTmpDir() const {
-            return std::chrono::duration_cast<std::chrono::milliseconds>(_endTimeCleanUpTmpDir - _startTimeCleanUpTmpDir).count();
-        }
-
         void setStartDatabaseState(const OsmDatabaseState &state) { _startDatabaseState = state; }
         void setLatestDatabaseState(const OsmDatabaseState &state) { _latestDatabaseState = state; }
         OsmDatabaseState getStartDatabaseState() const { return _startDatabaseState; }
@@ -307,12 +295,6 @@ namespace olu::osm {
 
         time_point_t _startTimeInsertingTriples;
         std::chrono::duration_cast<std::chrono::milliseconds> _countTimeInsertingTriples;
-
-        time_point_t _startTimeInsertingMetadataTriples;
-        time_point_t _endTimeInsertingMetadataTriples;
-
-        time_point_t _startTimeCleanUpTmpDir;
-        time_point_t _endTimeCleanUpTmpDir;
 
         static double calculatePercentage(const size_t total, const size_t part) {
             if (total == 0) {
