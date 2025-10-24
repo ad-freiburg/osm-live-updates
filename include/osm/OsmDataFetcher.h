@@ -26,8 +26,7 @@
 #include "OsmDatabaseState.h"
 #include "config/Constants.h"
 #include "osm/Node.h"
-#include "osm/Relation.h"
-#include "osm/Way.h"
+
 #include "util/Types.h"
 
 namespace olu::osm {

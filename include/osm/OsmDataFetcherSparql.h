@@ -13,8 +13,6 @@
 
 #include "osm/OsmDataFetcher.h"
 #include "osm/Node.h"
-#include "osm/Relation.h"
-#include "osm/Way.h"
 #include "sparql/SparqlWrapper.h"
 #include "sparql/QueryWriter.h"
 #include "util/Types.h"
