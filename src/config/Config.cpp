@@ -218,12 +218,6 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
 
         if (tmpFileDirOp->is_set()) {
             tmpDir = tmpFileDirOp->value();
-            if (!std::filesystem::exists(tmpDir)) {
-                std::stringstream errorDescription;
-                errorDescription << "Directory for temporary files does not exist: " << tmpDir << std::endl;
-                util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
-                exit(TMP_DIR_NOT_EXISTS);
-            }
             if (!std::filesystem::is_directory(tmpDir)) {
                 std::stringstream errorDescription;
                 errorDescription << "Directory for temporary files is not a directory: " << tmpDir << std::endl;
