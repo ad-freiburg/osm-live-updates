@@ -843,6 +843,10 @@ void olu::osm::OsmChangeHandler::filterAndInsertRelevantTriples() {
         }
     }
 
+    _stats->countNumberOfTriplesToInsert(relevantTriples.size());
+    _stats->startTimeInsertingTriples();
+    insertTriplesToDatabase(relevantTriples);
+    _stats->countTimeInsertingTriples();
     osm2rdfOutput.close();
 }
 
