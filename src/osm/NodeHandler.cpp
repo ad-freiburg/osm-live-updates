@@ -18,11 +18,9 @@
 
 #include "osm/NodeHandler.h"
 
-#include <iostream>
 #include <ranges>
 
 #include "osmium/osm/node.hpp"
-#include "osm2rdf/util/Time.h"
 
 #include "osm/Node.h"
 #include "osm/OsmObjectHelper.h"

@@ -74,13 +74,6 @@ namespace olu::osm {
         fetchAndWriteNodesToFile(const std::string &filePath, const std::set<id_t> &nodeIds){}
 
         /**
-         * @return A vector containing a pair of the member's uri and role for all members of the
-         * given relation.
-         */
-        virtual std::vector<Relation>
-        fetchRelations(const std::set<id_t> &relationIds){return {};}
-
-        /**
          * Fetches the members for the given relations and writes the relation to a file in the osm
          * XML format.
          *
@@ -92,19 +85,6 @@ namespace olu::osm {
         virtual size_t
         fetchAndWriteRelationsToFile(const std::string &filePath,
                                      const std::set<id_t> &relationIds) { return {}; }
-
-        /**
-         * Fetches tags and timestamp for the given relation
-         */
-        virtual void fetchRelationInfos(Relation &relation){}
-
-        /**
-         * Sends a query to the sparql endpoint to get the ids of all nodes that are referenced
-         * in the given way
-         *
-         * @return The subjects of all members
-         */
-        virtual std::vector<Way> fetchWays(const std::set<id_t> &wayIds){return {};}
 
         /**
          * Fetches the members for the given ways and writes the way to a file in the osm
@@ -120,34 +100,12 @@ namespace olu::osm {
                                 const std::set<id_t> &wayIds){return{};}
 
         /**
-         * Fetches tags and timestamp for the given way
-         */
-        virtual void fetchWayInfos(Way &way){}
-
-        /**
           * Sends a query to the sparql endpoint to get the ids of all nodes that are referenced
           * in the given way
           *
           * @return The subjects of all members
           */
         virtual member_ids_t fetchWaysMembers(const std::set<id_t> &wayIds){return {};}
-
-        /**
-          * Sends a query to the sparql endpoint to get the ids of all nodes that are referenced
-          * in the given way
-          *
-          * @return The subjects of all members
-          */
-        virtual std::vector<std::pair<id_t, member_ids_t>>
-        fetchWaysMembersSorted(const std::set<id_t> &wayIds){return {};}
-
-        /**
-          * Sends a query to the sparql endpoint to get the members of the given relations
-          *
-          * @return The subjects of all members
-          */
-        virtual std::vector<std::pair<id_t, std::vector<RelationMember>>>
-        fetchRelsMembersSorted(const std::set<id_t> &relIds){return {};}
 
         /**
          * @return The ids of all nodes and ways that are referenced by the given relations
@@ -198,7 +156,6 @@ namespace olu::osm {
          * value is the option value.
          */
         virtual std::map<std::string, std::string> fetchOsm2RdfOptions() { return {}; }
-
 
         /**
          * Fetches the 'osm2rdfmeta:updatesCompleteUntil' metadata triple from the SPARQL endpoint
