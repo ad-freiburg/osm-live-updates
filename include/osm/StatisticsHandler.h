@@ -138,7 +138,10 @@ namespace olu::osm {
         }
 
         void startTimeInsertingTriples() { _startTimeInsertingTriples = std::chrono::system_clock::now(); }
-        void countTimeInsertingTriples() { _countTimeInsertingTriples += std::chrono::system_clock::now() - _startTimeInsertingTriples; }
+        void countTimeInsertingTriples() {
+            auto currentTime = std::chrono::system_clock::now();
+            _countTimeInsertingTriples += std::chrono::duration_cast<std::chrono::milliseconds>(currentTime - _startTimeInsertingTriples);
+        }
         long getTimeInMSInsertingTriples() const {
             return (_countTimeInsertingTriples).count();
         }
@@ -294,7 +297,7 @@ namespace olu::osm {
         time_point_t _endTimeFilteringTriples;
 
         time_point_t _startTimeInsertingTriples;
-        std::chrono::duration_cast<std::chrono::milliseconds> _countTimeInsertingTriples;
+        std::chrono::milliseconds _countTimeInsertingTriples;
 
         static double calculatePercentage(const size_t total, const size_t part) {
             if (total == 0) {
