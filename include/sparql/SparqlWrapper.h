@@ -82,6 +82,8 @@ namespace olu::sparql {
         std::string _query;
         std::string _prefixes;
 
+        int _insertOpCount = 0;
+
         void writeQueryToFileOutput(const bool &isInsertOperation) const;
 
         /**

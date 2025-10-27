@@ -121,6 +121,13 @@ std::string olu::sparql::SparqlWrapper::sendUpdate(const UpdateOperation &update
             // We use Graph store HTTP protocol for INSERT operations (POST with data)
             request.addHeader(cnst::HTML_KEY_CONTENT_TYPE, cnst::HTML_VALUE_CONTENT_TYPE_TURTLE);
             request.addBody(body);
+
+            auto filename = cnst::getPathToOluTmpDir(_config->tmpDir).append("insert_").append(std::to_string(_insertOpCount)).append(".txt");
+            _insertOpCount += 1;
+            std::ofstream file(filename, std::ios::trunc);
+            file << body << std::endl;
+            file.close();
+
             break;
         case UpdateOperation::DELETE:
             request.addHeader(cnst::HTML_KEY_CONTENT_TYPE, cnst::HTML_VALUE_CONTENT_TYPE);
