@@ -254,24 +254,6 @@ std::string olu::sparql::QueryWriter::writeDeleteTripleQuery(const std::vector<t
 
 // _________________________________________________________________________________________________
 std::string
-olu::sparql::QueryWriter::writeDeleteQueryForMetaAndTags(const std::set<id_t> &ids,
-                                                         const std::string &osmTag) const {
-    std::ostringstream oss;
-    oss << "DELETE { ";
-    oss << wrapWithGraphOptional(
-        getTripleClause( cnst::QUERY_VAR_VAL, "?p", "?o"));
-    oss << "} WHERE { ";
-    oss << wrapWithGraphOptional(
-        getValuesClause(osmTag, ids) +
-        getTripleClause(cnst::QUERY_VAR_VAL, "?p", "?o") +
-        "FILTER (STRSTARTS(STR(?p),STR(" + cnst::NAMESPACE_OSM_META + ":)) || "
-                 "STRSTARTS(STR(?p),STR(" + cnst::NAMESPACE_OSM_KEY + ":)) || "
-                 "STRSTARTS(STR(?p),STR(" + cnst::PREFIXED_OSM2RDF_FACTS + "))) . }");
-    return oss.str();
-}
-
-// _________________________________________________________________________________________________
-std::string
 olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::set<id_t> &nodeIds) const {
     std::ostringstream oss;
     oss << "SELECT " + cnst::QUERY_VAR_VAL + " " + cnst::QUERY_VAR_LOC + " ";
@@ -325,24 +307,6 @@ std::string olu::sparql::QueryWriter::writeQueryForWaysMembers(const std::set<id
     oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_WAY_MEMBER, cnst::QUERY_VAR_MEMBER);
     oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_WAY_MEMBER_ID, cnst::QUERY_VAR_MEMBER_ID);
     oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_WAY_MEMBER_POS, cnst::QUERY_VAR_MEMBER_POS);
-    oss << "} GROUP BY " + cnst::QUERY_VAR_VAL;
-    return oss.str();
-}
-
-// _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeQueryForRelsMembers(const std::set<id_t> &relIds) const {
-    std::ostringstream oss;
-    oss << "SELECT " + cnst::QUERY_VAR_VAL + " "
-          "(GROUP_CONCAT(STR(" + cnst::QUERY_VAR_MEMBER_ID + "); separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_IDS + ") "
-          "(GROUP_CONCAT(STR(" + cnst::QUERY_VAR_MEMBER_POS + "); separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_POSS + ") "
-          "(GROUP_CONCAT(STR(" + cnst::QUERY_VAR_MEMBER_ROLE + "); separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_ROLES + ") ";
-    oss << getFromClauseOptional();
-    oss << "WHERE { ";
-    oss << getValuesClause(cnst::NAMESPACE_OSM_REL, relIds);
-    oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_REL_MEMBER, cnst::QUERY_VAR_MEMBER);
-    oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_REL_MEMBER_ID, cnst::QUERY_VAR_MEMBER_ID);
-    oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_REL_MEMBER_POS, cnst::QUERY_VAR_MEMBER_POS);
-    oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_REL_MEMBER_ROLE, cnst::QUERY_VAR_MEMBER_ROLE);
     oss << "} GROUP BY " + cnst::QUERY_VAR_VAL;
     return oss.str();
 }
@@ -427,27 +391,6 @@ olu::sparql::QueryWriter::writeQueryForRelationsReferencingRelations(const std::
     oss << getTripleClause("?o", cnst::PREFIXED_REL_MEMBER_ID, cnst::QUERY_VAR_VAL);
     oss << "} ";
     oss << "GROUP BY ?s";
-    return oss.str();
-}
-
-// _________________________________________________________________________________________________
-std::string olu::sparql::QueryWriter::writeQueryForTagsAndMetaInfo(const std::string &subject) const {
-    std::ostringstream oss;
-    oss << "SELECT ";
-    oss << cnst::QUERY_VAR_KEY + " ";
-    oss << cnst::QUERY_VAR_VAL + " ";
-    oss << cnst::QUERY_VAR_TIMESTAMP + " ";
-    oss << cnst::QUERY_VAR_VERSION + " ";
-    oss << cnst::QUERY_VAR_CHANGESET + " ";
-    oss << getFromClauseOptional();
-    oss << "WHERE { { ";
-    oss << getTripleClause(subject, cnst::QUERY_VAR_KEY, cnst::QUERY_VAR_VAL);
-    oss << "FILTER REGEX(STR(" + cnst::QUERY_VAR_KEY + "), STR(" + cnst::NAMESPACE_OSM_KEY + ":)) } ";
-    oss << wrapWithUnion(getTripleClause(subject, cnst::PREFIXED_OSM_META_TIMESTAMP, cnst::QUERY_VAR_TIMESTAMP));
-    oss << wrapWithUnion(getTripleClause(subject, cnst::PREFIXED_OSM_META_VERSION, cnst::QUERY_VAR_VERSION));
-    oss << wrapWithUnion(getTripleClause(subject, cnst::PREFIXED_OSM_META_CHANGESET, cnst::QUERY_VAR_CHANGESET));
-    oss << " }";
-
     return oss.str();
 }
 
