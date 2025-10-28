@@ -60,7 +60,7 @@ namespace olu::osm {
         template <typename T>
         static void run(const osm2rdf::config::Config& config);
 
-        std::vector<std::string> getArgsFromEndpoint();
+        std::vector<std::string> formatOptionsFromEndpoint();
     };
 
 } // namespace olu::osm

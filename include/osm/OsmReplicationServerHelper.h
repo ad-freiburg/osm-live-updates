@@ -33,8 +33,8 @@ namespace olu::osm {
      */
     class OsmReplicationServerHelper {
     public:
-        explicit OsmReplicationServerHelper(config::Config config,
-                                            StatisticsHandler &stats): _config(std::move(config)),
+        explicit OsmReplicationServerHelper(config::Config &config,
+                                            StatisticsHandler &stats): _config(&config),
                                                                        _stats(&stats) { }
 
         /**
@@ -72,7 +72,7 @@ namespace olu::osm {
          */
         void fetchDatabaseStateForTimestamp(const std::string &timeStamp) const;
     private:
-        config::Config _config;
+        config::Config* _config;
         StatisticsHandler* _stats;
 
         /**

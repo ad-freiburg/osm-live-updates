@@ -18,6 +18,7 @@
 
 #include "sparql/QueryWriter.h"
 
+#include <charconv>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -254,13 +255,51 @@ std::string olu::sparql::QueryWriter::writeDeleteTripleQuery(const std::vector<t
 
 // _________________________________________________________________________________________________
 std::string
-olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::set<id_t> &nodeIds) const {
+olu::sparql::QueryWriter::writeQueryForNodeLocations(const std::set<id_t> &nodeIds)
+const {
     std::ostringstream oss;
     oss << "SELECT " + cnst::QUERY_VAR_VAL + " " + cnst::QUERY_VAR_LOC + " ";
     oss << getFromClauseOptional();
     oss << "WHERE { ";
-    oss << getValuesClause(cnst::PREFIXED_OSM2RDF_GEOM_NODE_, "", nodeIds);
+
+    // Depending on whether a separate prefix for untagged nodes is used, osm2rdf uses different
+    // namespaces for tagged and untagged nodes
+    if (!_config->separatePrefixForUntaggedNodes.empty()) {
+        oss << getValuesClause({
+                                   cnst::PREFIXED_OSM2RDF_GEOM_NODE_TAGGED_,
+                                   cnst::PREFIXED_OSM2RDF_GEOM_NODE_UNTAGGED_
+                               },
+                               "", nodeIds);
+    } else {
+        oss << getValuesClause(cnst::PREFIXED_OSM2RDF_GEOM_NODE_, "", nodeIds);
+    }
     oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_GEO_AS_WKT, cnst::QUERY_VAR_LOC);
+    oss << "}";
+    return oss.str();
+}
+
+// _________________________________________________________________________________________________
+std::string
+olu::sparql::QueryWriter::writeQueryForNodeLocationsWithFacts(const std::set<id_t> &nodeIds)
+const {
+    std::ostringstream oss;
+    oss << "SELECT " + cnst::QUERY_VAR_VAL + " " + cnst::QUERY_VAR_LOC + " " + cnst::QUERY_VAR_FACTS + " ";
+    oss << getFromClauseOptional();
+    oss << "WHERE { ";
+
+    // Depending on whether a separate prefix for untagged nodes is used, osm2rdf uses different
+    // namespaces for tagged and untagged nodes
+    if (!_config->separatePrefixForUntaggedNodes.empty()) {
+        oss << getValuesClause({
+                                   cnst::NAMESPACE_OSM_NODE_TAGGED,
+                                   cnst::NAMESPACE_OSM_NODE_UNTAGGED
+                               }, ":", nodeIds);
+    } else {
+        oss << getValuesClause(cnst::NAMESPACE_OSM_NODE, ":", nodeIds);
+    }
+
+    oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_GEO_HAS_GEOMETRY + "/" + cnst::PREFIXED_GEO_AS_WKT, cnst::QUERY_VAR_LOC);
+    oss << wrapWithOptional(getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_OSM2RDF_FACTS, cnst::QUERY_VAR_FACTS));
     oss << "}";
     return oss.str();
 }
@@ -441,7 +480,7 @@ std::string olu::sparql::QueryWriter::writeQueryForReplicationServer() const {
 
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::getFromClauseOptional() const {
-    return  _config.graphUri.empty() ? "" : "FROM <" +_config.graphUri + "> ";
+    return  _config->graphUri.empty() ? "" : "FROM <" +_config->graphUri + "> ";
 }
 
 // _________________________________________________________________________________________________
@@ -463,10 +502,36 @@ std::string olu::sparql::QueryWriter::getValuesClause(const std::string &osmTag,
         valueClause += delimiter;
 
         char buffer[MAX_CHARS_PER_OBJECT_ID];
-        auto [ptr, ec] = std::to_chars(buffer, buffer + sizeof(buffer), objectId);
-        valueClause.append(buffer, ptr);
+        const std::to_chars_result result = std::to_chars(buffer, buffer + sizeof(buffer), objectId);
+        valueClause.append(buffer, result.ptr);
 
         valueClause += " ";
+    }
+    valueClause += "} ";
+    return valueClause;
+}
+
+// _________________________________________________________________________________________________
+std::string olu::sparql::QueryWriter::getValuesClause(const std::vector<std::string> &osmTags,
+                                                      const std::string &delimiter,
+                                                      const std::set<id_t> &objectIds) {
+    std::string valueClause = "VALUES " + cnst::QUERY_VAR_VAL + " { ";
+    constexpr int MAX_CHARS_PER_OBJECT_ID = 20;
+    // Max chars per OSM tag which we use is "osmnode_untagged_" with 17 chars
+    constexpr int MAX_CHARS_PER_OSM_TAG = 17;
+    valueClause.reserve(valueClause.size() +
+        ((MAX_CHARS_PER_OSM_TAG + delimiter.size() + MAX_CHARS_PER_OBJECT_ID  + 1) * objectIds.size() + 2) * osmTags.size());
+    for (const auto& objectId : objectIds) {
+        for (const auto& osmTag : osmTags) {
+            valueClause += osmTag;
+            valueClause += delimiter;
+
+            char buffer[MAX_CHARS_PER_OBJECT_ID];
+            const std::to_chars_result result = std::to_chars(buffer, buffer + sizeof(buffer), objectId);
+            valueClause.append(buffer, result.ptr);
+
+            valueClause += " ";
+        }
     }
     valueClause += "} ";
     return valueClause;
@@ -477,13 +542,14 @@ std::string olu::sparql::QueryWriter::getOsmNamespace(const osm::OsmObjectType &
     switch (type) {
         case osm::OsmObjectType::NODE:
             return cnst::NAMESPACE_OSM_NODE;
-            break;
+        case osm::OsmObjectType::NODE_TAGGED:
+            return cnst::NAMESPACE_OSM_NODE_TAGGED;
+        case osm::OsmObjectType::NODE_UNTAGGED:
+            return cnst::NAMESPACE_OSM_NODE_UNTAGGED;
         case osm::OsmObjectType::WAY:
             return cnst::NAMESPACE_OSM_WAY;
-            break;
         case osm::OsmObjectType::RELATION:
             return cnst::NAMESPACE_OSM_REL;
-            break;
     }
 
     throw QueryWriterException("Unknown OsmObjectType");
@@ -492,7 +558,7 @@ std::string olu::sparql::QueryWriter::getOsmNamespace(const osm::OsmObjectType &
 
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::wrapWithGraphOptional(const std::string& clause) const {
-    return _config.graphUri.empty() ? clause : "GRAPH <" + _config.graphUri + "> { " + clause + "} ";
+    return _config->graphUri.empty() ? clause : "GRAPH <" + _config->graphUri + "> { " + clause + "} ";
 }
 
 // _________________________________________________________________________________________________

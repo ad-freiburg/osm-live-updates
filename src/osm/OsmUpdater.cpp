@@ -38,7 +38,7 @@
 namespace cnst = olu::config::constants;
 
 std::unique_ptr<olu::osm::OsmDataFetcher>
-createOsmDataFetcher(const olu::config::Config& config, olu::osm::StatisticsHandler &stats) {
+createOsmDataFetcher(olu::config::Config &config, olu::osm::StatisticsHandler &stats) {
     if (config.isQLever) {
         return std::make_unique<olu::osm::OsmDataFetcherQLever>(config, stats);
     }
@@ -48,10 +48,8 @@ createOsmDataFetcher(const olu::config::Config& config, olu::osm::StatisticsHand
 
 // _________________________________________________________________________________________________
 olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config),
-                                                                 _stats(config),
-                                                                 _repServer(config, _stats),
-                                                                 _odf(createOsmDataFetcher(
-                                                                     config, _stats)),
+                                                                 _stats(_config),
+                                                                 _repServer(_config, _stats),
                                                                  _queryWriter(_config) {
     _stats.startTime();
 
@@ -83,13 +81,18 @@ olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config)
             throw OsmUpdaterException("Failed to clear sparql output file");
         }
     }
+
+    _odf = createOsmDataFetcher(_config, _stats);
 }
 
 // _________________________________________________________________________________________________
 void olu::osm::OsmUpdater::run() {
     // Check if the osm2rdf version that was used to create the dump on the SPARQL endpoint is the
     // same that is used in this program.
-    checkOsm2RdfVersions();
+    // checkOsm2RdfVersions();
+
+    // Read the osm2rdf options from the SPARQL endpoint and adapt the config accordingly
+    readOsm2RdfOptionsFromEndpoint();
 
     // Handle either local directory with change files or external one depending on the user
     // input
@@ -143,13 +146,8 @@ void olu::osm::OsmUpdater::run() {
     auto och{OsmChangeHandler(_config, *_odf, _stats)};
     och.run();
 
-    _stats.startTimeInsertingMetadataTriples();
     insertMetadataTriples(och);
-    _stats.endTimeInsertingMetadataTriples();
-
-    _stats.startTimeCleanUpTmpDir();
     deleteTmpDir();
-    _stats.endTimeCleanUpTmpDir();
 
     _stats.endTime();
 
@@ -399,4 +397,30 @@ void olu::osm::OsmUpdater::insertMetadataTriples(OsmChangeHandler &och) {
     och.runUpdateQuery(sparql::UpdateOperation::INSERT, query,
                        cnst::PREFIXES_FOR_METADATA_TRIPLES);
 }
+
+// _________________________________________________________________________________________________
+void olu::osm::OsmUpdater::readOsm2RdfOptionsFromEndpoint() {
+    _config.osm2rdfOptions = _odf->fetchOsm2RdfOptions();
+    if (_config.osm2rdfOptions.empty()) {
+        util::Logger::log(util::LogEvent::WARNING, "No osm2rdf options found on SPARQL "
+                                                   "endpoint, using default values.");
+        return;
+    }
+
+    // Check if a separate IRI prefix for untagged nodes is used and set the corresponding value in
+    // the config if that is the case
+    try {
+        const auto separateUriForUntaggedNodes = _config.osm2rdfOptions.at(
+            osm2rdf::config::constants::IRI_PREFIX_FOR_UNTAGGED_NODES_OPTION_LONG);
+        if (!separateUriForUntaggedNodes.empty() && separateUriForUntaggedNodes !=
+            cnst::NAMESPACE_IRI_OSM_NODE) {
+            _config.separatePrefixForUntaggedNodes = separateUriForUntaggedNodes;
+        }
+    } catch (const std::exception &e) {
+        util::Logger::log(util::LogEvent::WARNING, "Could not find value for option"
+                                                   " '--iri-prefix-for-untagged-nodes', using"
+                                                   " default prefix.");
+    }
+}
+
 

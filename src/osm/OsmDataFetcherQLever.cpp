@@ -68,8 +68,8 @@ void olu::osm::OsmDataFetcherQLever::runQuery(const std::string &query,
     }
 
     // Write SPARQL response to a file, if configured by the user
-    if (!_config.sparqlResponseFile.empty()) {
-        std::ofstream outputFile(_config.sparqlResponseFile, std::ios::app);
+    if (!_config->sparqlResponseFile.empty()) {
+        std::ofstream outputFile(_config->sparqlResponseFile, std::ios::app);
         if (!outputFile) {
             std::cerr << "Error opening file for SPARQL response output." << std::endl;
             throw OsmDataFetcherException("Cannot open file for SPARQL response output.");
@@ -113,7 +113,8 @@ olu::osm::OsmDataFetcherQLever::fetchNodes(const std::set<id_t> &nodeIds) {
     std::vector<Node> nodes;
     nodes.reserve(nodeIds.size());
 
-    runQuery(_queryWriter.writeQueryForNodeLocations(nodeIds), cnst::PREFIXES_FOR_NODE_LOCATION,
+    runQuery(_queryWriter.writeQueryForNodeLocations(nodeIds),
+             cnst::getPrefixesForNodeLocation(_config->separatePrefixForUntaggedNodes),
              [&nodes](simdjson::ondemand::value results) {
                  auto it = results.begin();
                  const auto nodeUri = getValue<std::string_view>((*it).value());
@@ -139,22 +140,55 @@ void olu::osm::OsmDataFetcherQLever::fetchAndWriteNodesToFile(const std::string 
     outputFile << std::fixed;
 
     size_t returnedNodeCount = 0;
-    runQuery(_queryWriter.writeQueryForNodeLocations(nodeIds), cnst::PREFIXES_FOR_NODE_LOCATION,
-             [&returnedNodeCount, &outputFile](simdjson::ondemand::value results) {
-                 returnedNodeCount++;
 
-                 auto it = results.begin();
-                 const auto nodeUri = getValue<std::string_view>((*it).value());
-                 ++it;
-                 const auto nodeLocationAsWkt = getValue<std::string_view>((*it).value());
+    // If a separate prefix for untagged nodes is set, we need to determine for each node if it is
+    // untagged or not, so osm2rdf uses the correct prefixes for member IRIs
+    if (_config->separatePrefixForUntaggedNodes.empty()) {
+        runQuery(_queryWriter.writeQueryForNodeLocations(nodeIds),
+                 cnst::getPrefixesForNodeLocation(_config->separatePrefixForUntaggedNodes),
+                 [&returnedNodeCount, &outputFile](simdjson::ondemand::value results) {
+                     returnedNodeCount++;
 
-                 const auto nodeId = OsmObjectHelper::parseIdFromUri(nodeUri);
-                 const auto nodeLocation = OsmObjectHelper::parseLonLatFromWktPoint(
-                     nodeLocationAsWkt);
-                 const auto nodeXml = util::XmlHelper::getNodeDummy(nodeId, nodeLocation);
-                 outputFile.write(nodeXml.data(), nodeXml.size());
-                 outputFile << std::endl;
-             });
+                     auto it = results.begin();
+                     const auto nodeUri = getValue<std::string_view>((*it).value());
+                     ++it;
+                     const auto nodeLocationAsWkt = getValue<std::string_view>((*it).value());
+
+                     const auto nodeId = OsmObjectHelper::parseIdFromUri(nodeUri);
+                     const auto nodeLocation = OsmObjectHelper::parseLonLatFromWktPoint(
+                         nodeLocationAsWkt);
+                     const auto nodeXml = util::XmlHelper::getNodeDummy(nodeId, nodeLocation);
+                     outputFile.write(nodeXml.data(), nodeXml.size());
+                     outputFile << std::endl;
+                 });
+    } else {
+        runQuery(_queryWriter.writeQueryForNodeLocationsWithFacts(nodeIds),
+                 cnst::getPrefixesForNodeLocationWithFacts(_config->separatePrefixForUntaggedNodes),
+                 [&returnedNodeCount, &outputFile](simdjson::ondemand::value results) {
+                     returnedNodeCount++;
+
+                     auto it = results.begin();
+                     const auto nodeUri = getValue<std::string_view>((*it).value());
+                     ++it;
+                     const auto nodeLocationAsWkt = getValue<std::string_view>((*it).value());
+                     ++it;
+
+                     const auto nodeId = OsmObjectHelper::parseIdFromUri(nodeUri);
+                     const auto nodeLocation = OsmObjectHelper::parseLonLatFromWktPoint(
+                         nodeLocationAsWkt);
+
+                     bool hasTags = false;
+                     if (auto value = *it; !value.is_null()) {
+                         const auto nodeFacts = getValue<std::string_view>(value.value());
+                         hasTags = !nodeFacts.starts_with("0");
+                     }
+
+                     const auto nodeXml = util::XmlHelper::getNodeDummy(
+                         nodeId, nodeLocation, hasTags);
+                     outputFile.write(nodeXml.data(), nodeXml.size());
+                     outputFile << std::endl;
+                 });
+    }
 
     outputFile.close();
 
@@ -200,7 +234,7 @@ olu::osm::OsmDataFetcherQLever::fetchAndWriteRelationsToFile(const std::string &
 
                  const auto relationId = OsmObjectHelper::parseIdFromUri(relationUri);
                  const auto members = OsmObjectHelper::parseRelationMemberList(
-                         memberUriList, memberRolesList, memberPosList);
+                         memberUriList, memberRolesList, memberPosList, _config->separatePrefixForUntaggedNodes);
 
                  // Write relation to file
                  const auto relationXml = util::XmlHelper::getRelationDummy(
@@ -465,7 +499,7 @@ std::vector<T>
 olu::osm::OsmDataFetcherQLever::parseValueList(const std::string_view &list,
                                                const std::function<T(std::string)> function) {
     std::vector<T> items;
-    std::ispanstream stream(list);
+    std::stringstream stream{std::string(list)};
 
     std::string token;
     while (std::getline(stream, token, ';')) {

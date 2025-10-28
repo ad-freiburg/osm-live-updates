@@ -34,7 +34,7 @@ namespace olu::sparql {
      */
     class QueryWriter {
     public:
-        explicit QueryWriter(config::Config  config): _config(std::move(config)) { }
+        explicit QueryWriter(config::Config &config): _config(&config) { }
 
         /**
          * @returns A SPARQL query that inserts a list of triples in to the database
@@ -77,6 +77,13 @@ namespace olu::sparql {
         * @returns A SPARQL query for the locations of the nodes with the given ID in WKT format
         */
         [[nodiscard]] std::string writeQueryForNodeLocations(const std::set<id_t> &nodeIds) const;
+
+        /**
+        * @returns A SPARQL query for the locations of the nodes with the given ID in WKT format and
+        * the number of facts (tags) for each node
+        */
+        [[nodiscard]] std::string
+        writeQueryForNodeLocationsWithFacts(const std::set<id_t> &nodeIds) const;
 
         /**
          * @returns A SPARQL query for the latest timestamp for the predicate 'osmmeta:timestamp'
@@ -146,7 +153,7 @@ namespace olu::sparql {
         [[nodiscard]] std::string writeQueryForReplicationServer() const;
 
         private:
-        config::Config _config;
+        config::Config* _config;
 
         [[nodiscard]] std::string getFromClauseOptional() const;
 
@@ -156,6 +163,10 @@ namespace olu::sparql {
         [[nodiscard]] static std::string getValuesClause(const std::string& osmTag,
                                                          const std::string &delimiter,
                                                          const std::set<id_t> &objectIds);
+
+        [[nodiscard]] static std::string getValuesClause(const std::vector<std::string> &osmTags,
+                                                      const std::string &delimiter,
+                                                      const std::set<id_t> &objectIds);
 
         [[nodiscard]] static std::string getTripleClause(const std::string& subject,
                                                          const std::string& predicate,

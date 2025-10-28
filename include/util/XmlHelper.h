@@ -53,9 +53,11 @@ namespace olu::util {
          *
          * @param nodeId The id of the node.
          * @param lonLat The longitude and latitude of the node.
+         * @param hasTags If true, a dummy tag will be added to the node.
          * @return A string containing the XML representation of the node.
          */
-        static std::string getNodeDummy(const id_t &nodeId, const lon_lat_t &lonLat);
+        static std::string
+        getNodeDummy(const id_t &nodeId, const lon_lat_t &lonLat, const bool &hasTags = false);
 
         /**
          * Creates a dummy XML way with the given id and member ids.

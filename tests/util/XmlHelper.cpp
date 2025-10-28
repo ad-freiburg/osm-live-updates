@@ -31,6 +31,16 @@ TEST(XmlHelper, getNodeDummy) {
 }
 
 // _________________________________________________________________________________________________
+TEST(XmlHelper, getNodeDummyWTag) {
+    constexpr olu::id_t nodeId = 123456789;
+    const olu::lon_lat_t lonLat = {"13.5690032", "42.7957187"};
+    const std::string expectedXml = "<node id=\"123456789\" lat=\"42.7957187\" lon=\"13.5690032\"><tag k=\"K\" v=\"V\"/></node>";
+
+    const std::string xml = olu::util::XmlHelper::getNodeDummy(nodeId, lonLat, true);
+    EXPECT_EQ(expectedXml, xml);
+}
+
+// _________________________________________________________________________________________________
 TEST(XmlHelper, getWayDummy) {
     constexpr olu::id_t wayId = 987654321;
     const olu::member_ids_t memberIds = {1, 2, 3};
