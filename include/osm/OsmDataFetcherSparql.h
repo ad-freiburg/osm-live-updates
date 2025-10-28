@@ -13,8 +13,6 @@
 
 #include "osm/OsmDataFetcher.h"
 #include "osm/Node.h"
-#include "osm/Relation.h"
-#include "osm/Way.h"
 #include "sparql/SparqlWrapper.h"
 #include "sparql/QueryWriter.h"
 #include "util/Types.h"
@@ -29,25 +27,11 @@ namespace olu::osm {
 
         void fetchAndWriteNodesToFile(const std::string &filePath, const std::set<id_t> &nodeIds) override;
 
-        std::vector<Relation> fetchRelations(const std::set<id_t> &relationIds) override;
-
         size_t fetchAndWriteRelationsToFile(const std::string &filePath, const std::set<id_t> &relationIds) override;
-
-        void fetchRelationInfos(Relation &relation) override;
-
-        std::vector<Way> fetchWays(const std::set<id_t> &wayIds) override;
 
         size_t fetchAndWriteWaysToFile(const std::string &filePath, const std::set<id_t> &wayIds) override;
 
-        void fetchWayInfos(Way &way) override;
-
         member_ids_t fetchWaysMembers(const std::set<id_t> &wayIds) override;
-
-        std::vector<std::pair<id_t, member_ids_t>>
-        fetchWaysMembersSorted(const std::set<id_t> &wayIds) override;
-
-        std::vector<std::pair<id_t, std::vector<RelationMember>>>
-        fetchRelsMembersSorted(const std::set<id_t> &relIds) override;
 
         std::pair<std::vector<id_t>, std::vector<id_t>>
         fetchRelationMembers(const std::set<id_t> &relIds) override;
