@@ -74,13 +74,6 @@ namespace olu::sparql {
         writeDeleteTripleQuery(const std::vector<ttl::Triple>& triples) const;
 
         /**
-         * @returns A SPARQL query that delete all triples with predicate 'osmmeta:...',
-         * 'osm2rdf:facts' and 'osmkey:...' for subject `osmTag:id`
-         */
-        [[nodiscard]] std::string
-        writeDeleteQueryForMetaAndTags(const std::set<id_t> &ids, const std::string &osmTag) const;
-
-        /**
         * @returns A SPARQL query for the locations of the nodes with the given ID in WKT format
         */
         [[nodiscard]] std::string writeQueryForNodeLocations(const std::set<id_t> &nodeIds) const;
@@ -99,12 +92,6 @@ namespace olu::sparql {
         * @returns A SPARQL query for the members of the given ways with their position.
         */
         [[nodiscard]] std::string writeQueryForWaysMembers(const std::set<id_t> &wayIds) const;
-
-        /**
-        * @returns A SPARQL query for the members of the given relations with their position and
-        * roles.
-        */
-        [[nodiscard]] std::string writeQueryForRelsMembers(const std::set<id_t> &relIds) const;
 
         /**
          * @returns A SPARQL query for all nodes that are referenced by the given way
@@ -135,11 +122,6 @@ namespace olu::sparql {
         * @returns A SPARQL query for relations that reference the given relations
         */
         [[nodiscard]] std::string writeQueryForRelationsReferencingRelations(const std::set<id_t> &relationIds) const;
-
-        /**
-        * @returns A SPARQL query for tags and timestamp of the given subject
-        */
-        [[nodiscard]] std::string writeQueryForTagsAndMetaInfo(const std::string &subject) const;
 
         /**
          * @returns A SPARQL query that returns the OSM2RDF version
