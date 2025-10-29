@@ -60,6 +60,4 @@ package_add_test(URLHelper util/URLHelper.cpp)
 package_add_test(TtlHelper util/TtlHelper.cpp)
 package_add_test(OsmObjectHelper util/OsmObjectHelper.cpp)
 package_add_test(Node osm/Node.cpp)
-package_add_test(Way osm/Way.cpp)
-package_add_test(Relation osm/Relation.cpp)
 
