@@ -298,16 +298,17 @@ std::string olu::sparql::QueryWriter::writeQueryForRelations(const std::set<id_t
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::writeQueryForWaysMembers(const std::set<id_t> &wayIds) const {
     std::ostringstream oss;
-    oss << "SELECT " + cnst::QUERY_VAR_VAL + " "
+    oss << "SELECT " + cnst::QUERY_VAR_VAL + " " + cnst::QUERY_VAR_FACTS + " "
           "(GROUP_CONCAT(STR(" + cnst::QUERY_VAR_MEMBER_ID + "); separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_IDS + ") "
           "(GROUP_CONCAT(STR(" + cnst::QUERY_VAR_MEMBER_POS + "); separator=\";\") AS " + cnst::QUERY_VAR_MEMBER_POSS + ") ";
     oss << getFromClauseOptional();
     oss << "WHERE { ";
     oss << getValuesClause(cnst::NAMESPACE_OSM_WAY, wayIds);
+    oss << wrapWithOptional(getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_OSM2RDF_FACTS, cnst::QUERY_VAR_FACTS));
     oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_WAY_MEMBER, cnst::QUERY_VAR_MEMBER);
     oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_WAY_MEMBER_ID, cnst::QUERY_VAR_MEMBER_ID);
     oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_WAY_MEMBER_POS, cnst::QUERY_VAR_MEMBER_POS);
-    oss << "} GROUP BY " + cnst::QUERY_VAR_VAL;
+    oss << "} GROUP BY " + cnst::QUERY_VAR_VAL + " " + cnst::QUERY_VAR_FACTS;
     return oss.str();
 }
 
@@ -497,12 +498,12 @@ std::string olu::sparql::QueryWriter::wrapWithGraphOptional(const std::string& c
 
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::wrapWithUnion(const std::string& clause) {
-    return "UNION { " + clause + " } ";
+    return "UNION { " + clause + "} ";
 }
 
 // _________________________________________________________________________________________________
 std::string olu::sparql::QueryWriter::wrapWithOptional(const std::string& clause) {
-    return "OPTIONAL { " + clause + " } ";
+    return "OPTIONAL { " + clause + "} ";
 }
 
 // _________________________________________________________________________________________________

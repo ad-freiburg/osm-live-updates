@@ -40,7 +40,8 @@ std::string olu::util::XmlHelper::getNodeDummy(const id_t &nodeId, const lon_lat
 }
 
 // _______________________________________________________________________________________________
-std::string olu::util::XmlHelper::getWayDummy(const id_t &wayId, const member_ids_t &memberIds) {
+std::string olu::util::XmlHelper::getWayDummy(const id_t &wayId, const member_ids_t &memberIds,
+                                              const bool &hasTag) {
     std::string result;
     result.reserve(30 + 24 * memberIds.size());
     result.append("<way id=\"")
@@ -53,7 +54,9 @@ std::string olu::util::XmlHelper::getWayDummy(const id_t &wayId, const member_id
               .append("\"/>");
     }
 
-    result.append(R"(<tag k="K" v="V"/>)");
+    if (hasTag) {
+        result.append(R"(<tag k="K" v="V"/>)");
+    }
     result.append("</way>");
 
     return result;

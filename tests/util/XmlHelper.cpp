@@ -32,19 +32,32 @@ TEST(XmlHelper, getNodeDummy) {
 
 // _________________________________________________________________________________________________
 TEST(XmlHelper, getWayDummy) {
-    constexpr olu::id_t wayId = 987654321;
-    const olu::member_ids_t memberIds = {1, 2, 3};
-    const std::string expectedXml = "<way id=\"987654321\">"
-                                    "<nd ref=\"1\"/><nd ref=\"2\"/>"
-                                    "<nd ref=\"3\"/>"
-                                    "<tag k=\"K\" v=\"V\"/>"
-                                    "</way>";
+    {
+        constexpr olu::id_t wayId = 987654321;
+        const olu::member_ids_t memberIds = {1, 2, 3};
+        const std::string expectedXml = "<way id=\"987654321\">"
+                "<nd ref=\"1\"/><nd ref=\"2\"/>"
+                "<nd ref=\"3\"/>"
+                "<tag k=\"K\" v=\"V\"/>"
+                "</way>";
 
-    const std::string xml = olu::util::XmlHelper::getWayDummy(wayId, memberIds);
-    EXPECT_EQ(expectedXml, xml);
+        const std::string xml = olu::util::XmlHelper::getWayDummy(wayId, memberIds, true);
+        EXPECT_EQ(expectedXml, xml);
+    }
+    {
+        constexpr olu::id_t wayId = 987654321;
+        const olu::member_ids_t memberIds = {1, 2, 3};
+        const std::string expectedXml = "<way id=\"987654321\">"
+                "<nd ref=\"1\"/><nd ref=\"2\"/>"
+                "<nd ref=\"3\"/>"
+                "</way>";
+
+        const std::string xml = olu::util::XmlHelper::getWayDummy(wayId, memberIds, false);
+        EXPECT_EQ(expectedXml, xml);
+    }
 }
 
-// _________________________________________________________________________________________________
+    // _________________________________________________________________________________________________
 TEST(XmlHelper, getRelationDummy) {
     constexpr olu::id_t relationId = 135792468;
     const olu::osm::RelationMember member1(1, olu::osm::OsmObjectType::NODE, std::string("role1"));

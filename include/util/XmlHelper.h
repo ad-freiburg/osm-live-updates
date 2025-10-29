@@ -67,9 +67,10 @@ namespace olu::util {
          *
          * @param wayId The id of the way.
          * @param memberIds The ids of the nodes that are part of the way.
+         * @param hasTag
          * @return A string containing the XML representation of the way.
          */
-        static std::string getWayDummy(const id_t &wayId, const member_ids_t &memberIds);
+        static std::string getWayDummy(const id_t &wayId, const member_ids_t &memberIds, const bool &hasTag);
 
         /**
          * Creates a dummy XML relation with the given id, type and members.
