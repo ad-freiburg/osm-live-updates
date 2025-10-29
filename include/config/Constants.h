@@ -238,7 +238,7 @@ namespace olu::config::constants {
     const static inline std::string NAME_LATEST_TIMESTAMP = "latestTimestamp";
     const static inline std::string NAME_VERSION = "version";
     const static inline std::string NAME_CHANGESET = "changeset";
-    const static inline std::string NAME_OSM_NODE_ = "osm_node_";
+    const static inline std::string NAME_OSM_NODE_ = "osmnode_";
     const static inline std::string NAME_OBJECT = "object";
     const static inline std::string NAME_NODE = "node";
     const static inline std::string NAME_NODES = "nodes";
