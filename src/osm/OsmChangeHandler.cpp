@@ -473,7 +473,7 @@ void olu::osm::OsmChangeHandler::deleteWaysFromDatabase(osm2rdf::util::ProgressB
 
     util::BatchHelper::doInBatches(
         waysToDelete,
-        _config.batchSize,
+        _config->batchSize,
         [this, &counter, progress](std::set<id_t> const &batch) mutable {
             // First, triples that are linked to the osm way (members, geometry and centroid)
             if (_osm2ttl.hasTripleForOption(osm2rdfCnst::NO_MEMBER_TRIPLES_OPTION_LONG, "false")) {
@@ -682,8 +682,8 @@ void olu::osm::OsmChangeHandler::insertTriplesToDatabase(const std::vector<tripl
 
     // We do not show the progress bar here when detailed statistics for each update operation are
     // shown because that breaks the output format.
-    osm2rdf::util::ProgressBar insertProgress(triples.size(), _config.showProgress &&
-                                              !_config.showDetailedStatistics);
+    osm2rdf::util::ProgressBar insertProgress(triples.size(), _config->showProgress &&
+                                              !_config->showDetailedStatistics);
     size_t counter = 0;
     insertProgress.update(counter);
 
@@ -717,7 +717,7 @@ void olu::osm::OsmChangeHandler::insertTriplesToDatabase(const std::vector<tripl
 
         tripleBatch.emplace_back(triple);
 
-        if (tripleBatch.size() == _config.batchSize || i == triples.size() - 1) {
+        if (tripleBatch.size() == _config->batchSize || i == triples.size() - 1) {
             runUpdateQuery(sparql::UpdateOperation::INSERT,
                            _queryWriter.writeInsertQuery(tripleBatch),
                            cnst::DEFAULT_PREFIXES);
@@ -726,7 +726,7 @@ void olu::osm::OsmChangeHandler::insertTriplesToDatabase(const std::vector<tripl
             if (i == triples.size() - 1) {
                 insertProgress.done();
             } else {
-                insertProgress.update(counter += _config.batchSize);
+                insertProgress.update(counter += _config->batchSize);
             }
         }
     }
