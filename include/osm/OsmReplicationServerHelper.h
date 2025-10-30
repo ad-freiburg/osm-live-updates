@@ -33,8 +33,8 @@ namespace olu::osm {
      */
     class OsmReplicationServerHelper {
     public:
-        explicit OsmReplicationServerHelper(config::Config config,
-                                            StatisticsHandler &stats): _config(std::move(config)),
+        explicit OsmReplicationServerHelper(config::Config& config,
+                                            StatisticsHandler &stats): _config(&config),
                                                                        _stats(&stats) { }
 
         /**
@@ -61,7 +61,7 @@ namespace olu::osm {
          * @param sequenceNumber The sequence number to fetch the change file for
          * @return The path to the location of the fetched .osm Change file
          */
-        void fetchChangeFile(int &sequenceNumber) ;
+        void fetchChangeFile(int &sequenceNumber) const;
 
         /**
          * Fetches the 'nearest' database state for the given timestamp from the server, meaning the
@@ -72,7 +72,7 @@ namespace olu::osm {
          */
         void fetchDatabaseStateForTimestamp(const std::string &timeStamp) const;
     private:
-        config::Config _config;
+        config::Config* _config;
         StatisticsHandler* _stats;
 
         /**

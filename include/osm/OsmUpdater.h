@@ -39,12 +39,12 @@ namespace olu::osm {
      */
     class OsmUpdater {
     public:
-        explicit OsmUpdater(const config::Config &config);
+        explicit OsmUpdater(config::Config &config);
 
         /// Starts the update process.
         void run();
     private:
-        config::Config _config;
+        config::Config* _config;
         StatisticsHandler _stats;
         OsmReplicationServerHelper _repServer;
         std::unique_ptr<OsmDataFetcher> _odf;

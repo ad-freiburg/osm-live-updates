@@ -41,7 +41,7 @@ olu::osm::OsmDatabaseState
 olu::osm::OsmReplicationServerHelper::fetchDatabaseStateFromUrl(
     const std::string &stateFilePath) const {
     const std::string url = util::URLHelper::buildUrl({
-        _config.replicationServerUri,
+        _config->replicationServerUri,
         stateFilePath});
 
     std::string response;
@@ -76,12 +76,12 @@ olu::osm::OsmDatabaseState olu::osm::OsmReplicationServerHelper::fetchLatestData
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::OsmReplicationServerHelper::fetchChangeFile(int &sequenceNumber) {
+void olu::osm::OsmReplicationServerHelper::fetchChangeFile(int &sequenceNumber) const {
     std::string diffFilename = util::URLHelper::formatSequenceNumberForUrl(sequenceNumber)
                                + cnst::OSM_CHANGE_FILE_EXTENSION
                                + cnst::GZIP_EXTENSION;
     std::string url = util::URLHelper::buildUrl({
-        _config.replicationServerUri,
+        _config->replicationServerUri,
         diffFilename});
 
     // Get change file from server and write to a cache file.
@@ -240,16 +240,16 @@ int olu::osm::OsmReplicationServerHelper::makeEducatedGuessForSequenceNumber(
     const std::string &timeStamp, const int &latestSequenceNumber) const {
     // We can only make an educated guess for sequence numbers if the OSM planet replication server
     // that provides minute, hour, and day diffs is used
-    if (!_config.replicationServerUri.starts_with("https://planet.osm.org/replication/")) {
+    if (!_config->replicationServerUri.starts_with("https://planet.osm.org/replication/")) {
         return -1;
     }
 
     int sequencesSinceLatest = 0;
-    if (_config.replicationServerUri.ends_with("day/")) {
+    if (_config->replicationServerUri.ends_with("day/")) {
         sequencesSinceLatest = util::daysBetweenNowAndTimestamp(timeStamp);
-    } else if (_config.replicationServerUri.ends_with("hour/")) {
+    } else if (_config->replicationServerUri.ends_with("hour/")) {
         sequencesSinceLatest = util::hoursBetweenNowAndTimestamp(timeStamp);
-    } else if (_config.replicationServerUri.ends_with("minute/")) {
+    } else if (_config->replicationServerUri.ends_with("minute/")) {
         sequencesSinceLatest = util::minutesBetweenNowAndTimestamp(timeStamp);
     } else {
         return -1; // Not a valid replication server URL for making an educated guess

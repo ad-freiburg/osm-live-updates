@@ -50,11 +50,11 @@ olu::osm::OsmChangeHandler::OsmChangeHandler(config::Config &config, OsmDataFetc
     _queryWriter(config),
     _odf(&odf),
     _stats(&stats),
+    _osm2ttl(_config, _odf, _stats),
     _nodeHandler(config, odf, stats),
     _wayHandler(config, odf, stats),
     _relationHandler(config, odf, stats),
-    _referencesHandler(config, odf, _nodeHandler, _wayHandler, _relationHandler),
-    _osm2ttl(_config, _odf, _stats) { }
+    _referencesHandler(config, odf, _nodeHandler, _wayHandler, _relationHandler) { }
 
 // _________________________________________________________________________________________________
 void olu::osm::OsmChangeHandler::run() {

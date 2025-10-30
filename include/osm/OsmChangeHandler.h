@@ -48,7 +48,7 @@ namespace olu::osm {
      */
     class OsmChangeHandler: public osmium::handler::Handler {
     public:
-        explicit OsmChangeHandler(const config::Config &config, OsmDataFetcher &odf,
+        explicit OsmChangeHandler(config::Config &config, OsmDataFetcher &odf,
                                   StatisticsHandler &stats);
         void run();
 
