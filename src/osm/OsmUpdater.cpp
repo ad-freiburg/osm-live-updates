@@ -371,7 +371,7 @@ void olu::osm::OsmUpdater::insertMetadataTriples(OsmChangeHandler &och) {
     std::vector<std::string> metadataTriples;
     // Do not insert new metadata triples if a replication server URI is not provided,
     // as the database state is unknown in that case.
-    if (_config.replicationServerUri.empty()) {
+    if (!_config.replicationServerUri.empty()) {
         // Create a new triple for the updatesCompleteUntil
         const std::string updatesCompleteUntil = osm::to_string(_stats.getLatestDatabaseState());
         updatesCompleteUntilTriple.object = "\"" + updatesCompleteUntil + "\"";
