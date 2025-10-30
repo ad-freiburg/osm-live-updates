@@ -182,9 +182,12 @@ olu::osm::OsmDataFetcherQLever::fetchAndWriteRelationsToFile(const std::string &
                  const auto relationUri = getValue<std::string_view>((*it).value());
 
                  ++it;
-                 auto relationType = getValue<std::string_view>((*it).value());
-                 // Remove the surrounding quotes from the relation type
-                 relationType = relationType.substr(1, relationType.size() - 2);
+                 std::string_view relationType;
+                 if (auto value = *it; !value.is_null()) {
+                     relationType = getValue<std::string_view>(value.value());
+                     // Remove the surrounding quotes from the relation type
+                     relationType = relationType.substr(1, relationType.size() - 2);
+                 }
 
                  ++it;
                  auto memberUriList = getValue<std::string_view>((*it).value());
@@ -204,7 +207,7 @@ olu::osm::OsmDataFetcherQLever::fetchAndWriteRelationsToFile(const std::string &
 
                  // Write relation to file
                  const auto relationXml = util::XmlHelper::getRelationDummy(
-                     relationId,relationType, members);
+                     relationId, relationType, members);
                  outputFile.write(relationXml.data(), relationXml.size());
                  outputFile << std::endl;
              });

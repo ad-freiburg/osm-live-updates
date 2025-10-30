@@ -152,7 +152,14 @@ olu::osm::OsmDataFetcherSparql::fetchAndWriteRelationsToFile(const std::string &
         // Set id and type of the relation
         auto relationUri = getValue<std::string_view>(binding[cnst::NAME_VALUE]);
         auto relationId = OsmObjectHelper::parseIdFromUri(relationUri);
-        auto relationType = getValue<std::string>(binding[cnst::NAME_TYPE]);
+
+        std::string relationType;
+        try {
+            relationType = getValue<std::string>(binding[cnst::NAME_TYPE]);
+        } catch (std::exception &e) {
+            // This will throw if no type triple is present for a relation, so we catch
+            // the exception and continue
+        }
 
         // Extract members for the relation
         auto memberUriList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_IDS]);

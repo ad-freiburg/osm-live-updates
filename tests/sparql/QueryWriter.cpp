@@ -480,4 +480,25 @@ namespace olu::sparql {
                 query
         );
     }
+    TEST(QueryWriter, writeQueryForRelations) {
+        {
+            QueryWriter qw{config::Config()};
+            std::string query = qw.writeQueryForRelations({1, 2, 3});
+            ASSERT_EQ(
+                    "SELECT ?value ?type "
+                    "(GROUP_CONCAT(STR(?member_id); separator=\";\") AS ?member_ids) "
+                    "(GROUP_CONCAT(STR(?member_role); separator=\";\") AS ?member_roles) "
+                    "(GROUP_CONCAT(STR(?member_pos); separator=\";\") AS ?member_poss) "
+                    "WHERE { "
+                    "VALUES ?value { osmrel:1 osmrel:2 osmrel:3 } "
+                    "OPTIONAL { ?value osmkey:type ?type . } "
+                    "?value osmrel:member ?member . "
+                    "?member osmrel:member_id ?member_id . "
+                    "?member osmrel:member_role ?member_role . "
+                    "?member osmrel:member_pos ?member_pos . } "
+                    "GROUP BY ?value ?type",
+                    query
+            );
+        }
+    }
 }

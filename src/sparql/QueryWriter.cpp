@@ -286,7 +286,7 @@ std::string olu::sparql::QueryWriter::writeQueryForRelations(const std::set<id_t
     oss << getFromClauseOptional();
     oss << "WHERE { ";
     oss << getValuesClause(cnst::NAMESPACE_OSM_REL, relationIds);
-    oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_OSM_KEY_TYPE, cnst::QUERY_VAR_TYPE);
+    oss << wrapWithOptional(getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_OSM_KEY_TYPE, cnst::QUERY_VAR_TYPE));
     oss << getTripleClause(cnst::QUERY_VAR_VAL, cnst::PREFIXED_REL_MEMBER, cnst::QUERY_VAR_MEMBER);
     oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_REL_MEMBER_ID, cnst::QUERY_VAR_MEMBER_ID);
     oss << getTripleClause(cnst::QUERY_VAR_MEMBER, cnst::PREFIXED_REL_MEMBER_ROLE, cnst::QUERY_VAR_MEMBER_ROLE);
