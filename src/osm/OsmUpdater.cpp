@@ -368,21 +368,19 @@ void olu::osm::OsmUpdater::insertMetadataTriples(OsmChangeHandler &och) {
     const auto deleteQuery = _queryWriter.writeDeleteTripleQuery({updatesCompleteUntilTriple, replicationServerTriple});
     och.runUpdateQuery(sparql::UpdateOperation::DELETE, deleteQuery, cnst::PREFIXES_FOR_METADATA_TRIPLES);
 
+    std::vector<std::string> metadataTriples;
     // Do not insert new metadata triples if a replication server URI is not provided,
     // as the database state is unknown in that case.
-    if (_config.replicationServerUri.empty()) {
-        return;
+    if (!_config.replicationServerUri.empty()) {
+        // Create a new triple for the updatesCompleteUntil
+        const std::string updatesCompleteUntil = osm::to_string(_stats.getLatestDatabaseState());
+        updatesCompleteUntilTriple.object = "\"" + updatesCompleteUntil + "\"";
+        metadataTriples.emplace_back(to_string(updatesCompleteUntilTriple));
+
+        // Create a triple for the replication server
+        replicationServerTriple.object = "\"" + _config.replicationServerUri + "\"";
+        metadataTriples.emplace_back(to_string(replicationServerTriple));
     }
-
-    std::vector<std::string> metadataTriples;
-    // Create a new triple for the updatesCompleteUntil
-    const std::string updatesCompleteUntil = osm::to_string(_stats.getLatestDatabaseState());
-    updatesCompleteUntilTriple.object = "\"" + updatesCompleteUntil + "\"";
-    metadataTriples.emplace_back(to_string(updatesCompleteUntilTriple));
-
-    // Create a triple for the replication server
-    replicationServerTriple.object = "\"" + _config.replicationServerUri + "\"";
-    metadataTriples.emplace_back(to_string(replicationServerTriple));
 
     // Create a triple for the date modified
     const std::string dateModified = util::currentIsoTime();
@@ -395,7 +393,6 @@ void olu::osm::OsmUpdater::insertMetadataTriples(OsmChangeHandler &och) {
 
     // Insert the new metadata triples into the database
     const auto query = _queryWriter.writeInsertQuery(metadataTriples);
-
     och.runUpdateQuery(sparql::UpdateOperation::INSERT, query,
                        cnst::PREFIXES_FOR_METADATA_TRIPLES);
 }

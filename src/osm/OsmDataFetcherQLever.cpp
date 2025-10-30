@@ -182,9 +182,12 @@ olu::osm::OsmDataFetcherQLever::fetchAndWriteRelationsToFile(const std::string &
                  const auto relationUri = getValue<std::string_view>((*it).value());
 
                  ++it;
-                 auto relationType = getValue<std::string_view>((*it).value());
-                 // Remove the surrounding quotes from the relation type
-                 relationType = relationType.substr(1, relationType.size() - 2);
+                 std::string_view relationType;
+                 if (auto value = *it; !value.is_null()) {
+                     relationType = getValue<std::string_view>(value.value());
+                     // Remove the surrounding quotes from the relation type
+                     relationType = relationType.substr(1, relationType.size() - 2);
+                 }
 
                  ++it;
                  auto memberUriList = getValue<std::string_view>((*it).value());
@@ -204,7 +207,7 @@ olu::osm::OsmDataFetcherQLever::fetchAndWriteRelationsToFile(const std::string &
 
                  // Write relation to file
                  const auto relationXml = util::XmlHelper::getRelationDummy(
-                     relationId,relationType, members);
+                     relationId, relationType, members);
                  outputFile.write(relationXml.data(), relationXml.size());
                  outputFile << std::endl;
              });
@@ -228,6 +231,13 @@ size_t olu::osm::OsmDataFetcherQLever::fetchAndWriteWaysToFile(const std::string
                  const auto wayUri = getValue<std::string_view>((*it).value());
 
                  ++it;
+                 auto hasTag = false;
+                 if (auto value = *it; !value.is_null()) {
+                     const auto wayFacts = getValue<std::string_view>(value.value());
+                     hasTag = !wayFacts.starts_with("0");
+                 }
+
+                 ++it;
                  auto memberUriList = getValue<std::string_view>((*it).value());
                  // Remove the surrounding brackets from the member URI list
                  memberUriList = memberUriList.substr(1, memberUriList.size() - 2);
@@ -242,7 +252,7 @@ size_t olu::osm::OsmDataFetcherQLever::fetchAndWriteWaysToFile(const std::string
                  auto members = OsmObjectHelper::parseWayMemberList(memberUriList, memberPosList);
 
                  // Write way to file
-                 const auto wayXml = util::XmlHelper::getWayDummy(wayId, members);
+                 const auto wayXml = util::XmlHelper::getWayDummy(wayId, members, hasTag);
                  outputFile.write(wayXml.data(), wayXml.size());
                  outputFile << std::endl;
              });

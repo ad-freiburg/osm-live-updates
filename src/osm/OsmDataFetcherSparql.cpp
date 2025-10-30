@@ -152,7 +152,14 @@ olu::osm::OsmDataFetcherSparql::fetchAndWriteRelationsToFile(const std::string &
         // Set id and type of the relation
         auto relationUri = getValue<std::string_view>(binding[cnst::NAME_VALUE]);
         auto relationId = OsmObjectHelper::parseIdFromUri(relationUri);
-        auto relationType = getValue<std::string>(binding[cnst::NAME_TYPE]);
+
+        std::string relationType;
+        try {
+            relationType = getValue<std::string>(binding[cnst::NAME_TYPE]);
+        } catch (std::exception &e) {
+            // This will throw if no type triple is present for a relation, so we catch
+            // the exception and continue
+        }
 
         // Extract members for the relation
         auto memberUriList = getValue<std::string_view>(binding[cnst::NAME_MEMBER_IDS]);
@@ -191,8 +198,17 @@ size_t olu::osm::OsmDataFetcherSparql::fetchAndWriteWaysToFile(const std::string
         const auto wayId = OsmObjectHelper::parseIdFromUri(wayUri);
         auto members = OsmObjectHelper::parseWayMemberList(memberUriList, memberPosList);
 
+        bool hasTag = false;
+        try {
+            const auto wayFacts = getValue<std::string_view>(binding[cnst::NAME_FACTS]);
+            hasTag = !wayFacts.starts_with("0");
+        } catch (std::exception &e) {
+            // This will throw if no zero-fact triple is present for untagged nodes, so we catch
+            // the exception and continue
+        }
+
         // Write way to file
-        outputFile << util::XmlHelper::getWayDummy(wayId, members) << std::endl;
+        outputFile << util::XmlHelper::getWayDummy(wayId, members, hasTag) << std::endl;
     }
 
     return returnedWayCount;

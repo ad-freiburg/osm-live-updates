@@ -1,11 +1,12 @@
 # osm-live-updates
 
-[osm-live-updates](https://github.com/nicolano/osm-live-updates) (`olu`) is a tool that converts OSM change files
-into SPARQL update operations, enabling efficient and near real-time querying of OSM
-data on SPARQL endpoints.
+[osm-live-updates](https://github.com/nicolano/osm-live-updates) (`olu`) 
+is a tool that generates SPARQL update operations from OSM change files,
+enabling efficient and near real-time querying of OSM data on SPARQL endpoints.
 When paired with a high-performance SPARQL engine like [QLever](https://github.com/ad-freiburg/qlever), 
-`olu` can process minute diffs from the europe dataset in under 10 seconds on average,
-while preserving the correctness of complete object geometries.
+`olu` can generate update operations from minute-interval change files 
+for the complete OSM Planet dataset in under 7 seconds,
+while ensuring the geometries of all OSM elements on the SPARQL endpoint remain correct.
 
 ## Preconditions
 

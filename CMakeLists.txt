@@ -40,6 +40,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ADDITIONAL_COMPILER_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ADDITIONAL_LINKER_FLAGS}")
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${ADDITIONAL_LINKER_FLAGS}")
 
+set(BUILD_SHARED_LIBS OFF)
+
 if (USE_PARALLEL)
     include(FindOpenMP)
     if (OPENMP_FOUND)
@@ -66,12 +68,6 @@ include_directories(SYSTEM ${POPL_INCLUDE_DIR})
 ######################################
 find_package(Protozero REQUIRED)
 include_directories(SYSTEM ${PROTOZERO_INCLUDE_DIR})
-
-######################################
-# Osmium
-######################################
-find_package(Osmium 2.20.0 REQUIRED COMPONENTS pbf xml)
-include_directories(SYSTEM ${OSMIUM_INCLUDE_DIRS})
 
 ######################################
 # Curl
@@ -104,11 +100,22 @@ endif ()
 include(FetchContent)
 
 ######################################
+# zlib-ng
+######################################
+FetchContent_Declare(
+        zlib-ng
+        GIT_REPOSITORY https://github.com/zlib-ng/zlib-ng.git
+        GIT_TAG 2.2.2
+        GIT_SHALLOW TRUE
+)
+
+######################################
 # osm2rdf
 ######################################
-FetchContent_Declare(osm2rdf
+FetchContent_Declare(
+        osm2rdf
         GIT_REPOSITORY  https://github.com/nicolano/osm2rdf.git
-        GIT_TAG 0650cc43ed31a22a22afe45be53106f70ec39d8c
+        GIT_TAG 213e60ee4785c055f4b213e27454c0e884a67a0a
 )
 
 ######################################
@@ -124,6 +131,16 @@ FetchContent_Declare(
 ######################################
 # Apply FetchContent
 ######################################
+set(ZLIB_COMPAT ON CACHE BOOL "Enable zlib compatibility" FORCE)
+set(WITH_GTEST OFF CACHE BOOL "Disable gtest" FORCE)
+set(ZLIB_ENABLE_TESTS OFF CACHE BOOL "Disable zlib tests" FORCE)
+
+FetchContent_MakeAvailable(zlib-ng)
+
+set(ZLIB_USE_STATIC_LIBS ON)
+set(ZLIB_INCLUDE_DIR "${zlib-ng_SOURCE_DIR}")
+set(ZLIB_LIBRARY "${zlib-ng_BINARY_DIR}/libz.a")
+
 FetchContent_MakeAvailable(osm2rdf simdjson)
 
 target_compile_options(osm2rdf PRIVATE -Wno-extra -Wno-all -Wno-error)
@@ -131,6 +148,13 @@ target_compile_options(osm2rdf PRIVATE -Wno-extra -Wno-all -Wno-error)
 include_directories(SYSTEM ${osm2rdf_SOURCE_DIR}/include)
 include_directories(SYSTEM ${osm2rdf_SOURCE_DIR}/vendor/spatialjoin/src)
 include_directories(SYSTEM ${simdjson_SOURCE_DIR}/include)
+
+######################################
+# Include protozero libosmium from osm2rfd
+######################################
+set(OSMIUM_INCLUDE_DIR "${osm2rdf_SOURCE_DIR}/vendor/osmcode/libosmium/include")
+find_package(Osmium 2.22 REQUIRED COMPONENTS pbf xml)
+include_directories(SYSTEM ${OSMIUM_INCLUDE_DIRS})
 
 if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     # Let's nicely support folders in IDEs

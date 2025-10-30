@@ -56,7 +56,7 @@ static void getWayDummy(benchmark::State& state) {
 
     std::ofstream outFile("benchmark.txt");
     for (auto _ : state) {
-        auto parsedId = olu::util::XmlHelper::getWayDummy(wayId, members);
+        auto parsedId = olu::util::XmlHelper::getWayDummy(wayId, members, false);
     }
 }
 BENCHMARK(getWayDummy);
@@ -69,7 +69,7 @@ static void getAndWriteWayDummy(benchmark::State& state) {
 
     std::ofstream outFile("benchmark.txt");
     for (auto _ : state) {
-        auto dummy = olu::util::XmlHelper::getWayDummy(wayId, members);
+        auto dummy = olu::util::XmlHelper::getWayDummy(wayId, members, false);
         outFile.write(dummy.data(), dummy.size());
     }
     outFile.close();

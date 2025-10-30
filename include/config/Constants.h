@@ -238,7 +238,7 @@ namespace olu::config::constants {
     const static inline std::string NAME_LATEST_TIMESTAMP = "latestTimestamp";
     const static inline std::string NAME_VERSION = "version";
     const static inline std::string NAME_CHANGESET = "changeset";
-    const static inline std::string NAME_OSM_NODE_ = "osm_node_";
+    const static inline std::string NAME_OSM_NODE_ = "osmnode_";
     const static inline std::string NAME_OBJECT = "object";
     const static inline std::string NAME_NODE = "node";
     const static inline std::string NAME_NODES = "nodes";
@@ -306,7 +306,7 @@ namespace olu::config::constants {
             PREFIX_DECL_OSM_REL, PREFIX_DECL_RDF, PREFIX_DECL_OSM2RDF_MEMBER, PREFIX_DECL_OSM, PREFIX_DECL_OSM_KEY};
 
     const static inline std::vector PREFIXES_FOR_WAY_MEMBERS{
-            PREFIX_DECL_OSM_WAY, PREFIX_DECL_OSM2RDF_MEMBER};
+            PREFIX_DECL_OSM_WAY, PREFIX_DECL_OSM2RDF_MEMBER, PREFIX_DECL_OSM2RDF};
 
     const static inline std::vector PREFIXES_FOR_WAY_TAGS_AND_META_INFO{
             PREFIX_DECL_OSM_WAY, PREFIX_DECL_OSM_META, PREFIX_DECL_OSM_KEY};
@@ -370,6 +370,7 @@ namespace olu::config::constants {
     const static inline std::string QUERY_VAR_KEY = MakeQueryVar(NAME_KEY);
     const static inline std::string QUERY_VAR_VAL = MakeQueryVar(NAME_VALUE);
     const static inline std::string QUERY_VAR_LOC = MakeQueryVar(NAME_LOCATION);
+    const static inline std::string QUERY_VAR_FACTS = MakeQueryVar(NAME_FACTS);
     const static inline std::string QUERY_VAR_TIMESTAMP = MakeQueryVar(NAME_TIMESTAMP);
     const static inline std::string QUERY_VAR_LATEST_TIMESTAMP = MakeQueryVar(NAME_LATEST_TIMESTAMP);
     const static inline std::string QUERY_VAR_VERSION = MakeQueryVar(NAME_VERSION);
@@ -424,7 +425,7 @@ namespace olu::config::constants {
 
     const static inline std::string SPARQL_OUTPUT_INFO = "SPARQL update output is set to file:";
     const static inline std::string SPARQL_OUTPUT_OPTION_SHORT = "o";
-    const static inline std::string SPARQL_OUTPUT_OPTION_LONG = "sparql-output";
+    const static inline std::string SPARQL_OUTPUT_OPTION_LONG = "output";
     const static inline std::string SPARQL_OUTPUT_OPTION_HELP =
         "Specify if SPARQL updates should be written to a file instead of sending them to the endpoint.";
 
