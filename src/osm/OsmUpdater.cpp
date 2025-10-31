@@ -47,12 +47,12 @@ createOsmDataFetcher(const olu::config::Config& config, olu::osm::StatisticsHand
 }
 
 // _________________________________________________________________________________________________
-olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config),
-                                                                 _stats(config),
-                                                                 _repServer(config, _stats),
-                                                                 _odf(createOsmDataFetcher(
-                                                                     config, _stats)),
-                                                                 _queryWriter(_config) {
+olu::osm::OsmUpdater::OsmUpdater(config::Config &config) : _config(&config),
+                                                           _stats(config),
+                                                           _repServer(config, _stats),
+                                                           _odf(createOsmDataFetcher(
+                                                               config, _stats)),
+                                                           _queryWriter(*_config) {
     _stats.startTime();
 
 #if defined(_OPENMP)
@@ -64,18 +64,19 @@ olu::osm::OsmUpdater::OsmUpdater(const config::Config &config) : _config(config)
     deleteTmpDir();
 
     try {
-        std::filesystem::create_directory(cnst::PATH_TO_TEMP_DIR);
-        std::filesystem::create_directory(cnst::PATH_TO_CHANGE_FILE_DIR);
-        std::filesystem::create_directory(cnst::PATH_TO_DUMMY_DIR);
+        std::filesystem::create_directory(_config->tmpDir);
+        std::filesystem::create_directory(cnst::getPathToOluTmpDir(_config->tmpDir));
+        std::filesystem::create_directory(cnst::getPathToChangeFileDir(_config->tmpDir));
+        std::filesystem::create_directory(cnst::getPathToDummyDir(_config->tmpDir));
     } catch (const std::exception &e) {
         util::Logger::log(util::LogEvent::ERROR, e.what());
         throw OsmUpdaterException("Failed to create temporary directories");
     }
 
-    if (_config.sparqlOutput != config::ENDPOINT) {
+    if (_config->sparqlOutput != config::ENDPOINT) {
         try {
             std::ofstream outputFile;
-            outputFile.open(_config.sparqlOutputFile,
+            outputFile.open(_config->sparqlOutputFile,
                             std::ofstream::out | std::ios_base::trunc);
             outputFile.close();
         } catch (const std::exception &e) {
@@ -93,12 +94,12 @@ void olu::osm::OsmUpdater::run() {
 
     // Handle either local directory with change files or external one depending on the user
     // input
-    if (!_config.changeFileDir.empty()) {
+    if (!_config->changeFileDir.empty()) {
         util::Logger::log(util::LogEvent::INFO,
-                          "Start handling change files at:  " + _config.changeFileDir);
+                          "Start handling change files at:  " + _config->changeFileDir);
 
         _stats.startTimeMergingChangeFiles();
-        mergeChangeFiles(_config.changeFileDir);
+        mergeChangeFiles(_config->changeFileDir);
         _stats.endTimeMergingChangeFiles();
     } else {
         // Fetch the latest database state from the replication server
@@ -118,10 +119,10 @@ void olu::osm::OsmUpdater::run() {
             throw util::DatabaseUpToDateException(msg.c_str());
         }
 
-        if (_config.maxSequenceNumber > 0) {
+        if (_config->maxSequenceNumber > 0) {
             util::Logger::log(util::LogEvent::INFO, "End at user specified sequence number: "
-                + std::to_string(_config.maxSequenceNumber));
-            _stats.setLatestDatabaseState({"", _config.maxSequenceNumber});
+                + std::to_string(_config->maxSequenceNumber));
+            _stats.setLatestDatabaseState({"", _config->maxSequenceNumber});
         }
 
         _stats.startTimeFetchingChangeFiles();
@@ -129,18 +130,18 @@ void olu::osm::OsmUpdater::run() {
         _stats.endTimeFetchingChangeFiles();
 
         _stats.startTimeMergingChangeFiles();
-        mergeChangeFiles(cnst::PATH_TO_CHANGE_FILE_DIR);
+        mergeChangeFiles(cnst::getPathToChangeFileDir(_config->tmpDir));
         clearChangesDir();
         _stats.endTimeMergingChangeFiles();
     }
 
-    if (!_config.bbox.empty() || !_config.pathToPolygonFile.empty()) {
+    if (!_config->bbox.empty() || !_config->pathToPolygonFile.empty()) {
         _stats.startTimeApplyingBoundaries();
         applyBoundaries();
         _stats.endTimeApplyingBoundaries();
     }
 
-    auto och{OsmChangeHandler(_config, *_odf, _stats)};
+    auto och{OsmChangeHandler(*_config, *_odf, _stats)};
     och.run();
 
     _stats.startTimeInsertingMetadataTriples();
@@ -155,7 +156,7 @@ void olu::osm::OsmUpdater::run() {
 
     _stats.printOsmStatistics();
     _stats.printUpdateStatistics();
-    if (_config.showDetailedStatistics) {
+    if (_config->showDetailedStatistics) {
         _stats.printOsm2RdfStatistics();
         _stats.printSparqlStatistics();
     }
@@ -167,16 +168,16 @@ void olu::osm::OsmUpdater::run() {
 // _________________________________________________________________________________________________
 void olu::osm::OsmUpdater::decideStartSequenceNumber() {
     // Check if the user specified a sequence number
-    if (_config.sequenceNumber > 0) {
+    if (_config->sequenceNumber > 0) {
         util::Logger::log(util::LogEvent::INFO, "Start from user specified sequence number: " +
-                                                std::to_string(_config.sequenceNumber));
-        _stats.setStartDatabaseState({"", _config.sequenceNumber});
+                                                std::to_string(_config->sequenceNumber));
+        _stats.setStartDatabaseState({"", _config->sequenceNumber});
         return;
     }
 
     // Check if the user specified a timestamp
-    if (!_config.timestamp.empty()) {
-        const std::string timestamp = _config.timestamp;
+    if (!_config->timestamp.empty()) {
+        const std::string timestamp = _config->timestamp;
         util::Logger::log(util::LogEvent::INFO,
                           "Start from user specified timestamp: " + timestamp);
 
@@ -190,7 +191,7 @@ void olu::osm::OsmUpdater::decideStartSequenceNumber() {
         auto databaseStateFromEndpoint = _odf->fetchUpdatesCompleteUntil();
         auto replicationServerUri = _odf->fetchReplicationServer();
 
-        if (!replicationServerUri.empty() && replicationServerUri == _config.replicationServerUri) {
+        if (!replicationServerUri.empty() && replicationServerUri == _config->replicationServerUri) {
             std::stringstream message;
             message.imbue(util::commaLocale);
             message << "SPARQL endpoint was last updated to database state: "
@@ -235,7 +236,7 @@ void olu::osm::OsmUpdater::decideStartSequenceNumber() {
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::OsmUpdater::mergeChangeFiles(const std::string &pathToChangeFileDir) {
+void olu::osm::OsmUpdater::mergeChangeFiles(const std::string &pathToChangeFileDir) const {
     // Get names for each change file and order them after their id
     std::vector<osmium::io::File> inputs;
     for (const auto& file : std::filesystem::directory_iterator(
@@ -250,7 +251,7 @@ void olu::osm::OsmUpdater::mergeChangeFiles(const std::string &pathToChangeFileD
     }
 
     util::Logger::log(util::LogEvent::INFO, "Merging and sorting change files...");
-    OsmFileHelper::mergeAndSortFiles(inputs, cnst::PATH_TO_CHANGE_FILE,
+    OsmFileHelper::mergeAndSortFiles(inputs, cnst::getPathToChangeFile(_config->tmpDir),
                                      object_order_type_id_reverse_version_delete(),
                                      inputs.size() > 1);
 }
@@ -282,20 +283,20 @@ void olu::osm::OsmUpdater::applyBoundaries() const {
 
     // See the osmium-tool manual for details about the extract command:
     // https://osmcode.org/osmium-tool/manual.html#creating-geographic-extracts
-    std::string cmd = "osmium extract " + cnst::PATH_TO_CHANGE_FILE;
-    if (!_config.bbox.empty()) {
-        cmd += " --bbox " + _config.bbox;
-    } else if (!_config.pathToPolygonFile.empty()) {
-        cmd += " --polygon " + _config.pathToPolygonFile;
+    std::string cmd = "osmium extract " + cnst::getPathToChangeFile(_config->tmpDir);
+    if (!_config->bbox.empty()) {
+        cmd += " --bbox " + _config->bbox;
+    } else if (!_config->pathToPolygonFile.empty()) {
+        cmd += " --polygon " + _config->pathToPolygonFile;
     } else {
         throw OsmUpdaterException("No bounding box or polygon file specified.");
     }
 
-    cmd += " -o " + cnst::PATH_TO_CHANGE_FILE_EXTRACT + " --overwrite -s "
-        + _config.extractStrategy + "  --no-progress";
+    cmd += " -o " + cnst::getPathToChangeFileExtract(_config->tmpDir) + " --overwrite -s "
+        + _config->extractStrategy + "  --no-progress";
 
     // Overwrite the original change file with the extracted one
-    cmd += " && mv " + cnst::PATH_TO_CHANGE_FILE_EXTRACT + " " + cnst::PATH_TO_CHANGE_FILE;
+    cmd += " && mv " + cnst::getPathToChangeFileExtract(_config->tmpDir) + " " + cnst::getPathToChangeFile(_config->tmpDir);
 
     if (std::system(cmd.c_str()) != 0) {
         throw OsmUpdaterException("Failed to apply boundaries using osmium extract command.");
@@ -303,10 +304,10 @@ void olu::osm::OsmUpdater::applyBoundaries() const {
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::OsmUpdater::clearChangesDir() {
+void olu::osm::OsmUpdater::clearChangesDir() const {
     try {
         for (const auto& entry : std::filesystem::directory_iterator(
-            cnst::PATH_TO_CHANGE_FILE_DIR)) {
+            cnst::getPathToChangeFileDir(_config->tmpDir))) {
             remove_all(entry.path());
         }
     } catch (const std::filesystem::filesystem_error& e) {
@@ -316,13 +317,13 @@ void olu::osm::OsmUpdater::clearChangesDir() {
 }
 
 // _________________________________________________________________________________________________
-void olu::osm::OsmUpdater::deleteTmpDir() {
+void olu::osm::OsmUpdater::deleteTmpDir() const {
     try {
-        if (!std::filesystem::exists(cnst::PATH_TO_TEMP_DIR)) {
+        if (!std::filesystem::exists(cnst::getPathToOluTmpDir(_config->tmpDir))) {
             return;
         }
 
-        for (const auto& entry : std::filesystem::directory_iterator(cnst::PATH_TO_TEMP_DIR)) {
+        for (const auto& entry : std::filesystem::directory_iterator(cnst::getPathToOluTmpDir(_config->tmpDir))) {
             remove_all(entry.path());
         }
     } catch (const std::filesystem::filesystem_error& e) {
@@ -371,14 +372,14 @@ void olu::osm::OsmUpdater::insertMetadataTriples(OsmChangeHandler &och) {
     std::vector<std::string> metadataTriples;
     // Do not insert new metadata triples if a replication server URI is not provided,
     // as the database state is unknown in that case.
-    if (!_config.replicationServerUri.empty()) {
+    if (!_config->replicationServerUri.empty()) {
         // Create a new triple for the updatesCompleteUntil
         const std::string updatesCompleteUntil = osm::to_string(_stats.getLatestDatabaseState());
         updatesCompleteUntilTriple.object = "\"" + updatesCompleteUntil + "\"";
         metadataTriples.emplace_back(to_string(updatesCompleteUntilTriple));
 
         // Create a triple for the replication server
-        replicationServerTriple.object = "\"" + _config.replicationServerUri + "\"";
+        replicationServerTriple.object = "\"" + _config->replicationServerUri + "\"";
         metadataTriples.emplace_back(to_string(replicationServerTriple));
     }
 

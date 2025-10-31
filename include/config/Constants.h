@@ -49,18 +49,42 @@ namespace olu::config::constants {
     const static inline std::string TEXT_FILE_EXTENSION = ".txt";
 
     // Directory paths -----------------------------------------------------------------------------
-    const static inline std::string PATH_TO_TEMP_DIR = "/tmp/olu_tmp_files/";
-    const static inline std::string PATH_TO_DUMMY_DIR = PATH_TO_TEMP_DIR  + "dummy/";
-    const static inline std::string PATH_TO_CHANGE_FILE_DIR = PATH_TO_TEMP_DIR + "changes/";
-    const static inline std::string PATH_TO_SCRATCH_DIRECTORY = PATH_TO_TEMP_DIR + "osm2rdfScratch/";
+    [[maybe_unused]] static std::string getPathToOluTmpDir(const std::filesystem::path& tmpDirPath) {
+        return tmpDirPath.string() + "/olu_tmp/";
+    }
+    static std::string getPathToDummyDir(const std::filesystem::path& tmpDirPath) {
+        return getPathToOluTmpDir(tmpDirPath) + "dummy/";
+    }
+    static std::string getPathToChangeFileDir(const std::filesystem::path& tmpDirPath) {
+        return getPathToOluTmpDir(tmpDirPath) + "changes/";
+    }
+    static std::string getPathForChangeFile(const std::filesystem::path& tmpDirPath,
+                                            const int &sequenceNumber) {
+        return getPathToChangeFileDir(tmpDirPath) + std::to_string(sequenceNumber)
+                + OSM_CHANGE_FILE_EXTENSION + GZIP_EXTENSION;
+    }
+    static std::string getPathToOsm2rdfScratchDir(const std::filesystem::path& tmpDirPath) {
+        return getPathToOluTmpDir(tmpDirPath) + "osm2rdfScratch/";
+    }
 
     // File paths ----------------------------------------------------------------------------------
-    const static inline std::string PATH_TO_CHANGE_FILE = PATH_TO_TEMP_DIR + "changes" + OSM_CHANGE_FILE_EXTENSION + GZIP_EXTENSION;
-    const static inline std::string PATH_TO_CHANGE_FILE_EXTRACT = PATH_TO_TEMP_DIR + "changes-boundary" + OSM_CHANGE_FILE_EXTENSION + GZIP_EXTENSION;
-    const static inline std::string PATH_TO_INPUT_FILE = PATH_TO_TEMP_DIR + "input" + OSM_EXTENSION;
-    const static inline std::string PATH_TO_OUTPUT_FILE = PATH_TO_TEMP_DIR + "output" + TURTLE_FILE_EXTENSION;
-    const static inline std::string PATH_TO_OSM2RDF_INFO_OUTPUT_FILE = PATH_TO_TEMP_DIR + "osm2rdf_info" + TEXT_FILE_EXTENSION;
-    const static inline std::string PATH_TO_OSM2RDF_INFO_OUTPUT_FILE_DEBUG = "osm2rdf_info" + TEXT_FILE_EXTENSION;
+    static std::string getPathToChangeFile(const std::filesystem::path& tmpDirPath) {
+        return getPathToOluTmpDir(tmpDirPath) + "changes" + OSM_CHANGE_FILE_EXTENSION + GZIP_EXTENSION;
+    }
+    static std::string getPathToChangeFileExtract(const std::filesystem::path& tmpDirPath) {
+        return getPathToOluTmpDir(tmpDirPath) + "changes_extract" + OSM_CHANGE_FILE_EXTENSION + GZIP_EXTENSION;
+    }
+    static std::string getPathToOsm2rdfInputFile(const std::filesystem::path& tmpDirPath) {
+        return getPathToOluTmpDir(tmpDirPath) + "osm2rdf_input" + OSM_EXTENSION;
+    }
+    static std::string getPathToOsm2rdfOutputFile(const std::filesystem::path& tmpDirPath) {
+        return getPathToOluTmpDir(tmpDirPath) + "osm2rdf_output" + TURTLE_FILE_EXTENSION;
+    }
+    static std::string getPathToOsm2rdfInfoOutputFile(const std::filesystem::path& tmpDirPath) {
+        return getPathToOluTmpDir(tmpDirPath) + "osm2rdf_info" + TEXT_FILE_EXTENSION;
+    }
+    const static inline std::string PATH_TO_OSM2RDF_INFO_OUTPUT_FILE_DEBUG =
+            "osm2rdf_info" + TEXT_FILE_EXTENSION;
     const static inline std::string PATH_TO_STATE_FILE = "state" + TEXT_FILE_EXTENSION;
     const static inline std::string PATH_TO_LOG_FILE = "olu_log" + TEXT_FILE_EXTENSION;
 
@@ -507,9 +531,14 @@ namespace olu::config::constants {
     const static inline std::string EXTRACT_STRATEGY_OPTION_SHORT = "";
     const static inline std::string EXTRACT_STRATEGY_OPTION_LONG = "extract-strategy";
     const static inline std::string EXTRACT_STRATEGY_OPTION_HELP =
-        "Specify the extract strategy to use. Possible values are 'smart', 'complete_ways' and "
-        "'simple'. See osmium documentation for more information.";
+            "Specify the extract strategy to use. Possible values are 'smart', 'complete_ways' and "
+            "'simple'. See osmium documentation for more information.";
 
+    const static inline std::string TMP_FILE_DIR_INFO = "Creating temporary files at:";
+    const static inline std::string TMP_FILE_DIR_OPTION_SHORT = "";
+    const static inline std::string TMP_FILE_DIR_OPTION_LONG = "tmp";
+    const static inline std::string TMP_FILE_DIR_OPTION_HELP =
+            "Specify a directory where temporary files should be created.";
 } // namespace olu::config::constants
 
 #endif //OSM_LIVE_UPDATES_CONSTANTS_H

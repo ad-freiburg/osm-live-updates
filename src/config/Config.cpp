@@ -141,6 +141,12 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
         constants::EXTRACT_STRATEGY_OPTION_LONG,
         constants::EXTRACT_STRATEGY_OPTION_HELP);
 
+    const auto tmpFileDirOp = parser.add<popl::Value<std::string>,
+    popl::Attribute::optional>(
+        constants::TMP_FILE_DIR_OPTION_SHORT,
+        constants::TMP_FILE_DIR_OPTION_LONG,
+        constants::TMP_FILE_DIR_OPTION_HELP);
+
     try {
         parser.parse(argc, argv);
 
@@ -207,6 +213,16 @@ void olu::config::Config::fromArgs(const int argc, char **argv) {
                 errorDescription << "Input is not a directory: " << changeFileDir << std::endl;
                 util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
                 exit(INPUT_IS_NOT_DIRECTORY);
+            }
+        }
+
+        if (tmpFileDirOp->is_set()) {
+            tmpDir = tmpFileDirOp->value();
+            if (!std::filesystem::is_directory(tmpDir)) {
+                std::stringstream errorDescription;
+                errorDescription << "Directory for temporary files is not a directory: " << tmpDir << std::endl;
+                util::Logger::log(util::LogEvent::ERROR, errorDescription.str());
+                exit(TMP_DIR_IS_NOT_DIRECTORY);
             }
         }
 
@@ -460,6 +476,9 @@ void olu::config::Config::printInfo() const {
         util::Logger::log(util::LogEvent::CONFIG,
                           constants::BATCH_SIZE_INFO + " " + std::to_string(batchSize));
     }
+
+    util::Logger::log(util::LogEvent::CONFIG,
+        constants::TMP_FILE_DIR_INFO + " " + tmpDir.string());
 }
 
 
