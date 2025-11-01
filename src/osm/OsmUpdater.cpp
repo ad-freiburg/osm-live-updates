@@ -88,10 +88,6 @@ olu::osm::OsmUpdater::OsmUpdater(config::Config &config) : _config(&config),
 
 // _________________________________________________________________________________________________
 void olu::osm::OsmUpdater::run() {
-    // Check if the osm2rdf version that was used to create the dump on the SPARQL endpoint is the
-    // same that is used in this program.
-    checkOsm2RdfVersions();
-
     // Handle either local directory with change files or external one depending on the user
     // input
     if (!_config->changeFileDir.empty()) {
