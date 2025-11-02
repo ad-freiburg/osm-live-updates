@@ -178,6 +178,9 @@ std::vector<std::string> olu::osm::Osm2ttl::getArgsFromEndpoint() {
         // Only add arguments for supported osm2rdf options to avoid errors when the osm2rdf dump
         // was created with a newer version of osm2rdf than the one olu uses internally
         if (!std::ranges::contains(supportedOsm2rdfOptions, optionName)) {
+            util::Logger::log(util::LogEvent::WARNING,
+                              "Unknown option \"" + optionName + "\" was used for the OSM data"
+                              " dump with osm2rdf. Skipping this option.");
             continue;
         }
 

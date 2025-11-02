@@ -86,7 +86,7 @@ olu::osm::OsmObjectHelper::parseOsmTypeFromUri(const std::string_view &uri) {
         return OsmObjectType::RELATION;
     }
 
-    const std::string msg = "Cant extract osm type from uri: " + std::string(uri);
+    const std::string msg = "Unknown namespace for OSM element: " + std::string(uri);
     throw OsmObjectHelperException(msg.c_str());
 }
 

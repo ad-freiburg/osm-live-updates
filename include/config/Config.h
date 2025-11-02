@@ -24,6 +24,8 @@
 #include <map>
 #include <thread>
 
+#include "Constants.h"
+
 namespace olu::config {
 
 enum SparqlOutput {
@@ -88,7 +90,7 @@ struct Config {
     size_t batchSize = DEFAULT_BATCH_SIZE;
 
     // Directory to store temporary files
-    std::filesystem::path tmpDir = std::filesystem::temp_directory_path();
+    std::filesystem::path tmpDir = std::filesystem::path(constants::DEFAULT_TMP_DIR);
 
     // Specifies what happens with the sparql output
     // - ENDPOINT: The sparql updates are sent to the sparql endpoint
