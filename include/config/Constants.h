@@ -23,8 +23,6 @@
 #include <vector>
 #include <sstream>
 
-#include "Config.h"
-
 namespace olu::config::constants {
     // Exception Messages --------------------------------------------------------------------------
     const static inline auto EXCEPTION_MSG_SEQUENCE_NUMBER_IS_INVALID = "Sequence number is invalid.";
@@ -49,8 +47,9 @@ namespace olu::config::constants {
     const static inline std::string TEXT_FILE_EXTENSION = ".txt";
 
     // Directory paths -----------------------------------------------------------------------------
+    const static std::string DEFAULT_TMP_DIR = "olu_tmp";
     [[maybe_unused]] static std::string getPathToOluTmpDir(const std::filesystem::path& tmpDirPath) {
-        return tmpDirPath.string() + "/olu_tmp/";
+        return tmpDirPath.string() + "/";
     }
     static std::string getPathToDummyDir(const std::filesystem::path& tmpDirPath) {
         return getPathToOluTmpDir(tmpDirPath) + "dummy/";
@@ -500,8 +499,7 @@ namespace olu::config::constants {
     const static inline std::string BATCH_SIZE_OPTION_SHORT = "";
     const static inline std::string BATCH_SIZE_OPTION_LONG = "batch-size";
     const static inline std::string BATCH_SIZE_OPTION_HELP =
-        "The number of values or triples that should be sent in one batch to the SPARQL endpoint. "
-        "Default is " + std::to_string(Config::DEFAULT_BATCH_SIZE) + ".";
+        "The number of values or triples that should be sent in one batch to the SPARQL endpoint.";
 
     const static inline std::string QLEVER_ENDPOINT_INFO = "Working with a QLever endpoint";
     const static inline std::string QLEVER_ENDPOINT_OPTION_SHORT = "";
