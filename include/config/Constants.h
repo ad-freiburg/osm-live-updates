@@ -22,6 +22,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include <filesystem>
 
 namespace olu::config::constants {
     // Exception Messages --------------------------------------------------------------------------
