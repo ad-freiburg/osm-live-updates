@@ -154,7 +154,8 @@ std::vector<std::string> olu::osm::Osm2ttl::getArgsFromEndpoint() {
         osm2rdf::config::constants::NO_UNTAGGED_NODES_OPTION_LONG,
         osm2rdf::config::constants::NO_UNTAGGED_WAYS_OPTION_LONG,
         osm2rdf::config::constants::NO_UNTAGGED_RELATIONS_OPTION_LONG,
-        osm2rdf::config::constants::NO_UNTAGGED_AREAS_OPTION_LONG
+        osm2rdf::config::constants::NO_UNTAGGED_AREAS_OPTION_LONG,
+        osm2rdf::config::constants::WKT_PRECISION_OPTION_LONG
     };
 
     std::vector<std::string> arguments = {" ",
