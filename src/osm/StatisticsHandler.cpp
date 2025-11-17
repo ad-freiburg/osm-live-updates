@@ -328,8 +328,6 @@ void olu::osm::StatisticsHandler::logQleverQueryInfo(simdjson::ondemand::object 
 
 struct QLeverUpdateTriplesTimingStatistics {
     long total;
-    long updateMetadata;
-    long performUpdate() const { return this->total - this->updateMetadata; }
 };
 
 struct QleverProcessUpdateStatistics {
@@ -346,11 +344,13 @@ struct QleverExecutionTimingStatistics {
     long acquiringDeltaTriplesWriteLock;
     long diskWriteback;
     long snapshotCreation;
+    long updateMetadata;
     QleverProcessUpdateStatistics processUpdateImpl;
 };
 
 struct QleverTimingStatistics {
     long total;
+    long parsing;
     long snapshot;
     long planning;
     long waitingForUpdateThread;
@@ -424,6 +424,13 @@ void olu::osm::StatisticsHandler::logQLeverUpdateInfo(const simdjson::padded_str
                     qleverTiming.waitingForUpdateThread = timeFieldValue.value();
                 }
 
+                if (timeField.key() == "parsing") {
+                    auto timeFieldValue = timeField.value().value().get_int64();
+                    handleParsingIntError(timeFieldValue, "time:parsing");
+
+                    qleverTiming.parsing = timeFieldValue.value();
+                }
+
                 if (timeField.key() == "execution") {
                     for (auto executionField: timeField.value().get_object()) {
                         handleParsingObjectError(executionField, "execution");
@@ -450,6 +457,12 @@ void olu::osm::StatisticsHandler::logQLeverUpdateInfo(const simdjson::padded_str
                             auto intField = executionField.value().value().get_int64();
                             handleParsingIntError(intField, "snapshotCreation");
                             qleverTiming.execution.snapshotCreation = intField.value();
+                        }
+
+                        if (executionField.key() == "updateMetadata") {
+                            auto intField = executionField.value().value().get_int64();
+                            handleParsingIntError(intField, "updateMetadata");
+                            qleverTiming.execution.updateMetadata = intField.value();
                         }
 
                         if (executionField.key() == "processUpdateImpl") {
@@ -493,12 +506,6 @@ void olu::osm::StatisticsHandler::logQLeverUpdateInfo(const simdjson::padded_str
                                                 handleParsingIntError(intField, "deleteTriples:total");
                                                 qleverTiming.execution.processUpdateImpl.deleteTriples.total = intField.value();
                                             }
-
-                                            if (deleteTriplesField.key() == "updateMetadata") {
-                                                auto intField = deleteTriplesField.value().value().get_int64();
-                                                handleParsingIntError(intField, "updateMetadata");
-                                                qleverTiming.execution.processUpdateImpl.deleteTriples.updateMetadata = intField.value();
-                                            }
                                         }
                                     }
                                 }
@@ -515,12 +522,6 @@ void olu::osm::StatisticsHandler::logQLeverUpdateInfo(const simdjson::padded_str
                                                 auto intField = insertTriplesField.value().value().get_int64();
                                                 handleParsingIntError(intField, "deleteTriples:total");
                                                 qleverTiming.execution.processUpdateImpl.insertTriples.total = intField.value();
-                                            }
-
-                                            if (insertTriplesField.key() == "updateMetadata") {
-                                                auto intField = insertTriplesField.value().value().get_int64();
-                                                handleParsingIntError(intField, "updateMetadata");
-                                                qleverTiming.execution.processUpdateImpl.insertTriples.updateMetadata = intField.value();
                                             }
                                         }
                                     }
@@ -561,12 +562,12 @@ void olu::osm::StatisticsHandler::logQLeverUpdateInfo(const simdjson::padded_str
                 << " ms, Preparation: " << qleverTiming.execution.processUpdateImpl.preparation;
 
         if (updateOp == sparql::UpdateOperation::INSERT) {
-            util::Logger::stream() << ", Update Metadata: " << qleverTiming.execution.processUpdateImpl.insertTriples.updateMetadata
-                    << " ms, Perform Update: " << qleverTiming.execution.processUpdateImpl.insertTriples.performUpdate()
-                    << " ms";
+            util::Logger::stream() << ", Update Metadata: " << qleverTiming.execution.updateMetadata
+                    << " ms, Perform Update: " << qleverTiming.execution.processUpdateImpl.insertTriples.total
+                    << " ms, Parsing: " << qleverTiming.parsing << " ms";
         } else {
-            util::Logger::stream() << ", Update Metadata: " << qleverTiming.execution.processUpdateImpl.deleteTriples.updateMetadata
-                    << " ms, Perform Update: " << qleverTiming.execution.processUpdateImpl.deleteTriples.performUpdate()
+            util::Logger::stream() << ", Update Metadata: " << qleverTiming.execution.updateMetadata
+                    << " ms, Perform Update: " << qleverTiming.execution.processUpdateImpl.deleteTriples.total
                     << " ms";
         }
 
